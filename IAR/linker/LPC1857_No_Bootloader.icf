@@ -1,0 +1,72 @@
+/*###ICF### Section handled by ICF editor, don't touch! ****/
+/*-Editor annotation file-*/
+/* IcfEditorFile="$TOOLKIT_DIR$\config\ide\IcfEditor\cortex_v1_0.xml" */
+/*-Specials-*/
+define symbol __ICFEDIT_intvec_start__ = 0x1A000000;
+/*-Memory Regions-*/
+define symbol __ICFEDIT_region_ROM_start__ = 0x1A000140;
+define symbol __ICFEDIT_region_ROM_end__   = 0x1A080000;  
+
+
+/* bank 1 RAM - 32k */
+define symbol __ICFEDIT_region_RAM_start__ = 0x10000000;
+define symbol __ICFEDIT_region_RAM_end__   = 0x10007FFF;
+/* gap exclude RAM */
+define symbol __ICFEDIT_region_RAM_Exclude_start__ = 0x10008000;
+define symbol __ICFEDIT_region_RAM_Exclude_end__   = 0x1007FFFF;
+/* bank 2 RAM - 40k  ... IAP 32bytes reserved*/
+define symbol __region_LRAM2_start__ = 0x10080000;
+define symbol __region_LRAM2_end__   = 0x10089FDF;
+/* gap exclude RAM  ... IAP 32bytes reserved*/
+define symbol __ICFEDIT_region_RAM_G2_Exclude_start__ = 0x10089FE0;
+define symbol __ICFEDIT_region_RAM_G2_Exclude_end__   = 0x1FFFFFFF;
+/* bank 3 RAM - 3K reserved for USB */
+define symbol _AHB_RAM_USB_start__  = 0x20000000;
+define symbol _AHB_RAM_USB_end__    = 0x20002FFF;
+/* bank 3,4,5 RAM - rest of 32k,16k,16k bank 3,4,5 */
+define symbol __ICFEDIT_region_AHB_RAM_start__  = 0x20003000;
+define symbol __ICFEDIT_region_AHB_RAM_end__    = 0x2000FFDF;
+
+
+
+define symbol __ICFEDIT_region_ROM_B_start__ = 0x1B000000;
+define symbol __ICFEDIT_region_ROM_B_end__   = 0x1B07FFFF;  
+
+
+/*-Sizes-*/
+define symbol __ICFEDIT_size_cstack__ = 0x1200;
+define symbol __ICFEDIT_size_heap__   = 0x200;
+/**** End of ICF editor section. ###ICF###*/
+
+
+
+define symbol __ICFEDIT_region_ROM_Exclude_start__ = 0x1A080000;
+define symbol __ICFEDIT_region_ROM_Exclude_end__   = 0x1AFFFFFF;
+
+define memory mem with size = 4G;
+define region ROM_region   = mem:[from __ICFEDIT_region_ROM_start__   to __ICFEDIT_region_ROM_end__] ;
+define region ROM_B_region =  mem:[from __ICFEDIT_region_ROM_B_start__   to __ICFEDIT_region_ROM_B_end__] ;
+
+/*define region RAM_region   = mem:[from __ICFEDIT_region_RAM_start__  to __ICFEDIT_region_AHB_RAM_end__] - mem:[from __ICFEDIT_region_RAM_Exclude_start__  to __ICFEDIT_region_RAM_Exclude_end__]- mem:[from __ICFEDIT_region_RAM_G2_Exclude_start__  to __ICFEDIT_region_RAM_G2_Exclude_end__];*/
+define region RAM_region   = mem:[from _AHB_RAM_USB_end__  to __ICFEDIT_region_AHB_RAM_end__];
+
+
+define region AHB_RAM_USB_region = mem:[from _AHB_RAM_USB_start__ to _AHB_RAM_USB_end__];
+
+
+
+define block CSTACK    with alignment = 8, size = __ICFEDIT_size_cstack__   { };
+define block HEAP      with alignment = 8, size = __ICFEDIT_size_heap__     { };
+
+initialize by copy { readwrite };
+do not initialize  { section .noinit };
+
+place at address mem:__ICFEDIT_intvec_start__ { section .intvec };
+place in ROM_region     { readonly };
+place in RAM_region     { readwrite,
+                          block CSTACK, block HEAP };
+                          
+                        
+place in AHB_RAM_USB_region { section USB_RAM  };
+                          
+

@@ -1,0 +1,33 @@
+ -B 
+
+"--endian=little" 
+
+"--cpu=Cortex-M4" 
+
+"--fpu=VFPv4_SP" 
+
+"-p" 
+
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\CONFIG\debugger\NXP\LPC4357_M4.ddf" 
+
+"--drv_verify_download" 
+
+"--semihosting=none" 
+
+"--device=LPC4357_M4" 
+
+"--drv_communication=USB0" 
+
+"--drv_interface_speed=4000" 
+
+"--jlink_reset_strategy=0,0" 
+
+"--drv_catch_exceptions=0x000" 
+
+"--jlink_script_file=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\config\debugger\NXP\LPC4350_DebugCortexM4.JLinkScript" 
+
+"--drv_swo_clock_setup=204000000,0,2000000" 
+
+
+
+

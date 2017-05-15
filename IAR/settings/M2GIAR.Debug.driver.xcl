@@ -1,0 +1,51 @@
+ -B 
+
+"--endian=little" 
+
+"--cpu=Cortex-M4" 
+
+"--fpu=VFPv4_SP" 
+
+"-p" 
+
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\CONFIG\debugger\NXP\LPC4357_M4.ddf" 
+
+"--drv_verify_download" 
+
+"--semihosting" 
+
+"--device=LPC4357_M4" 
+
+"--multicore_nr_of_cores=1" 
+
+"--jet_script_file=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\config\debugger\NXP\LPC18xx.ProbeScript" 
+
+"--jet_standard_reset=2,300,200" 
+
+"--reset_style=\"0,-,0,Disabled__no_reset_\"" 
+
+"--reset_style=\"1,-,0,Software\"" 
+
+"--reset_style=\"2,-,1,Hardware\"" 
+
+"--reset_style=\"3,-,0,Core\"" 
+
+"--reset_style=\"4,-,0,System\"" 
+
+"--reset_style=\"7,ResetAndStopAtUser,0,Reset_and_halt_after_bootloader\"" 
+
+"--reset_style=\"8,ResetAndStopAtBoot,0,Reset_and_halt_before_bootloader\"" 
+
+"--drv_interface=SWD" 
+
+"--drv_catch_exceptions=0x7f0" 
+
+"--jet_board_cfg=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\config\debugger\NXP\LPC43xx.ProbeConfig" 
+
+"--drv_trace_size=8388608" 
+
+"--board_file=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\config\flashloader\NXP\FlashNXPLPC18xx_1024K.board" 
+
+
+
+
