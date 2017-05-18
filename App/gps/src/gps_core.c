@@ -401,12 +401,10 @@ CREATE_CONTRACT(GPS);//!< Create contract for buzzer msg publication
  * Module Threads
  */
 #define X(a, b, c, d, e, f) {.thisThread.name = a, .thisThread.stacksize = b, .thisThread.tpriority = c, .thisThread.pthread = d, .thisModule = e, .thisWDTPosition = f},
-Threads_t THREADS_THISTHREAD[] = {
-GPS_MODULES };
+Threads_t THREADS_THISTHREAD[] = { GPS_MODULES };
 #undef X
 
-volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD)
-        / sizeof(THREADS_THISTHREAD[0])];   //!< Threads Watchdog flag holder
+volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS_THISTHREAD[0])];   //!< Threads Watchdog flag holder
 
 WATCHDOG_CREATE(GPSPUB);//!< WDT pointer flag
 WATCHDOG_CREATE(GPSMGT);//!< WDT pointer flag
@@ -899,7 +897,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
     osSignalSet (xMainID, THREADS_RETURN_SIGNAL(bGPSTPSThreadArrayPosition)); //Task created, inform core
 
     // Configure external interrupt 2 - Module GPS TIMEPULSE
-    GPS_vConfigExtInterrupt ();
+    GPS_vConfigExtInterrupt();
 
     //Loop infinito da tarefa:
     while (1)
@@ -2825,7 +2823,7 @@ void GPS_vGPSThread (void const *argument)
     INITIALIZE_TIMER(GPS_bTimerMtr, osTimerPeriodic);
 
     // Used to count 125ms after an timepulse interrupt
-    INITIALIZE_TIMER(GPS_bTimerTimeout, osTimerOnce);
+    INITIALIZE_TIMER(GPS_bTimerTimeout, osTimerPeriodic);
 
     //Mutex para controle de acesso às estruturas de dados de entrada do GPS:
     INITIALIZE_MUTEX(GPS_MTX_sEntradas);

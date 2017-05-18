@@ -528,11 +528,7 @@ void CTL_vControlManagementThread(void const *argument)
     //Semáforo para controle de acesso à exibição de mensagens de alerta:
     INITIALIZE_SEMAPHORE(UOS_sSemAlerta, 1);
 
-    //Flags para indicar o status do sistema:
     // Initialize flag group to indicate events
-//    status = osFlagGroupCreate(&UOS_sFlagSis);
-//    ASSERT(status == osOK);
-
     //Flags que representam os bits do contador de ticks:
     status = osFlagGroupCreate(&UOS_sFlagTicks);
     ASSERT(status == osOK);
@@ -599,7 +595,6 @@ void CTL_vControlManagementThread(void const *argument)
                 {
                     //Este flag deve ser reconhecido aqui:
                     osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_REGISTRO);
-                    // Publish that the
 
                     bEstadoInterface = EI_NOVO_REG;
                 }
