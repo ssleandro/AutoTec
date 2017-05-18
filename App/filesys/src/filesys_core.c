@@ -36,9 +36,11 @@
 *******************************************************************************/
 #include "M2G_app.h"
 #include "filesys_core.h"
+#include "api_mdriver_span.h"
 #include "debug_tool.h"
 #include "../../filesys/config/filesys_config.h"
 #include "filesys_ThreadControl.h"
+#include "fat_sl.h"
 #include <stdlib.h>
 
 /******************************************************************************
@@ -73,7 +75,7 @@ volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS
 WATCHDOG_CREATE(FSMPUB);                                //!< WDT pointer flag
 uint8_t bFSMPUBThreadArrayPosition = 0;                 //!< Thread position in array
 
-extern peripheral_descriptor_p pFileSysHandle;          //!< SPIFI Handler
+peripheral_descriptor_p pFileSysHandle;          //!< SPIFI Handler
 
 /******************************************************************************
 * Function Prototypes
@@ -259,12 +261,17 @@ void FSM_vFileSysPublishThread(void const *argument){}
 *******************************************************************************/
 eAPPError_s FSM_vInitDeviceLayer(void)
 {
-    /*Prepare the device */
-    pFileSysHandle = DEV_open(FILESYS_ID);
-    ASSERT(pFileSysHandle != NULL);
+	uint8_t ucStatus;
+
+	/*Prepare the device */
+	ucStatus = fs_init();
+	if (ucStatus  == F_NO_ERROR)
+	{
+		ucStatus = f_initvolume( initfunc_span );
+	}
+    ASSERT(ucStatus != F_NO_ERROR);
 
     eError = APP_ERROR_SUCCESS;
-
     return eError;
 }
 
@@ -281,9 +288,9 @@ void FSM_vFileSysThread (void const *argument)
     /* Init the module queue - structure that receive data from broker */
     INITIALIZE_QUEUE(FileSysQueue);
 
-    /* Prepare the signature - struture that notify the broker about subscribers */
-    SIGNATURE_HEADER(FileSys, THIS_MODULE, TOPIC_FILESYS, FileSysQueue);
-    ASSERT(SUBSCRIBE(SIGNATURE(FileSys), 0) == osOK);
+    error = FSM_vInitDeviceLayer();
+    ASSERT(error != APP_ERROR_SUCCESS);
+
 
     /* Prepare the signature - struture that notify the broker about subscribers */
     /* Subs to diagnostic topic */
@@ -324,3 +331,26 @@ void FSM_vFileSysThread (void const *argument)
 #else
 void FSM_vFileSysThread (void const *argument){}
 #endif
+
+
+/* ************************* Management thread ************************************ */
+void FSM_vFileSysManagementThread(void const *argument)
+{
+    eAPPError_s error;
+
+#ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
+    SEGGER_SYSVIEW_Print("FileSys Thread Created");
+#endif
+
+    FSM_vDetectThread(&WATCHDOG(FSMPUB), &bFSMPUBThreadArrayPosition, (void*)FSM_vFileSysManagementThread);
+    WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
+
+    osThreadId xDiagMainID = (osThreadId) argument;
+    osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition));//Task created, inform core
+    osThreadSetPriority(NULL, osPriorityLow);
+
+    while(1)
+    {
+
+    }
+}

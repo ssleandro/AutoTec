@@ -61,6 +61,7 @@
         X("Gui"        , 200 , osPriorityAboveNormal    , GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
         X("Sensor"     , 200 , osPriorityAboveNormal    , SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
         X("Acquireg"   , 200 , osPriorityAboveNormal    , AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
+		X("Filesys"    , 200 , osPriorityHigh        	, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
         X(NULL         ,   0 , 0                        , NULL                  , 0                 , NULL         )
 
 /*
