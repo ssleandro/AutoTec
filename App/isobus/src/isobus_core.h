@@ -59,9 +59,91 @@
 /******************************************************************************
 * Typedefs
 *******************************************************************************/
-typedef enum {WAIT_GLOBAL_VT_STATUS, WAIT_VT_STATUS, WAIT_LOAD_VERSION, WAIT_SEND_POOL, OBJECT_POOL_SENDED, BOOT_COMPLETED} eBootStates;
+typedef enum {
+	WAIT_GLOBAL_VT_STATUS,
+	WAIT_VT_STATUS,
+	WAIT_LOAD_VERSION,
+	WAIT_SEND_POOL,
+	OBJECT_POOL_SENDED,
+	BOOT_COMPLETED
+} eBootStates;
 
-typedef enum {BOOT, RUNNING} eModuleStates;
+typedef enum {
+	BOOT,
+	RUNNING
+} eModuleStates;
+
+typedef enum {
+	DATA_MASK_CONFIGURATION = 0x5000,
+	DATA_MASK_INSTALLATION,
+	DATA_MASK_PLANTER,
+	DATA_MASK_TEST_MODE,
+	DATA_MASK_TRIMMING,
+	DATA_MASK_SYSTEM,
+	DATA_MASK_INVALID
+} eDataMask;
+
+typedef enum {
+	STATUS_INSTALL_INSTALLING 	 = 0x0E,
+	STATUS_INSTALL_INSTALLED 	 = 0x0A,
+	STATUS_INSTALL_INSTALL_ERROR = 0x0C,
+	STATUS_INSTALL_NONE			 = 0xFF,
+	STATUS_INSTALL_INVALID
+} eInstallationStatus;
+
+typedef enum {
+	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
+	STATUS_TRIMMING_TRIMMED		= 0x0C,
+	STATUS_TRIMMING_INVALID,
+} eTrimmingStatus;
+
+typedef enum {
+	LANGUAGE_PORTUGUESE,
+	LANGUAGE_ENGLISH,
+	LANGUAGE_SPANISH,
+	LANGUAGE_RUSSIAN,
+	LANGUAGE_INVALID
+} eSelectedLanguage;
+
+typedef enum {
+	UNIT_INTERNATIONAL_SYSTEM,
+	UNIT_IMPERIAL_SYSTEM,
+	UNIT_SYSTEM_INVALID
+} eSelectedUnitMeasurement;
+
+typedef enum {
+	AREA_MONITOR_DISABLED,
+	AREA_MONITOR_ENABLED,
+	AREA_MONITOR_INVALID
+} eAreaMonitor;
+
+typedef enum {
+	ALTERNATE_ROWS_DISABLED,
+	ALTERNATE_ROWS_ENABLED,
+	ALTERNATE_ROWS_INVALID
+} eAlternateRows;
+
+typedef enum {
+	ALTERNATED_ROWS_ODD,
+	ALTERNATED_ROWS_EVEN,
+	ALTERNATED_ROWS_INVALID
+} eAlternatedRowsType;
+
+typedef struct sConfigurationDataMask {
+	eSelectedLanguage eLanguage;
+	eSelectedUnitMeasurement eUnit;
+	uint32_t dVehicleID;
+	eAreaMonitor eMonitor;
+	float fSeedsPerMeter;
+	uint8_t bNumOfRows;
+	float fImplementWidth;
+	float fEvaluationDistance;
+	uint8_t fTolerance;
+	float fMaxSpeed;
+	eAlternateRows eAlterRows;
+	eAlternatedRowsType eAltType;
+} sConfigurationDataMask;
+
 /******************************************************************************
 * Variables
 *******************************************************************************/

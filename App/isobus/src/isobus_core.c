@@ -56,7 +56,21 @@ static eAPPError_s eError;                   		//!< Error variable
 
 extern osFlagsGroupId UOS_sFlagSis;
 
-//osThreadId startUpdate;
+static sConfigurationDataMask sConfigDataMask =
+{
+	.eLanguage = LANGUAGE_ENGLISH,
+	.eUnit = UNIT_INTERNATIONAL_SYSTEM,
+	.dVehicleID = 0x2525,
+	.eMonitor = AREA_MONITOR_DISABLED,
+	.fSeedsPerMeter = 0.5f,
+	.bNumOfRows = 6,
+	.fImplementWidth = 2.0f,
+	.fEvaluationDistance = 15.0f,
+	.fTolerance = 10,
+	.fMaxSpeed = 5.0f,
+	.eAlterRows = ALTERNATE_ROWS_DISABLED,
+	.eAltType = ALTERNATED_ROWS_ODD
+};
 
 #ifndef UNITY_TEST
 DECLARE_QUEUE(IsobusQueue, QUEUE_SIZEOFISOBUS);     //!< Declaration of Interface Queue
@@ -70,9 +84,9 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
  *****************************/
 CREATE_LOCAL_QUEUE(PublishQ, ISOBUSMsg, 10)
 CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 10)
-CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 10)
+CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 10)
 CREATE_LOCAL_QUEUE(UpdateQ, ISOBUSMsg, 10)
-CREATE_LOCAL_QUEUE(AuxBootQ, ISOBUSMsg, 10)
+CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 10)
 
 /**
  * Module Threads
@@ -89,16 +103,15 @@ volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS
 WATCHDOG_CREATE(ISOPUB);                                    //!< WDT pointer flag
 WATCHDOG_CREATE(ISORCV);                                    //!< WDT pointer flag
 WATCHDOG_CREATE(ISOWRT);                                    //!< WDT pointer flag
-WATCHDOG_CREATE(ISOBOOT);                                   //!< WDT pointer flag
+WATCHDOG_CREATE(ISOMGT);                                   	//!< WDT pointer flag
 WATCHDOG_CREATE(ISOUPDT);                                   //!< WDT pointer flag
+WATCHDOG_CREATE(ISOBOOT);                                   //!< WDT pointer flag
 uint8_t bISOPUBThreadArrayPosition = 0;                     //!< Thread position in array
 uint8_t bISORCVThreadArrayPosition = 0;                     //!< Thread position in array
 uint8_t bISOWRTThreadArrayPosition = 0;                     //!< Thread position in array
-uint8_t bISOBOOTThreadArrayPosition = 0;                    //!< Thread position in array
+uint8_t bISOMGTThreadArrayPosition = 0;                    	//!< Thread position in array
 uint8_t bISOUPDTThreadArrayPosition = 0;                    //!< Thread position in array
-
-WATCHDOG_CREATE(ISOAUX);                                   //!< WDT pointer flag
-uint8_t bISOAUXThreadArrayPosition = 0;                    //!< Thread position in array
+uint8_t bISOBOOTThreadArrayPosition = 0;                    //!< Thread position in array
 
 osThreadId xBootThreadId;                                  // Holds the BootThreadId
 osThreadId xAuxBootThreadId;                               // Holds the AuxBootThreadId
@@ -107,6 +120,9 @@ osThreadId xAuxBootThreadId;                               // Holds the AuxBootT
 eModuleStates eModCurrState;
 VTStatus sVTCurrentStatus;                          //!< Holds the current VT status
 peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
+
+// Mutex to VT status control structure
+CREATE_MUTEX(MTX_VTStatus);
 
 extern unsigned int POOL_SIZE;
 extern uint8_t pool[];
@@ -265,7 +281,7 @@ eAPPError_s ISO_eInitIsobusPublisher(void)
     }
 
     //Prepare Default Contract/Message
-    MESSAGE_HEADER(Isobus, 1, ISOBUS_DEFAULT_MSGSIZE, MT_BYTE); // MT_ARRAYBYTE
+    MESSAGE_HEADER(Isobus, 1, ISOBUS_DEFAULT_MSGSIZE, MT_ARRAYBYTE); // MT_ARRAYBYTE
     CONTRACT_HEADER(Isobus, 1, THIS_MODULE, TOPIC_ISOBUS);
 
     return APP_ERROR_SUCCESS;
@@ -300,6 +316,9 @@ eAPPError_s ISO_eInitIsobusPublisher(void)
 #ifndef UNITY_TEST
 void ISO_vIsobusPublishThread(void const *argument)
 {
+	osEvent evt;
+	PubMessage sIsoPubMsg;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Publish Thread Created");
 #endif
@@ -313,21 +332,23 @@ void ISO_vIsobusPublishThread(void const *argument)
 
     INITIALIZE_LOCAL_QUEUE(PublishQ);           //!< Initialise message queue to publish thread
 
-    ISOBUSMsg* recv;
+    ISO_eInitIsobusPublisher();
 
     while(1)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
-        osEvent evtPub = RECEIVE_LOCAL_QUEUE(PublishQ, osWaitForever);   // Wait
+        evt = RECEIVE_LOCAL_QUEUE(PublishQ, osWaitForever);   // Wait
         WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
 
-        if(evtPub.status == osEventMessage)
+        if(evt.status == osEventMessage)
         {
-            recv = (ISOBUSMsg*) evtPub.value.p;
-            // Send messages received to the other threads
-            PUT_LOCAL_QUEUE(WriteQ, *((ISOBUSMsg*)recv), 0);
+//        	sIsoPubMsg.dEvent = EVENT_XXXXXXXXXXXXXX;
+//        	sIsoPubMsg.eEvtType = EVENT_TYPE_XXXXXXX;
+//        	sIsoPubMsg.vPayload = (void*) &sIsoMsg;
         }
+
+
     }
     osThreadTerminate(NULL);
 }
@@ -392,10 +413,26 @@ eAPPError_s ISO_vInitDeviceLayer(uint32_t wSelectedInterface)
     return eError;
 }
 
+void ISO_vIdentifyEvent (contract_s* contract)
+{
+	switch (contract->eOrigin)
+	{
+		case MODULE_GUI:
+		{
+
+
+			break;
+		}
+		default:
+			break;
+	}
+}
+
 /* ************************* Main thread ************************************ */
 #ifndef UNITY_TEST
 void ISO_vIsobusThread (void const *argument)
 {
+	osEvent evt;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Thread Created");
@@ -405,9 +442,11 @@ void ISO_vIsobusThread (void const *argument)
     /* Init the module queue - structure that receive data from broker */
     INITIALIZE_QUEUE(IsobusQueue);
 
+    INITIALIZE_MUTEX(MTX_VTStatus);
+
     /* Prepare the signature - struture that notify the broker about subscribers */
-//    SIGNATURE_HEADER(Diagnostic, THIS_MODULE, TOPIC_ALL, DiagnosticQueue);
-//    ASSERT(SUBSCRIBE(SIGNATURE(Diagnostic), 0) == osOK);
+    SIGNATURE_HEADER(Isobus, THIS_MODULE, TOPIC_GUI, IsobusQueue);
+    ASSERT(SUBSCRIBE(SIGNATURE(Isobus), 0) == osOK);
 
     /* Init M2GISOCOMM device for output */
     ISO_vInitDeviceLayer(ISO_INITIAL_IO_IFACE);
@@ -428,9 +467,13 @@ void ISO_vIsobusThread (void const *argument)
     {
         /* Blocks until any message is published on ISOBUS topic */
         WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
-        osDelay(2000);
-        //        osEvent evt = RECEIVE(IsobusQueue, osWaitForever);
+        evt = RECEIVE(IsobusQueue, osWaitForever);
         WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
+        if(evt.status == osEventMessage)
+        {
+        	ISO_vIdentifyEvent(GET_CONTRACT(evt));
+        }
     }
 
     /* Unreachable */
@@ -477,7 +520,7 @@ void ISO_vIsobusDispatcher(ISOBUSMsg* RcvMsg)
                     case PROPRIETARY_A_PGN:
                     case PROPRIETARY_A2_PGN:
                         // Send message to BootThread
-                        PUT_LOCAL_QUEUE(BootQ, *RcvMsg, 0);
+                        PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, 0);
                         break;
                     default:
                         break;
@@ -492,7 +535,7 @@ void ISO_vIsobusDispatcher(ISOBUSMsg* RcvMsg)
                 {
                     case VT_TO_ECU_PGN:
                         // Send message to BootThread
-                        PUT_LOCAL_QUEUE(BootQ, *RcvMsg, 0);
+                        PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, 0);
                         break;
                     case ECU_TO_GLOBAL_PGN:
                         break;
@@ -658,36 +701,36 @@ void ISO_vTimerCallbackWSMaintenance(void const *arg)
 }
 
 #ifndef UNITY_TEST
-void ISO_vIsobusAuxBootThread(void const *argument)
+void ISO_vIsobusBootThread(void const *argument)
 {
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Aux Boot Thread Created");
 #endif
 
-    ISO_vDetectThread(&WATCHDOG(ISOAUX), &bISOAUXThreadArrayPosition, (void*)ISO_vIsobusAuxBootThread);
-    WATCHDOG_STATE(ISOAUX, WDT_ACTIVE);
+    ISO_vDetectThread(&WATCHDOG(ISOBOOT), &bISOBOOTThreadArrayPosition, (void*)ISO_vIsobusBootThread);
+    WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
 
     osThreadId xIsoMainID = (osThreadId) argument;
-    osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOAUXThreadArrayPosition));//Task created, inform core
+    osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOBOOTThreadArrayPosition));//Task created, inform core
     osThreadSetPriority(NULL, osPriorityLow);
 
     ISOBUSMsg* RcvMsg;
     eBootStates eCurrState;
 
-    INITIALIZE_LOCAL_QUEUE(AuxBootQ);
+    INITIALIZE_LOCAL_QUEUE(BootQ);
 
     CREATE_TIMER(WSMaintenanceTimer, ISO_vTimerCallbackWSMaintenance);
     INITIALIZE_TIMER(WSMaintenanceTimer, osTimerPeriodic);
 
     // Inform BootThread that AuxBootThread already start
-    WATCHDOG_STATE(ISOAUX, WDT_SLEEP);
+    WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
     osSignalSet(xBootThreadId, 0xFF);
-    WATCHDOG_STATE(ISOAUX, WDT_ACTIVE);
+    WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
 
     // Wait for an VT status message
-    WATCHDOG_STATE(ISOAUX, WDT_SLEEP);
+    WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
     osSignalWait(WAIT_GLOBAL_VT_STATUS, osWaitForever);
-    WATCHDOG_STATE(ISOAUX, WDT_ACTIVE);
+    WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
 
     // Send a request address claim message
     ISO_vSendRequest(ADDRESS_CLAIM_PGN);
@@ -702,9 +745,9 @@ void ISO_vIsobusAuxBootThread(void const *argument)
     {
         while(eCurrState != BOOT_COMPLETED)
         {
-            WATCHDOG_STATE(ISOAUX, WDT_SLEEP);
+            WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
             osSignalWait(eCurrState, osWaitForever);
-            WATCHDOG_STATE(ISOAUX, WDT_ACTIVE);
+            WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
 
             switch(eCurrState)
             {
@@ -739,9 +782,9 @@ void ISO_vIsobusAuxBootThread(void const *argument)
                     // Waits for a CTS message
                     // While object pool pointer not equal to NULL
                     do{
-                        WATCHDOG_STATE(ISOAUX, WDT_SLEEP);
-                        osEvent evtPub = RECEIVE_LOCAL_QUEUE(AuxBootQ, osWaitForever);   // Wait
-                        WATCHDOG_STATE(ISOAUX, WDT_ACTIVE);
+                        WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
+                        osEvent evtPub = RECEIVE_LOCAL_QUEUE(BootQ, osWaitForever);   // Wait
+                        WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
 
                         if(evtPub.status == osEventMessage)
                         {
@@ -807,23 +850,28 @@ void ISO_vIsobusAuxBootThread(void const *argument)
                     break;
             } // End of switch statement
         } // End of while
-        WATCHDOG_STATE(ISOAUX, WDT_SLEEP);
+        WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
         osDelay(5000);
-        WATCHDOG_STATE(ISOAUX, WDT_ACTIVE);
+        WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
         // TODO: Change task priority and suspend this thread. Useful only when BOOT is not completed
     } // End of while
     osThreadTerminate(NULL);
 }
 #else
-void ISO_vIsobusAuxBootThread(void const *argument){}
+void ISO_vIsobusBootThread(void const *argument){}
 #endif
 
 void ISO_vIsobusUpdateVTStatus(ISOBUSMsg* RcvMsg)
 {
+	osStatus status;
+
     if(RcvMsg->B1 != FUNC_VT_STATUS)
     {
         return;
     }
+
+    status = WAIT_MUTEX(MTX_VTStatus, osWaitForever);
+    ASSERT(status == osOK);
 
     sVTCurrentStatus.bActiveWSM = RcvMsg->B2;
     sVTCurrentStatus.wMaskActWS = RcvMsg->B3 | (RcvMsg->B4 << 8);
@@ -837,6 +885,9 @@ void ISO_vIsobusUpdateVTStatus(ISOBUSMsg* RcvMsg)
     sVTCurrentStatus.bAuxCtrlAct = RcvMsg->B7 & 0x40;
     sVTCurrentStatus.bVTOutMemory = RcvMsg->B7 & 0x80;
     sVTCurrentStatus.bVTFuncCode = RcvMsg->B8;
+
+    status = RELEASE_MUTEX(MTX_VTStatus);
+    ASSERT(status == osOK);
 }
 
 void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
@@ -872,14 +923,14 @@ void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
             if(sRcvMsg->PS == M2G_SOURCE_ADDRESS)
             {
                 osSignalSet(xAuxBootThreadId, WAIT_SEND_POOL);
-                PUT_LOCAL_QUEUE(AuxBootQ, *sRcvMsg, 0);
+                PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, 0);
             }
             break;
         case ETP_CONN_MANAGE_PGN:
             if(sRcvMsg->PS == M2G_SOURCE_ADDRESS)
             {
                 osSignalSet(xAuxBootThreadId, WAIT_SEND_POOL);
-                PUT_LOCAL_QUEUE(AuxBootQ, *sRcvMsg, 0);
+                PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, 0);
             }
             break;
         default:
@@ -957,36 +1008,36 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
   *
   *******************************************************************************/
 #ifndef UNITY_TEST
-void ISO_vIsobusBootThread(void const *argument)
-{    
+void ISO_vIsobusManagementThread(void const *argument)
+{
+	osEvent evt;
+    ISOBUSMsg* sRcvMsg;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-    SEGGER_SYSVIEW_Print("Isobus Boot Thread Created");
+    SEGGER_SYSVIEW_Print("Isobus Management Thread Created");
 #endif
 
-    ISO_vDetectThread(&WATCHDOG(ISOBOOT), &bISOBOOTThreadArrayPosition, (void*)ISO_vIsobusBootThread);
-    WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
+    ISO_vDetectThread(&WATCHDOG(ISOMGT), &bISOMGTThreadArrayPosition, (void*)ISO_vIsobusManagementThread);
+    WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
     osThreadId xIsoMainID = (osThreadId) argument;
-    osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOBOOTThreadArrayPosition));//Task created, inform core
+    osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOMGTThreadArrayPosition));//Task created, inform core
     osThreadSetPriority(NULL, osPriorityLow);
 
-    INITIALIZE_LOCAL_QUEUE(BootQ);    
-
-    ISOBUSMsg* sRcvMsg;
-    osEvent evt;
+    INITIALIZE_LOCAL_QUEUE(ManagementQ);
 
     // Wait for auxiliary thread start
     /* Pool the device waiting for */
-    WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
+    WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
     osSignalWait(0xFF, osWaitForever);
-    WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
+    WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
     while(1)
     {
         /* Pool the device waiting for */
-        WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
-        evt = RECEIVE_LOCAL_QUEUE(BootQ, osWaitForever);   // Wait
-        WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
+        WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+        evt = RECEIVE_LOCAL_QUEUE(ManagementQ, osWaitForever);   // Wait
+        WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
         if(evt.status == osEventMessage)
         {

@@ -862,16 +862,6 @@ typedef struct{
 /******************************************************************************
 * Publish structures
 *******************************************************************************/
-typedef struct {
-    uint32_t dEvent;
-    GPS_tsDadosGPS* psGPSData;
-} GPSPubMessage;
-
-typedef struct {
-    uint32_t dEvent;
-    CAN_tsCtrlListaSens* psSENList;
-} SENPubMessage;
-
 typedef enum {
     EVENT_SET,
     EVENT_CLEAR,
