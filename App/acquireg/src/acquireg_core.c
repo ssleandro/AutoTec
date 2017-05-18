@@ -2113,9 +2113,6 @@ void AQR_vAcquiregThread (void const *argument)
     ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGPS), 0) == osOK);
 
     // Internal flags
-//    status = osFlagGroupCreate (&UOS_sFlagSis);
-//    ASSERT(status == osOK);
-
     status = osFlagGroupCreate (&xSEN_sFlagApl);
     ASSERT(status == osOK);
 
