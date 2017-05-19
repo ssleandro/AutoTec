@@ -312,6 +312,7 @@ void ISO_vSendGetNumberSoftKeys(void);
 void ISO_vSendRequestToSend(void);
 void ISO_vSendProprietaryA(void);
 void ISO_vSendLoadVersion(uint64_t);
+void ISO_vSendStoreVersion(uint64_t);
 void ISO_vSendETP_CM_DPO(uint8_t, uint32_t);
 uint8_t ISO_vInitPointersToTranfer(const uint8_t*, uint32_t);
 void ISO_vSendObjectPool(uint8_t, uint32_t, uint8_t);

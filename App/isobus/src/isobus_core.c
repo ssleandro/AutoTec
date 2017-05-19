@@ -56,18 +56,20 @@ static eAPPError_s eError;                   		//!< Error variable
 
 extern osFlagsGroupId UOS_sFlagSis;
 
+static sNumberVariableObj sNumVarObjects[N_NUMBER_VARIABLE_OBJECTS];
+
 static sConfigurationDataMask sConfigDataMask =
 {
 	.eLanguage = LANGUAGE_ENGLISH,
 	.eUnit = UNIT_INTERNATIONAL_SYSTEM,
-	.dVehicleID = 0x2525,
+	.dVehicleID = &(sNumVarObjects[0].dValue),
 	.eMonitor = AREA_MONITOR_DISABLED,
-	.fSeedsPerMeter = 0.5f,
-	.bNumOfRows = 6,
-	.fImplementWidth = 2.0f,
-	.fEvaluationDistance = 15.0f,
-	.fTolerance = 10,
-	.fMaxSpeed = 5.0f,
+	.fSeedsPerMeter = &(sNumVarObjects[1].fValue),
+	.bNumOfRows = (uint8_t*)(&sNumVarObjects[2].dValue),
+	.fImplementWidth = &(sNumVarObjects[3].fValue),
+	.fEvaluationDistance = &(sNumVarObjects[4].fValue),
+	.fTolerance = (uint8_t*)(&sNumVarObjects[5].dValue),
+	.fMaxSpeed = &(sNumVarObjects[6].fValue),
 	.eAlterRows = ALTERNATE_ROWS_DISABLED,
 	.eAltType = ALTERNATED_ROWS_ODD
 };
@@ -116,8 +118,12 @@ uint8_t bISOBOOTThreadArrayPosition = 0;                    //!< Thread position
 osThreadId xBootThreadId;                                  // Holds the BootThreadId
 osThreadId xAuxBootThreadId;                               // Holds the AuxBootThreadId
 
+eBootStates eCurrState;
+
 // Holds the current module state
 eModuleStates eModCurrState;
+eDataMask eCurrentDataMask = DATA_MASK_INSTALLATION;
+
 VTStatus sVTCurrentStatus;                          //!< Holds the current VT status
 peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
 
@@ -715,7 +721,6 @@ void ISO_vIsobusBootThread(void const *argument)
     osThreadSetPriority(NULL, osPriorityLow);
 
     ISOBUSMsg* RcvMsg;
-    eBootStates eCurrState;
 
     INITIALIZE_LOCAL_QUEUE(BootQ);
 
@@ -752,6 +757,7 @@ void ISO_vIsobusBootThread(void const *argument)
             switch(eCurrState)
             {
                 case WAIT_VT_STATUS:
+                {
                     // Send a working set master message
                     ISO_vSendWorkingSetMaster();
                     // Send a working set maintenance (first)
@@ -770,14 +776,17 @@ void ISO_vIsobusBootThread(void const *argument)
                     // Send a load version message
                     ISO_vSendLoadVersion(0xAAAAAAABAAAAAA);
 
-                    eCurrState = WAIT_LOAD_VERSION;
                     break;
+                }
                 case WAIT_LOAD_VERSION:
+                {
                     // Send a request to send message
                     ISO_vSendRequestToSend();
                     eCurrState = WAIT_SEND_POOL;
                     break;
+                }
                 case WAIT_SEND_POOL:
+                {
                     ISO_vInitPointersToTranfer(pool, POOL_SIZE);
                     // Waits for a CTS message
                     // While object pool pointer not equal to NULL
@@ -837,15 +846,22 @@ void ISO_vIsobusBootThread(void const *argument)
                     ISO_vSendEndObjectPool();
                     ISO_vSendWSMaintenancePoolSent();
                     ISO_vSendLoadVersion(0xAAAAAAABAAAAAA);
+                    ISO_vSendStoreVersion(0xAAAAAAABAAAAAA);
 
+                    eCurrState = OBJECT_POOL_LOADED;
+                    osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
+                    break;
+                }
+                case OBJECT_POOL_LOADED:
+                {
                     START_TIMER(WSMaintenanceTimer, 1000);
 
                     // The boot process are completed, so terminate this thread
                     eCurrState = BOOT_COMPLETED;
                     eModCurrState = RUNNING;
-//                    osSignalSet(startUpdate, 0xAF);
                     osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK);
-                    break;
+                	break;
+                }
                 default:
                     break;
             } // End of switch statement
@@ -900,7 +916,14 @@ void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
                 switch(sRcvMsg->B1)
                 {
                     case FUNC_LOAD_VERSION:
-                        osSignalSet(xAuxBootThreadId, WAIT_LOAD_VERSION);
+    					if(sRcvMsg->B6 == 0)
+    					{
+    						eCurrState = OBJECT_POOL_LOADED;
+    						osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
+    					} else{
+    						eCurrState = WAIT_LOAD_VERSION;
+                            osSignalSet(xAuxBootThreadId, WAIT_LOAD_VERSION);
+    					}
                         break;
                     case FUNC_VT_STATUS:
                         osSignalSet(xAuxBootThreadId, WAIT_VT_STATUS);
@@ -938,11 +961,39 @@ void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
     }
 }
 
+#define GET_INDEX_FROM_ID(id) (id & 0x0FFF)
+#define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
+
+void ISO_vInitObjectStruct(void)
+{
+	for (int i = 0; i < (sizeof(sNumVarObjects)/sizeof(sNumberVariableObj)); ++i) {
+		sNumVarObjects[i].wObjID = 0x8000 + i;
+	}
+}
+
+
+
+// Used to FUNC_CHANGE_NUMERIC_VALUE message
+void ISO_vUpdateNumberVariableValue(ISOBUSMsg* sRcvMsg)
+{
+	uint16_t wObjectID = (sRcvMsg->B3 | (sRcvMsg->B2 << 8));
+	uint32_t dValue = (sRcvMsg->B5 | (sRcvMsg->B6 << 8) | (sRcvMsg->B7 << 16) | (sRcvMsg->B8 << 24));
+
+	if(sNumVarObjects[GET_INDEX_FROM_ID(wObjectID)].wObjID == wObjectID)
+	{
+		sNumVarObjects[GET_INDEX_FROM_ID(wObjectID)].dValue = dValue;
+		sNumVarObjects[GET_INDEX_FROM_ID(wObjectID)].fValue = GET_FLOAT_VALUE(dValue);
+	}
+}
+
 void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
 {
+	uint32_t dAux;
+
     switch(ISO_wGetPGN(sRcvMsg))
     {
         case VT_TO_ECU_PGN:
+        {
             if(sRcvMsg->PS == M2G_SOURCE_ADDRESS)
             {
                 switch(sRcvMsg->B1)
@@ -953,14 +1004,25 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                         break;
                     case FUNC_POINTING_EVENT:
                         break;
-                    case FUNC_SELECT_INPUT_OBJECT:
+                    case FUNC_VT_SELECT_INP_OBJECT:
                         break;
-                    case FUNC_ESC_COMMAND:
+                    case FUNC_VT_ESC:
                         break;
-                    case FUNC_CHANGE_NUMERIC_VALUE:
+                    case FUNC_VT_CHANGE_NUMERIC_VALUE:
+                    {
+                    	// Relationship between Object ID and field in structure
+                    	ISO_vUpdateNumberVariableValue(sRcvMsg);
                         break;
-                    case FUNC_CHANGE_ACTIVE_MASK:
+                    }
+                    case FUNC_VT_CHANGE_ACTIVE_MASK:
+                    {
+                    	dAux = ((sRcvMsg->B2 << 8) | (sRcvMsg->B3));
+                    	if((dAux >= DATA_MASK_CONFIGURATION) || (dAux < DATA_MASK_INVALID))
+                    	{
+                    		eCurrentDataMask = (eDataMask) dAux;
+                    	}
                         break;
+                    }
                     default:
                         break;
                 }
@@ -975,9 +1037,12 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                 }
             }
             break;
+        }
         case TP_CONN_MANAGE_PGN:
         case ETP_CONN_MANAGE_PGN:
+        {
             break;
+        }
         default:
             break;
     }
@@ -1025,6 +1090,8 @@ void ISO_vIsobusManagementThread(void const *argument)
     osThreadSetPriority(NULL, osPriorityLow);
 
     INITIALIZE_LOCAL_QUEUE(ManagementQ);
+
+    ISO_vInitObjectStruct();
 
     // Wait for auxiliary thread start
     /* Pool the device waiting for */
@@ -1097,6 +1164,8 @@ void ISO_UpdateBarGraph(uint16_t wOutputNumberID, uint32_t dNumericValue)
     PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
 }
 
+extern uint32_t getID(uint32_t, uint32_t, uint32_t, uint32_t);
+
 void ISO_UpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
 {
     ISOBUSMsg sSendMsg;    
@@ -1114,6 +1183,43 @@ void ISO_UpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
     sSendMsg.frame.data[7] = (dNumericValue & 0xFF000000) >> 24;
     
     PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
+}
+
+void ISO_vUpdateConfigurationDataMask(void);
+void ISO_vUpdateInstallationDataMask(void);
+void ISO_vUpdatePlanterDataMask(void);
+void ISO_vUpdateTestModeDataMask(void);
+void ISO_vUpdateTrimmingDataMask(void);
+void ISO_vUpdateSystemDataMask(void);
+
+void ISO_vUpdateConfigurationDataMask(void)
+{
+
+}
+
+void ISO_vUpdateInstallationDataMask(void)
+{
+
+}
+
+void ISO_vUpdatePlanterDataMask(void)
+{
+
+}
+
+void ISO_vUpdateTestModeDataMask(void)
+{
+
+}
+
+void ISO_vUpdateTrimmingDataMask(void)
+{
+
+}
+
+void ISO_vUpdateSystemDataMask(void)
+{
+
 }
 
 /******************************************************************************
@@ -1162,33 +1268,54 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     uint8_t random = 0x00;
     
     (void) dBarGraphID;
-    
-//    startUpdate = osThreadGetId();
 
-//    WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-//    osSignalWait(0xAF, osWaitForever);
-//    WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
-    
     // Waiting for RUNNING module state
     WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-//    while(eModCurrState != RUNNING){};
+    while(eModCurrState != RUNNING){};
     WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
     while(1)
     {
-        // Receive a message...
+    	/* Pool the device waiting for */
+    	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+    	osDelay(5000);
+    	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-        if(eModCurrState == RUNNING)
-        {
-            /* Pool the device waiting for */
-            WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-            osDelay(10000);
-            WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
-        }
-        /* Pool the device waiting for */
-        WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-        osDelay(10000);
-        WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+    	switch(eCurrentDataMask)
+    	{
+    		case DATA_MASK_CONFIGURATION:
+    		{
+    			ISO_vUpdateConfigurationDataMask();
+    			break;
+    		}
+    		case DATA_MASK_INSTALLATION:
+    		{
+    			ISO_vUpdateInstallationDataMask();
+    			break;
+    		}
+    		case DATA_MASK_PLANTER:
+    		{
+    			ISO_vUpdatePlanterDataMask();
+    			break;
+    		}
+    		case DATA_MASK_TEST_MODE:
+    		{
+    			ISO_vUpdateTestModeDataMask();
+    			break;
+    		}
+    		case DATA_MASK_TRIMMING:
+    		{
+    			ISO_vUpdateTrimmingDataMask();
+    			break;
+    		}
+    		case DATA_MASK_SYSTEM:
+    		{
+    			ISO_vUpdateSystemDataMask();
+    			break;
+    		}
+    		default:
+    			break;
+    	}
     }
     osThreadTerminate(NULL);
 }

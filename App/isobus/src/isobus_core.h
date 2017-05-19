@@ -65,6 +65,7 @@ typedef enum {
 	WAIT_LOAD_VERSION,
 	WAIT_SEND_POOL,
 	OBJECT_POOL_SENDED,
+	OBJECT_POOL_LOADED,
 	BOOT_COMPLETED
 } eBootStates;
 
@@ -132,17 +133,25 @@ typedef enum {
 typedef struct sConfigurationDataMask {
 	eSelectedLanguage eLanguage;
 	eSelectedUnitMeasurement eUnit;
-	uint32_t dVehicleID;
+	uint32_t* dVehicleID;
 	eAreaMonitor eMonitor;
-	float fSeedsPerMeter;
-	uint8_t bNumOfRows;
-	float fImplementWidth;
-	float fEvaluationDistance;
-	uint8_t fTolerance;
-	float fMaxSpeed;
+	float* fSeedsPerMeter;
+	uint8_t* bNumOfRows;
+	float* fImplementWidth;
+	float* fEvaluationDistance;
+	uint8_t* fTolerance;
+	float* fMaxSpeed;
 	eAlternateRows eAlterRows;
 	eAlternatedRowsType eAltType;
 } sConfigurationDataMask;
+
+typedef struct sNumberVariableObj {
+	uint16_t wObjID;
+	uint32_t dValue;
+	float fValue;
+} sNumberVariableObj;
+
+#define N_NUMBER_VARIABLE_OBJECTS 7
 
 /******************************************************************************
 * Variables
