@@ -2060,18 +2060,18 @@ void AQR_vIdentifyEvent (contract_s* contract)
         case MODULE_SENSOR:
         {
             // Treat an event receive from MODULE_SENSOR
-            osStatus stat = osFlagSet (xSEN_sFlagApl, ((SENPubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent);
+            osStatus stat = osFlagSet (xSEN_sFlagApl, GET_PUBLISHED_EVENT(contract));
             break;
         }
         case MODULE_GPS:
         {
             // Treat an event receive from MODULE_GPS
-            osFlagSet (xGPS_sFlagGPS, ((GPSPubMessage*) (GET_MESSAGE(contract)->pvMessage))->dEvent);
+            osFlagSet (xGPS_sFlagGPS, GET_PUBLISHED_EVENT(contract));
 
             status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever)
             ASSERT(status == osOK);
 
-            memcpy (&AQR_sDadosGPS, (GPS_tsDadosGPS*)(((GPSPubMessage*) (GET_MESSAGE(contract)->pvMessage))->psGPSData), sizeof(GPS_tsDadosGPS));
+            memcpy (&AQR_sDadosGPS, (GPS_tsDadosGPS*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(GPS_tsDadosGPS));
 
             status = RELEASE_MUTEX(AQR_MTX_sEntradas)
             ASSERT(status == osOK);
