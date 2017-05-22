@@ -33,6 +33,7 @@
  *******************************************************************************/
 #include "M2G_app.h"
 #include "debug_tool.h"
+#include "config_files.h"
 #include "filesys_core.h"
 #include "file_tool.h"
 #include <stdlib.h>
@@ -42,14 +43,17 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //Nome do arquivo de configuração:
-const uint8_t UOS_abNomeConfig[] = "MPA2500.CFG";
+const uint8_t FFS_abConfigName[] = "MPA2500.CFG";
+const uint8_t FFS_abInterfaceCfgName[] = "INTERFACE.CFG";
 
 /******************************************************************************
  * Variables from others modules
  *******************************************************************************/
 extern osFlagsGroupId FFS_sFlagSis;
-extern UOS_tsConfiguracao	FFS_sConfiguracao;;
+extern UOS_tsConfiguracao FFS_sConfiguracao;
 extern const UOS_tsConfiguracao UOS_sConfiguracaoDefault;
+
+extern IHM_tsConfig FFS_sConfig;
 
 /******************************************************************************
  * Typedefs
@@ -90,12 +94,12 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
 		//Procura pelo arquivo de configuracao:
-		bErr = f_findfirst(UOS_abNomeConfig, &xFindStruct);
+		bErr = f_findfirst(FFS_abConfigName, &xFindStruct);
 		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
 
 		if (bErr == F_NO_ERROR)
 		{
-			xFileHandle = f_open(UOS_abNomeConfig, "r");
+			xFileHandle = f_open(FFS_abConfigName, "r");
 			ASSERT(xFileHandle == NULL);
 
 			//Verifica se o tamanho consiste:
@@ -118,18 +122,18 @@ eAPPError_s FFS_vLoadConfigFile (void)
 			ASSERT(bErr == F_NO_ERROR);
 		}
 	}
-
+	//Carrega arquivo de configuracao default
 	if (bErroCfg == true)
 	{
-		//Carrega arquivo de configuracao default
 		memcpy (&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
 		uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
 		memcpy (FFS_sConfiguracao.sVeiculo.abCodigo, abCodigo, sizeof(FFS_sConfiguracao.sVeiculo.abCodigo));
-		osFlagClear(FFS_sFlagSis, FFS_FLAG_CFG);
+
+		osFlagClear (FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_ERROR;
 	} else
 	{
-		osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
+		osFlagSet (FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_SUCCESS;
 	}
 	return ret;
@@ -144,7 +148,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
  Retorno   : nenhum
 
  ******************************************************************************/
-eAPPError_s FFS_vSalveConfigFile (void)
+eAPPError_s FFS_vSaveConfigFile (void)
 {
 	osFlags dFlagsSis;
 	uint16_t wCRC16;
@@ -166,7 +170,7 @@ eAPPError_s FFS_vSalveConfigFile (void)
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
-		xFileHandle = f_open(UOS_abNomeConfig, "w");
+		xFileHandle = f_open(FFS_abConfigName, "w");
 
 		if (xFileHandle != NULL)
 		{
@@ -177,13 +181,159 @@ eAPPError_s FFS_vSalveConfigFile (void)
 
 			f_close(xFileHandle);
 
-			if (bErr != 1)
+			if (bErr == 1)
 			{
 				ErroReturn = APP_ERROR_SUCCESS;
-				osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
+				osFlagSet (FFS_sFlagSis, FFS_FLAG_CFG);
 			}
 		}
 	}
 
 	return ErroReturn;
 }
+
+/*
+ ================================================================================
+ GRAVA CONFIG IHM
+
+ Descrição : Grava a configuração do IHM no arquivo INTERFACE.CFG
+ Parâmetros: nenhum
+ Retorno   : nenhum
+ ================================================================================
+ */
+/*****************************************************************************
+
+ void FFS_vSaveInterfaceCfgFile( void )
+
+ Descricao : funcao para salvar arquivo de configuracao do sistema.
+ Parametros: nenhum
+ Retorno   : nenhum
+
+ ******************************************************************************/
+eAPPError_s FFS_vSaveInterfaceCfgFile (void)
+{
+	osFlags dFlagsSis;
+	uint16_t wCRC16;
+	uint8_t bErr;
+	uint8_t bErroCfg = true;
+	F_FIND xFindStruct;
+	F_FILE *xFileHandle;
+	eAPPError_s ErroReturn = APP_ERROR_ERROR;
+
+	//Confere o CRC da configuracao:
+	TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sConfig,
+					(sizeof(FFS_sConfig) - sizeof(FFS_sConfig.wCRC16)));
+
+	//Atualiza o valor do crc na estrutura:
+	FFS_sConfig.wCRC16 = wCRC16;
+
+	//Verifica se o sistema de arquivo foi inicializado:
+	dFlagsSis = osFlagGet (FFS_sFlagSis);
+
+	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	{
+		xFileHandle = f_open(FFS_abInterfaceCfgName, "w");
+
+		if (xFileHandle != NULL)
+		{
+			bErr = f_rewind(xFileHandle);
+
+			bErr = f_write((uint8_t* )&FFS_sConfig, sizeof(FFS_sConfig), 1, xFileHandle);
+			ASSERT(bErr == 1);
+
+			f_close(xFileHandle);
+
+			if (bErr == 1)
+			{
+				ErroReturn = APP_ERROR_SUCCESS;
+				osFlagSet (FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
+			}
+		}
+	}
+
+	return ErroReturn;
+}
+
+/*
+ ================================================================================
+ CARREGA CONFIG IHM
+
+ Descrição:    Carrega a configuração do IHM
+ Parâmetros:   Nenhum
+ Retorno:      true se conseguir carregar a configuração
+ Obs.:         Nenhuma
+ ================================================================================
+ */
+eAPPError_s FFS_vLoadInterfaceCfgFile (void)
+{
+	osFlags dFlagsSis;
+	uint16_t wCRC16_C;
+	uint8_t bErr;
+	uint8_t bErroCfg = true;
+	F_FIND xFindStruct;
+	F_FILE *xFileHandle;
+	eAPPError_s ret;
+
+	//Verifica se o sistema de arquivo foi inicializado:
+	dFlagsSis = osFlagGet (FFS_sFlagSis);
+
+	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	{
+		//Procura pelo arquivo de configuracao:
+		bErr = f_findfirst(FFS_abInterfaceCfgName, &xFindStruct);
+		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
+
+		if (bErr == F_NO_ERROR)
+		{
+			xFileHandle = f_open(FFS_abInterfaceCfgName, "r");
+			ASSERT(xFileHandle == NULL);
+
+			//Verifica se o tamanho consiste:
+			if (xFindStruct.filesize == sizeof(IHM_tsConfig) && (xFileHandle != NULL))
+			{
+				//Le o arquivo de configuracao do sistema de arquivos:
+				bErr = f_read((uint8_t * )&FFS_sConfig, sizeof(FFS_sConfig), 1, xFileHandle);
+				ASSERT(bErr == 1);
+
+				//Confere o CRC da configuracao:
+				TLS_vCalculaCRC16Bloco (&wCRC16_C, (uint8_t *) &FFS_sConfig, sizeof(FFS_sConfig));
+				//Se o CRC esta OK:
+				if (wCRC16_C == 0)
+				{
+					bErroCfg = false;
+				}
+			}
+			//Fecha o arquivo de configuracao:
+			bErr = f_close(xFileHandle);
+			ASSERT(bErr == F_NO_ERROR);
+		}
+	}
+
+	if (bErroCfg == true)
+	{
+		// Inicia parâmetros default:
+		memset (&FFS_sConfig, 0, sizeof(FFS_sConfig));
+		FFS_sConfig.bBrilho = LCD_bBRILHO_MAX;
+		FFS_sConfig.bContraste = LCD_bCONTRASTE_MAX / 2;
+		memcpy (FFS_sConfig.abSenha, "\x1\x2\x3\x4", 4);
+		FFS_sConfig.bIdioma = 0;
+		FFS_sConfig.bSistImperial = false;
+		ret = FFS_vSaveInterfaceCfgFile ();
+		ASSERT(ret == APP_ERROR_SUCCESS);
+		if (ret == APP_ERROR_SUCCESS)
+		{
+			bErroCfg = false;
+		}
+	}
+	if (bErroCfg == true)
+	{
+		osFlagClear (FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
+		ret = APP_ERROR_ERROR;
+	} else
+	{
+		osFlagSet (FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
+		ret = APP_ERROR_SUCCESS;
+	}
+	return ret;
+}
+

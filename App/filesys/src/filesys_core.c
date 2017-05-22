@@ -36,6 +36,8 @@
 *******************************************************************************/
 #include "M2G_app.h"
 #include "filesys_core.h"
+
+#include <config_files.h>
 #include "api_mdriver_span.h"
 #include "debug_tool.h"
 #include "../../filesys/config/filesys_config.h"
@@ -95,6 +97,7 @@ PubMessage sFileSysPubMsg;
 *******************************************************************************/
 
 UOS_tsConfiguracao FFS_sConfiguracao;
+IHM_tsConfig FFS_sConfig;
 
 /******************************************************************************
 * Function Prototypes
@@ -254,7 +257,7 @@ void FSM_vFileSysPublishThread(void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
-		osEvent sEvent = osSignalWait(0, osWaitForever);
+		osEvent sEvent = osSignalWait(FFS_FLAG_ALL, osWaitForever);
 		WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 		osFlags dFlags =  osFlagGet(FFS_sFlagSis);
@@ -274,6 +277,14 @@ void FSM_vFileSysPublishThread(void const *argument)
 			else
 				FSM_ePublishEvent(EVENT_FFS_CFG, EVENT_CLEAR, NULL);
 		}
+		if (tSignalBit & FFS_FLAG_INTERFACE_CFG)
+		{
+			if(dFlags & FFS_FLAG_INTERFACE_CFG)
+				FSM_ePublishEvent(EVENT_FFS_INTERFACE_CFG, EVENT_SET, (void*)&FFS_sConfig);
+			else
+				FSM_ePublishEvent(EVENT_FFS_INTERFACE_CFG, EVENT_CLEAR, NULL);
+		}
+
 	}
 
 	osThreadTerminate (NULL);
@@ -328,6 +339,40 @@ eAPPError_s FSM_vInitDeviceLayer(void)
 	return eError;
 }
 
+void FFS_vIdentifyEvent (contract_s* contract)
+{
+    osStatus status;
+
+    switch (contract->eOrigin)
+    {
+        case MODULE_CONTROL:
+        case MODULE_GUI:
+        {
+        	if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
+        	{
+        		memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(UOS_tsConfiguracao));
+    			if(GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+    			{
+    				eAPPError_s error = FFS_vSaveConfigFile();
+    				ASSERT(error == APP_ERROR_SUCCESS);
+    			}
+
+        	}
+        	if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
+        	{
+        		memcpy(&FFS_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_tsConfig));
+    			if(GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+    			{
+    				eAPPError_s error = FFS_vSaveInterfaceCfgFile();
+    				ASSERT(error == APP_ERROR_SUCCESS);
+    			}
+        	}
+            break;
+        }
+        default:
+            break;
+    }
+}
 /* ************************* Main thread ************************************ */
 #ifndef UNITY_TEST
 void FSM_vFileSysThread (void const *argument)
@@ -359,13 +404,15 @@ void FSM_vFileSysThread (void const *argument)
     osThreadId xMainFromID = (osThreadId) argument;
     osSignalSet(xMainFromID, MODULE_FILESYS);
 
-
     osSignalSet(xPbulishThreadID, FFS_FLAG_STATUS);
 
-    osDelay(100);
     error = FFS_vLoadConfigFile();
-//    ASSERT(error == APP_ERROR_SUCCESS);
+    ASSERT(error == APP_ERROR_SUCCESS);
     osSignalSet(xPbulishThreadID, FFS_FLAG_CFG);
+
+    error = FFS_vLoadInterfaceCfgFile();
+    ASSERT(error == APP_ERROR_SUCCESS);
+    osSignalSet(xPbulishThreadID, FFS_FLAG_INTERFACE_CFG);
 
     /* Start the main functions of the application */
     while (1)
@@ -377,7 +424,7 @@ void FSM_vFileSysThread (void const *argument)
 
         if (evt.status == osEventMessage)
         {
-            (void)evt;
+        	FFS_vIdentifyEvent(GET_CONTRACT(evt));
         }
     }
     /* Unreachable */

@@ -98,6 +98,9 @@ UOS_tsVersaoCod         UOS_sVersaoCod;
 //Estrutura da configuracao operacional:
 UOS_tsConfiguracao      UOS_sConfiguracao;
 
+//Estrutura da configuracao IHM:
+IHM_tsConfig IHM_sConfig;
+
 //Flags que representas os bits do contador de ticks:
 osFlagsGroupId UOS_sFlagTicks;
 
@@ -361,11 +364,22 @@ void CTL_vIdentifyEvent(contract_s* contract)
         {
         	if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
         	{
-        		memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(UOS_tsConfiguracao));
     			if(GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+    			{
+    				memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(UOS_tsConfiguracao));
     				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+    			}
     			else
+    			{
     				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+    			}
+        	}
+        	if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
+        	{
+    			if(GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+    			{
+    				memcpy(&IHM_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_sConfig));
+    			}
         	}
             break;
         }

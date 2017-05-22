@@ -48,9 +48,10 @@
 *******************************************************************************/
 #define FFS_SIGNAL_PUBLISH			0x55
 
+#define FFS_FLAG_ALL 			0x0FFF
 #define FFS_FLAG_STATUS 		0x0001
 #define FFS_FLAG_CFG 			0x0002
-#define FFS_FLAG_INTERFACE 		0x0004
+#define FFS_FLAG_INTERFACE_CFG	0x0004
 #define FFS_FLAG_ESTATIC		0x0008
 
 

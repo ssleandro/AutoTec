@@ -887,11 +887,55 @@ typedef struct {
 
 typedef enum event_e
 {
-    EVENT_FFS,        		//!< EVENT FFS STATUS CHANGED
+    EVENT_FFS_STATUS,        		//!< EVENT FFS STATUS CHANGED
 	EVENT_FFS_CFG,        	//!< EVENT FILE CFG STATUS CHANGED
-	EVENT_FFS_INTERFACE,    //!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_FFS_INTERFACE_CFG,    //!< EVENT FILE INTERFACE STATUS CHANGED
 } event_e;
 
+
+typedef struct
+{
+	//Senha para operacoes de seguranca:
+	uint8_t       abSenha[4];
+	//Contraste do LCD:
+	uint8_t        bContraste;
+	//Brilho do LCD:
+	uint8_t       bBrilho;
+	//Idioma:
+	uint8_t       bIdioma;
+
+	// Se e sistema imperial ou internacional
+	uint8_t       bSistImperial;
+
+	// Tipo de medida para velocidade do veiculo
+	uint8_t       bVelocidade;
+	uint8_t       bTxtVel;
+	uint8_t       bTxtVelPorHora;
+	// Medida da superficie trabalhada
+	uint8_t       bAreaTrabalhada;
+	uint8_t       bTxtAreaTrab;
+	uint8_t       bTxtAreauint8_torHora;
+	// Sementes por cm/pol..
+	uint8_t       bSementes;
+	uint8_t       bTxtSementes;
+	uint8_t       bTxtSemPorDist;
+	uint8_t       bImgSemPorDist;
+	// distancia em km/mi..
+	uint8_t       bDistPerc;
+	uint8_t       bTxtDistPerc;
+	// caractere usado para fracao e milhar:
+	uint8_t       bCharFrac;
+	uint8_t       bCharMilhar;
+
+	// CRC da estrutura
+	uint16_t      wCRC16;
+}
+IHM_tsConfig;
+
+#define LCD_bBRILHO_MAX        99
+
+//Ajuste do Contraste
+#define LCD_bCONTRASTE_MAX    127
 
 /******************************************************************************
 * Variables

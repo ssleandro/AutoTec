@@ -65,4 +65,6 @@
 eAPPError_s FFS_vLoadConfigFile(void);
 eAPPError_s FFS_vSaveConfigFile (void);
 
+eAPPError_s FFS_vLoadInterfaceCfgFile (void);
+eAPPError_s FFS_vSaveInterfaceCfgFile (void);
 #endif
