@@ -39,7 +39,7 @@
  /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
-//Tabela de low bytes para c�lculo do CRC-16:
+//Tabela de low bytes para cálculo do CRC-16:
 const uint8_t abmCRC16_TAB_LO[ 256 ] =
 {
   0x00,0xc1,0x81,0x40,0x01,0xc0,0x80,0x41,
@@ -76,7 +76,7 @@ const uint8_t abmCRC16_TAB_LO[ 256 ] =
   0x01,0xc0,0x80,0x41,0x00,0xc1,0x81,0x40
 };
 
-//Tabela de high bytes para c�lculo do CRC-16:
+//Tabela de high bytes para cálculo do CRC-16:
 const uint8_t abmCRC16_TAB_HI[ 256 ] =
 {
   0x00,0xc0,0xc1,0x01,0xc3,0x03,0x02,0xc2,
@@ -113,6 +113,7 @@ const uint8_t abmCRC16_TAB_HI[ 256 ] =
   0x82,0x42,0x43,0x83,0x41,0x81,0x80,0x40
 };
 
+
 /******************************************************************************
  * Variables from others modules
  *******************************************************************************/
@@ -142,18 +143,18 @@ void TLS_vCalculaCRC16Bloco( uint16_t *pwCRC16, uint8_t *pabBuf, uint16_t dTam )
 
   void TLS_vCalculaCRC16Bloco( uint16_t *pbCRC16, uint8_t *pabBuf, uint16_t dTam )
 
-  Descri��o : Calcular o CRC de um bloco de bytes.
-  Par�metros: pbDados - ponteiro para o bloco de pbDados.
-              wN      - n�mero de bytes no bloco.
-  Retorno   : A variavel p�blica wCRC16 � atualizada com o valor calculado.
+  Descrição : Calcular o CRC de um bloco de bytes.
+  Parâmetros: pbDados - ponteiro para o bloco de pbDados.
+              wN      - número de bytes no bloco.
+  Retorno   : A variavel pública wCRC16 é atualizada com o valor calculado.
 
 *******************************************************************************/
 void TLS_vCalculaCRC16Bloco( uint16_t *pwCRC16, uint8_t *pabBuf, uint16_t dTam )
 {
 
-	uint8_t  bCRCLO, bCRCHI;     //Aramzenamento tempor�rio para o CRC.
+  uint8_t  bCRCLO, bCRCHI;     //Aramzenamento temporário para o CRC.
   uint16_t wI;                 //Contador de loops.
-  uint8_t  bIdx;               //�ndice para as tabelas de CRC.
+  uint8_t  bIdx;               //Índice para as tabelas de CRC.
 
   bCRCLO = 0;
   bCRCHI = 0;
@@ -165,3 +166,5 @@ void TLS_vCalculaCRC16Bloco( uint16_t *pwCRC16, uint8_t *pabBuf, uint16_t dTam )
   *pwCRC16 = ( bCRCLO | ( bCRCHI << 8 ) );
 
 }
+
+

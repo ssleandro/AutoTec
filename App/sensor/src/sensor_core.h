@@ -291,31 +291,6 @@ extern const uint8_t CAN_abNomeArquivoErros[];
 /******************************************************************************
 * Variables from Control module... Just for test...
 *******************************************************************************/
-#define UOS_SIS_FLAG_NENHUM             0x00000000
-#define UOS_SIS_FLAG_TODOS              0xFFFFFFFF
-#define UOS_SIS_FLAG_BOOT               0x00000001
-#define UOS_SIS_FLAG_FFS_OK             0x00000002
-#define UOS_SIS_FLAG_MEM_OK             0x00000004
-#define UOS_SIS_FLAG_CFG_OK             0x00000008
-#define UOS_SIS_FLAG_AQR_OK             0x00000010
-#define UOS_SIS_FLAG_BTH_OK             0x00000020
-#define UOS_SIS_FLAG_SIS_OK             0x00000040
-#define UOS_SIS_FLAG_REINICIO           0x00000080
-#define UOS_SIS_FLAG_COMUNICA           0x00000100
-#define UOS_SIS_FLAG_NOVO_REG           0x00000200
-#define UOS_SIS_FLAG_REGISTRO           0x00000400
-#define UOS_SIS_FLAG_EMERGENCIA         0x00000800
-#define UOS_SIS_FLAG_ALARME             0x00001000
-#define UOS_SIS_FLAG_CONECTADO          0x00002000
-#define UOS_SIS_FLAG_IHM                0x00004000
-#define UOS_SIS_FLAG_MODO_TRABALHO      0x00008000
-#define UOS_SIS_FLAG_CONFIRMA_INST      0x00010000
-#define UOS_SIS_FLAG_MODO_TESTE         0x00020000
-#define UOS_SIS_FLAG_VERIFICANDO        0x00040000
-#define UOS_SIS_FLAG_PARAMETROS_OK      0x00080000
-#define UOS_SIS_FLAG_VERSAO_SW_OK       0x00100000
-#define UOS_SIS_FLAG_ALARME_TOLERANCIA  0x00200000
-#define UOS_SIS_FLAG_ERRO_INST_SENSOR   0x00400000
 
 extern UOS_tsConfiguracao      UOS_sConfiguracao;
 

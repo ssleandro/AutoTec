@@ -94,13 +94,13 @@
     ASSERT(TimerName != NULL);
 /*!< Start Timer */
 #define START_TIMER(TimerName, TimerDelay) \
-  (osTimerStart(TimerName, TimerDelay));
+  (osTimerStart(TimerName, TimerDelay))
 /*!< Stop Timer */
 #define STOP_TIMER(TimerName) \
-  (osTimerStop(TimerName));
+  (osTimerStop(TimerName))
 /*!< Extern a timer */
 #define EXTERN_TIMER(TimerName) \
-    extern osTimerId  TimerName;
+    extern osTimerId  TimerName
 
 //!< *****************
 //!< Create a Mutex Definition
@@ -119,10 +119,10 @@
   (osMutexRelease(MutexName));
 /*!< Delete Mutex */
 #define DELETE_MUTEX(MutexName) \
-  (osMutexDelete(MutexName));
+  (osMutexDelete(MutexName))
 /*!< Extern a mutex */
 #define EXTERN_MUTEX(MutexName) \
-    extern osMutexId  MutexName;
+    extern osMutexId  MutexName
 
 //!< *****************
 //!< Create a Semaphore Definition
@@ -135,16 +135,16 @@
   ASSERT(SemaphoreName != NULL);
 /*!< Semaphore wait */
 #define WAIT_SEMAPHORE(SemaphoreName, TimeToWait) \
-  (osSemaphoreWait(SemaphoreName, TimeToWait));
+  (osSemaphoreWait(SemaphoreName, TimeToWait))
 /*!< Release Semaphore */
 #define RELEASE_SEMAPHORE(SemaphoreName) \
-  (osSemaphoreRelease(SemaphoreName));
+  (osSemaphoreRelease(SemaphoreName))
 /*!< Delete Semaphore */
 #define DELETE_SEMAPHORE(SemaphoreName) \
-  (osSemaphoreDelete(SemaphoreName));
+  (osSemaphoreDelete(SemaphoreName))
 /*!< Extern a semaphore */
 #define EXTERN_SEMAPHORE(SemaphoreName) \
-    extern osSemaphoreId  SemaphoreName;
+    extern osSemaphoreId  SemaphoreName
 
 //!< *****************
 //!< Create a Message Queue Definition
@@ -477,6 +477,8 @@ typedef struct
 
 #define CAN_APL_FLAG_FINISH_INSTALLATION          0x00100000
 
+#define AQR_APL_FLAG_SAVE_STATIC_REG	          0x00200000
+
 
 // Listagem de dispositivos utilizados na rede CAN
 #define CAN_APL_SENSOR_SEMENTE                    0x00 //Sensor de semente
@@ -735,6 +737,7 @@ typedef struct {
 #define AQR_FLAG_RESET_DESLIGA    0x00000400
 #define AQR_FLAG_DESLIGA          0x00000800
 #define AQR_FLAG_IMP_PARADO       0x00001000
+#define AQR_FLAG_ESTATICO_REG     0x00002000
 
 //Mascaras para identificar eventos e gerar Alarmes e registro
 #define AQR_NENHUM                  0x0000 // Nenhum alarme acionado
@@ -890,6 +893,7 @@ typedef enum event_e
     EVENT_FFS_STATUS,        		//!< EVENT FFS STATUS CHANGED
 	EVENT_FFS_CFG,        	//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_FFS_INTERFACE_CFG,    //!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_FFS_STATIC_REG,    //!< EVENT FILE INTERFACE STATUS CHANGED
 } event_e;
 
 
@@ -904,7 +908,7 @@ typedef struct
 	//Idioma:
 	uint8_t       bIdioma;
 
-	// Se e sistema imperial ou internacional
+	// Se egit  sistema imperial ou internacional
 	uint8_t       bSistImperial;
 
 	// Tipo de medida para velocidade do veiculo
@@ -931,6 +935,61 @@ typedef struct
 	uint16_t      wCRC16;
 }
 IHM_tsConfig;
+
+typedef struct {
+
+  //uint8_t  abAdubo[32];      //Adubo por linha
+  uint32_t dSomaSem;         //Sementes em todas as Linhas
+  uint32_t dDistancia;       //Distância Percorrida  em centimetros
+  uint32_t dSegundos;        //Tempo em segundos
+  float   fArea;            //Area
+  uint32_t adSementes[36];   //Sementes por linha
+
+} tsLinhas;
+
+typedef struct {
+
+  uint32_t    dTEV;          //Tempo total em excesso de velocidade (em trabalho)
+  uint32_t    dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
+  float      fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
+
+} tsVelocidade;
+
+//Estrutura do registro estático:
+typedef struct {
+
+  uint16_t          wFlagInicio;           //Flag de inicio do registro (0xFFFF)
+
+  uint8_t           abDataHoraIni[6];      //Data/hora de inicio (SMHDMA).
+  uint8_t           abDataHoraFim[6];      //Data/hora de fim (SMHDMA).
+
+  tsVelocidade    sVelocidade;           //Valores relativos à excesso de velocidade
+
+  tsLinhas        sTrabParcial;          //Acumulados Parcial Trabalhando
+  tsLinhas        sTrabParcDir;          //Acumulados Parcial Trabalhando
+  tsLinhas        sTrabParcEsq;          //Acumulados Parcial Trabalhando
+
+} AQR_tsRegEstatico;
+
+//Estrutura acima com CRC:
+typedef struct {
+
+  uint32_t                dEmergencia;     //Indica que a tarefa de emergência executou normalmente
+  tsLinhas              sTrabTotal;       //Acumulados Total Trabalhando
+  tsLinhas              sTrabTotalDir;    //Acumulados Total Trabalhando
+  tsLinhas              sTrabTotalEsq;    //Acumulados Total Trabalhando
+
+  AQR_tsRegEstatico     sReg;            //Estrutura de um registro estático.
+  uint32_t                dDataHora;       //Data/hora da última atualização desta estrutura.
+  uint32_t                dOffsetRegDat;   //Offset do último registro estático dentro do REGISTRO.DAT
+
+  uint16_t                awMediaSementes[36];      //Última média calculada para cada linha
+
+  //Declarei esta variável com 32 bits para evitar problemas de alinhamento
+  //no momento do cálculo do CRC.
+  uint32_t                wCRC16;         //CRC desta estrutura.
+
+} AQR_tsRegEstaticoCRC;
 
 #define LCD_bBRILHO_MAX        99
 

@@ -98,6 +98,7 @@ PubMessage sFileSysPubMsg;
 
 UOS_tsConfiguracao FFS_sConfiguracao;
 IHM_tsConfig FFS_sConfig;
+AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 
 /******************************************************************************
 * Function Prototypes
@@ -284,6 +285,14 @@ void FSM_vFileSysPublishThread(void const *argument)
 			else
 				FSM_ePublishEvent(EVENT_FFS_INTERFACE_CFG, EVENT_CLEAR, NULL);
 		}
+		if (tSignalBit & FFS_FLAG_STATIC_REG)
+		{
+			if(dFlags & FFS_FLAG_STATIC_REG)
+				FSM_ePublishEvent(EVENT_FFS_STATIC_REG, EVENT_SET, (void*)&FFS_sRegEstaticoCRC);
+			else
+				FSM_ePublishEvent(EVENT_FFS_STATIC_REG, EVENT_CLEAR, NULL);
+		}
+
 
 	}
 
@@ -369,6 +378,20 @@ void FFS_vIdentifyEvent (contract_s* contract)
         	}
             break;
         }
+        case MODULE_ACQUIREG:
+		{
+        	if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_STATIC_REG)
+        	{
+        		memcpy(&FFS_sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(AQR_tsRegEstaticoCRC));
+    			if(GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+    			{
+    				eAPPError_s error = FFS_vSaveStaticReg();
+    				ASSERT(error == APP_ERROR_SUCCESS);
+    			}
+        	}
+            break;
+		}
+
         default:
             break;
     }
@@ -413,6 +436,10 @@ void FSM_vFileSysThread (void const *argument)
     error = FFS_vLoadInterfaceCfgFile();
     ASSERT(error == APP_ERROR_SUCCESS);
     osSignalSet(xPbulishThreadID, FFS_FLAG_INTERFACE_CFG);
+
+    error = FFS_vLoadStaticReg();
+    ASSERT(error == APP_ERROR_SUCCESS);
+    osSignalSet(xPbulishThreadID, FFS_FLAG_STATIC_REG);
 
     /* Start the main functions of the application */
     while (1)

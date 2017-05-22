@@ -104,9 +104,18 @@
 //#define AQR_wCF_AUTO_DESLIGA      0x0401 //Desliga após um tempo sem utilização
 //#define AQR_wCF_LIBERA_MEM        0x0402 //Liberação de memória.
 
+
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/
+
+//Sequencia de códigos para a variável AQR_bStatus, usados na inicialização:
+#define AQR_bSTS_NAO_INICIADO           0xFF
+#define AQR_bSTS_OK                     0x00
+#define AQR_bSTS_ERRO                   0x01
+#define AQR_bSTS_FFS_OK                 0x02
+#define AQR_bSTS_SALVA_REG              0x03
+#define AQR_bSTS_NOVO_REG               0x04
 
 /******************************************************************************
 * Macros
@@ -225,17 +234,6 @@
 
 typedef struct {
 
-  //uint8_t  abAdubo[32];      //Adubo por linha
-  uint32_t dSomaSem;         //Sementes em todas as Linhas
-  uint32_t dDistancia;       //Distância Percorrida  em centimetros
-  uint32_t dSegundos;        //Tempo em segundos
-  float   fArea;            //Area
-  uint32_t adSementes[36];   //Sementes por linha
-
-} tsLinhas;
-
-typedef struct {
-
   uint32_t dDistancia;      //Distância Percorrida  em centimetros - após config
   uint32_t dSomaSem;       //Soma de sementes parcial de todas as linhas
 
@@ -270,54 +268,10 @@ typedef struct {
 
 } tsAcumulados;
 
-typedef struct {
-
-  uint32_t    dTEV;          //Tempo total em excesso de velocidade (em trabalho)
-  uint32_t    dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
-  float      fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
-
-} tsVelocidade;
-
-//Estrutura do registro estático:
-typedef struct {
-
-  uint16_t          wFlagInicio;           //Flag de inicio do registro (0xFFFF)
-
-  uint8_t           abDataHoraIni[6];      //Data/hora de inicio (SMHDMA).
-  uint8_t           abDataHoraFim[6];      //Data/hora de fim (SMHDMA).
-
-  tsVelocidade    sVelocidade;           //Valores relativos à excesso de velocidade
-
-  tsLinhas        sTrabParcial;          //Acumulados Parcial Trabalhando
-  tsLinhas        sTrabParcDir;          //Acumulados Parcial Trabalhando
-  tsLinhas        sTrabParcEsq;          //Acumulados Parcial Trabalhando
-
-} AQR_tsRegEstatico;
-
 #pragma pack(pop)
 
 //Tamanho da estrutura acima:
 #define AQR_wTAM_REG_ESTATICO sizeof( AQR_tsRegEstatico )
-
-//Estrutura acima com CRC:
-typedef struct {
-
-  uint32_t                dEmergencia;     //Indica que a tarefa de emergência executou normalmente
-  tsLinhas              sTrabTotal;       //Acumulados Total Trabalhando
-  tsLinhas              sTrabTotalDir;    //Acumulados Total Trabalhando
-  tsLinhas              sTrabTotalEsq;    //Acumulados Total Trabalhando
-
-  AQR_tsRegEstatico     sReg;            //Estrutura de um registro estático.
-  uint32_t                dDataHora;       //Data/hora da última atualização desta estrutura.
-  uint32_t                dOffsetRegDat;   //Offset do último registro estático dentro do REGISTRO.DAT
-
-  uint16_t                awMediaSementes[36];      //Última média calculada para cada linha
-
-  //Declarei esta variável com 32 bits para evitar problemas de alinhamento
-  //no momento do cálculo do CRC.
-  uint32_t                wCRC16;         //CRC desta estrutura.
-
-} AQR_tsRegEstaticoCRC;
 
 //Tamanho da estrutura acima:
 #define AQR_wTAM_REG_ESTATICO_CRC sizeof( AQR_tsRegEstaticoCRC )

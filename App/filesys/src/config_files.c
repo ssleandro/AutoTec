@@ -45,6 +45,10 @@
 //Nome do arquivo de configuração:
 const uint8_t FFS_abConfigName[] = "MPA2500.CFG";
 const uint8_t FFS_abInterfaceCfgName[] = "INTERFACE.CFG";
+//Nome do arquivo de registro estático:
+const uint8_t FFS_abStaticRegCfgName[] = "ESTATICO.REG";
+//Nome do arquivo de registros combinados (estáticos e dinâmicos):
+//const uint8_t abNomeRegDat[] = "REGISTRO.DAT";
 
 /******************************************************************************
  * Variables from others modules
@@ -54,6 +58,8 @@ extern UOS_tsConfiguracao FFS_sConfiguracao;
 extern const UOS_tsConfiguracao UOS_sConfiguracaoDefault;
 
 extern IHM_tsConfig FFS_sConfig;
+
+extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 
 /******************************************************************************
  * Typedefs
@@ -100,7 +106,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
 		if (bErr == F_NO_ERROR)
 		{
 			xFileHandle = f_open(FFS_abConfigName, "r");
-			ASSERT(xFileHandle == NULL);
+			ASSERT(xFileHandle != NULL);
 
 			//Verifica se o tamanho consiste:
 			if (xFindStruct.filesize == sizeof(FFS_sConfiguracao) && (xFileHandle != NULL))
@@ -171,10 +177,12 @@ eAPPError_s FFS_vSaveConfigFile (void)
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
 		xFileHandle = f_open(FFS_abConfigName, "w");
+		ASSERT(xFileHandle != NULL);
 
 		if (xFileHandle != NULL)
 		{
 			bErr = f_rewind(xFileHandle);
+			ASSERT(bErr == F_NO_ERROR);
 
 			bErr = f_write((uint8_t* )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao), 1, xFileHandle);
 			ASSERT(bErr == 1);
@@ -184,7 +192,6 @@ eAPPError_s FFS_vSaveConfigFile (void)
 			if (bErr == 1)
 			{
 				ErroReturn = APP_ERROR_SUCCESS;
-				osFlagSet (FFS_sFlagSis, FFS_FLAG_CFG);
 			}
 		}
 	}
@@ -233,10 +240,12 @@ eAPPError_s FFS_vSaveInterfaceCfgFile (void)
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
 		xFileHandle = f_open(FFS_abInterfaceCfgName, "w");
+		ASSERT(xFileHandle != NULL);
 
 		if (xFileHandle != NULL)
 		{
 			bErr = f_rewind(xFileHandle);
+			ASSERT(bErr == F_NO_ERROR);
 
 			bErr = f_write((uint8_t* )&FFS_sConfig, sizeof(FFS_sConfig), 1, xFileHandle);
 			ASSERT(bErr == 1);
@@ -246,7 +255,6 @@ eAPPError_s FFS_vSaveInterfaceCfgFile (void)
 			if (bErr == 1)
 			{
 				ErroReturn = APP_ERROR_SUCCESS;
-				osFlagSet (FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
 			}
 		}
 	}
@@ -286,7 +294,7 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 		if (bErr == F_NO_ERROR)
 		{
 			xFileHandle = f_open(FFS_abInterfaceCfgName, "r");
-			ASSERT(xFileHandle == NULL);
+			ASSERT(xFileHandle != NULL);
 
 			//Verifica se o tamanho consiste:
 			if (xFindStruct.filesize == sizeof(IHM_tsConfig) && (xFileHandle != NULL))
@@ -337,3 +345,138 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 	return ret;
 }
 
+/*
+ ================================================================================
+ CARREGA STATIC REGISTER
+
+ Descrição:    Carrega a configuração do IHM
+ Parâmetros:   Nenhum
+ Retorno:      true se conseguir carregar a configuração
+ Obs.:         Nenhuma
+ ================================================================================
+ */
+eAPPError_s FFS_vSaveStaticReg (void)
+{
+
+	osFlags dFlagsSis;
+	uint16_t wCRC16;
+	uint8_t bErr;
+	uint8_t bErroCfg = true;
+	F_FIND xFindStruct;
+	F_FILE *xFileHandle;
+	eAPPError_s ErroReturn = APP_ERROR_ERROR;
+
+	//Confere o CRC da configuracao:
+	TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sRegEstaticoCRC,
+					(sizeof(FFS_sRegEstaticoCRC) - sizeof(FFS_sRegEstaticoCRC.wCRC16)));
+
+	//Atualiza o valor do crc na estrutura:
+	FFS_sRegEstaticoCRC.wCRC16 = wCRC16;
+
+	//Verifica se o sistema de arquivo foi inicializado:
+	dFlagsSis = osFlagGet (FFS_sFlagSis);
+
+	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	{
+		xFileHandle = f_open(FFS_abStaticRegCfgName, "w");
+		ASSERT(xFileHandle != NULL);
+
+		if (xFileHandle != NULL)
+		{
+			bErr = f_rewind(xFileHandle);
+			ASSERT(bErr == F_NO_ERROR);
+
+			bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
+			ASSERT(bErr == 1);
+
+			f_close(xFileHandle);
+
+			if (bErr == 1)
+			{
+				ErroReturn = APP_ERROR_SUCCESS;
+			}
+		}
+	}
+
+	return ErroReturn;
+}
+
+/*
+ ================================================================================
+ CARREGA STATIC REGISTERM
+
+ Descrição:    Carrega a configuração do IHM
+ Parâmetros:   Nenhum
+ Retorno:      true se conseguir carregar a configuração
+ Obs.:         Nenhuma
+ ================================================================================
+ */
+eAPPError_s FFS_vLoadStaticReg (void)
+{
+	osFlags dFlagsSis;
+	uint16_t wCRC16_C, wCRC16;
+	uint8_t bErr;
+	uint8_t bErroCfg = true;
+	F_FIND xFindStruct;
+	F_FILE *xFileHandle;
+	eAPPError_s ret;
+
+	//Verifica se o sistema de arquivo foi inicializado:
+	dFlagsSis = osFlagGet (FFS_sFlagSis);
+
+	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	{
+		//Procura pelo arquivo de configuracao:
+		bErr = f_findfirst(FFS_abStaticRegCfgName, &xFindStruct);
+		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
+
+		if (bErr == F_NO_ERROR)
+		{
+			xFileHandle = f_open(FFS_abStaticRegCfgName, "r");
+			ASSERT(xFileHandle != NULL);
+
+			//Verifica se o tamanho consiste:
+			if (xFindStruct.filesize == sizeof(FFS_sRegEstaticoCRC) && (xFileHandle != NULL))
+			{
+				//Le o arquivo de configuracao do sistema de arquivos:
+				bErr = f_read((uint8_t * )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
+				ASSERT(bErr == 1);
+
+				//Confere o CRC da configuracao:
+				TLS_vCalculaCRC16Bloco (&wCRC16_C, (uint8_t *) &FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
+				//Se o CRC esta OK:
+				if (wCRC16_C == 0)
+				{
+					bErroCfg = false;
+				}
+			}
+			//Fecha o arquivo de configuracao:
+			bErr = f_close(xFileHandle);
+			ASSERT(bErr == F_NO_ERROR);
+		}
+	}
+
+	if (bErroCfg == true)
+	{
+		//Limpa a estrutura do registro estático:
+		memset (&FFS_sRegEstaticoCRC, 0x00, sizeof(FFS_sRegEstaticoCRC));
+
+		//Calcula o crc da estrutura do registro estático:
+		TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sRegEstaticoCRC,
+						(sizeof(FFS_sRegEstaticoCRC) - sizeof(FFS_sRegEstaticoCRC.wCRC16)));
+
+		//Atualiza o valor do crc na estrutura combinada:
+		FFS_sRegEstaticoCRC.wCRC16 = wCRC16;
+
+		//Recria o arquivo
+		xFileHandle = f_open(FFS_abStaticRegCfgName, "w+");
+		ASSERT(xFileHandle != NULL);
+
+		ret = APP_ERROR_ERROR;
+	} else
+	{
+		ret = APP_ERROR_SUCCESS;
+	}
+	osFlagSet (FFS_sFlagSis, FFS_FLAG_STATIC_REG);
+	return ret;
+}

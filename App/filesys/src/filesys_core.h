@@ -52,7 +52,7 @@
 #define FFS_FLAG_STATUS 		0x0001
 #define FFS_FLAG_CFG 			0x0002
 #define FFS_FLAG_INTERFACE_CFG	0x0004
-#define FFS_FLAG_ESTATIC		0x0008
+#define FFS_FLAG_STATIC_REG		0x0008
 
 
 /******************************************************************************
