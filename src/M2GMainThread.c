@@ -55,13 +55,13 @@
 #define STARTING_MODULES \
         X("Diagnostic" , 500 , osPriorityLow            , DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
         X("Broker"     , 150 , osPriorityHigh           , BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
-        X("Control"    , 200 , osPriorityHigh           , CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
+		X("Control"    , 200 , osPriorityHigh           , CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
+		X("Filesys"    , 512 , osPriorityHigh        	, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
 		X("GPS"        , 400 , osPriorityAboveNormal    , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
         X("Isobus"     , 200 , osPriorityRealtime       , ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
         X("Gui"        , 200 , osPriorityAboveNormal    , GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
         X("Sensor"     , 200 , osPriorityAboveNormal    , SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
         X("Acquireg"   , 200 , osPriorityAboveNormal    , AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
-		X("Filesys"    , 200 , osPriorityHigh        	, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
         X(NULL         ,   0 , 0                        , NULL                  , 0                 , NULL         )
 
 /*

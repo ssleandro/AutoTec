@@ -53,6 +53,7 @@ DECLARE_QUEUE(ControlQueue, QUEUE_SIZEOFCONTROL);      //!< Declaration of Inter
 CREATE_SIGNATURE(ControlDiagnostic);                             //!< Signature Declarations
 CREATE_SIGNATURE(ControlAcquireg);                             //!< Signature Declarations
 CREATE_SIGNATURE(ControlSensor);                             //!< Signature Declarations
+CREATE_SIGNATURE(ControlFileSys);
 CREATE_CONTRACT(Control);                              //!< Create contract for sensor msg publication
 
 osThreadId xCtlEmyThreadId;                            // Holds the control emergency thread id
@@ -61,7 +62,7 @@ osThreadId xCtlPubThreadId;                            // Holds the control publ
 //!< From MPA2500
 /******************************************************************************
    Versão deste software com 4 campos de 8 caracteres na seguinte ordem:
-   Cliente, Produto, Versão e Observação.
+   Cliente, Produto, Versão e Observacao.
 *******************************************************************************/
 //Código numérico desta versão:
 const UOS_tsVersaoCod UOS_sVersaoCodDef = {
@@ -85,10 +86,7 @@ const UOS_tsVersaoCod UOS_sVersaoCodDef = {
       0x00000000         //Offset.
 };
 
-//Nome do arquivo de configuração:
-const uint8_t             UOS_abNomeConfig[] = "MPA2500.CFG";
-
-//Nome do arquivo de configuração da interface:
+//Nome do arquivo de configuracao da interface:
 const uint8_t             UOS_abNomeConfigIHM[] = "INTERFACE.CFG";
 
 //Contador de tick do sistema:
@@ -97,7 +95,7 @@ volatile uint32_t         UOS_dTicks;
 //Estrutura com o código númerico desta versão:
 UOS_tsVersaoCod         UOS_sVersaoCod;
 
-//Estrutura da configuração operacional:
+//Estrutura da configuracao operacional:
 UOS_tsConfiguracao      UOS_sConfiguracao;
 
 //Flags que representas os bits do contador de ticks:
@@ -120,7 +118,7 @@ CREATE_MUTEX(UOS_MTX_sDataHora);
 // Semaphores
 //Semáforo para sincronizar a tarefa UOS_vTrfSincronismo com o tick:
 CREATE_SEMAPHORE(UOS_sSemSincronismo);
-//Semáforo para controle de acesso à exibição de mensagens de alerta:
+//Semáforo para controle de acesso à exibicao de mensagens de alerta:
 CREATE_SEMAPHORE(UOS_sSemAlerta);
 
 //Buffer para mensagens do sistema de controle:
@@ -128,7 +126,7 @@ CREATE_SEMAPHORE(UOS_sSemAlerta);
 
 uint8_t    bMem = 1;
 
-//Variáveis para indicar modo de utilização da Serial
+//Variáveis para indicar modo de utilizacao da Serial
 uint8_t    UOS_bGPSAtivo;
 uint8_t    UOS_bEstadoUART0;
 uint8_t    UOS_bSilenciaAlarme;
@@ -146,7 +144,7 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
   /*FP32   fLimVel;*/                         20.0f, //Limite de velocidade km/h.
   /*INT16U wSementesPorMetro;*/                  15, //Meta de Sementes por Metro. (sementes/m)*10
   /*INT16U wInsensibilidade;*/                  100, //Distância de insensibilidade para falhas. (metros)*10
-  /*INT16U wAvalia;*/                          1000, //Distância para avaliação de aplicação. (metros)*10
+  /*INT16U wAvalia;*/                          1000, //Distância para avaliacao de aplicacao. (metros)*10
   /*INT16U wDistLinhas;*/                         0, //Distância entre linhas. (centímetros)*10
   /*INT16U wLargImpl;*/                          10, //Largura do implemento. (centímetros)*10
   /*uint8_t  bMonitorArea;*/                    false, //Se está em modo monitor de área. (0 = false, 1 = true )
@@ -166,7 +164,7 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
   /*INT16U      wDistanciaEntreFixos;*/            0,
   /*INT16U      wAnguloEntreFixos;*/               0,
   /*uint8_t       bHorarioVerao;*/               false, //Indica se está em horário de verão (bHorarioVerao = 1)
-  /*uint8_t       bSalvaRegistro;*/              false, //Indica se gravação de registros está ativada
+  /*uint8_t       bSalvaRegistro;*/              false, //Indica se gravacao de registros está ativada
 
 //------------------------------------------------------------------------------
 //tsCfgBluetooth
@@ -291,10 +289,11 @@ void CTL_vControlPublishThread(void const *argument)
 
         /* Pool the device waiting for */
         WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-        evt = osSignalWait ((UOS_BUZZER_ON | UOS_BUZZER_OFF), 100);
+  //      evt = osSignalWait ((UOS_BUZZER_ON | UOS_BUZZER_OFF), 100);
+        osDelay(2000);
         WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
-        if(evt.status == osEventSignal)
+ /*       if(evt.status == osEventSignal)
         {
             switch(evt.value.signals)
             {
@@ -302,7 +301,7 @@ void CTL_vControlPublishThread(void const *argument)
 
                     *dPayload = 'A';
 
-                    /* Publish the array at the CONTROL topic */
+                     Publish the array at the CONTROL topic
                     MESSAGE_HEADER(Control, 1, 1, MT_ARRAYBYTE);
                     MESSAGE_PAYLOAD(Control) = (void*) dPayload;
                     PUBLISH(CONTRACT(Control), 0);
@@ -312,7 +311,7 @@ void CTL_vControlPublishThread(void const *argument)
 
                     *dPayload = 'B';
 
-                    /* Publish the array at the CONTROL topic */
+                     Publish the array at the CONTROL topic
                     MESSAGE_HEADER(Control, 1, 1, MT_ARRAYBYTE);
                     MESSAGE_PAYLOAD(Control) = (void*) dPayload;
                     PUBLISH(CONTRACT(Control), 0);
@@ -321,7 +320,7 @@ void CTL_vControlPublishThread(void const *argument)
                 default:
                     break;
             }
-        }
+        }*/
     }
     osThreadTerminate(NULL);
 }
@@ -356,6 +355,18 @@ void CTL_vIdentifyEvent(contract_s* contract)
         }
         case MODULE_GPS:
         {
+            break;
+        }
+        case MODULE_FILESYS:
+        {
+        	if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
+        	{
+        		memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(UOS_tsConfiguracao));
+    			if(GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+    				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+    			else
+    				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+        	}
             break;
         }
         default:
@@ -394,6 +405,9 @@ void CTL_vControlThread (void const *argument)
 
     SIGNATURE_HEADER(ControlSensor, THIS_MODULE, TOPIC_SENSOR, ControlQueue);
     ASSERT(SUBSCRIBE(SIGNATURE(ControlSensor), 0) == osOK);
+
+    SIGNATURE_HEADER(ControlFileSys, THIS_MODULE, TOPIC_FILESYS, ControlQueue);
+    ASSERT(SUBSCRIBE(SIGNATURE(ControlFileSys), 0) == osOK);
 
     //Create subthreads
     uint8_t bNumberOfThreads = 0;
@@ -462,7 +476,7 @@ void CTL_vControlEmergencyThread(void const *argument)
         //Acumula os valores de áreas trabalhadas
 //        AQR_vAcumulaArea();
 
-        //Finaliza os arquivos da aquisição:
+        //Finaliza os arquivos da aquisicao:
 //        AQR_vEmergencia();
 
 //        CAN_vSalvaArquivoErros();
@@ -478,7 +492,7 @@ void CTL_vControlEmergencyThread(void const *argument)
 //      }
 //      else
 //      {
-//        //Reajusta o watchdog timer para aguardar reinicialização forçada:
+//        //Reajusta o watchdog timer para aguardar reinicializacao forçada:
 //        WDTC = UOS_WDT_dTMP_REBOOT;
 //      }
 
@@ -495,19 +509,19 @@ void CTL_vControlEmergencyThread(void const *argument)
 void CTL_vControlManagementThread(void const *argument)
 {
 #define EI_BOOT       0    //Interface no estado inicial.
-#define EI_ERRO_FFS   1    //Interface no estado memória cheia.
-#define EI_COMUNICA   2    //Interface no estado comunicação em andamento.
-#define EI_ERRO_CFG   3    //Interface no estado erro na configuração.
+#define EI_ERRO_FFS   1    //Interface no estado memoria cheia.
+#define EI_COMUNICA   2    //Interface no estado comunicacao em andamento.
+#define EI_ERRO_CFG   3    //Interface no estado erro na configuracao.
 #define EI_NOVO_REG   4    //Interface no estado novo registro.
-#define EI_MEMO_CHEIA 5    //Interface no estado memória cheia.
-#define EI_EMERGENCIA 6    //Interface no estado de emergência.
+#define EI_MEMO_CHEIA 5    //Interface no estado memoria cheia.
+#define EI_EMERGENCIA 6    //Interface no estado de emergencia.
 #define EI_ALARME     7    //Interface no estado de alarme.
 #define EI_IHM        8    //Interface no estado de alerta.
-#define EI_TOLERANCIA 9    //Interface no estado de alarme por falha na tolerância
+#define EI_TOLERANCIA 9    //Interface no estado de alarme por falha na tolerancia
 #define EI_NORMAL     0xFF //Interface no estado normal.
 
     osStatus status;
-    osFlags dFlagsSis;
+    osFlags dFlagSis;
     uint8_t bAlarme;
     uint8_t bEstadoInterface;
     uint8_t bI;
@@ -522,10 +536,10 @@ void CTL_vControlManagementThread(void const *argument)
     osThreadId xDiagMainID = (osThreadId) argument;
     osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLMGTThreadArrayPosition));//Task created, inform core
 
-    //Semáforo para sincronizar esta tarefa com o tick:
+    //Semaforo para sincronizar esta tarefa com o tick:
     INITIALIZE_SEMAPHORE(UOS_sSemSincronismo, 1);
 
-    //Semáforo para controle de acesso à exibição de mensagens de alerta:
+    //Semaforo para controle de acesso a� exibicao de mensagens de alerta:
     INITIALIZE_SEMAPHORE(UOS_sSemAlerta, 1);
 
     // Initialize flag group to indicate events
@@ -533,7 +547,7 @@ void CTL_vControlManagementThread(void const *argument)
     status = osFlagGroupCreate(&UOS_sFlagTicks);
     ASSERT(status == osOK);
 
-    //Flags que a diferença de fase entre o início de um ciclo de um
+    //Flags que a diferenca de fase entre o inicio de um ciclo de um
     //segundo e o momento atual, de 2 em dois ticks (0 a 62):
     status = osFlagGroupCreate(&UOS_sFlagFase);
     ASSERT(status == osOK);
@@ -574,24 +588,24 @@ void CTL_vControlManagementThread(void const *argument)
         //        }
 
         //--------------------------------------------------------------------------
-        //Define o estado da interface em função dos flags de status:
+        //Define o estado da interface em funcao dos flags de status:
 
         //Flags de status:
         WATCHDOG_STATE(CONTROLMGT, WDT_SLEEP);
-        dFlagsSis = osFlagGet(UOS_sFlagSis);
+        dFlagSis = osFlagGet(UOS_sFlagSis);
         WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
 
-        //Atualização da variável de controle da interface
+        //Atualizacao da variável de controle da interface
         //Se o sistema já está iniciado:
-        if ( ( dFlagsSis & UOS_SIS_FLAG_SIS_OK ) > 0 )
+        if ( ( dFlagSis & UOS_SIS_FLAG_SIS_OK ) > 0 )
         {
-            if ( ( dFlagsSis & UOS_SIS_FLAG_FFS_OK ) == 0 ) //Erro no sistema de arquivos tem a prioridade mais alta.
+            if ( ( dFlagSis & UOS_SIS_FLAG_FFS_OK ) == 0 ) //Erro no sistema de arquivos tem a prioridade mais alta.
             {
                 bEstadoInterface = EI_ERRO_FFS;
             }
             else
             {
-                if ( ( dFlagsSis & UOS_SIS_FLAG_REGISTRO ) > 0 )  //Seguido da criação de registro.
+                if ( ( dFlagSis & UOS_SIS_FLAG_REGISTRO ) > 0 )  //Seguido da criacao de registro.
                 {
                     //Este flag deve ser reconhecido aqui:
                     osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_REGISTRO);
@@ -600,7 +614,7 @@ void CTL_vControlManagementThread(void const *argument)
                 }
                 else
                 {
-                    if ( ( dFlagsSis & UOS_SIS_FLAG_COMUNICA ) > 0 ) //Seguido de comunicação em andamento
+                    if ( ( dFlagSis & UOS_SIS_FLAG_COMUNICA ) > 0 ) //Seguido de comunicaçao em andamento
                     {
                         //Este flag deve ser reconhecido aqui:
                         osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_COMUNICA);
@@ -609,7 +623,7 @@ void CTL_vControlManagementThread(void const *argument)
                     }
                     else
                     {
-                        if ( ( dFlagsSis & UOS_SIS_FLAG_CFG_OK ) == 0 ) //Seguido do erro na configuração.
+                        if ( ( dFlagSis & UOS_SIS_FLAG_CFG_OK ) == 0 ) //Seguido do erro na configuracao.
                         {
                             if( UOS_bSilenciaAlarme == false )
                             {
@@ -623,25 +637,25 @@ void CTL_vControlManagementThread(void const *argument)
                         }
                         else
                         {
-                            if ( ( dFlagsSis & UOS_SIS_FLAG_MEM_OK ) == 0 ) //Seguido de memória cheia.
+                            if ( ( dFlagSis & UOS_SIS_FLAG_MEM_OK ) == 0 ) //Seguido de memoria cheia.
                             {
                                 bEstadoInterface = EI_MEMO_CHEIA;
                             }
                             else
                             {
-                                if ( ( dFlagsSis & UOS_SIS_FLAG_EMERGENCIA ) > 0 ) //Seguido das emergências.
+                                if ( ( dFlagSis & UOS_SIS_FLAG_EMERGENCIA ) > 0 ) //Seguido das emergenncias.
                                 {
                                     bEstadoInterface = EI_EMERGENCIA;
                                 }
                                 else
                                 {
-                                    if ( ( dFlagsSis & UOS_SIS_FLAG_ALARME ) > 0 ) //Seguido dos alarmes.
+                                    if ( ( dFlagSis & UOS_SIS_FLAG_ALARME ) > 0 ) //Seguido dos alarmes.
                                     {
                                         bEstadoInterface = EI_ALARME;
                                     }
                                     else
                                     {
-                                        if ( ( dFlagsSis & UOS_SIS_FLAG_ALARME_TOLERANCIA ) > 0 )
+                                        if ( ( dFlagSis & UOS_SIS_FLAG_ALARME_TOLERANCIA ) > 0 )
                                         {
                                             //Este flag deve ser reconhecido aqui:
                                             osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ALARME_TOLERANCIA);
@@ -660,10 +674,10 @@ void CTL_vControlManagementThread(void const *argument)
                 }
             }
         }
-        else //Senão, não completou a inicialização:
+        else //Senão, não completou a inicializacao:
         {
-            //Verifica se ainda está aguardando estabilização da fonte de energia:
-            if ( ( dFlagsSis & UOS_SIS_FLAG_BOOT ) > 0 )
+            //Verifica se ainda está aguardando estabilizacao da fonte de energia:
+            if ( ( dFlagSis & UOS_SIS_FLAG_BOOT ) > 0 )
             {
                 bEstadoInterface = EI_BOOT;
             }
@@ -731,14 +745,14 @@ void CTL_vControlManagementThread(void const *argument)
                         bAlarme      = true;
                     }
                     break;
-                case EI_COMUNICA: //Se temos comunicação em andamento:
+                case EI_COMUNICA: //Se temos comunicacao em andamento:
                     if ( ( UOS_dTicks & 0x000F ) == 0 )
                     {
                         bAlarme      = true;
 
                     }
                     break;
-                case EI_ERRO_CFG: //Se o sistema está com erro nos configuração:
+                case EI_ERRO_CFG: //Se o sistema está com erro nos configuracao:
                     if ( ( UOS_dTicks & 0x0034 ) == 0 )
                     {
                         bAlarme      = true;
@@ -750,14 +764,14 @@ void CTL_vControlManagementThread(void const *argument)
                     bAlarme      = false;
 
                     break;
-                case EI_EMERGENCIA: //Se existe uma situação de emergência:
+                case EI_EMERGENCIA: //Se existe uma situacao de emergência:
                     if ( ( UOS_dTicks & 0x0004 ) == 0 )
                     {
                         bAlarme      = true;
                     }
                     break;
 
-                case EI_ALARME: //Se existe uma situação de alarme:
+                case EI_ALARME: //Se existe uma situacao de alarme:
                     if( (AQR_wAlarmes & AQR_NOVO_SENSOR) > 0 )
                     {
 
@@ -809,9 +823,9 @@ void CTL_vControlManagementThread(void const *argument)
             } //Fim switch ( bEstadoInterface )
 
             //------------------------------------------------------------------------
-            //            //Realimentação acústica do teclado:
+            //            //Realimentacao acústica do teclado:
             //
-            //            //Realimentação acústica do teclado:
+            //            //Realimentacao acústica do teclado:
             //            if ( KBD_bIHM > 0 )
             //            {
             //                KBD_bIHM--;

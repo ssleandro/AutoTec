@@ -78,7 +78,7 @@ typedef int           ( *F_WRITESECTOR )( F_DRIVER * driver, void * data, unsign
 typedef int           ( *F_READSECTOR )( F_DRIVER * driver, void * data, unsigned long sector );
 typedef int           ( *F_GETPHY )( F_DRIVER * driver, F_PHY * phy );
 typedef long          ( *F_GETSTATUS )( F_DRIVER * driver );
-typedef void          ( *F_RELEASE )( F_DRIVER * driver );
+typedef int          ( *F_RELEASE )( F_DRIVER * driver );
 
 typedef struct F_DRIVER
 {

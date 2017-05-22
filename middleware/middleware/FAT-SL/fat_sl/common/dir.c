@@ -38,7 +38,7 @@
  *
  */
 
-#include "../../api/fat_sl.h"
+#include "fat_sl.h"
 #include "../../psp/include/psp_string.h"
 
 #include "dir.h"
