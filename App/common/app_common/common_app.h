@@ -393,6 +393,9 @@ typedef struct
 
 } GPS_tsDadosGPS; // estrutura contendo os dados do gps.
 
+extern gpio_config_s sEnablePS9;
+#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
+#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
 
 /* CAN sensor core */
 #define CAN_ALTA_PRIOR            0x00
@@ -586,6 +589,60 @@ typedef struct {
     uint8_t bOffsetDuploOffsetTriplo;   // LSN = OffsetDuplo / MSN = OffsetTriplo   (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
 }CAN_tsParametrosExtended;
 
+
+typedef struct {
+
+  //uint8_t  abAdubo[32];      //Adubo por linha
+  uint32_t dSomaSem;         //Sementes em todas as Linhas
+  uint32_t dDistancia;       //Distância Percorrida  em centimetros
+  uint32_t dSegundos;        //Tempo em segundos
+  float   fArea;            //Area
+  uint32_t adSementes[36];   //Sementes por linha
+
+} tsLinhas;
+
+typedef struct {
+
+  uint32_t dDistancia;      //Distância Percorrida  em centimetros - após config
+  uint32_t dSomaSem;       //Soma de sementes parcial de todas as linhas
+
+} tsDistanciaTrab;
+
+
+typedef struct {
+
+  uint32_t    dTEV;          //Tempo total em excesso de velocidade (em trabalho)
+  uint32_t    dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
+  float      fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
+
+} tsVelocidade;
+
+typedef struct {
+
+  tsLinhas  sTrabTotal;     //Acumula valores trabalhando (Total)
+  tsLinhas  sTrabTotalDir;  //Acumula valores trabalhando em Arremate do lado direito
+  tsLinhas  sTrabTotalEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
+
+  tsLinhas  sTrabParcial;  //Acumula valores trabalhando (Parcial)
+  tsLinhas  sTrabParcDir;  //Acumula valores trabalhando em Arremate do lado direito
+  tsLinhas  sTrabParcEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
+
+  tsLinhas  sManobra;      //Acumula valores manobra (não trabalhando)
+
+  tsLinhas  sTotalReg;     //Acumula valores totais para Registro(trabalhando + manobra)
+
+  tsLinhas  sAvalia;       //Acumula valores em Avaliação (cálculo da média)
+
+  tsDistanciaTrab  sDistTrabTotal;     //Distância parcial - o qual zera após a configuração
+  tsDistanciaTrab  sDistTrabTotalEsq;  //Distância parcial - o qual zera após a configuração
+  tsDistanciaTrab  sDistTrabTotalDir;  //Distância parcial - o qual zera após a configuração
+
+  tsDistanciaTrab  sDistTrabParcial;     //Distância parcial - o qual zera após a configuração
+  tsDistanciaTrab  sDistTrabParcialEsq;  //Distância parcial - o qual zera após a configuração
+  tsDistanciaTrab  sDistTrabParcialDir;  //Distância parcial - o qual zera após a configuração
+
+
+} tsAcumulados;
 
 /******************************************************************************
 * Typedefs from Control module... Just for test...

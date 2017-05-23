@@ -56,22 +56,72 @@ static eAPPError_s eError;                   		//!< Error variable
 
 extern osFlagsGroupId UOS_sFlagSis;
 
-static sNumberVariableObj sNumVarObjects[N_NUMBER_VARIABLE_OBJECTS];
+extern uint32_t getID(uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio);
+
+static sNumberVariableObj asNumVarObjects[N_NUMBER_VARIABLE_OBJECTS];
+static sFillAttributesObj asNumFillAttributesObjects[N_FILL_ATTRIBUTES_OBJECTS];
+static sInputListObj asConfigInputList[N_INPUT_LIST_OBJECTS];
+
+static sBarGraphStatus asLinesStatus[N_BAR_GRAPH_OBJECTS];
+static sBarGraphStatus asIndividualLineStatus[N_BAR_GRAPH_OBJECTS];
+
+static sInstallSensorStatus sInstallStatus;
+static sTrimmingStatus sLinesTrimmingStatus;
+
+static sLineCountVariables sSeedsCountVar;
 
 static sConfigurationDataMask sConfigDataMask =
 {
-	.eLanguage = LANGUAGE_ENGLISH,
-	.eUnit = UNIT_INTERNATIONAL_SYSTEM,
-	.dVehicleID = &(sNumVarObjects[0].dValue),
+	.eLanguage = (eSelectedLanguage*)(&asConfigInputList[0].bSelectedIndex),
+	.eUnit = (eSelectedUnitMeasurement*)(&asConfigInputList[1].bSelectedIndex),
+	.dVehicleID = &(asNumVarObjects[0].dValue),
 	.eMonitor = AREA_MONITOR_DISABLED,
-	.fSeedsPerMeter = &(sNumVarObjects[1].fValue),
-	.bNumOfRows = (uint8_t*)(&sNumVarObjects[2].dValue),
-	.fImplementWidth = &(sNumVarObjects[3].fValue),
-	.fEvaluationDistance = &(sNumVarObjects[4].fValue),
-	.fTolerance = (uint8_t*)(&sNumVarObjects[5].dValue),
-	.fMaxSpeed = &(sNumVarObjects[6].fValue),
+	.fSeedsPerMeter = &(asNumVarObjects[1].fValue),
+	.bNumOfRows = (uint8_t*)(&asNumVarObjects[2].dValue),
+	.fImplementWidth = &(asNumVarObjects[3].fValue),
+	.fEvaluationDistance = &(asNumVarObjects[4].fValue),
+	.bTolerance = (uint8_t*)(&asNumVarObjects[5].dValue),
+	.fMaxSpeed = &(asNumVarObjects[6].fValue),
 	.eAlterRows = ALTERNATE_ROWS_DISABLED,
 	.eAltType = ALTERNATED_ROWS_ODD
+};
+
+const sPlantingVariables sPlantingVar =
+{
+	.psNumberVariable = &asNumVarObjects[0],
+	.bNumOfVariables = 9
+};
+
+const sPlanterDataMask sPlanterStatusDataMask =
+{
+	.psLinesStatus = &asLinesStatus[0],
+	.psIndividualLineStatus = &asIndividualLineStatus[0],
+	.pdPartPopSemPerMt = &(sPlantingVar.psNumberVariable[0].dValue),
+	.pdPartPopSemPetHa = &(sPlantingVar.psNumberVariable[1].dValue),
+	.pdWorkedAreaMt = &(sPlantingVar.psNumberVariable[2].dValue),
+	.pdWorkedAreaHa = &(sPlantingVar.psNumberVariable[3].dValue),
+	.pdTotalMt = &(sPlantingVar.psNumberVariable[4].dValue),
+	.pdTotalHa = &(sPlantingVar.psNumberVariable[5].dValue),
+	.pdProductivity = &(sPlantingVar.psNumberVariable[6].dValue),
+	.pdWorkedTime = &(sPlantingVar.psNumberVariable[7].dValue),
+	.pdTotalSeeds = &(sPlantingVar.psNumberVariable[8].dValue)
+};
+
+static sInstallationDataMask sInstallDataMask =
+{
+	.psLinesInstallStatus = &sInstallStatus
+};
+
+static sTestModeDataMask sTestMdDataMask =
+{
+	.psSeedsCount = &sSeedsCountVar,
+	.pdInstalledSensors = &(sSeedsCountVar.psNumberVariable[36].dValue),
+	.pdConfiguredSensors = &(sSeedsCountVar.psNumberVariable[37].dValue)
+};
+
+static sTrimmingDataMask sTrimminDataMask =
+{
+	.psTrimmedLines = &sLinesTrimmingStatus
 };
 
 #ifndef UNITY_TEST
@@ -136,6 +186,12 @@ extern uint8_t pool[];
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
+void ISO_vUpdateConfigurationDataMask(void);
+void ISO_vUpdateInstallationDataMask(void);
+void ISO_vUpdatePlanterDataMask(void);
+void ISO_vUpdateTestModeDataMask(void);
+void ISO_vUpdateTrimmingDataMask(void);
+void ISO_vUpdateSystemDataMask(void);
 
 /******************************************************************************
  * Function Definitions
@@ -963,26 +1019,101 @@ void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
 
 #define GET_INDEX_FROM_ID(id) (id & 0x0FFF)
 #define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
+#define GET_UNSIGNED_INT_VALUE(value) ((uint32_t)(value*10))
 
 void ISO_vInitObjectStruct(void)
 {
-	for (int i = 0; i < (sizeof(sNumVarObjects)/sizeof(sNumberVariableObj)); ++i) {
-		sNumVarObjects[i].wObjID = 0x8000 + i;
+	// Init number variable objects
+	for (int i = 0; i < ARRAY_SIZE(asNumVarObjects); i++) {
+		asNumVarObjects[i].wObjID = 0x8000 + i;
+	}
+
+	// Initialize fill attributes objects
+	for (int i = 0; i < ARRAY_SIZE(asNumFillAttributesObjects); i++) {
+		asNumFillAttributesObjects[i].wObjID = 0x9600 + i;
+	}
+
+	// Initialize sensor install status structure
+	sInstallStatus.bNumOfSensors = 36;
+	sInstallStatus.pFillAttribute = &asNumFillAttributesObjects[0];
+
+	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++) {
+		if(i < *sConfigDataMask.bNumOfRows)
+		{
+			sInstallStatus.pFillAttribute[i].bColor = STATUS_INSTALL_INSTALLING;
+		} else{
+			sInstallStatus.pFillAttribute[i].bColor = STATUS_INSTALL_NONE;
+		}
+	}
+
+	// Initialize sensor trimming status structure
+	sLinesTrimmingStatus.bNumOfSensor = 36;
+	sLinesTrimmingStatus.pFillAtributte = &asNumFillAttributesObjects[36];
+
+	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++) {
+		if(i < *sConfigDataMask.bNumOfRows)
+		{
+			sLinesTrimmingStatus.pFillAtributte[i].bColor = STATUS_TRIMMING_NOT_TRIMMED;
+		} else{
+			sLinesTrimmingStatus.pFillAtributte[i].bColor = STATUS_TRIMMING_NONE;
+		}
+	}
+
+	// Initialize input list objects
+	for (int i = 0; i < ARRAY_SIZE(asConfigInputList); i++) {
+		asConfigInputList[i].wObjID = 0x9000 + i;
+	}
+
+	for (int i = 0; i < (N_BAR_GRAPH_OBJECTS * 2); i = i + 2) {
+		asLinesStatus[i].wIncBarID = 0x7000 + i;
+		asLinesStatus[i].wDecBarID = 0x7000 + (i + 1);
+		asLinesStatus[i].wIncOutputNumID = 0x800B + i;
+		asLinesStatus[i].wDecOutputNumID = 0x800B + (i + 1);
+		asIndividualLineStatus[i].wIncBarID = 0x7048 + i;
+		asIndividualLineStatus[i].wDecBarID = 0x7048 + (i + 1);
+		asIndividualLineStatus[i].wIncOutputNumID = 0x812F + i;
+		asIndividualLineStatus[i].wDecOutputNumID = 0x812F + (i + 1);
 	}
 }
 
-
-
 // Used to FUNC_CHANGE_NUMERIC_VALUE message
-void ISO_vUpdateNumberVariableValue(ISOBUSMsg* sRcvMsg)
+void ISO_vInputNumberVariableValue(uint16_t wObjectID, uint32_t dValue)
+{
+	uint16_t index = GET_INDEX_FROM_ID(wObjectID);
+
+	if(index < ARRAY_SIZE(asNumVarObjects))
+	{
+		if(asNumVarObjects[index].wObjID == wObjectID)
+		{
+			asNumVarObjects[index].dValue = dValue;
+			asNumVarObjects[index].fValue = GET_FLOAT_VALUE(dValue);
+		}
+	}
+}
+
+void ISO_vInputIndexListValue(uint16_t wObjectID, uint32_t dValue)
+{
+	uint16_t index = GET_INDEX_FROM_ID(wObjectID);
+
+	if(index < ARRAY_SIZE(asConfigInputList))
+	{
+		if(asConfigInputList[index].wObjID == wObjectID)
+		{
+			asConfigInputList[index].bSelectedIndex = dValue;
+		}
+	}
+}
+
+void ISO_vTreatChangeNumericValueEvent(ISOBUSMsg* sRcvMsg)
 {
 	uint16_t wObjectID = (sRcvMsg->B3 | (sRcvMsg->B2 << 8));
 	uint32_t dValue = (sRcvMsg->B5 | (sRcvMsg->B6 << 8) | (sRcvMsg->B7 << 16) | (sRcvMsg->B8 << 24));
 
-	if(sNumVarObjects[GET_INDEX_FROM_ID(wObjectID)].wObjID == wObjectID)
+	if((wObjectID >= 0x8000) && (wObjectID < 0x8200))
 	{
-		sNumVarObjects[GET_INDEX_FROM_ID(wObjectID)].dValue = dValue;
-		sNumVarObjects[GET_INDEX_FROM_ID(wObjectID)].fValue = GET_FLOAT_VALUE(dValue);
+		ISO_vInputNumberVariableValue(wObjectID, dValue);
+	} else if((wObjectID >= 0x9000) && (wObjectID < 0x9500)){
+		ISO_vInputIndexListValue(wObjectID, dValue);
 	}
 }
 
@@ -1011,7 +1142,7 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                     case FUNC_VT_CHANGE_NUMERIC_VALUE:
                     {
                     	// Relationship between Object ID and field in structure
-                    	ISO_vUpdateNumberVariableValue(sRcvMsg);
+                    	ISO_vTreatChangeNumericValueEvent(sRcvMsg);
                         break;
                     }
                     case FUNC_VT_CHANGE_ACTIVE_MASK:
@@ -1091,8 +1222,6 @@ void ISO_vIsobusManagementThread(void const *argument)
 
     INITIALIZE_LOCAL_QUEUE(ManagementQ);
 
-    ISO_vInitObjectStruct();
-
     // Wait for auxiliary thread start
     /* Pool the device waiting for */
     WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
@@ -1129,30 +1258,14 @@ void ISO_vIsobusManagementThread(void const *argument)
 void ISO_vIsobusWriteThread(void const *argument){}
 #endif
 
-#define N_ROWS 36
-#define N_COLUMNS 2
+ISOBUSMsg sSendMsg;
 
-uint16_t dBarGraphXOutputNumber[N_ROWS][N_COLUMNS] = 
+void ISO_vUpdateNumberVariableValue(uint16_t wOutputNumberID, uint32_t dNumericValue)
 {
-    {0x7000, 0x8009},
-    {0x7001, 0x800A},
-    {0x7002, 0x800B},
-    {0x7003, 0x800C},
-    {0x7004, 0x800D},
-    {0x7005, 0x800E},
-    {0x7006, 0x800F},
-    {0x7007, 0x8010}    
-};
-
-
-void ISO_UpdateBarGraph(uint16_t wOutputNumberID, uint32_t dNumericValue)
-{
-    ISOBUSMsg sSendMsg;    
-    
-    sSendMsg.frame.id = 0x18E72687;
+    sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);;
     sSendMsg.frame.dlc = 8;
     
-    sSendMsg.frame.data[0] = 0xA8;
+    sSendMsg.frame.data[0] = FUNC_CHANGE_NUMERIC_VALUE;
     sSendMsg.frame.data[1] = (wOutputNumberID & 0xFF00) >> 8;
     sSendMsg.frame.data[2] = wOutputNumberID & 0xFF;
     sSendMsg.frame.data[3] = 0xFF;
@@ -1162,14 +1275,29 @@ void ISO_UpdateBarGraph(uint16_t wOutputNumberID, uint32_t dNumericValue)
     sSendMsg.frame.data[7] = (dNumericValue & 0xFF000000) >> 24;
     
     PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
+    osDelay(2);
 }
 
-extern uint32_t getID(uint32_t, uint32_t, uint32_t, uint32_t);
-
-void ISO_UpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
+void ISO_vUpdateListItemValue(uint16_t wOutputNumberID, uint8_t bListItem)
 {
-    ISOBUSMsg sSendMsg;    
-    
+    sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);;
+    sSendMsg.frame.dlc = 8;
+
+    sSendMsg.frame.data[0] = FUNC_CHANGE_LIST_ITEM;
+    sSendMsg.frame.data[1] = (wOutputNumberID & 0xFF00) >> 8;
+    sSendMsg.frame.data[2] = wOutputNumberID & 0xFF;
+    sSendMsg.frame.data[3] = bListItem;
+    sSendMsg.frame.data[4] = 0xFF;
+    sSendMsg.frame.data[5] = 0xFF;
+    sSendMsg.frame.data[6] = 0xFF;
+    sSendMsg.frame.data[7] = 0xFF;
+
+    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
+    osDelay(2);
+}
+
+void ISO_vUpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
+{
     sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
     sSendMsg.frame.dlc = 8;
   
@@ -1183,23 +1311,58 @@ void ISO_UpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
     sSendMsg.frame.data[7] = (dNumericValue & 0xFF000000) >> 24;
     
     PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
+    osDelay(2);
 }
 
-void ISO_vUpdateConfigurationDataMask(void);
-void ISO_vUpdateInstallationDataMask(void);
-void ISO_vUpdatePlanterDataMask(void);
-void ISO_vUpdateTestModeDataMask(void);
-void ISO_vUpdateTrimmingDataMask(void);
-void ISO_vUpdateSystemDataMask(void);
+void ISO_vUpdateFillAttributesValue(uint16_t wFillAttrID, uint8_t bColor)
+{
+    sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+    sSendMsg.frame.dlc = 8;
+
+    sSendMsg.frame.data[0] = FUNC_CHANGE_FILL_ATTRIBUTES;
+    sSendMsg.frame.data[1] = (wFillAttrID & 0xFF00) >> 8;
+    sSendMsg.frame.data[2] = wFillAttrID & 0xFF;
+    sSendMsg.frame.data[3] = 0x02;
+    sSendMsg.frame.data[4] = bColor;
+    sSendMsg.frame.data[5] = 0xFF;
+    sSendMsg.frame.data[6] = 0xFF;
+    sSendMsg.frame.data[7] = 0xFF;
+
+    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
+    osDelay(2);
+}
 
 void ISO_vUpdateConfigurationDataMask(void)
 {
+	*sConfigDataMask.eLanguage = LANGUAGE_ENGLISH;
+	*sConfigDataMask.eUnit = UNIT_IMPERIAL_SYSTEM;
+	*sConfigDataMask.dVehicleID = 1234;
+	sConfigDataMask.eMonitor = AREA_MONITOR_DISABLED;
+	*sConfigDataMask.fSeedsPerMeter = GET_UNSIGNED_INT_VALUE(2.5f);
+	*sConfigDataMask.bNumOfRows = 2;
+	*sConfigDataMask.fImplementWidth = 50;
+	*sConfigDataMask.fEvaluationDistance = 50;
+	*sConfigDataMask.bTolerance = 50;
+	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(12.0f);
+	sConfigDataMask.eAlterRows = ALTERNATE_ROWS_DISABLED;
 
+	ISO_vUpdateNumberVariableValue(0x81E3, *sConfigDataMask.eLanguage);
+//	ISO_vUpdateOutputNumberValue(0x9001, *sConfigDataMask.eUnit);
+
+	ISO_vUpdateNumberVariableValue(0x8000, *sConfigDataMask.dVehicleID);
+	ISO_vUpdateNumberVariableValue(0x8001, *sConfigDataMask.fSeedsPerMeter);
+	ISO_vUpdateNumberVariableValue(0x8002, *sConfigDataMask.bNumOfRows);
+	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.fImplementWidth);
+	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.fEvaluationDistance);
+	ISO_vUpdateNumberVariableValue(0x8005, *sConfigDataMask.bTolerance);
+	ISO_vUpdateNumberVariableValue(0x8006, *sConfigDataMask.fMaxSpeed);
 }
 
 void ISO_vUpdateInstallationDataMask(void)
 {
-
+	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++) {
+		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID, sInstallStatus.pFillAttribute[i].bColor);
+	}
 }
 
 void ISO_vUpdatePlanterDataMask(void)
@@ -1207,9 +1370,15 @@ void ISO_vUpdatePlanterDataMask(void)
 
 }
 
+extern tsAcumulados AQR_sAcumulado;
+
 void ISO_vUpdateTestModeDataMask(void)
 {
+	tsAcumulados* sSeedsCount = &AQR_sAcumulado;
 
+	for (int i = 0; i < *sConfigDataMask.bNumOfRows; i++) {
+		ISO_vUpdateNumberVariableValue((0x805C + i), sSeedsCount->sTotalReg.adSementes[i]);
+	}
 }
 
 void ISO_vUpdateTrimmingDataMask(void)
@@ -1274,28 +1443,36 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     while(eModCurrState != RUNNING){};
     WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
+    osThreadSetPriority(NULL, osPriorityHigh);
+
+    ISO_vUpdateConfigurationDataMask();
+
+    ISO_vInitObjectStruct();
+
+    ISO_vUpdateInstallationDataMask();
+
     while(1)
     {
     	/* Pool the device waiting for */
     	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    	osDelay(5000);
+    	osDelay(250);
     	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
     	switch(eCurrentDataMask)
     	{
     		case DATA_MASK_CONFIGURATION:
     		{
-    			ISO_vUpdateConfigurationDataMask();
+//    			ISO_vUpdateConfigurationDataMask();
     			break;
     		}
     		case DATA_MASK_INSTALLATION:
     		{
-    			ISO_vUpdateInstallationDataMask();
+//    			ISO_vUpdateInstallationDataMask();
     			break;
     		}
     		case DATA_MASK_PLANTER:
     		{
-    			ISO_vUpdatePlanterDataMask();
+//    			ISO_vUpdatePlanterDataMask();
     			break;
     		}
     		case DATA_MASK_TEST_MODE:
@@ -1305,12 +1482,12 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     		}
     		case DATA_MASK_TRIMMING:
     		{
-    			ISO_vUpdateTrimmingDataMask();
+//    			ISO_vUpdateTrimmingDataMask();
     			break;
     		}
     		case DATA_MASK_SYSTEM:
     		{
-    			ISO_vUpdateSystemDataMask();
+//    			ISO_vUpdateSystemDataMask();
     			break;
     		}
     		default:

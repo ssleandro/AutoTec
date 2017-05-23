@@ -3018,10 +3018,10 @@ void AQR_vAcquiregManagementThread (void const *argument)
                     //Liga flag de fim de instalação
                     osFlagSet (UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
                     //Atualiza flag para avisar a IHM que já pode confirmar o teste dos sensores
-                    //                    if ( IHM_bConfirmaInstSensores == eSensoresNaoInstalados )
-                    //                    {
-                    //                        IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
-                    //                    }
+//                    if ( IHM_bConfirmaInstSensores == eSensoresNaoInstalados )
+//                    {
+//                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
+//                    }
 
                     for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
                     {
@@ -3191,8 +3191,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
                     }
 
                     //Lê o valor do flag
-                    //                    dFlagCAN = OSFlagQuery( CAN_psFlagApl, &bErr );
-                    //                    __assert( bErr == OS_NO_ERR );
                     dFlagCAN = osFlagGet (xSEN_sFlagApl);
 
                     //Se houve resposta ao comando de configuração...
@@ -3205,8 +3203,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
                         psStatus->bCfgSensorRespondeu = true;
 
                         //Faz um auto-teste dos sensores:
-                        //                        OSFlagPost( AQR_sFlagREG, AQR_FLAG_AUTO_TESTE, OS_FLAG_SET, &bErr );
-                        //                        __assert( bErr == OS_NO_ERR );
                         osFlagSet (AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 
                         bTentativas = 0;
@@ -3214,7 +3210,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
                     if (psStatus->bAutoTeste != false)
                     {
-
                         //Verifica se há sensores reprovados...
                         bContaSensor = AQR_vContaSensores (Conectado);
 
@@ -3581,16 +3576,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
                 psStatus->bSensorDesconectado = false;
 
                 //Desabilita fonte de alimentação dos sensores CAN
-                //            UOS_DISABLE_PS9;
-//                DISABLE_PS9;
+                DISABLE_PS9;
 
                 //Aguarda meio segundo
-                //            OSTimeDly( TICK/2 );
                 osDelay (500);
 
                 //Habilita fonte de alimentação dos sensores CAN
-                //            UOS_ENABLE_PS9;
-//                ENABLE_PS9;
+                ENABLE_PS9;
             }
         }
 
