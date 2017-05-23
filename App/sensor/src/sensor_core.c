@@ -535,7 +535,7 @@ void SEN_vIdentifyEvent(contract_s* contract)
         }
         case MODULE_ACQUIREG:
         {
-            if((((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent) == CAN_APL_FLAG_FINISH_INSTALLATION)
+            if (GET_PUBLISHED_EVENT(contract) == CAN_APL_FLAG_FINISH_INSTALLATION)
             {
                 // Send final handshake messages to sensors...
 
@@ -585,7 +585,7 @@ void SEN_vIdentifyEvent(contract_s* contract)
         }
         case MODULE_GPS:
         {
-            if(((((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent) & GPS_FLAG_METRO) > 0)
+            if((GET_PUBLISHED_EVENT(contract) & GPS_FLAG_METRO) > 0)
             {
                 // TODO: Se nao esta em monitor de area nao pede a leitura dos sensores e nao esta em modo instalacao
                 SEN_vReadDataFromSensors();

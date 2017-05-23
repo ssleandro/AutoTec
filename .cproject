@@ -66,6 +66,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/App/common/app_inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/App/broker/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/App/diagnostic/inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/api}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/config}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/fat_sl/common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/media-drv/spansionBD/FTL/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/media-drv/spansionBD/FTL}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/media-drv/spansionBD/FTL/source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/middleware/FAT-SL/media-drv/spansionBD/SPF}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/App/broker/test}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/devices/dev_common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/devices/dev_inc}&quot;"/>
@@ -92,7 +99,7 @@
 									<listOptionValue builtIn="false" value="NDEBUG"/>
 									<listOptionValue builtIn="false" value="M2G_PROTOB"/>
 									<listOptionValue builtIn="false" value="configUSE_SEGGER_SYSTEM_VIEWER_HOOKS=1"/>
-									<listOptionValue builtIn="false" value="__SLLD"/>
+									<listOptionValue builtIn="false" value="__SPF"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.other.263015611" name="Other compiler flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.other" useByScannerDiscovery="true" value="" valueType="string"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.425588427" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
@@ -137,10 +144,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1917614912.1985403362" name="acquireg_util.h" rcbsApplicability="disable" resourcePath="App/acquireg/src/acquireg_util.h" toolsToInvoke=""/>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1917614912.1421855077" name="iap.h" rcbsApplicability="disable" resourcePath="mculib/mcu_inc/iap.h" toolsToInvoke=""/>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1917614912.846262156" name="tda3500app.doxyfile" rcbsApplicability="disable" resourcePath="M2G.doxyfile" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="IAR_(1)|IAR|mculib/mcu_inc/iap.h|middleware/middleware/FAT-SL/media-drv/spansionBD/SLLD/trace|middleware/middleware/fatfs/option/cc950.c|middleware/AuteqOS/os_extras/ARM_CM0|middleware/middleware/FAT-SL|src|middleware/middleware/fatfs/option/ccsbcs.c|devices/dev_src/ring_buffer.c|middleware/AuteqOS/os_extras/CMSIS|middleware/middleware/FAT-SL/media-drv/spansionBD/SLLD/TestCase|common_GCC/cr_startup_lpc43xx.c|middleware/middleware/fatfs/option/cc932.c|middleware/middleware/fatfs/option/cc936.c|middleware/AuteqOS/os_extras/ARM_CM4F_IAR|middleware/middleware/emWin/libs/IAR|middleware/middleware/fatfs/option/cc949.c|middleware/middleware/fat_sl|common_GCC/cr_startup_lpc4357.c|mculib/mcu_src/ring_buffer.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="App/acquireg/src/acquireg_util.h|App/acquireg/src/acquireg_util.c|App/filesys/src/srl.c|middleware/middleware/FAT-SL/media-drv/spansionBD/SLLD|IAR_(1)|IAR|mculib/mcu_inc/iap.h|middleware/middleware/FAT-SL/media-drv/spansionBD/SLLD/trace|middleware/middleware/fatfs/option/cc950.c|middleware/AuteqOS/os_extras/ARM_CM0|src|middleware/middleware/fatfs/option/ccsbcs.c|devices/dev_src/ring_buffer.c|middleware/AuteqOS/os_extras/CMSIS|middleware/middleware/FAT-SL/media-drv/spansionBD/SLLD/TestCase|common_GCC/cr_startup_lpc43xx.c|middleware/middleware/fatfs/option/cc932.c|middleware/middleware/fatfs/option/cc936.c|middleware/AuteqOS/os_extras/ARM_CM4F_IAR|middleware/middleware/emWin/libs/IAR|middleware/middleware/fatfs/option/cc949.c|middleware/middleware/fat_sl|common_GCC/cr_startup_lpc4357.c|mculib/mcu_src/ring_buffer.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>

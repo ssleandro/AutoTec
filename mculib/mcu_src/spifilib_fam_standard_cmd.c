@@ -1547,7 +1547,7 @@ SPIFI_FAM_NODE_T *spifi_REG_FAMILY_CommonCommandSet(void)
 			"S25FL256S 64kSec",
 			{{0x01, 0x02, 0x19}, 2, {0x4D, 0x01}},	/* JEDEC ID, extCount, ext data  */
 			(SPIFI_CAP_4BYTE_ADDR | SPIFI_CAP_DUAL_READ | SPIFI_CAP_QUAD_READ | SPIFI_CAP_QUAD_WRITE | SPIFI_CAP_FULLLOCK | SPIFI_CAP_NOBLOCK),
-			256,					/* # of blocks */
+			/*256*/ 512,					/* # of blocks */
 			0x10000,				/* block size */
 			0,						/* # of sub-blocks (Does NOT support full sub-block erase) */
 			0,						/* sub-block size 0x1000 */

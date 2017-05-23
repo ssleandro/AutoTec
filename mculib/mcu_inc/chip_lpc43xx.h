@@ -109,6 +109,7 @@ extern "C" {
 
 #define LPC_SCT                   ((LPC_SCT_T              *) LPC_SCT_BASE)
 #define LPC_GPDMA                 ((LPC_GPDMA_T            *) LPC_GPDMA_BASE)
+#define LPC_SPIFI                 ((LPC_SPIFI_T            *) LPC_SPIFI_BASE)
 #define LPC_SDMMC                 ((LPC_SDMMC_T            *) LPC_SDMMC_BASE)
 #define LPC_EMC                   ((LPC_EMC_T              *) LPC_EMC_BASE)
 #define LPC_USB0                  ((LPC_USBHS_T            *) LPC_USB0_BASE)
