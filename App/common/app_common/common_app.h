@@ -993,25 +993,6 @@ typedef struct
 }
 IHM_tsConfig;
 
-typedef struct {
-
-  //uint8_t  abAdubo[32];      //Adubo por linha
-  uint32_t dSomaSem;         //Sementes em todas as Linhas
-  uint32_t dDistancia;       //Distância Percorrida  em centimetros
-  uint32_t dSegundos;        //Tempo em segundos
-  float   fArea;            //Area
-  uint32_t adSementes[36];   //Sementes por linha
-
-} tsLinhas;
-
-typedef struct {
-
-  uint32_t    dTEV;          //Tempo total em excesso de velocidade (em trabalho)
-  uint32_t    dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
-  float      fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
-
-} tsVelocidade;
-
 //Estrutura do registro estático:
 typedef struct {
 

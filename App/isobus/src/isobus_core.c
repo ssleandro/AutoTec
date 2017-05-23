@@ -92,31 +92,9 @@ const sPlantingVariables sPlantingVar =
 	.bNumOfVariables = 9
 };
 
-const sPlanterDataMask sPlanterStatusDataMask =
-{
-	.psLinesStatus = &asLinesStatus[0],
-	.psIndividualLineStatus = &asIndividualLineStatus[0],
-	.pdPartPopSemPerMt = &(sPlantingVar.psNumberVariable[0].dValue),
-	.pdPartPopSemPetHa = &(sPlantingVar.psNumberVariable[1].dValue),
-	.pdWorkedAreaMt = &(sPlantingVar.psNumberVariable[2].dValue),
-	.pdWorkedAreaHa = &(sPlantingVar.psNumberVariable[3].dValue),
-	.pdTotalMt = &(sPlantingVar.psNumberVariable[4].dValue),
-	.pdTotalHa = &(sPlantingVar.psNumberVariable[5].dValue),
-	.pdProductivity = &(sPlantingVar.psNumberVariable[6].dValue),
-	.pdWorkedTime = &(sPlantingVar.psNumberVariable[7].dValue),
-	.pdTotalSeeds = &(sPlantingVar.psNumberVariable[8].dValue)
-};
-
 static sInstallationDataMask sInstallDataMask =
 {
 	.psLinesInstallStatus = &sInstallStatus
-};
-
-static sTestModeDataMask sTestMdDataMask =
-{
-	.psSeedsCount = &sSeedsCountVar,
-	.pdInstalledSensors = &(sSeedsCountVar.psNumberVariable[36].dValue),
-	.pdConfiguredSensors = &(sSeedsCountVar.psNumberVariable[37].dValue)
 };
 
 static sTrimmingDataMask sTrimminDataMask =
@@ -1064,16 +1042,6 @@ void ISO_vInitObjectStruct(void)
 		asConfigInputList[i].wObjID = 0x9000 + i;
 	}
 
-	for (int i = 0; i < (N_BAR_GRAPH_OBJECTS * 2); i = i + 2) {
-		asLinesStatus[i].wIncBarID = 0x7000 + i;
-		asLinesStatus[i].wDecBarID = 0x7000 + (i + 1);
-		asLinesStatus[i].wIncOutputNumID = 0x800B + i;
-		asLinesStatus[i].wDecOutputNumID = 0x800B + (i + 1);
-		asIndividualLineStatus[i].wIncBarID = 0x7048 + i;
-		asIndividualLineStatus[i].wDecBarID = 0x7048 + (i + 1);
-		asIndividualLineStatus[i].wIncOutputNumID = 0x812F + i;
-		asIndividualLineStatus[i].wDecOutputNumID = 0x812F + (i + 1);
-	}
 }
 
 // Used to FUNC_CHANGE_NUMERIC_VALUE message

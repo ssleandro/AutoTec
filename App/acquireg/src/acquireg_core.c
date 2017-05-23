@@ -38,7 +38,6 @@
 #include "../../acquireg/config/acquireg_config.h"
 #include "acquireg_ThreadControl.h"
 #include <stdlib.h>
-#include "acquireg_util.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
@@ -2310,6 +2309,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 //                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
 //                    }
 
+                    for( bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++ )
+                    {
+                      //Conecta sensores
+                      psAQR_Sensor[ bConta ].eEstado = Conectado;
+                    }
 				}
 
 				// Occurs event CAN_APL_FLAG_FINISH_INSTALLATION
