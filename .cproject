@@ -144,7 +144,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1917614912.1985403362" name="acquireg_util.h" rcbsApplicability="disable" resourcePath="App/acquireg/src/acquireg_util.h" toolsToInvoke=""/>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1917614912.1421855077" name="iap.h" rcbsApplicability="disable" resourcePath="mculib/mcu_inc/iap.h" toolsToInvoke=""/>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1917614912.846262156" name="tda3500app.doxyfile" rcbsApplicability="disable" resourcePath="M2G.doxyfile" toolsToInvoke=""/>
 					<sourceEntries>

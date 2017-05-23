@@ -328,13 +328,18 @@ eAPPError_s FSM_vInitDeviceLayer(void)
 {
 	uint8_t ucStatus;
 	eAPPError_s error = APP_ERROR_SUCCESS;
+	uint8_t retries = 3;
 
-	/*Prepare the device */
-	ucStatus = fs_init();
-	if (ucStatus  == F_NO_ERROR)
+	do
 	{
 		ucStatus = f_initvolume( initfunc_span );
-	}
+		if (ucStatus == F_ERR_NOTFORMATTED)
+		{
+			f_format( F_FAT16_MEDIA );
+		}
+
+	} while ((ucStatus  != F_NO_ERROR) && (retries-- > 0));
+
     if (ucStatus == F_NO_ERROR)
     {
     	eError = APP_ERROR_SUCCESS;
@@ -412,7 +417,6 @@ void FSM_vFileSysThread (void const *argument)
     INITIALIZE_QUEUE(FileSysQueue);
 
 	osFlagGroupCreate (&FFS_sFlagSis);
-
     error = FSM_vInitDeviceLayer();
     ASSERT(error == APP_ERROR_SUCCESS);
 

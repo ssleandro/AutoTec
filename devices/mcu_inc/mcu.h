@@ -109,6 +109,9 @@ void MCU_vSDRAMInit(void);
 uint32_t MCU_wReadBootCode(void);
 
 uint32_t MCU_wReadPID(void);
+
+void MCU_vFFSInit(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

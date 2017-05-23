@@ -85,3 +85,8 @@ uint32_t MCU_wReadPID(void)
   Chip_IAP_init();
   return Chip_IAP_ReadPID();
 }
+
+void MCU_vFFSInit (void)
+{
+	fs_init();
+}
