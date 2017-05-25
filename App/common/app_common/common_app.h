@@ -42,6 +42,13 @@
 /******************************************************************************
 * Preprocessor Constants
 *******************************************************************************/
+#define GUI_UPDATE_INSTALLATION_INTERFACE 0x00000001
+#define GUI_UPDATE_PLANTER_INTERFACE 	  0x00000002
+#define GUI_UPDATE_TEST_MODE_INTERFACE	  0x00000004
+#define GUI_UPDATE_TRIMMING_INTERFACE	  0x00000008
+#define GUI_UPDATE_SYSTEM_INTERFACE		  0x00000010
+#define GUI_CHANGE_CURRENT_DATA_MASK	  0x00000020
+#define GUI_CHANGE_CURRENT_CONFIGURATION  0x00000040
 
 /******************************************************************************
 * Configuration Constants
@@ -50,6 +57,7 @@
 /******************************************************************************
 * Macros
 *******************************************************************************/
+#define TICK 1000
 /**
  * This MACRO will Create a Ring Buffer
  */
@@ -260,8 +268,42 @@ typedef enum WDTStatus_e
     WDT_ACTIVE          = 2,//!< ACTIVE
 } WDTStatus_e;
 
-#define TICK 1000
+typedef enum {
+	DATA_MASK_CONFIGURATION = 0x5000,
+	DATA_MASK_INSTALLATION,
+	DATA_MASK_PLANTER,
+	DATA_MASK_TEST_MODE,
+	DATA_MASK_TRIMMING,
+	DATA_MASK_SYSTEM,
+	DATA_MASK_INVALID
+} eDataMask;
 
+/******************************************************************************
+* Publish structures
+*******************************************************************************/
+typedef enum {
+    EVENT_SET,
+    EVENT_CLEAR,
+    EVENT_UPDATE,
+} eEventType;
+
+typedef struct {
+    uint32_t dEvent;
+    eEventType eEvtType;
+    void* vPayload;
+} PubMessage;
+
+typedef enum event_e
+{
+    EVENT_FFS_STATUS,        		//!< EVENT FFS STATUS CHANGED
+	EVENT_FFS_CFG,        	//!< EVENT FILE CFG STATUS CHANGED
+	EVENT_FFS_INTERFACE_CFG,    //!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_FFS_STATIC_REG,    //!< EVENT FILE INTERFACE STATUS CHANGED
+} event_e;
+
+/******************************************************************************
+* Conversion from MPA
+*******************************************************************************/
 // TODO: This variables is just for test
 // TODO: common from GPS
 
@@ -928,31 +970,6 @@ typedef struct{
   uint16_t  awBufDis;
   uint8_t   abBufSem[ CAN_bNUM_DE_LINHAS ];
 }tsFalhaInstantanea;
-
-/******************************************************************************
-* Publish structures
-*******************************************************************************/
-typedef enum {
-    EVENT_SET,
-    EVENT_CLEAR,
-    EVENT_UPDATE,
-} eEventType;
-
-typedef struct {
-    uint32_t dEvent;
-    eEventType eEvtType;
-    void* vPayload;
-} PubMessage;
-
-
-typedef enum event_e
-{
-    EVENT_FFS_STATUS,        		//!< EVENT FFS STATUS CHANGED
-	EVENT_FFS_CFG,        	//!< EVENT FILE CFG STATUS CHANGED
-	EVENT_FFS_INTERFACE_CFG,    //!< EVENT FILE INTERFACE STATUS CHANGED
-	EVENT_FFS_STATIC_REG,    //!< EVENT FILE INTERFACE STATUS CHANGED
-} event_e;
-
 
 typedef struct
 {

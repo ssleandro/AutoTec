@@ -49,10 +49,13 @@
 #define QUEUE_SIZEOFISOBUS (5)
 
 #define THIS_MODULE MODULE_ISOBUS
+
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
 static eAPPError_s eError;                   		//!< Error variable
+
+tsAcumulados* psAccumulated;
 
 extern osFlagsGroupId UOS_sFlagSis;
 
@@ -117,6 +120,11 @@ CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 10)
 CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 10)
 CREATE_LOCAL_QUEUE(UpdateQ, ISOBUSMsg, 10)
 CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 10)
+
+/*****************************
+ * Local flag group
+ *****************************/
+osFlagsGroupId ISO_sFlags;
 
 /**
  * Module Threads
@@ -356,8 +364,8 @@ eAPPError_s ISO_eInitIsobusPublisher(void)
 #ifndef UNITY_TEST
 void ISO_vIsobusPublishThread(void const *argument)
 {
-	osEvent evt;
-	PubMessage sIsoPubMsg;
+	osFlags dFlags;
+	PubMessage sISOPubMessage;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Publish Thread Created");
@@ -378,16 +386,26 @@ void ISO_vIsobusPublishThread(void const *argument)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
-        evt = RECEIVE_LOCAL_QUEUE(PublishQ, osWaitForever);   // Wait
+        dFlags = osFlagWait(ISO_sFlags, (GUI_CHANGE_CURRENT_DATA_MASK | GUI_CHANGE_CURRENT_CONFIGURATION), true, false, osWaitForever);
         WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
 
-        if(evt.status == osEventMessage)
-        {
-//        	sIsoPubMsg.dEvent = EVENT_XXXXXXXXXXXXXX;
-//        	sIsoPubMsg.eEvtType = EVENT_TYPE_XXXXXXX;
-//        	sIsoPubMsg.vPayload = (void*) &sIsoMsg;
-        }
+    	if((dFlags & GUI_CHANGE_CURRENT_DATA_MASK) > 0)
+    	{
+    		sISOPubMessage.dEvent = GUI_CHANGE_CURRENT_DATA_MASK;
+    		sISOPubMessage.eEvtType = EVENT_SET;
+    		sISOPubMessage.vPayload = (void*) &eCurrentDataMask;
+            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
+            PUBLISH(CONTRACT(Isobus), 0);
+    	}
 
+    	if((dFlags & GUI_CHANGE_CURRENT_CONFIGURATION) > 0)
+    	{
+    		sISOPubMessage.dEvent = GUI_CHANGE_CURRENT_CONFIGURATION;
+    		sISOPubMessage.eEvtType = EVENT_SET;
+    		sISOPubMessage.vPayload = (void*) &sConfigDataMask;
+            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
+            PUBLISH(CONTRACT(Isobus), 0);
+    	}
 
     }
     osThreadTerminate(NULL);
@@ -455,12 +473,46 @@ eAPPError_s ISO_vInitDeviceLayer(uint32_t wSelectedInterface)
 
 void ISO_vIdentifyEvent (contract_s* contract)
 {
+	osFlags evt;
+
 	switch (contract->eOrigin)
 	{
 		case MODULE_GUI:
 		{
-
-
+			evt = GET_PUBLISHED_EVENT(contract);
+			switch (evt) {
+				case GUI_UPDATE_INSTALLATION_INTERFACE:
+				{
+					osFlagSet(ISO_sFlags, GUI_UPDATE_INSTALLATION_INTERFACE);
+					break;
+				}
+				case GUI_UPDATE_PLANTER_INTERFACE:
+				{
+					osFlagSet(ISO_sFlags, GUI_UPDATE_PLANTER_INTERFACE);
+					break;
+				}
+				case GUI_UPDATE_TEST_MODE_INTERFACE:
+				{
+					if(psAccumulated == NULL)
+					{
+						psAccumulated = (tsAcumulados*) GET_PUBLISHED_PAYLOAD(contract);
+					}
+					osFlagSet(ISO_sFlags, GUI_UPDATE_TEST_MODE_INTERFACE);
+					break;
+				}
+				case GUI_UPDATE_TRIMMING_INTERFACE:
+				{
+					osFlagSet(ISO_sFlags, GUI_UPDATE_TRIMMING_INTERFACE);
+					break;
+				}
+				case GUI_UPDATE_SYSTEM_INTERFACE:
+				{
+					osFlagSet(ISO_sFlags, GUI_UPDATE_SYSTEM_INTERFACE);
+					break;
+				}
+				default:
+					break;
+			}
 			break;
 		}
 		default:
@@ -473,6 +525,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 void ISO_vIsobusThread (void const *argument)
 {
 	osEvent evt;
+	osStatus status;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Thread Created");
@@ -483,6 +536,9 @@ void ISO_vIsobusThread (void const *argument)
     INITIALIZE_QUEUE(IsobusQueue);
 
     INITIALIZE_MUTEX(MTX_VTStatus);
+
+    status = osFlagGroupCreate(&ISO_sFlags);
+    ASSERT(status == osOK);
 
     /* Prepare the signature - struture that notify the broker about subscribers */
     SIGNATURE_HEADER(Isobus, THIS_MODULE, TOPIC_GUI, IsobusQueue);
@@ -888,7 +944,7 @@ void ISO_vIsobusBootThread(void const *argument)
                 }
                 case OBJECT_POOL_LOADED:
                 {
-                    START_TIMER(WSMaintenanceTimer, 1000);
+                    START_TIMER(WSMaintenanceTimer, 800);
 
                     // The boot process are completed, so terminate this thread
                     eCurrState = BOOT_COMPLETED;
@@ -1119,6 +1175,7 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                     	if((dAux >= DATA_MASK_CONFIGURATION) || (dAux < DATA_MASK_INVALID))
                     	{
                     		eCurrentDataMask = (eDataMask) dAux;
+                    		osFlagSet(ISO_sFlags, GUI_CHANGE_CURRENT_DATA_MASK);
                     	}
                         break;
                     }
@@ -1338,14 +1395,15 @@ void ISO_vUpdatePlanterDataMask(void)
 
 }
 
-extern tsAcumulados AQR_sAcumulado;
+//extern tsAcumulados AQR_sAcumulado;
 
 void ISO_vUpdateTestModeDataMask(void)
 {
-	tsAcumulados* sSeedsCount = &AQR_sAcumulado;
+	if(psAccumulated == NULL)
+		return;
 
 	for (int i = 0; i < *sConfigDataMask.bNumOfRows; i++) {
-		ISO_vUpdateNumberVariableValue((0x805C + i), sSeedsCount->sTotalReg.adSementes[i]);
+		ISO_vUpdateNumberVariableValue((0x805C + i), psAccumulated->sTotalReg.adSementes[i]);
 	}
 }
 
@@ -1385,7 +1443,9 @@ void ISO_vUpdateSystemDataMask(void)
   *******************************************************************************/
 #ifndef UNITY_TEST
 void ISO_vIsobusUpdateOPThread(void const *argument)
-{    
+{
+	osFlags dFlags;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus UpdateOP Thread Created");
 #endif
@@ -1417,49 +1477,39 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
 
     ISO_vInitObjectStruct();
 
-    ISO_vUpdateInstallationDataMask();
+//    ISO_vUpdateInstallationDataMask();
 
     while(1)
     {
     	/* Pool the device waiting for */
     	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    	osDelay(250);
+    	dFlags = osFlagWait(ISO_sFlags, (GUI_UPDATE_INSTALLATION_INTERFACE | GUI_UPDATE_PLANTER_INTERFACE | GUI_UPDATE_TEST_MODE_INTERFACE |
+    										GUI_UPDATE_TRIMMING_INTERFACE | GUI_UPDATE_SYSTEM_INTERFACE), true, false, osWaitForever);
     	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-    	switch(eCurrentDataMask)
+    	if((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
     	{
-    		case DATA_MASK_CONFIGURATION:
-    		{
-//    			ISO_vUpdateConfigurationDataMask();
-    			break;
-    		}
-    		case DATA_MASK_INSTALLATION:
-    		{
-//    			ISO_vUpdateInstallationDataMask();
-    			break;
-    		}
-    		case DATA_MASK_PLANTER:
-    		{
-//    			ISO_vUpdatePlanterDataMask();
-    			break;
-    		}
-    		case DATA_MASK_TEST_MODE:
-    		{
-    			ISO_vUpdateTestModeDataMask();
-    			break;
-    		}
-    		case DATA_MASK_TRIMMING:
-    		{
-//    			ISO_vUpdateTrimmingDataMask();
-    			break;
-    		}
-    		case DATA_MASK_SYSTEM:
-    		{
-//    			ISO_vUpdateSystemDataMask();
-    			break;
-    		}
-    		default:
-    			break;
+
+    	}
+
+    	if((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
+    	{
+
+    	}
+
+    	if((dFlags & GUI_UPDATE_TEST_MODE_INTERFACE) > 0)
+    	{
+    		ISO_vUpdateTestModeDataMask();
+    	}
+
+    	if((dFlags & GUI_UPDATE_TRIMMING_INTERFACE) > 0)
+    	{
+
+    	}
+
+    	if((dFlags & GUI_UPDATE_SYSTEM_INTERFACE) > 0)
+    	{
+
     	}
     }
     osThreadTerminate(NULL);

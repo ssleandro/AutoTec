@@ -2316,48 +2316,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
                     }
 				}
 
-				// Occurs event CAN_APL_FLAG_FINISH_INSTALLATION
 				osFlagSet(xSEN_sFlagApl, CAN_APL_FLAG_FINISH_INSTALLATION);
-
-//                //-----------------------------------------------------------------------------
-//                //Envia Parâmetros para sensores de semente
-//                uint8_t abParametros[6];
-//
-//                CAN_sParametrosSensor.wMinimo = 600; //us
-//                CAN_sParametrosSensor.wMaximo = 20000; //us
-//                CAN_sParametrosSensor.wMaximoDuplo = 20000; //us
-//
-//                memcpy (abParametros, &CAN_sParametrosSensor, sizeof(CAN_sParametrosSensor));
-//
-//                //Envia parâmetros para os sensores de semente
-//                SEN_vSensorsParameters ( CAN_APL_CMD_PARAMETROS_SENSOR, CAN_APL_LINHA_TODAS,
-//                                        CAN_APL_SENSOR_SEMENTE, abParametros, CAN_MSG_DLC_6);
-//                //-----------------------------------------------------------------------------
-//                //Envia solicitação de Versão dos sensores, se já obteve a versão , não envia a solicitação
-//                if (!(dFlagsSis & UOS_SIS_FLAG_VERSAO_SW_OK))
-//                {
-//                    SEN_vGetVersion ();
-//                }
-//
-//                //-----------------------------------------------------------------------------
-//                //Envia Parâmetros para sensores de semente com algoritimo para tratar duplos
-//                uint8_t abParametrosExt[8];
-//
-//                CAN_sParametrosExtended.bMinimo = 6;    //( x 100us )
-//                CAN_sParametrosExtended.bDuplo = 200;   //( x 100us )
-//                CAN_sParametrosExtended.bMaximo = 200;   //( x 100us )
-//                CAN_sParametrosExtended.bFreqAmostra = 4; //( x 10 Amostras/seg )
-//                CAN_sParametrosExtended.bNAmostra = 250;   //( Amostras )
-//                CAN_sParametrosExtended.bPasso = 20;    //( x 10us )
-//                CAN_sParametrosExtended.bDivPicoOffsetMinimo = 0x58; //( DivPico = 8 / OffsetMinimo = 5 (-) )
-//                CAN_sParametrosExtended.bOffsetDuploOffsetTriplo = 0x40; //( OffsetDuplo = 0 / OffsetTriplo = 4 (-) )
-//
-//                memcpy (abParametrosExt, &CAN_sParametrosExtended, sizeof(CAN_tsParametrosExtended));
-//
-//                //Envia parâmetros para os sensores de semente
-//                SEN_vSensorsParameters (CAN_APL_CMD_PARAMETROS_EXTENDED, CAN_APL_LINHA_TODAS,
-//                                        CAN_APL_SENSOR_SEMENTE, abParametrosExt, CAN_MSG_DLC_8);
-//                /* ******************************************************************************* */
 			}
 		}
 
@@ -2381,19 +2340,15 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		if (dFlagSensor != CAN_APL_FLAG_NENHUM)
 		{
-			//            psApl->dEventosAplAqr |= evt.value.signals;
-
 			//Pega o mutex antes acessar dados compartilhados:
-			status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever)
-			;
+			status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
 			ASSERT(status == osOK);
 
 			//Prepara a cópia de trabalho da estrutura com dados CAN:
 			memcpy(&AQR_sDadosCAN, &CAN_sCtrlLista, sizeof(AQR_sDadosCAN));
 
 			//Devolve o mutex:
-			status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores)
-			;
+			status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
 			ASSERT(status == osOK);
 
 			//------------------------------------------------------------------------
@@ -2429,8 +2384,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							bApagaSensorReprovado = false;
 
 							//Pega o mutex antes acessar dados compartilhados:
-							status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever)
-							;
+							status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
 							ASSERT(status == osOK);
 
 							// TODO: CAN_sCtrlLista. This should be done using broker.
@@ -2440,8 +2394,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 								sizeof(AQR_sDadosCAN.asLista[psStatus->bSensorAdicionado]));
 
 							//Devolve o mutex:
-							status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores)
-							;
+							status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
 							ASSERT(status == osOK);
 						}
 					}
@@ -3130,18 +3083,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//Indica Erro no GPS
 
 		//Se nova mensagem for inválida, liga evento de erro de GPS:
-//        if( ( ( AQR_sDadosGPS.bFlagsFix & GPS_FIX_STATUS_OK ) != GPS_FIX_STATUS_OK )||  //Se não tiver fixos
-//                ( ( AQR_sDadosGPS.bValid & GPS_VALID_TIME       ) != GPS_VALID_TIME    )||  //Se não tiver hora válida
-//                ( AQR_sDadosGPS.eStsAntena != OK                                       )||  //Se não tiver antena OK
-//                ( AQR_sDadosGPS.dSpeedAcc > 150                                        )||  //Se a precisão de velocidade for maior que 1,5 m/s
-//                ( UOS_bEstadoUART0 != UOS_GPS                                          )||  //Se a UART não estiver conectada ao GPS
-//                ( GPS_sDadosGPS.bConfigura_FIM == false                                )  ) //Se a configuração do GPS não estiver finalizada
-		if (((AQR_sDadosGPS.bFlagsFix & GPS_FIX_STATUS_OK) != GPS_FIX_STATUS_OK)
-			||  //Se não tiver fixos
+		if (((AQR_sDadosGPS.bFlagsFix & GPS_FIX_STATUS_OK) != GPS_FIX_STATUS_OK) ||  //Se não tiver fixos
 			((AQR_sDadosGPS.bValid & GPS_VALID_TIME) != GPS_VALID_TIME) || //Se não tiver hora válida
 			(AQR_sDadosGPS.eStsAntena != OK) ||  //Se não tiver antena OK
 			(AQR_sDadosGPS.dSpeedAcc > 150) || //Se a precisão de velocidade for maior que 1,5 m/s
-			(GPS_sDadosGPS.bConfigura_FIM == false)) //Se a configuração do GPS não estiver finalizada
+			(AQR_sDadosGPS.bConfigura_FIM == false)) //Se a configuração do GPS não estiver finalizada
 		{
 			psStatus->bErroGPS = true;
 
@@ -3214,22 +3160,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			}
 		}
 
-		//            dFlagsSis = OSFlagQuery( UOS_sFlagSis, &bErr );
-		//            __assert( bErr == OS_NO_ERR );
-		//
-		//            //Se houver timeout
-		//            //Se não estiver em modo de trabalho
-		//            //Se a instalação estiver concluída
-		//            if( ( ( dValorGPS & GPS_FLAG_TIMEOUT_MTR ) > 0 ) &&
-		//                ( ( dFlagsSis & UOS_SIS_FLAG_MODO_TESTE     ) > 0  ) )
-		//            {
-		//              if( psMonitor->bMonitorArea == false )
-		//              {
-		//                //Envia comando de Leitura de dados dos Sensores
-		//                CAN_vLeituraDadosSensores();
-		//              }
-		//            }
-
 		dFlagsSis = osFlagGet(UOS_sFlagSis);
 
 		//Se houver timeout
@@ -3241,7 +3171,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if (psMonitor->bMonitorArea == false)
 			{
 				// TODO: Envia comando de Leitura de dados dos Sensores
-				// Probably not necessary, because MODULE_GPS generate this event. Verify it!
 				SEN_vReadDataFromSensors();
 			}
 		}
@@ -3270,9 +3199,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if ((dValorFlagREG & AQR_FLAG_RESET_DESLIGA) > 0)
 			{
 				//Ajusta o timer com timeout de 30 Min.
-				//                UOS_vAjustaTimer( bTimerDesliga, AQR_TIMEOUT_30MIN, true );
-				status = START_TIMER(AQR_bTimerTurnOff, AQR_TIMEOUT_30MIN)
-					;
+				status = START_TIMER(AQR_bTimerTurnOff, AQR_TIMEOUT_30MIN);
 				ASSERT(status == osOK);
 			}
 #endif
@@ -3351,9 +3278,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			|| ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) == 0))
 		{
 			//Ajusta o timer com timeout de 1 segundo
-			//              UOS_vAjustaTimer( GPS_bTimerMtr, GPS_TIMEOUT_1S, true );
-			status = START_TIMER(GPS_bTimerMtr, GPS_TIMEOUT_1S)
-				;
+			status = START_TIMER(GPS_bTimerMtr, GPS_TIMEOUT_1S);
 			ASSERT(status == osOK);
 		}
 
@@ -3431,83 +3356,56 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						{
 							//Se a linha não estiver levantada (Arremate ou intercalação)
 							//Utilizando os flags de extensão, verificando se é maior que 32 bits
-							if ((((dLinhaAtual & psStatus->dLinhasLevantadas)
-								== 0) && (bI < 32))
-								|| (((dLinhaAtualExt
-									& psStatus->dLinhasLevantadasExt)
-									== 0) && (bI >= 32)))
+							if ((((dLinhaAtual & psStatus->dLinhasLevantadas) == 0) && (bI < 32))
+											|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0) && (bI >= 32)))
 							{
-								// TODO:
-								// ( ( dLinhaAtualExt & psStatus->dLinhasLevantadasExt ) == 0 ) && ( bI >= 32 ) )
-
 								//Devido à necessidade de trabalharmos com valores inteiros de semente,
 								//devemos arredondar o valor configurado, para acumular na linha ignorada
 								//o valor equivalente ao real, sem perder a parte fracionária.
-								uint8_t bArredondamento =
-									(uint8_t)(psMonitor->wSementesPorMetro
-										* 0.1);
-								bArredondamento = psMonitor->wSementesPorMetro
-									- (bArredondamento * 10);
+								uint8_t bArredondamento = (uint8_t) (psMonitor->wSementesPorMetro * 0.1);
+								bArredondamento = psMonitor->wSementesPorMetro - (bArredondamento * 10);
 								bArredondamento = 10 - bArredondamento;
 
 								//Coloca no buffer informações sobre sensores de semente
-								sSegmentos.abBufSem[bI][wAux] =
-									(uint8_t)((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 0.1f);
+								sSegmentos.abBufSem[bI][wAux] = (uint8_t) ((psMonitor->wSementesPorMetro
+												+ bArredondamento) * 0.1f);
 
 								//Soma o total de sementes por linha em trabalho
-								psTrabTotal->adSementes[bI] +=
-									(uint32_t)((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 0.1f);
-								psTrabParcial->adSementes[bI] +=
-									(uint32_t)((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 0.1f);
+								psTrabTotal->adSementes[bI] += (uint32_t) ((psMonitor->wSementesPorMetro
+												+ bArredondamento) * 0.1f);
+								psTrabParcial->adSementes[bI] += (uint32_t) ((psMonitor->wSementesPorMetro
+												+ bArredondamento) * 0.1f);
 
 								//Soma o total de sementes em todas as linha em trabalho
-								psTrabTotal->dSomaSem +=
-									(uint32_t)((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 0.1f);
-								psTrabParcial->dSomaSem +=
-									(uint32_t)((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 0.1f);
-								psDistTrabParcial->dSomaSem +=
-									(uint32_t)((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 0.1f);
+								psTrabTotal->dSomaSem += (uint32_t) ((psMonitor->wSementesPorMetro + bArredondamento)
+												* 0.1f);
+								psTrabParcial->dSomaSem += (uint32_t) ((psMonitor->wSementesPorMetro + bArredondamento)
+												* 0.1f);
+								psDistTrabParcial->dSomaSem += (uint32_t) ((psMonitor->wSementesPorMetro
+												+ bArredondamento) * 0.1f);
 								//Sementes por metro * 10 - Distância em m
 								//utilizamos para esta conta o valor sem arredondamento, pois precisamos extrair a fração real que está
 								//sendo "perdida" nos cálculos em função da distância do segmento não ser exatamente 1 metro
-								int32_t lFracaoSemente =
-									(uint32_t)(psMonitor->wSementesPorMetro
-										* sSegmentos.awBufDis[wAux]
-										* 0.1);
+								int32_t lFracaoSemente = (uint32_t) (psMonitor->wSementesPorMetro
+												* sSegmentos.awBufDis[wAux] * 0.1);
 								//Subtraimos deste valor a quantidade de sementes que já havia sido acumulada (com arredondamento)
 								//desta forma acumulamos o valor fracionário, com 3 casas decimais de precisão
 								sSegmentos.alBufSemFrac[bI] += lFracaoSemente
-									- ((psMonitor->wSementesPorMetro
-										+ bArredondamento) * 100);
+												- ((psMonitor->wSementesPorMetro + bArredondamento) * 100);
 
-								if ((sSegmentos.alBufSemFrac[bI] >= 1000)
-									|| (sSegmentos.alBufSemFrac[bI] <= -1000))
+								if ((sSegmentos.alBufSemFrac[bI] >= 1000) || (sSegmentos.alBufSemFrac[bI] <= -1000))
 								{
-									lFracaoSemente =
-										(int32_t)(sSegmentos.alBufSemFrac[bI]
-											* 0.001f);
+									lFracaoSemente = (int32_t) (sSegmentos.alBufSemFrac[bI] * 0.001f);
 
-									sSegmentos.alBufSemFrac[bI] -=
-										lFracaoSemente * 1000.0f;
-									sSegmentos.abBufSem[bI][wAux] +=
-										lFracaoSemente;
+									sSegmentos.alBufSemFrac[bI] -= lFracaoSemente * 1000.0f;
+									sSegmentos.abBufSem[bI][wAux] += lFracaoSemente;
 									//Soma o total de sementes por linha em trabalho
-									psTrabTotal->adSementes[bI] +=
-										lFracaoSemente;
-									psTrabParcial->adSementes[bI] +=
-										lFracaoSemente;
+									psTrabTotal->adSementes[bI] += lFracaoSemente;
+									psTrabParcial->adSementes[bI] += lFracaoSemente;
 									//Soma o total de sementes em todas as linha em trabalho
 									psTrabTotal->dSomaSem += lFracaoSemente;
 									psTrabParcial->dSomaSem += lFracaoSemente;
-									psDistTrabParcial->dSomaSem +=
-										lFracaoSemente;
-
+									psDistTrabParcial->dSomaSem += lFracaoSemente;
 								}
 							}
 						}
@@ -3515,25 +3413,19 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						{
 							//Se a linha atual não estiver levantada verificando se está
 							//Utilizando os flags de extensão, verificando se é maior que 32 bits
-							if ((((dLinhaAtual & psStatus->dLinhasLevantadas)
-								== 0) && (bI < 32))
-								|| (((dLinhaAtualExt
-									& psStatus->dLinhasLevantadasExt)
-									== 0) && (bI >= 32)))
+							if ((((dLinhaAtual & psStatus->dLinhasLevantadas) == 0) && (bI < 32))
+											|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0) && (bI >= 32)))
 							{
 								//Coloca no buffer informações sobre sensores de semente
-								sSegmentos.abBufSem[bI][wAux] =
-									psAQR_Sensor[bI1].abUltimaLeitura[0];
+								sSegmentos.abBufSem[bI][wAux] = psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 								//Soma o total de sementes por linha em trabalho
-								psTrabTotal->adSementes[bI] +=
-									(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
-								psTrabParcial->adSementes[bI] +=
-									(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+								psTrabTotal->adSementes[bI] += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
+								psTrabParcial->adSementes[bI] += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 								//Se não caiu semente na linha
-								if ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-									* 100) < psStatus->wMinSementesZero)
+								if ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+												< psStatus->wMinSementesZero)
 								{
 									//Incrementa a quantidade de linhas com zero sementes
 									psStatus->bNumLinhasZero++;
@@ -3545,40 +3437,31 @@ void AQR_vAcquiregManagementThread (void const *argument)
 										//Verifica qual flag irá sinalizar
 										if (bI < 32)
 										{
-											AQR_sStatus.dSementeZero |=
-												0x00000001 << bI;
-										}
-										else
+											AQR_sStatus.dSementeZero |= 0x00000001 << bI;
+										} else
 										{
-											AQR_sStatus.dSementeZeroExt |=
-												0x00000001 << (bI - 32);
+											AQR_sStatus.dSementeZeroExt |= 0x00000001 << (bI - 32);
 										}
 
 										abTimeoutAlarme[bI] =
 										AQR_DISTANCIA_LIMPA_FALHA;
 
-										AQR_sFalhaInstantanea.abBufSem[bI] =
-											sSegmentos.abBufSem[bI][wAux];
-										AQR_sFalhaInstantanea.awBufDis =
-											(uint16_t)((AQR_sDadosGPS.fDistancia
-												* 10.0f) + 0.5f);
+										AQR_sFalhaInstantanea.abBufSem[bI] = sSegmentos.abBufSem[bI][wAux];
+										AQR_sFalhaInstantanea.awBufDis = (uint16_t) ((AQR_sDadosGPS.fDistancia * 10.0f)
+														+ 0.5f);
 										//Indica falha de sensor - usado pela IHM
 										//AQR_sStatus.dSementeZeroIHM |= 0x00000001 << bI;
 									}                      //fim insensibilidade
-								}
-								else
+								} else
 								{
 									//Limpa falha de sensor de semente próximo de zero
 									//Verifica qual flag irá sinalizar
 									if (bI < 32)
 									{
-										AQR_sStatus.dSementeZero &= ~(0x00000001
-											<< bI);
-									}
-									else
+										AQR_sStatus.dSementeZero &= ~(0x00000001 << bI);
+									} else
 									{
-										AQR_sStatus.dSementeZeroExt &=
-											~(0x00000001 << (bI - 32));
+										AQR_sStatus.dSementeZeroExt &= ~(0x00000001 << (bI - 32));
 									}
 
 									if (abTimeoutAlarme[bI] == 0)
@@ -3586,43 +3469,32 @@ void AQR_vAcquiregManagementThread (void const *argument)
 										//Verifica qual flag irá sinalizar
 										if (bI < 32)
 										{
-											AQR_sStatus.dSementeZeroIHM &=
-												~(0x00000001 << bI);
-										}
-										else
+											AQR_sStatus.dSementeZeroIHM &= ~(0x00000001 << bI);
+										} else
 										{
-											AQR_sStatus.dSementeZeroIHMExt &=
-												~(0x00000001 << (bI - 32));
+											AQR_sStatus.dSementeZeroIHMExt &= ~(0x00000001 << (bI - 32));
 										}
 									}
 								}
 
 								//Soma o total de sementes em todas as linha em trabalho
-								psTrabTotal->dSomaSem +=
-									(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
-								psTrabParcial->dSomaSem +=
-									(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
-								psDistTrabParcial->dSomaSem +=
-									(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+								psTrabTotal->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
+								psTrabParcial->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
+								psDistTrabParcial->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 							}
 						}
 
 						//Se o sensor foi marcado como ignorado pelo usuário verifica se
 						//Utiliza as flags de extensão, verificando se é maior que 32 bits
-						if ((((dLinhaAtual & psStatus->dAduboIgnorado) > 0)
-							&& (bI < 32))
-							|| (((dLinhaAtualExt
-								& psStatus->dAduboIgnoradoExt) > 0)
-								&& (bI >= 32)))
+						if ((((dLinhaAtual & psStatus->dAduboIgnorado) > 0) && (bI < 32))
+										|| (((dLinhaAtualExt & psStatus->dAduboIgnoradoExt) > 0) && (bI >= 32)))
 						{
 							//Coloca no buffer informações ideais
 							sSegmentos.abBufAdu[bI][wAux] = 1;
-						}
-						else
+						} else
 						{
 							//Coloca no buffer informações sobre sensores de Adubo
-							sSegmentos.abBufAdu[bI][wAux] =
-								psAQR_Sensor[bI2].abUltimaLeitura[0];
+							sSegmentos.abBufAdu[bI][wAux] = psAQR_Sensor[bI2].abUltimaLeitura[0];
 							bAdubo = psAQR_Sensor[bI2].abUltimaLeitura[0];
 
 							//Se existir sensor de adubo instalado e não tiver caído adubo neste metro
@@ -3633,12 +3505,10 @@ void AQR_vAcquiregManagementThread (void const *argument)
 								{
 									//Indica a falha de sensor de adubo nesta linha:
 									psStatus->dAduboFalha |= 0x00000001 << bI;
-								}
-								else
+								} else
 								{
 									//Indica a falha de sensor de adubo nesta linha:
-									psStatus->dAduboFalhaExt |= 0x00000001
-										<< (bI - 32);
+									psStatus->dAduboFalhaExt |= 0x00000001 << (bI - 32);
 								}
 							}
 							/*
@@ -3661,8 +3531,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							if (bI < 32)
 							{
 								dLinhaAtual = 1 << bI;
-							}
-							else
+							} else
 							{
 								dLinhaAtualExt = 1 << (bI - 32);
 							}
@@ -3670,16 +3539,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							//Números Pares - Sensores de Semente
 							uint8_t bI1 = (bI * 2);
 
-							if ((((dLinhaAtual & psStatus->dLinhasLevantadas)
-								> 0) && (bI < 32))
-								|| (((dLinhaAtualExt
-									& psStatus->dLinhasLevantadasExt)
-									> 0) && (bI >= 32)))
+							if ((((dLinhaAtual & psStatus->dLinhasLevantadas) > 0) && (bI < 32))
+											|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) > 0) && (bI >= 32)))
 
 							{
 								//Conta quantas linhas que estão levantadas estão contando semente
-								if ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-									* 100) > psStatus->wMinSementesZero)
+								if ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+												> psStatus->wMinSementesZero)
 								{
 									psStatus->bAlarmeLinhasLevantadas++;
 								}
@@ -3691,18 +3557,15 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					//Arredonda Distância para Avaliação
 
 					//Arredonda variável de avaliação para um número inteiro.
-					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100)
-						/ GPS_bDistanciaPercorrida;
-					AQR_sStatus.wAvaliaArred = ((AQR_sStatus.wAvaliaArred + 5)
-						/ 10);
+					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100) / GPS_bDistanciaPercorrida;
+					AQR_sStatus.wAvaliaArred = ((AQR_sStatus.wAvaliaArred + 5) / 10);
 					GPS_bDistanciaPercorrida = 0;
 
 					//Se a posição de retirado do buffer for zero, Aponta para o fim
 					if (sSegmentos.wPosRet == 0)
 					{
 						wPtrAux = sSegmentos.wMskBufAnel;
-					}
-					else
+					} else
 					{
 						//Aponta para a posição do buffer
 						wPtrAux = (sSegmentos.wPosRet - 1);
@@ -3717,12 +3580,10 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 					//Acumula valores dos n últimos segmentos, onde n é o valor da
 					//configuração de avaliação:
-					for (bOffSeg = 0; bOffSeg < psStatus->wAvaliaArred;
-							bOffSeg++)
+					for (bOffSeg = 0; bOffSeg < psStatus->wAvaliaArred; bOffSeg++)
 					{
 						//Acumula distância exata percorrida em milímetros:
-						psAvalia->dDistancia +=
-							(uint32_t)sSegmentos.awBufDis[wPtrAux];
+						psAvalia->dDistancia += (uint32_t) sSegmentos.awBufDis[wPtrAux];
 
 						for (bI = 0; bI < psMonitor->bNumLinhas; bI++)
 						{
@@ -3730,23 +3591,18 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							if (bI < 32)
 							{
 								dLinhaAtual = 1 << bI;
-							}
-							else
+							} else
 							{
 								dLinhaAtualExt = 1 << (bI - 32);
 							}
 
 							//Se a linha atual não estiver levantada e verificando se está
 							//Utilizando os flags de extensão, verificando se é maior que 32 bits
-							if ((((dLinhaAtual & psStatus->dLinhasLevantadas)
-								== 0) && (bI < 32))
-								|| (((dLinhaAtualExt
-									& psStatus->dLinhasLevantadasExt)
-									== 0) && (bI >= 32)))
+							if ((((dLinhaAtual & psStatus->dLinhasLevantadas) == 0) && (bI < 32))
+											|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0) && (bI >= 32)))
 							{
 								//Acumula Quantidade de Sementes Plantadas:
-								psAvalia->adSementes[bI] +=
-									(uint32_t)sSegmentos.abBufSem[bI][wPtrAux];
+								psAvalia->adSementes[bI] += (uint32_t) sSegmentos.abBufSem[bI][wPtrAux];
 
 								//Acumula Adubo lançado
 								//psAvalia->abAdubo[bI] += sSegmentos.abBufAdu[bI][wPtrAux];//<<---o VERIFICAR
@@ -3798,8 +3654,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					if (bI < 32)
 					{
 						dLinhaAtual = 1 << bI;
-					}
-					else
+					} else
 					{
 						dLinhaAtualExt = 1 << (bI - 32);
 					}
@@ -3807,16 +3662,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					//Números Pares - Sensores de Semente
 					uint8_t bI1 = (bI * 2);
 
-					if (((dValorGPS & GPS_FLAG_METRO) > 0)
-						|| ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) == 0))
+					if (((dValorGPS & GPS_FLAG_METRO) > 0) || ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) == 0))
 					{
 						//Soma o total de sementes por linha em manobra
-						psManobra->adSementes[bI] +=
-							(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+						psManobra->adSementes[bI] += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 						//Soma o total de sementes em todas as Linhas em manobra
-						psManobra->dSomaSem +=
-							(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+						psManobra->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 					}
 
 					//Se percorreu um metro
@@ -3828,25 +3680,15 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						//E a linha atual não está em arremate
 						//E a última leitura do sensor foi zero
 						//Verificando se está utilizando os flags de extensão, verificando se é maior que 32 bits
-						if (((psStatus->bPausaAuto != false)
-							&& ((dLinhaAtual & psStatus->dSementeIgnorado)
-								== 0)
-							&& ((dLinhaAtual & psStatus->dLinhasLevantadas)
-								== 0)
-							&& ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-								* 100) < psStatus->wMinSementesZero)
-							&& (bI < 32))
-							|| ((psStatus->bPausaAuto != false)
-								&& ((dLinhaAtualExt
-									& psStatus->dSementeIgnoradoExt)
-									== 0)
-								&& ((dLinhaAtualExt
-									& psStatus->dLinhasLevantadasExt)
-									== 0)
-								&& ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-									* 100)
-									< psStatus->wMinSementesZero)
-								&& (bI >= 32)))
+						if (((psStatus->bPausaAuto != false) && ((dLinhaAtual & psStatus->dSementeIgnorado) == 0)
+										&& ((dLinhaAtual & psStatus->dLinhasLevantadas) == 0)
+										&& ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+														< psStatus->wMinSementesZero) && (bI < 32))
+										|| ((psStatus->bPausaAuto != false)
+														&& ((dLinhaAtualExt & psStatus->dSementeIgnoradoExt) == 0)
+														&& ((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0)
+														&& ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+																		< psStatus->wMinSementesZero) && (bI >= 32)))
 						{
 							//Incrementa o número de linhas que não está caindo semente
 							psStatus->bNumLinhasZero++;
@@ -3855,16 +3697,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 					//Verifica quantas linhas está caindo semente para erro de GPS
 					if ((((dLinhaAtual & psStatus->dSementeIgnorado) == 0)
-						&& ((dLinhaAtual & psStatus->dLinhasLevantadas) == 0)
-						&& ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-							* 100) > psStatus->wMinSementesZero))
-						|| (((dLinhaAtualExt & psStatus->dSementeIgnoradoExt)
-							== 0)
-							&& ((dLinhaAtualExt
-								& psStatus->dLinhasLevantadasExt)
-								== 0)
-							&& ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-								* 100) > psStatus->wMinSementesZero)))
+									&& ((dLinhaAtual & psStatus->dLinhasLevantadas) == 0)
+									&& ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+													> psStatus->wMinSementesZero))
+									|| (((dLinhaAtualExt & psStatus->dSementeIgnoradoExt) == 0)
+													&& ((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0)
+													&& ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+																	> psStatus->wMinSementesZero)))
 					{
 						//Incrementa o número de linhas que estão caindo semente
 						bLinhasErroGPS++;
@@ -3875,13 +3714,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				//Se houver erro no gps .
 				//Se não estiver no modo simulador.
 				if ( //( bLinhasErroGPS >= bLinhasFalhaPausaAuto )&&
-				(bLinhasErroGPS > 0) && (psStatus->bErroGPS != false)
-					&& (CAN_bSensorSimulador == false))
+				(bLinhasErroGPS > 0) && (psStatus->bErroGPS != false) && (CAN_bSensorSimulador == false))
 				{
 					//Aciona alarme do GPS
 					psStatus->bAlarmeGPS = true;
-				}
-				else
+				} else
 				{
 					psStatus->bAlarmeGPS = false;
 				}
@@ -3890,34 +3727,27 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				if ((dValorGPS & GPS_FLAG_METRO) > 0) // Se passou 1 metro
 				{
 					//Se está em pausa automática e vai sair da pausa
-					if ((psStatus->bNumLinhasZero < bLinhasFalhaPausaAuto)
-						&& (psStatus->bPausaAuto != false))
+					if ((psStatus->bNumLinhasZero < bLinhasFalhaPausaAuto) && (psStatus->bPausaAuto != false))
 					{
 						//Sai da Pausa
 						psStatus->bPausaAuto = false;
 
 						//Indica que não está em pausa
-						osFlagClear(AQR_sFlagREG, AQR_FLAG_PAUSA);
+						osFlagClear (AQR_sFlagREG, AQR_FLAG_PAUSA);
 
 						//Coloca no Buffer a distância exata percorrida no último metro (em milímetros)
 						sSegmentos.awBufDis[sSegmentos.wPosIns] =
-							(uint16_t)((AQR_sDadosGPS.fDistancia * 10.0f)
-								+ 0.5f);
+										(uint16_t) ((AQR_sDadosGPS.fDistancia * 10.0f) + 0.5f);
 
 						//Acumula distância trabalhada total e parcial em m:
-						psTrabTotal->dDistancia +=
-							(uint32_t)(AQR_sDadosGPS.fDistancia + 0.5f);
-						psTrabParcial->dDistancia +=
-							(uint32_t)(AQR_sDadosGPS.fDistancia + 0.5f);
+						psTrabTotal->dDistancia += (uint32_t) (AQR_sDadosGPS.fDistancia + 0.5f);
+						psTrabParcial->dDistancia += (uint32_t) (AQR_sDadosGPS.fDistancia + 0.5f);
 						// Area parcial
-						psDistTrabParcial->dDistancia +=
-							(uint32_t)(AQR_sDadosGPS.fDistancia + 0.5f);
-						psDistTrabTotal->dDistancia +=
-							(uint32_t)(AQR_sDadosGPS.fDistancia + 0.5f);
+						psDistTrabParcial->dDistancia += (uint32_t) (AQR_sDadosGPS.fDistancia + 0.5f);
+						psDistTrabTotal->dDistancia += (uint32_t) (AQR_sDadosGPS.fDistancia + 0.5f);
 
 						//Acumula distância para verificar insensibilidade
-						dDistInsens += (uint32_t)(AQR_sDadosGPS.fDistancia
-							+ 0.5f);
+						dDistInsens += (uint32_t) (AQR_sDadosGPS.fDistancia + 0.5f);
 
 						for (uint8_t bI = 0; bI < psMonitor->bNumLinhas; bI++)
 						{
@@ -3925,8 +3755,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							if (bI < 32)
 							{
 								dLinhaAtual = 1 << bI;
-							}
-							else
+							} else
 							{
 								dLinhaAtualExt = 1 << (bI - 32);
 							}
@@ -3935,128 +3764,90 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							uint8_t bI1 = (bI * 2);
 
 							//Soma o total de sementes por linha em manobra
-							psManobra->adSementes[bI] -=
-								(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+							psManobra->adSementes[bI] -= (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 							//Soma o total de sementes em todas as Linhas em manobra
-							psManobra->dSomaSem -=
-								(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+							psManobra->dSomaSem -= (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 							//Se a linha está sendo ignorada ou
 							//Se a linha está sendo ignorada e são os flags extendidos
-							if (((((dLinhaAtual & psStatus->dSementeIgnorado)
-								> 0) && (bI < 32)))
-								|| (((dLinhaAtualExt
-									& psStatus->dSementeIgnoradoExt) > 0)
-									&& (bI >= 32)))
+							if (((((dLinhaAtual & psStatus->dSementeIgnorado) > 0) && (bI < 32)))
+											|| (((dLinhaAtualExt & psStatus->dSementeIgnoradoExt) > 0) && (bI >= 32)))
 							{
 								//Se a linha não estiver levantada (Arremate ou intercalação) ou
 								//Se a linha não estiver levantada e forem os flags de extendidos
-								if ((((dLinhaAtual & psStatus->dLinhasLevantadas)
-									== 0) && (bI < 32))
-									|| (((dLinhaAtualExt
-										& psStatus->dLinhasLevantadasExt)
-										== 0) && (bI >= 32)))
+								if ((((dLinhaAtual & psStatus->dLinhasLevantadas) == 0) && (bI < 32))
+												|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0)
+																&& (bI >= 32)))
 								{
 									//Devido à necessidade de trabalharmos com valores inteiros de semente,
 									//devemos arredondar o valor configurado, para acumular na linha ignorada
 									//o valor equivalente ao real, sem perder a parte fracionária.
-									uint8_t bArredondamento =
-										(uint8_t)(psMonitor->wSementesPorMetro
-											* 0.1);
-									bArredondamento =
-										psMonitor->wSementesPorMetro
-											- (bArredondamento * 10);
+									uint8_t bArredondamento = (uint8_t) (psMonitor->wSementesPorMetro * 0.1);
+									bArredondamento = psMonitor->wSementesPorMetro - (bArredondamento * 10);
 									bArredondamento = 10 - bArredondamento;
 
 									//Coloca no buffer informações sobre sensores de semente
 									sSegmentos.abBufSem[bI][sSegmentos.wPosIns] =
-										(uint8_t)((psMonitor->wSementesPorMetro
-											+ bArredondamento) * 0.1f);
+													(uint8_t) ((psMonitor->wSementesPorMetro + bArredondamento) * 0.1f);
 
 									//Soma o total de sementes por linha em trabalho
-									psTrabTotal->adSementes[bI] +=
-										(uint32_t)((psMonitor->wSementesPorMetro
-											+ bArredondamento) * 0.1f);
-									psTrabParcial->adSementes[bI] +=
-										(uint32_t)((psMonitor->wSementesPorMetro
-											+ bArredondamento) * 0.1f);
+									psTrabTotal->adSementes[bI] += (uint32_t) ((psMonitor->wSementesPorMetro
+													+ bArredondamento) * 0.1f);
+									psTrabParcial->adSementes[bI] += (uint32_t) ((psMonitor->wSementesPorMetro
+													+ bArredondamento) * 0.1f);
 
 									//Soma o total de sementes em todas as linha em trabalho
 									psTrabTotal->dSomaSem +=
-										(uint32_t)((psMonitor->wSementesPorMetro
-											+ bArredondamento) * 0.1f);
-									psTrabParcial->dSomaSem +=
-										(uint32_t)((psMonitor->wSementesPorMetro
-											+ bArredondamento) * 0.1f);
-									psDistTrabParcial->dSomaSem +=
-										(uint32_t)((psMonitor->wSementesPorMetro
-											+ bArredondamento) * 0.1f);
+													(uint32_t) ((psMonitor->wSementesPorMetro + bArredondamento) * 0.1f);
+									psTrabParcial->dSomaSem += (uint32_t) ((psMonitor->wSementesPorMetro
+													+ bArredondamento) * 0.1f);
+									psDistTrabParcial->dSomaSem += (uint32_t) ((psMonitor->wSementesPorMetro
+													+ bArredondamento) * 0.1f);
 									//Sementes por metro * 10 - Distância em m
 									//utilizamos para esta conta o valor sem arredondamento, pois precisamos extrair a fração real que está
 									//sendo "perdida" nos cálculos em função da distância do segmento não ser exatamente 1 metro
-									int32_t lFracaoSemente =
-										(uint32_t)(psMonitor->wSementesPorMetro
-											* sSegmentos.awBufDis[sSegmentos.wPosIns]
-											* 0.1);
+									int32_t lFracaoSemente = (uint32_t) (psMonitor->wSementesPorMetro
+													* sSegmentos.awBufDis[sSegmentos.wPosIns] * 0.1);
 									//Subtraimos deste valor a quantidade de sementes que já havia sido acumulada (com arredondamento)
 									//desta forma acumulamos o valor fracionário, com 3 casas decimais de precisão
-									sSegmentos.alBufSemFrac[bI] +=
-										lFracaoSemente
-											- ((psMonitor->wSementesPorMetro
-												+ bArredondamento)
-												* 100);
+									sSegmentos.alBufSemFrac[bI] += lFracaoSemente
+													- ((psMonitor->wSementesPorMetro + bArredondamento) * 100);
 
-									if ((sSegmentos.alBufSemFrac[bI] >= 1000)
-										|| (sSegmentos.alBufSemFrac[bI]
-											<= -1000))
+									if ((sSegmentos.alBufSemFrac[bI] >= 1000) || (sSegmentos.alBufSemFrac[bI] <= -1000))
 									{
-										lFracaoSemente =
-											(int32_t)(sSegmentos.alBufSemFrac[bI]
-												* 0.001f);
+										lFracaoSemente = (int32_t) (sSegmentos.alBufSemFrac[bI] * 0.001f);
 
-										sSegmentos.alBufSemFrac[bI] -=
-											lFracaoSemente * 1000.0f;
-										sSegmentos.abBufSem[bI][sSegmentos.wPosIns] +=
-											lFracaoSemente;
+										sSegmentos.alBufSemFrac[bI] -= lFracaoSemente * 1000.0f;
+										sSegmentos.abBufSem[bI][sSegmentos.wPosIns] += lFracaoSemente;
 										//Soma o total de sementes por linha em trabalho
-										psTrabTotal->adSementes[bI] +=
-											lFracaoSemente;
-										psTrabParcial->adSementes[bI] +=
-											lFracaoSemente;
+										psTrabTotal->adSementes[bI] += lFracaoSemente;
+										psTrabParcial->adSementes[bI] += lFracaoSemente;
 										//Soma o total de sementes em todas as linha em trabalho
 										psTrabTotal->dSomaSem += lFracaoSemente;
-										psTrabParcial->dSomaSem +=
-											lFracaoSemente;
-										psDistTrabParcial->dSomaSem +=
-											lFracaoSemente;
+										psTrabParcial->dSomaSem += lFracaoSemente;
+										psDistTrabParcial->dSomaSem += lFracaoSemente;
 
 									}
 								}
-							}
-							else
+							} else
 							{
 								//Se a linha atual não estiver levantada ou
 								//Se a linha atual não estiver levantada dos flags extendidos
-								if ((((dLinhaAtual & psStatus->dLinhasLevantadas)
-									== 0) && (bI < 32))
-									|| (((dLinhaAtualExt
-										& psStatus->dLinhasLevantadasExt)
-										== 0) && (bI >= 32)))
+								if ((((dLinhaAtual & psStatus->dLinhasLevantadas) == 0) && (bI < 32))
+												|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0)
+																&& (bI >= 32)))
 								{
 									//Coloca no buffer informações sobre sensores de semente
-									sSegmentos.abBufSem[bI][sSegmentos.wPosIns] =
-										psAQR_Sensor[bI1].abUltimaLeitura[0];
+									sSegmentos.abBufSem[bI][sSegmentos.wPosIns] = psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 									//Soma o total de sementes por linha em trabalho
-									psTrabTotal->adSementes[bI] +=
-										(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
-									psTrabParcial->adSementes[bI] +=
-										(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+									psTrabTotal->adSementes[bI] += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
+									psTrabParcial->adSementes[bI] += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 									//Se não caiu semente na linha
-									if ((uint16_t)(psAQR_Sensor[bI1].abUltimaLeitura[0]
-										* 100) < psStatus->wMinSementesZero)
+									if ((uint16_t) (psAQR_Sensor[bI1].abUltimaLeitura[0] * 100)
+													< psStatus->wMinSementesZero)
 									{
 										//Verifica se está em insensibilidade
 										if (AQR_sStatus.bInsensivel == false)
@@ -4065,39 +3856,31 @@ void AQR_vAcquiregManagementThread (void const *argument)
 											//Verifica se o loop é maior que 32, para usar, os flags extendidos
 											if (bI < 32)
 											{
-												AQR_sStatus.dSementeZero |=
-													0x00000001 << bI;
-											}
-											else
+												AQR_sStatus.dSementeZero |= 0x00000001 << bI;
+											} else
 											{
-												AQR_sStatus.dSementeZeroExt |=
-													0x00000001 << (bI - 32);
+												AQR_sStatus.dSementeZeroExt |= 0x00000001 << (bI - 32);
 											}
 											abTimeoutAlarme[bI] =
 											AQR_DISTANCIA_LIMPA_FALHA;
 
 											AQR_sFalhaInstantanea.abBufSem[bI] =
-												sSegmentos.abBufSem[bI][sSegmentos.wPosIns];
-											AQR_sFalhaInstantanea.awBufDis =
-												(uint16_t)((AQR_sDadosGPS.fDistancia
-													* 10.0f) + 0.5f);
+															sSegmentos.abBufSem[bI][sSegmentos.wPosIns];
+											AQR_sFalhaInstantanea.awBufDis = (uint16_t) ((AQR_sDadosGPS.fDistancia
+															* 10.0f) + 0.5f);
 											//Indica falha de sensor - usado pela IHM
 											//AQR_sStatus.dSementeZeroIHM |= 0x00000001 << bI;
 										}                  //fim insensibilidade
-									}
-									else
+									} else
 									{
 										//Limpa falha de sensor de semente próximo de zero
 										//Verifica se o loop é maior que 32, para usar, os flags extendidos
 										if (bI < 32)
 										{
-											AQR_sStatus.dSementeZero &=
-												~(0x00000001 << bI);
-										}
-										else
+											AQR_sStatus.dSementeZero &= ~(0x00000001 << bI);
+										} else
 										{
-											AQR_sStatus.dSementeZeroExt &=
-												~(0x00000001 << (bI - 32));
+											AQR_sStatus.dSementeZeroExt &= ~(0x00000001 << (bI - 32));
 										}
 
 										//Após 10 metros que parou o alarme sonoro, limpa o alarme visual
@@ -4108,25 +3891,18 @@ void AQR_vAcquiregManagementThread (void const *argument)
 											//Verifica se o loop é maior que 32, para usar os flags extendidos
 											if (bI < 32)
 											{
-												AQR_sStatus.dSementeZeroIHM &=
-													~(0x00000001 << bI);
-											}
-											else
+												AQR_sStatus.dSementeZeroIHM &= ~(0x00000001 << bI);
+											} else
 											{
-												AQR_sStatus.dSementeZeroIHMExt &=
-													~(0x00000001
-														<< (bI - 32));
+												AQR_sStatus.dSementeZeroIHMExt &= ~(0x00000001 << (bI - 32));
 											}
 										}
 									}
 
 									//Soma o total de sementes em todas as linha em trabalho
-									psTrabTotal->dSomaSem +=
-										(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
-									psTrabParcial->dSomaSem +=
-										(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
-									psDistTrabParcial->dSomaSem +=
-										(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+									psTrabTotal->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
+									psTrabParcial->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
+									psDistTrabParcial->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 								}
 							}
 						}
@@ -4147,8 +3923,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if (bI < 32)
 			{
 				dLinhaAtual = 1 << bI;
-			}
-			else
+			} else
 			{
 				dLinhaAtualExt = 1 << (bI - 32);
 			}
@@ -4159,16 +3934,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			//Se a linha atual não estiver levantada ou
 			//Se a linha atual não estiver levantada e estiver usando os flags extendidos
 			if ((((dLinhaAtual & psStatus->dLinhasLevantadas) == 0) && (bI < 32))
-				|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0)
-					&& (bI >= 32)))
+							|| (((dLinhaAtualExt & psStatus->dLinhasLevantadasExt) == 0) && (bI >= 32)))
 			{
 				//Soma o total de sementes por Linha
-				psTotalReg->adSementes[bI] +=
-					(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+				psTotalReg->adSementes[bI] += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 
 				//Soma o total de sementes em todas as Linhas
-				psTotalReg->dSomaSem +=
-					(uint32_t)psAQR_Sensor[bI1].abUltimaLeitura[0];
+				psTotalReg->dSomaSem += (uint32_t) psAQR_Sensor[bI1].abUltimaLeitura[0];
 			}
 		}
 
@@ -4231,11 +4003,9 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if (psStatus->bLinhasFalha != false)
 			{
 				//Se a falha é em outro sensor, então sinaliza com um novo alarme.
-				if ((((AQR_sStatus.dSementeFalha ^ AQR_sStatus.dSementeFalhaIHM)
-					& AQR_sStatus.dSementeFalha) > 0)
-					|| (((AQR_sStatus.dSementeFalhaExt
-						^ AQR_sStatus.dSementeFalhaIHMExt)
-						& AQR_sStatus.dSementeFalhaExt) > 0))
+				if ((((AQR_sStatus.dSementeFalha ^ AQR_sStatus.dSementeFalhaIHM) & AQR_sStatus.dSementeFalha) > 0)
+								|| (((AQR_sStatus.dSementeFalhaExt ^ AQR_sStatus.dSementeFalhaIHMExt)
+												& AQR_sStatus.dSementeFalhaExt) > 0))
 				{
 					bAlarmes = true;
 					AQR_sStatus.dSementeFalhaIHM |= AQR_sStatus.dSementeFalha;
@@ -4477,23 +4247,21 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			AQR_FALHA_GPS)) > 0)
 			{
 				//Se algum está ativo, aciona o alarme:
-				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
+				osFlagSet (UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
 			}
 
 			//Se houve apenas falha na tolerância do sensor, então emite 2 beeps.
-			if (((AQR_wAlarmes & AQR_FALHA_LINHA) == 0)
-				&& ((AQR_wAlarmes & AQR_FALHA_TOLERANCIA_LINHA) > 0))
+			if (((AQR_wAlarmes & AQR_FALHA_LINHA) == 0) && ((AQR_wAlarmes & AQR_FALHA_TOLERANCIA_LINHA) > 0))
 			{
 				//Aciona o alarme de linha abaixo da tolerância
-				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_ALARME_TOLERANCIA);
+				osFlagSet (UOS_sFlagSis, UOS_SIS_FLAG_ALARME_TOLERANCIA);
 			}
-		}
-		else
+		} else
 		{
 			if ((dFlagsSis & UOS_SIS_FLAG_ALARME) > 0)
 			{
 				//Este flag deve ser reconhecido aqui:
-				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
+				osFlagClear (UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
 			}
 		}
 

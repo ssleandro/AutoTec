@@ -167,8 +167,8 @@ void vApplicationIdleHook (void)
 
 int main (void)
 {
-    MCU_vSysInit ();
-    MCU_vFFSInit ();
+	MCU_vSysInit ();
+	MCU_vFFSInit ();
 
     /* Configure and initialize SystemView */
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
