@@ -257,6 +257,23 @@ void ISO_vSendProprietaryA(void) {
     osDelay(1);
 }
 
+void ISO_vSendStoreVersion(uint64_t lVersionLabel) {
+
+    (pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+    pISOMsg.DLC = 8;
+
+    pISOMsg.B1 = FUNC_STORE_VERSION;
+    pISOMsg.B2 = lVersionLabel & 0xFF;
+    pISOMsg.B3 = ((lVersionLabel >> 8) & 0xFF);
+    pISOMsg.B4 = ((lVersionLabel >> 16) & 0xFF);
+    pISOMsg.B5 = ((lVersionLabel >> 24) & 0xFF);
+    pISOMsg.B6 = ((lVersionLabel >> 32) & 0xFF);
+    pISOMsg.B7 = ((lVersionLabel >> 40) & 0xFF);
+    pISOMsg.B8 = ((lVersionLabel >> 48) & 0xFF);
+
+    PUT_LOCAL_QUEUE(WriteQ, pISOMsg, 0);
+    osDelay(1);
+}
 
 void ISO_vSendLoadVersion(uint64_t lVersionLabel) {
     

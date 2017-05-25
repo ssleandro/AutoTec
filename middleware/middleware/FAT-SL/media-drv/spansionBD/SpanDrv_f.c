@@ -65,7 +65,7 @@ int span_format( void )
   
   if((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
   {
-    DBG_Printf("ERROR: ioctl_span_format: FTL_InitAll() \n", 0, 0);
+//    DBG_Printf("ERROR: ioctl_span_format: FTL_InitAll() \n", 0, 0);
     return MDRIVER_SPAN_ERR_FORMAT;
   }
   
@@ -92,19 +92,19 @@ int span_init(void)
     {
       if((status = FTL_Format()) !=  FTL_ERR_PASS)
       {
-       DBG_Printf("ERROR: ioctl_span_init: FTL_Format() \n", 0, 0);
+//       DBG_Printf("ERROR: ioctl_span_init: FTL_Format() \n", 0, 0);
        return MDRIVER_SPAN_ERR_SECTOR;
       }
       
       if((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
       {
-       DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() 2\n", 0, 0);
+//       DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() 2\n", 0, 0);
        return MDRIVER_SPAN_ERR_SECTOR;
       }
 	  }
 		else
     {
-     DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() \n", 0, 0);
+//     DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() \n", 0, 0);
      return MDRIVER_SPAN_NO_ERROR;
     }
 
@@ -121,7 +121,7 @@ static int span_terminate( F_DRIVER * driver )
   FTL_STATUS status;
   if((status = FTL_Shutdown()) != FTL_ERR_PASS)
    {
-    DBG_Printf("ERROR: ioctl_span_terminate: FTL_Shutdown() \n", 0, 0);
+//    DBG_Printf("ERROR: ioctl_span_terminate: FTL_Shutdown() \n", 0, 0);
     return MDRIVER_SPAN_ERR_SECTOR;
    }
   return MDRIVER_SPAN_NO_ERROR;
@@ -157,7 +157,7 @@ static int readsector_span( F_DRIVER * driver, void * data, unsigned long sector
   unsigned long done;
   if((status = FTL_DeviceObjectsRead((unsigned char *)data, sector, 1, &done)) != FTL_ERR_PASS)
   {
-   DBG_Printf("ERROR: readsector_span: sect_no=0x%X, ", sector, 0);
+//   DBG_Printf("ERROR: readsector_span: sect_no=0x%X, ", sector, 0);
    return MDRIVER_SPAN_ERR_SECTOR;
   }
 
@@ -174,7 +174,7 @@ static int writesector_span( F_DRIVER * driver, void * data, unsigned long secto
   unsigned long done;
   if((status = FTL_DeviceObjectsWrite((unsigned char *)data, sector, 1, &done)) != FTL_ERR_PASS)
   {
-   DBG_Printf("ERROR: writesector_span: sect_no=0x%X, ", sector, 0);
+//   DBG_Printf("ERROR: writesector_span: sect_no=0x%X, ", sector, 0);
    return MDRIVER_SPAN_ERR_SECTOR;
   }
   

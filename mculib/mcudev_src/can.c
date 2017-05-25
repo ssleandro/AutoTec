@@ -55,7 +55,7 @@
 /******************************************************************************
 * Module Preprocessor Macros
 *******************************************************************************/
-#define CAN_MAX_CHANNELS (CAN_INVALID - 1) //!< Maximum number of CAN channels
+#define CAN_MAX_CHANNELS (CAN_INVALID) //!< Maximum number of CAN channels
 #define CAN_MAX_CLOCK 100000000  //!< Maximum clock supported on CAN
 
 #define CAN_STAT_LEC_MASK  (0x07)    //!< Mask for Last Error Code

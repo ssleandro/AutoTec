@@ -50,7 +50,6 @@
 * Module Variable Definitions
 *******************************************************************************/
 DECLARE_QUEUE(ControlQueue, QUEUE_SIZEOFCONTROL);      //!< Declaration of Interface Queue
-CREATE_SIGNATURE(ControlDiagnostic);                             //!< Signature Declarations
 CREATE_SIGNATURE(ControlAcquireg);                             //!< Signature Declarations
 CREATE_SIGNATURE(ControlSensor);                             //!< Signature Declarations
 CREATE_SIGNATURE(ControlFileSys);
@@ -334,24 +333,6 @@ void CTL_vIdentifyEvent(contract_s* contract)
 
     switch(contract->eOrigin)
     {
-        case MODULE_DIAGNOSTIC:
-        {
-            // Message arrived
-            uint8_t wData = *(uint8_t*)GET_MESSAGE(contract)->pvMessage;
-
-            switch(wData)
-            {
-                case 'M':
-                    osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
-                break;
-                case 'N':
-                    osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
-                break;
-                default:
-                break;
-            }
-            break;
-        }
         case MODULE_ACQUIREG:
         {
             break;
@@ -410,9 +391,6 @@ void CTL_vControlThread (void const *argument)
     // Create an flag to indicate the system status...
     status = osFlagGroupCreate(&UOS_sFlagSis);
     ASSERT(status == osOK);
-
-    SIGNATURE_HEADER(ControlDiagnostic, THIS_MODULE, TOPIC_DIAGNOSTIC, ControlQueue);
-    ASSERT(SUBSCRIBE(SIGNATURE(ControlDiagnostic), 0) == osOK);
 
     SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
     ASSERT(SUBSCRIBE(SIGNATURE(ControlAcquireg), 0) == osOK);

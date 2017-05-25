@@ -53,6 +53,13 @@ DECLARE_QUEUE(GuiQueue, QUEUE_SIZEOFGUI);      //!< Declaration of Interface Que
 CREATE_SIGNATURE(Gui);                             //!< Signature Declarations
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 
+osFlagsGroupId GUI_sFlags;
+
+eDataMask eCurrDataMask = DATA_MASK_INSTALLATION;
+
+extern osFlagsGroupId UOS_sFlagSis;
+extern tsAcumulados AQR_sAcumulado;
+
 /******************************************************************************
 * Module typedef
 *******************************************************************************/
@@ -75,6 +82,9 @@ uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position 
 /******************************************************************************
 * Function Prototypes
 *******************************************************************************/
+void GUI_vUpdateInterfaceTimerCallback(void const *argument);
+
+CREATE_TIMER(Gui_UptTimer, GUI_vUpdateInterfaceTimerCallback);
 
 /******************************************************************************
 * Function Definitions
@@ -106,10 +116,27 @@ static void GUI_vCreateThread(const Threads_t sThread )
     }
 }
 
+eAPPError_s GUI_eInitGuiPublisher(void)
+{
+    //Prepare Default Contract/Message
+    MESSAGE_HEADER(Gui, 1, GUI_DEFAULT_MSGSIZE, MT_ARRAYBYTE); // MT_ARRAYBYTE
+    CONTRACT_HEADER(Gui, 1, THIS_MODULE, TOPIC_GUI);
+
+    return APP_ERROR_SUCCESS;
+}
+
+void GUI_vUpdateInterfaceTimerCallback(void const *argument)
+{
+	osFlagSet(GUI_sFlags, GUI_UPDATE_TEST_MODE_INTERFACE);
+}
+
 void GUI_vGuiPublishThread(void const *argument)
 {
+	osFlags dFlags, dFlagsSis;
+	PubMessage sGUIPubMessage;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-    SEGGER_SYSVIEW_Print("Control Publish Thread Created");
+    SEGGER_SYSVIEW_Print("Gui Publish Thread Created");
 #endif
 
     GUI_vDetectThread(&WATCHDOG(GUIPUB), &bGUIPUBThreadArrayPosition, (void*)GUI_vGuiPublishThread);
@@ -117,27 +144,119 @@ void GUI_vGuiPublishThread(void const *argument)
 
     osThreadId xDiagMainID = (osThreadId) argument;
     osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGUIPUBThreadArrayPosition));//Task created, inform core
-    osThreadSetPriority(NULL, osPriorityLow);
+//    osThreadSetPriority(NULL, osPriorityLow);
+
+    GUI_eInitGuiPublisher();
+
+    START_TIMER(Gui_UptTimer, 750);
 
     while(1)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-        osDelay(2000);
+        dFlags = osFlagWait(GUI_sFlags, (GUI_UPDATE_INSTALLATION_INTERFACE | GUI_UPDATE_PLANTER_INTERFACE | GUI_UPDATE_TEST_MODE_INTERFACE |
+    									 GUI_UPDATE_TRIMMING_INTERFACE | GUI_UPDATE_SYSTEM_INTERFACE), true, false, osWaitForever);
         WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
+        dFlagsSis = osFlagGet(UOS_sFlagSis);
+
+    	if((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
+    	{
+
+    	}
+
+    	if((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
+    	{
+
+    	}
+
+    	if((dFlags & GUI_UPDATE_TEST_MODE_INTERFACE) > 0)
+    	{
+    		if((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
+    		{
+    			sGUIPubMessage.dEvent = GUI_UPDATE_TEST_MODE_INTERFACE;
+    			sGUIPubMessage.eEvtType = EVENT_SET;
+    			sGUIPubMessage.vPayload = (void*) &AQR_sAcumulado;
+    			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
+    			PUBLISH(CONTRACT(Gui), 0);
+    		}
+    	}
+
+    	if((dFlags & GUI_UPDATE_TRIMMING_INTERFACE) > 0)
+    	{
+
+    	}
+
+    	if((dFlags & GUI_UPDATE_SYSTEM_INTERFACE) > 0)
+    	{
+
+    	}
     }
     osThreadTerminate(NULL);
+}
+
+void GUI_vIdentifyEvent (contract_s* contract)
+{
+	osFlags dFlags;
+
+	switch (contract->eOrigin)
+	{
+		case MODULE_ISOBUS:
+		{
+			dFlags = GET_PUBLISHED_EVENT(contract);
+
+			if((dFlags & GUI_CHANGE_CURRENT_DATA_MASK) > 0)
+			{
+				eCurrDataMask = *((eDataMask*) GET_PUBLISHED_PAYLOAD(contract));
+
+				if (eCurrDataMask == DATA_MASK_TEST_MODE)
+				{
+					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
+				} else if (eCurrDataMask == DATA_MASK_PLANTER)
+				{
+					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
+				}
+			}
+
+			if((dFlags & GUI_CHANGE_CURRENT_CONFIGURATION) > 0)
+			{
+
+			}
+
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+eAPPError_s GUI_eInitGuiSubs(void)
+{
+    /* Prepare the signature - struture that notify the broker about subscribers */
+    SIGNATURE_HEADER(Gui, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
+    ASSERT(SUBSCRIBE(SIGNATURE(Gui), 0) == osOK);
+
+    return APP_ERROR_SUCCESS;
 }
 
 /* ************************* Main thread ************************************ */
 void GUI_vGuiThread (void const *argument)
 {
+	osStatus status;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Gui Thread Created");
 #endif
 
     /* Init the module queue - structure that receive data from broker */
     INITIALIZE_QUEUE(GuiQueue);
+
+    INITIALIZE_TIMER(Gui_UptTimer, osTimerPeriodic);
+
+    status = osFlagGroupCreate(&GUI_sFlags);
+    ASSERT(status == osOK);
+
+    GUI_eInitGuiSubs();
 
     //Create subthreads
     uint8_t bNumberOfThreads = 0;
@@ -157,11 +276,10 @@ void GUI_vGuiThread (void const *argument)
         WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
         osEvent evt = RECEIVE(GuiQueue, osWaitForever);
         WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
         if (evt.status == osEventMessage)
         {
-            // Message arrived
-            uint32_t wData = *(uint32_t*)GET_MESSAGE(GET_CONTRACT(evt))->pvMessage;
-            (void)wData;
+            GUI_vIdentifyEvent(GET_CONTRACT(evt));
         }
     }
     /* Unreachable */

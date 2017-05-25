@@ -65,8 +65,8 @@ osThreadId xAqrRegThreadId;              // Holds the AqrRegThread ID
 // Pin to enable/disable sensor power source
 gpio_config_s sEnablePS9;
 
-#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
-#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
+//#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
+//#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
 
 /******************************************************************************
 * Module Variable Definitions from MPA2500 (can.h)
@@ -535,7 +535,7 @@ void SEN_vIdentifyEvent(contract_s* contract)
         }
         case MODULE_ACQUIREG:
         {
-            if (GET_PUBLISHED_EVENT(contract) == CAN_APL_FLAG_FINISH_INSTALLATION)
+            if ((GET_PUBLISHED_EVENT(contract) & CAN_APL_FLAG_FINISH_INSTALLATION) > 0)
             {
                 // Send final handshake messages to sensors...
 
