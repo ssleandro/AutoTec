@@ -48,7 +48,6 @@
 * Preprocessor Constants
 *******************************************************************************/
 
-
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/
@@ -286,26 +285,31 @@ typedef enum {
     EVENT_UPDATE,
 } eEventType;
 
-typedef struct {
-    uint32_t dEvent;
-    eEventType eEvtType;
-    void* vPayload;
-} PubMessage;
-
 typedef enum event_e
 {
     EVENT_FFS_STATUS,        				//!< EVENT FFS STATUS CHANGED
 	EVENT_FFS_CFG,        					//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_FFS_INTERFACE_CFG,    			//!< EVENT FILE INTERFACE STATUS CHANGED
 	EVENT_FFS_STATIC_REG,    				//!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_AQR_FINISH_INSTALLATION,
+	EVENT_GUI_UPDATE_CONFIGURATION_INTERFACE,
 	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
 	EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
 	EVENT_GUI_UPDATE_TEST_MODE_INTERFACE,
 	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_INTERFACE,
-	EVENT_ISOBUS_UPDATE_CURRENT_DATA_MASK,
-	EVENT_ISOBUS_UPDATE_CURRENT_CONFIGURATION,
+	EVENT_GUI_INSTALLATION_FINISH,
+	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
+	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
+	EVENT_ISO_INSTALLATION_REPEAT_TEST,
+	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION
 } event_e;
+
+typedef struct {
+    uint32_t dEvent;
+    eEventType eEvtType;
+    void* vPayload;
+} PubMessage;
 
 /******************************************************************************
 * Conversion from MPA

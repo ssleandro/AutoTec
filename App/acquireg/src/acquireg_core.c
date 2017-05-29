@@ -1239,7 +1239,10 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		{
 			osFlagClear(xSEN_sFlagApl, CAN_APL_FLAG_FINISH_INSTALLATION);
 
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&dFlags;
+			sArqRegPubMsg.dEvent = EVENT_AQR_FINISH_INSTALLATION;
+			sArqRegPubMsg.eEvtType = EVENT_SET;
+			sArqRegPubMsg.vPayload = (void*)&dFlags;
+			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
 		if ((dFlags & AQR_APL_FLAG_SAVE_STATIC_REG) > 0)
@@ -1268,19 +1271,19 @@ void AQR_vIdentifyEvent (contract_s* contract)
 	switch (contract->eOrigin)
 	{
 		case MODULE_CONTROL:
-			{
+		{
 			// Treat an event receive from MODULE_CONTROL
 			bAQRWaitForConfig = true;
 			break;
 		}
 		case MODULE_SENSOR:
-			{
+		{
 			// Treat an event receive from MODULE_SENSOR
 			osStatus stat = osFlagSet(xSEN_sFlagApl, GET_PUBLISHED_EVENT(contract));
 			break;
 		}
 		case MODULE_GPS:
-			{
+		{
 			// Treat an event receive from MODULE_GPS
 			osFlagSet(xGPS_sFlagGPS, GET_PUBLISHED_EVENT(contract));
 
@@ -1295,7 +1298,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			break;
 		}
 		case MODULE_FILESYS:
-			{
+		{
 			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_STATIC_REG)
 			{
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)

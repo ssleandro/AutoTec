@@ -205,7 +205,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			dFlags = GET_PUBLISHED_EVENT(contract);
 
-			if((dFlags & GUI_CHANGE_CURRENT_DATA_MASK) > 0)
+			if((dFlags & EVENT_ISO_UPDATE_CURRENT_DATA_MASK) > 0)
 			{
 				eCurrDataMask = *((eDataMask*) GET_PUBLISHED_PAYLOAD(contract));
 
@@ -218,7 +218,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				}
 			}
 
-			if((dFlags & GUI_CHANGE_CURRENT_CONFIGURATION) > 0)
+			if((dFlags & EVENT_ISO_UPDATE_CURRENT_CONFIGURATION) > 0)
 			{
 
 			}

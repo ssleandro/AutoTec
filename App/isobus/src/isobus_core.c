@@ -46,9 +46,11 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of SENSOR queue
-#define QUEUE_SIZEOFISOBUS (5)
+#define QUEUE_SIZEOFISOBUS (16)
 
 #define THIS_MODULE MODULE_ISOBUS
+
+#define ISO_FLAG_STATE_RUNNING 0x00800000
 
 /******************************************************************************
  * Module Variable Definitions
@@ -61,13 +63,14 @@ extern osFlagsGroupId UOS_sFlagSis;
 
 extern uint32_t getID(uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio);
 
-static sNumberVariableObj asNumVarObjects[N_NUMBER_VARIABLE_OBJECTS];
-static sFillAttributesObj asNumFillAttributesObjects[N_FILL_ATTRIBUTES_OBJECTS];
-static sInputListObj asConfigInputList[N_INPUT_LIST_OBJECTS];
+static sNumberVariableObj asNumVarObjects[ISO_NUM_NUMBER_VARIABLE_OBJECTS];
+static sFillAttributesObj asNumFillAttributesObjects[ISO_NUM_FILL_ATTRIBUTES_OBJECTS];
+static sInputListObj asConfigInputList[ISO_NUM_INPUT_LIST_OBJECTS];
 
-static sBarGraphStatus asLinesStatus[N_BAR_GRAPH_OBJECTS];
-static sBarGraphStatus asIndividualLineStatus[N_BAR_GRAPH_OBJECTS];
+static sBarGraphStatus asLinesStatus[ISO_NUM_BAR_GRAPH_OBJECTS];
+static sBarGraphStatus asIndividualLineStatus[ISO_NUM_BAR_GRAPH_OBJECTS];
 
+static eInstallationStatus eSensorsIntallStatus[36];
 static sInstallSensorStatus sInstallStatus;
 static sTrimmingStatus sLinesTrimmingStatus;
 
@@ -115,11 +118,11 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
 /*****************************
  * Local messages queue
  *****************************/
-CREATE_LOCAL_QUEUE(PublishQ, ISOBUSMsg, 10)
-CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 10)
-CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 10)
-CREATE_LOCAL_QUEUE(UpdateQ, ISOBUSMsg, 10)
-CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 10)
+CREATE_LOCAL_QUEUE(PublishQ, event_e, 16)
+CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 32)
+CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 32)
+CREATE_LOCAL_QUEUE(UpdateQ, event_e, 16)
+CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 32)
 
 /*****************************
  * Local flag group
@@ -153,6 +156,7 @@ uint8_t bISOBOOTThreadArrayPosition = 0;                    //!< Thread position
 
 osThreadId xBootThreadId;                                  // Holds the BootThreadId
 osThreadId xAuxBootThreadId;                               // Holds the AuxBootThreadId
+osThreadId xUpdatePoolThreadId;							   // Holds the UpdatePoolThreadId
 
 eBootStates eCurrState;
 
@@ -364,7 +368,8 @@ eAPPError_s ISO_eInitIsobusPublisher(void)
 #ifndef UNITY_TEST
 void ISO_vIsobusPublishThread(void const *argument)
 {
-	osFlags dFlags;
+	osEvent evt;
+	event_e ePubEvt;
 	PubMessage sISOPubMessage;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
@@ -386,27 +391,53 @@ void ISO_vIsobusPublishThread(void const *argument)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
-        dFlags = osFlagWait(ISO_sFlags, (ISO_UPDATE_CURRENT_DATA_MASK | ISO_UPDATE_CURRENT_CONFIGURATION), true, false, osWaitForever);
+        evt = RECEIVE_LOCAL_QUEUE(PublishQ, osWaitForever);
         WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
 
-    	if((dFlags & ISO_UPDATE_CURRENT_DATA_MASK) > 0)
-    	{
-    		sISOPubMessage.dEvent = EVENT_ISOBUS_UPDATE_CURRENT_DATA_MASK;
-    		sISOPubMessage.eEvtType = EVENT_SET;
-    		sISOPubMessage.vPayload = (void*) &eCurrentDataMask;
-            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
-            PUBLISH(CONTRACT(Isobus), 0);
-    	}
-
-    	if((dFlags & ISO_UPDATE_CURRENT_CONFIGURATION) > 0)
-    	{
-    		sISOPubMessage.dEvent = EVENT_ISOBUS_UPDATE_CURRENT_CONFIGURATION;
-    		sISOPubMessage.eEvtType = EVENT_SET;
-    		sISOPubMessage.vPayload = (void*) &sConfigDataMask;
-            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
-            PUBLISH(CONTRACT(Isobus), 0);
-    	}
-
+        if(evt.status == osEventMessage)
+        {
+        	ePubEvt = (event_e) evt.value.v;
+        	switch (ePubEvt) {
+				case EVENT_ISO_UPDATE_CURRENT_DATA_MASK:
+				{
+		    		sISOPubMessage.dEvent = ePubEvt;
+		    		sISOPubMessage.eEvtType = EVENT_UPDATE;
+		    		sISOPubMessage.vPayload = (void*) &eCurrentDataMask;
+		            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
+		            PUBLISH(CONTRACT(Isobus), 0);
+					break;
+				}
+				case EVENT_ISO_UPDATE_CURRENT_CONFIGURATION:
+				{
+		    		sISOPubMessage.dEvent = ePubEvt;
+		    		sISOPubMessage.eEvtType = EVENT_UPDATE;
+		    		sISOPubMessage.vPayload = (void*) &sConfigDataMask;
+		            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
+		            PUBLISH(CONTRACT(Isobus), 0);
+					break;
+				}
+				case EVENT_ISO_INSTALLATION_REPEAT_TEST:
+				{
+		    		sISOPubMessage.dEvent = ePubEvt;
+		    		sISOPubMessage.eEvtType = EVENT_SET;
+		    		sISOPubMessage.vPayload = NULL;
+		            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
+		            PUBLISH(CONTRACT(Isobus), 0);
+					break;
+				}
+				case EVENT_ISO_INSTALLATION_ERASE_INSTALLATION:
+				{
+		    		sISOPubMessage.dEvent = ePubEvt;
+		    		sISOPubMessage.eEvtType = EVENT_SET;
+		    		sISOPubMessage.vPayload = NULL;
+		            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
+		            PUBLISH(CONTRACT(Isobus), 0);
+					break;
+				}
+				default:
+					break;
+			}
+        }
     }
     osThreadTerminate(NULL);
 }
@@ -473,22 +504,23 @@ eAPPError_s ISO_vInitDeviceLayer(uint32_t wSelectedInterface)
 
 void ISO_vIdentifyEvent (contract_s* contract)
 {
-	osFlags evt;
+	event_e eEvt;
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_GUI:
 		{
-			evt = GET_PUBLISHED_EVENT(contract);
-			switch (evt) {
+			eEvt = GET_PUBLISHED_EVENT(contract);
+			switch (eEvt) {
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, ISO_UPDATE_INSTALLATION_INTERFACE);
+					memcpy(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract), sizeof(eSensorsIntallStatus));
+					osMessagePut(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, ISO_UPDATE_PLANTER_INTERFACE);
+					osMessagePut(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
@@ -497,17 +529,22 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					{
 						psAccumulated = (tsAcumulados*) GET_PUBLISHED_PAYLOAD(contract);
 					}
-					osFlagSet(ISO_sFlags, ISO_UPDATE_TEST_MODE_INTERFACE);
+					osMessagePut(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, ISO_UPDATE_TRIMMING_INTERFACE);
+					osMessagePut(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, ISO_UPDATE_SYSTEM_INTERFACE);
+					osMessagePut(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_FINISH:
+				{
+					osMessagePut(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				default:
@@ -949,6 +986,7 @@ void ISO_vIsobusBootThread(void const *argument)
                     // The boot process are completed, so terminate this thread
                     eCurrState = BOOT_COMPLETED;
                     eModCurrState = RUNNING;
+                    osSignalSet(xUpdatePoolThreadId, ISO_FLAG_STATE_RUNNING);
                     osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK);
                 	break;
                 }
@@ -1051,20 +1089,16 @@ void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
     }
 }
 
-#define GET_INDEX_FROM_ID(id) (id & 0x0FFF)
-#define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
-#define GET_UNSIGNED_INT_VALUE(value) ((uint32_t)(value*10))
-
 void ISO_vInitObjectStruct(void)
 {
 	// Init number variable objects
 	for (int i = 0; i < ARRAY_SIZE(asNumVarObjects); i++) {
-		asNumVarObjects[i].wObjID = 0x8000 + i;
+		asNumVarObjects[i].wObjID = ISO_OBJECT_NUMBER_VARIABLE_ID + i;
 	}
 
 	// Initialize fill attributes objects
 	for (int i = 0; i < ARRAY_SIZE(asNumFillAttributesObjects); i++) {
-		asNumFillAttributesObjects[i].wObjID = 0x9600 + i;
+		asNumFillAttributesObjects[i].wObjID = ISO_OBJECT_FILL_ATTRIBUTES_ID + i;
 	}
 
 	// Initialize sensor install status structure
@@ -1095,7 +1129,7 @@ void ISO_vInitObjectStruct(void)
 
 	// Initialize input list objects
 	for (int i = 0; i < ARRAY_SIZE(asConfigInputList); i++) {
-		asConfigInputList[i].wObjID = 0x9000 + i;
+		asConfigInputList[i].wObjID = ISO_OBJECT_INPUT_LIST_ID + i;
 	}
 
 }
@@ -1143,7 +1177,8 @@ void ISO_vTreatChangeNumericValueEvent(ISOBUSMsg* sRcvMsg)
 
 void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
 {
-	uint32_t dAux;
+	uint16_t dAux;
+	event_e ePubEvt;
 
     switch(ISO_wGetPGN(sRcvMsg))
     {
@@ -1156,7 +1191,26 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                     case FUNC_SOFT_KEY_ACTIVATION:
                         break;
                     case FUNC_BUTTON_ACTIVATION:
+                    {
+                    	dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B4));
+                    	switch (dAux) {
+							case ISO_BUTTON_REPEAT_TEST_ID:
+							{
+								ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
+								osMessagePut(PublishQ, ePubEvt, osWaitForever);
+								break;
+							}
+							case ISO_BUTTON_ERASE_INSTALLATION_ID:
+							{
+								ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+								osMessagePut(PublishQ, ePubEvt, osWaitForever);
+								break;
+							}
+							default:
+								break;
+						}
                         break;
+                    }
                     case FUNC_POINTING_EVENT:
                         break;
                     case FUNC_VT_SELECT_INP_OBJECT:
@@ -1165,7 +1219,6 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                         break;
                     case FUNC_VT_CHANGE_NUMERIC_VALUE:
                     {
-                    	// Relationship between Object ID and field in structure
                     	ISO_vTreatChangeNumericValueEvent(sRcvMsg);
                         break;
                     }
@@ -1175,7 +1228,8 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                     	if((dAux >= DATA_MASK_CONFIGURATION) || (dAux < DATA_MASK_INVALID))
                     	{
                     		eCurrentDataMask = (eDataMask) dAux;
-                    		osFlagSet(ISO_sFlags, ISO_UPDATE_CURRENT_DATA_MASK);
+                    		ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
+                    		osMessagePut(PublishQ, ePubEvt, osWaitForever);
                     	}
                         break;
                     }
@@ -1386,6 +1440,7 @@ void ISO_vUpdateConfigurationDataMask(void)
 void ISO_vUpdateInstallationDataMask(void)
 {
 	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++) {
+		sInstallStatus.pFillAttribute[i].bColor = eSensorsIntallStatus[i];
 		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID, sInstallStatus.pFillAttribute[i].bColor);
 	}
 }
@@ -1394,8 +1449,6 @@ void ISO_vUpdatePlanterDataMask(void)
 {
 
 }
-
-//extern tsAcumulados AQR_sAcumulado;
 
 void ISO_vUpdateTestModeDataMask(void)
 {
@@ -1444,11 +1497,14 @@ void ISO_vUpdateSystemDataMask(void)
 #ifndef UNITY_TEST
 void ISO_vIsobusUpdateOPThread(void const *argument)
 {
-	osFlags dFlags;
+	osEvent evt;
+	event_e ePubEvt;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus UpdateOP Thread Created");
 #endif
+
+    xUpdatePoolThreadId = osThreadGetId();
 
     ISO_vDetectThread(&WATCHDOG(ISOUPDT), &bISOUPDTThreadArrayPosition, (void*)ISO_vIsobusUpdateOPThread);
     WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
@@ -1457,18 +1513,11 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOUPDTThreadArrayPosition));//Task created, inform core
     osThreadSetPriority(NULL, osPriorityLow);
 
-    INITIALIZE_LOCAL_QUEUE(UpdateQ);    
-    uint16_t dBarGraphID = 0x7000;
-    uint16_t dOutputNumberID = 0x8009;
-    uint8_t bIterator;
-    uint8_t gap = 0;
-    uint8_t random = 0x00;
-    
-    (void) dBarGraphID;
+    INITIALIZE_LOCAL_QUEUE(UpdateQ);
 
     // Waiting for RUNNING module state
     WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    while(eModCurrState != RUNNING){};
+    osFlagWait(ISO_sFlags, ISO_FLAG_STATE_RUNNING, false, true, osWaitForever);
     WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
     osThreadSetPriority(NULL, osPriorityHigh);
@@ -1483,33 +1532,42 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     {
     	/* Pool the device waiting for */
     	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    	dFlags = osFlagWait(ISO_sFlags, (ISO_UPDATE_INSTALLATION_INTERFACE | ISO_UPDATE_PLANTER_INTERFACE | ISO_UPDATE_TEST_MODE_INTERFACE |
-    										ISO_UPDATE_TRIMMING_INTERFACE | ISO_UPDATE_SYSTEM_INTERFACE), true, false, osWaitForever);
+    	evt = RECEIVE_LOCAL_QUEUE(UpdateQ, osWaitForever);
     	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-    	if((dFlags & ISO_UPDATE_INSTALLATION_INTERFACE) > 0)
+    	if(evt.status == osEventMessage)
     	{
+    		ePubEvt = GET_PUBLISHED_EVENT(GET_CONTRACT(evt));
 
-    	}
-
-    	if((dFlags & ISO_UPDATE_PLANTER_INTERFACE) > 0)
-    	{
-
-    	}
-
-    	if((dFlags & ISO_UPDATE_TEST_MODE_INTERFACE) > 0)
-    	{
-    		ISO_vUpdateTestModeDataMask();
-    	}
-
-    	if((dFlags & ISO_UPDATE_TRIMMING_INTERFACE) > 0)
-    	{
-
-    	}
-
-    	if((dFlags & ISO_UPDATE_SYSTEM_INTERFACE) > 0)
-    	{
-
+    		switch (ePubEvt) {
+				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
+				{
+					ISO_vUpdatePlanterDataMask();
+					break;
+				}
+				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
+				{
+					ISO_vUpdateInstallationDataMask();
+					break;
+				}
+				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
+				{
+					ISO_vUpdateTestModeDataMask();
+					break;
+				}
+				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
+				{
+					ISO_vUpdateTrimmingDataMask();
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
+				{
+					ISO_vUpdateSystemDataMask();
+					break;
+				}
+				default:
+					break;
+			}
     	}
     }
     osThreadTerminate(NULL);

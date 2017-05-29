@@ -17,7 +17,7 @@ your application. */
 #define configTICK_RATE_HZ                      ( ( TickType_t ) 1000 ) //250
 #define configMAX_PRIORITIES                    10
 #define configMINIMAL_STACK_SIZE                128
-#define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 50 * 1024 ) ) //40k
+#define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 1024 * 1024 ) ) //40k
 #define configMAX_TASK_NAME_LEN                 16
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1

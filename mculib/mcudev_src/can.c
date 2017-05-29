@@ -546,6 +546,7 @@ void CAN_vSendRemoteMessage(const can_config_s *pCAN, const canMSGStruct_s CANMe
         while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER(pCAN->eCANPort)) >> (obj_idx - 1)) {    // blocking , wait for sending completed
         }
     }
+    Chip_CCAN_SetValidMsg(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], obj_idx, false);
 }
 
 void CAN_vSendMessage(const can_config_s *pCAN, const canMSGStruct_s CANMessage)

@@ -104,8 +104,8 @@ CREATE_CONTRACT(Sensor);                            //!< Create contract for sen
 /******************************************************************************
 * Local messages queue
 *******************************************************************************/
-CREATE_LOCAL_QUEUE(SensorPublishQ, canMSGStruct_s, 10);
-CREATE_LOCAL_QUEUE(SensorWriteQ, canMSGStruct_s, 10);
+CREATE_LOCAL_QUEUE(SensorPublishQ, canMSGStruct_s, 16);
+CREATE_LOCAL_QUEUE(SensorWriteQ, canMSGStruct_s, 16);
 
 /******************************************************************************
 * Module Threads
@@ -352,21 +352,6 @@ void SEN_vSensorPublishThread(void const *argument)
 
     while(1)
     {
-//        /* Pool the device waiting for */
-//        WATCHDOG_STATE(SENPUB, WDT_SLEEP);
-//        osEvent evtPub = RECEIVE_LOCAL_QUEUE(SensorPublishQ, osWaitForever);   // Wait
-//        WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
-//
-//        if(evtPub.status == osEventMessage)
-//        {
-//            // recv = (canMSGStruct_s*) evtPub.value.p;
-//
-//            // /* Publish the array at the SENSOR topic */
-//            // MESSAGE_HEADER(Sensor, SENSOR_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE);
-//            // CONTRACT_HEADER(Sensor, 1, THIS_MODULE, TOPIC_BUZZER);
-//            // MESSAGE_PAYLOAD(Sensor) = (void*) recv->data;
-//            // PUBLISH(CONTRACT(Sensor), 0);
-//        }
         WATCHDOG_STATE(SENPUB, WDT_SLEEP);
         dValorFlag = osFlagWait (CAN_psFlagApl,
                                 (CAN_APL_FLAG_TODOS_SENS_RESP_PNP |
@@ -651,6 +636,8 @@ void SEN_vSensorThread (void const *argument)
     // Create a Mutex to access sensor buffer list on CAN network
     INITIALIZE_MUTEX(CAN_MTX_sBufferListaSensores);
 
+//    INITIALIZE_MUTEX(CAN_MTX_sMPAStruct);
+
     // Create a Mutex to access sensor file list on CAN network
 
     // Create and start CAN application thread
@@ -838,11 +825,14 @@ void SEN_vSensorRecvThread(void const *argument)
     osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
     WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
     
+    uint32_t wTicks = osKernelSysTick ();
+
     while(1)
     {
         /* Pool the device waiting for */
+    	WATCHDOG_STATE(SENRCV, WDT_SLEEP);
+        osDelayUntil(&wTicks, 200);
         WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
-        osDelay(250); // Wait
         
         // Use an osDelayUntil function instead osDelay function
 
