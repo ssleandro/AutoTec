@@ -386,21 +386,21 @@ void ISO_vIsobusPublishThread(void const *argument)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
-        dFlags = osFlagWait(ISO_sFlags, (GUI_CHANGE_CURRENT_DATA_MASK | GUI_CHANGE_CURRENT_CONFIGURATION), true, false, osWaitForever);
+        dFlags = osFlagWait(ISO_sFlags, (ISO_UPDATE_CURRENT_DATA_MASK | ISO_UPDATE_CURRENT_CONFIGURATION), true, false, osWaitForever);
         WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
 
-    	if((dFlags & GUI_CHANGE_CURRENT_DATA_MASK) > 0)
+    	if((dFlags & ISO_UPDATE_CURRENT_DATA_MASK) > 0)
     	{
-    		sISOPubMessage.dEvent = GUI_CHANGE_CURRENT_DATA_MASK;
+    		sISOPubMessage.dEvent = EVENT_ISOBUS_UPDATE_CURRENT_DATA_MASK;
     		sISOPubMessage.eEvtType = EVENT_SET;
     		sISOPubMessage.vPayload = (void*) &eCurrentDataMask;
             MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
             PUBLISH(CONTRACT(Isobus), 0);
     	}
 
-    	if((dFlags & GUI_CHANGE_CURRENT_CONFIGURATION) > 0)
+    	if((dFlags & ISO_UPDATE_CURRENT_CONFIGURATION) > 0)
     	{
-    		sISOPubMessage.dEvent = GUI_CHANGE_CURRENT_CONFIGURATION;
+    		sISOPubMessage.dEvent = EVENT_ISOBUS_UPDATE_CURRENT_CONFIGURATION;
     		sISOPubMessage.eEvtType = EVENT_SET;
     		sISOPubMessage.vPayload = (void*) &sConfigDataMask;
             MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
@@ -481,33 +481,33 @@ void ISO_vIdentifyEvent (contract_s* contract)
 		{
 			evt = GET_PUBLISHED_EVENT(contract);
 			switch (evt) {
-				case GUI_UPDATE_INSTALLATION_INTERFACE:
+				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, GUI_UPDATE_INSTALLATION_INTERFACE);
+					osFlagSet(ISO_sFlags, ISO_UPDATE_INSTALLATION_INTERFACE);
 					break;
 				}
-				case GUI_UPDATE_PLANTER_INTERFACE:
+				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, GUI_UPDATE_PLANTER_INTERFACE);
+					osFlagSet(ISO_sFlags, ISO_UPDATE_PLANTER_INTERFACE);
 					break;
 				}
-				case GUI_UPDATE_TEST_MODE_INTERFACE:
+				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
 					if(psAccumulated == NULL)
 					{
 						psAccumulated = (tsAcumulados*) GET_PUBLISHED_PAYLOAD(contract);
 					}
-					osFlagSet(ISO_sFlags, GUI_UPDATE_TEST_MODE_INTERFACE);
+					osFlagSet(ISO_sFlags, ISO_UPDATE_TEST_MODE_INTERFACE);
 					break;
 				}
-				case GUI_UPDATE_TRIMMING_INTERFACE:
+				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, GUI_UPDATE_TRIMMING_INTERFACE);
+					osFlagSet(ISO_sFlags, ISO_UPDATE_TRIMMING_INTERFACE);
 					break;
 				}
-				case GUI_UPDATE_SYSTEM_INTERFACE:
+				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
 				{
-					osFlagSet(ISO_sFlags, GUI_UPDATE_SYSTEM_INTERFACE);
+					osFlagSet(ISO_sFlags, ISO_UPDATE_SYSTEM_INTERFACE);
 					break;
 				}
 				default:
@@ -1175,7 +1175,7 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                     	if((dAux >= DATA_MASK_CONFIGURATION) || (dAux < DATA_MASK_INVALID))
                     	{
                     		eCurrentDataMask = (eDataMask) dAux;
-                    		osFlagSet(ISO_sFlags, GUI_CHANGE_CURRENT_DATA_MASK);
+                    		osFlagSet(ISO_sFlags, ISO_UPDATE_CURRENT_DATA_MASK);
                     	}
                         break;
                     }
@@ -1483,31 +1483,31 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     {
     	/* Pool the device waiting for */
     	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    	dFlags = osFlagWait(ISO_sFlags, (GUI_UPDATE_INSTALLATION_INTERFACE | GUI_UPDATE_PLANTER_INTERFACE | GUI_UPDATE_TEST_MODE_INTERFACE |
-    										GUI_UPDATE_TRIMMING_INTERFACE | GUI_UPDATE_SYSTEM_INTERFACE), true, false, osWaitForever);
+    	dFlags = osFlagWait(ISO_sFlags, (ISO_UPDATE_INSTALLATION_INTERFACE | ISO_UPDATE_PLANTER_INTERFACE | ISO_UPDATE_TEST_MODE_INTERFACE |
+    										ISO_UPDATE_TRIMMING_INTERFACE | ISO_UPDATE_SYSTEM_INTERFACE), true, false, osWaitForever);
     	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-    	if((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
+    	if((dFlags & ISO_UPDATE_INSTALLATION_INTERFACE) > 0)
     	{
 
     	}
 
-    	if((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
+    	if((dFlags & ISO_UPDATE_PLANTER_INTERFACE) > 0)
     	{
 
     	}
 
-    	if((dFlags & GUI_UPDATE_TEST_MODE_INTERFACE) > 0)
+    	if((dFlags & ISO_UPDATE_TEST_MODE_INTERFACE) > 0)
     	{
     		ISO_vUpdateTestModeDataMask();
     	}
 
-    	if((dFlags & GUI_UPDATE_TRIMMING_INTERFACE) > 0)
+    	if((dFlags & ISO_UPDATE_TRIMMING_INTERFACE) > 0)
     	{
 
     	}
 
-    	if((dFlags & GUI_UPDATE_SYSTEM_INTERFACE) > 0)
+    	if((dFlags & ISO_UPDATE_SYSTEM_INTERFACE) > 0)
     	{
 
     	}

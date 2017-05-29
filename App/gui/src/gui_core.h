@@ -44,6 +44,14 @@
 * Preprocessor Constants
 *******************************************************************************/
 
+#define GUI_UPDATE_INSTALLATION_INTERFACE 0x00000001
+#define GUI_UPDATE_PLANTER_INTERFACE 	  0x00000002
+#define GUI_UPDATE_TEST_MODE_INTERFACE	  0x00000004
+#define GUI_UPDATE_TRIMMING_INTERFACE	  0x00000008
+#define GUI_UPDATE_SYSTEM_INTERFACE		  0x00000010
+#define GUI_CHANGE_CURRENT_DATA_MASK	  0x00000020
+#define GUI_CHANGE_CURRENT_CONFIGURATION  0x00000040
+
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/

@@ -52,6 +52,16 @@
 #define N_FILL_ATTRIBUTES_OBJECTS 72
 #define N_BAR_GRAPH_OBJECTS 36
 
+#define ISO_UPDATE_CURRENT_DATA_MASK 		0x0001
+#define ISO_UPDATE_CURRENT_CONFIGURATION    0x0002
+#define ISO_UPDATE_INSTALLATION_INTERFACE	0x0004
+#define ISO_UPDATE_PLANTER_INTERFACE		0x0008
+#define ISO_UPDATE_TEST_MODE_INTERFACE		0x0010
+#define ISO_UPDATE_TRIMMING_INTERFACE		0x0020
+#define ISO_UPDATE_SYSTEM_INTERFACE			0x0040
+
+
+
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/
@@ -77,14 +87,6 @@ typedef enum {
 	BOOT,
 	RUNNING
 } eModuleStates;
-
-typedef enum {
-	STATUS_INSTALL_INSTALLING 	 = 0x0E,
-	STATUS_INSTALL_INSTALLED 	 = 0x0A,
-	STATUS_INSTALL_INSTALL_ERROR = 0x0C,
-	STATUS_INSTALL_NONE			 = 0xE6,
-	STATUS_INSTALL_INVALID
-} eInstallationStatus;
 
 typedef enum {
 	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
