@@ -174,8 +174,8 @@ void GUI_vGuiPublishThread(void const *argument)
     	{
     		if((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
     		{
-    			sGUIPubMessage.dEvent = GUI_UPDATE_TEST_MODE_INTERFACE;
-    			sGUIPubMessage.eEvtType = EVENT_SET;
+    			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
+    			sGUIPubMessage.eEvtType = EVENT_UPDATE;
     			sGUIPubMessage.vPayload = (void*) &AQR_sAcumulado;
     			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
     			PUBLISH(CONTRACT(Gui), 0);

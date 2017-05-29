@@ -39,16 +39,15 @@
 *******************************************************************************/
 #include "ring_buffer.h"
 #include "debug_tool.h"
+#include "sensor_app.h"
+#include "isobus_app.h"
+#include "acquireg_app.h"
+#include "gps_app.h"
+
 /******************************************************************************
 * Preprocessor Constants
 *******************************************************************************/
-#define GUI_UPDATE_INSTALLATION_INTERFACE 0x00000001
-#define GUI_UPDATE_PLANTER_INTERFACE 	  0x00000002
-#define GUI_UPDATE_TEST_MODE_INTERFACE	  0x00000004
-#define GUI_UPDATE_TRIMMING_INTERFACE	  0x00000008
-#define GUI_UPDATE_SYSTEM_INTERFACE		  0x00000010
-#define GUI_CHANGE_CURRENT_DATA_MASK	  0x00000020
-#define GUI_CHANGE_CURRENT_CONFIGURATION  0x00000040
+
 
 /******************************************************************************
 * Configuration Constants
@@ -295,10 +294,17 @@ typedef struct {
 
 typedef enum event_e
 {
-    EVENT_FFS_STATUS,        		//!< EVENT FFS STATUS CHANGED
-	EVENT_FFS_CFG,        	//!< EVENT FILE CFG STATUS CHANGED
-	EVENT_FFS_INTERFACE_CFG,    //!< EVENT FILE INTERFACE STATUS CHANGED
-	EVENT_FFS_STATIC_REG,    //!< EVENT FILE INTERFACE STATUS CHANGED
+    EVENT_FFS_STATUS,        				//!< EVENT FFS STATUS CHANGED
+	EVENT_FFS_CFG,        					//!< EVENT FILE CFG STATUS CHANGED
+	EVENT_FFS_INTERFACE_CFG,    			//!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_FFS_STATIC_REG,    				//!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
+	EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
+	EVENT_GUI_UPDATE_TEST_MODE_INTERFACE,
+	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
+	EVENT_GUI_UPDATE_SYSTEM_INTERFACE,
+	EVENT_ISOBUS_UPDATE_CURRENT_DATA_MASK,
+	EVENT_ISOBUS_UPDATE_CURRENT_CONFIGURATION,
 } event_e;
 
 /******************************************************************************
@@ -307,137 +313,7 @@ typedef enum event_e
 // TODO: This variables is just for test
 // TODO: common from GPS
 
-//Valores para os temporizadores de comunicacao:
-#define GPS_wTICKS_WDT  (TICK/2)      //Numero de ticks ate o watchdog timeout.
-#define GPS_wTICKS_WAT  (TICK/8)    //Numero de ticks ate o fim de uma espera.
-#define GPS_wTICKS_IDL  (TICK*3)    //Numero de ticks maximo em neutro.
-#define GPS_wTICKS_CNX  (TICK*30)   //Numero de ticks maximo ocioso.
 
-//Valores para os contadores de excessoes de comunicacao:
-#define GPS_wMAX_ENQS   16      //Numero maximo de pedidos de confirmação de um quadro.
-#define GPS_wMAX_NAKS   16      //Numero maximo de reconhecimentos negativos para um quadro.
-#define GPS_wMAX_WAITS  24      //Numero maximo de esperas por buffer livre.
-
-//Timeout do GPS
-
-#define GPS_TIMEOUT_10S    (TICK*10)  // 10 segundos
-#define GPS_TIMEOUT_9S    (TICK*9)  // 9 segundos
-#define GPS_TIMEOUT_8S    (TICK*8)  // 8 segundos
-#define GPS_TIMEOUT_7S    (TICK*7)  // 7 segundos
-#define GPS_TIMEOUT_6S    (TICK*6)  // 6 segundos
-#define GPS_TIMEOUT_5S    (TICK*5)  // 5 segundos
-#define GPS_TIMEOUT_4S    (TICK*4)  // 4 segundos
-#define GPS_TIMEOUT_3S    (TICK*3)  // 3 segundos
-#define GPS_TIMEOUT_2S    (TICK*2)  // 2 segundos
-#define GPS_TIMEOUT_1S    TICK      // 1 segundos
-#define GPS_TIMEOUT_S500  (TICK/2)  // 0,5 segundos
-
-//Flags de controle da rotina do modulo GPS:
-#define GPS_FLAG_NENHUM             0x00000000
-#define GPS_FLAG_TIME_OUT           0x00000001
-#define GPS_FLAG_INT_TIMEPULSE      0x00000002
-#define GPS_FLAG_METRO              0x00000004
-#define GPS_FLAG_TIMEOUT_MTR        0x00000008
-#define GPS_FLAG_SEGUNDO            0x00000010
-
-//Mascaras do Fix Status Flag
-#define GPS_FIX_OK  0x01   //i.e within DOP & ACC Masks
-//#define DIFF_SOLN  0x02 //1 if DGPS used
-#define WEEK_SET    0x04  //1 if Week Number valid
-#define TOW_SET     0x08   //1 if Time of Week valid
-#define GPS_FIX_STATUS_OK ( GPS_FIX_OK | WEEK_SET | TOW_SET )
-
-//Mascaras do flag do GPS Time
-#define VALID_TOW     0x01 //1=Valid Time of Week
-#define VALID_WEEK    0x02 //1=Valid Week Number
-#define VALID_UTCOFF  0x04 //1=Valid Leap Seconds, i.e. Leap Seconds already known
-#define GPS_VALID_TIME ( VALID_TOW | VALID_WEEK | VALID_UTCOFF )
-
-typedef enum {
-  No_Fix,
-  Dead_Reckoning_only,
-  GPS_2D_Fix,
-  GPS_3D_Fix,
-  GPS_and_Dead_Reckoning_Combined,
-  Time_only_fix
-}GPS_teFix;
-
-typedef enum {
-  INIT,
-  DONT_KNOW,
-  OK,
-  SHORT,
-  OPEN
-}GPS_teAnt;
-
-typedef enum {
-  POWER_OFF,
-  POWER_ON,
-  DONTKNOW
-}GPS_tePWR;
-
-typedef struct
-{
-
-//----------------------------------------------------------------------------//
-//NAV-POSLLH (Geodetic Position Solution)
-  int32_t          lLon;  // Longitude (deg) 1e-7
-  int32_t          lLat;  // Latitude (deg) 1e-7
-  uint32_t          dHAcc; // Horizontal Accuracy Estimate (mm)
-  uint32_t          dVAcc; // Vertical Accuracy Estimate (mm)
-
-//----------------------------------------------------------------------------//
-//NAV-SOL ( Navigation Solution Information )
-  GPS_teFix       eGpsFix; //GPS fix type
-  uint8_t           bFlagsFix; //Fix Status Flags
-  uint16_t          wPDOP; //Position DOP (0.01)
-  uint8_t           bNSV;  //Number of SVs used in Nav Solution
-
-//----------------------------------------------------------------------------//
-//NAV-VELNED ( Velocity Solution in NED )
-  int32_t          lVelNorth;     //NED north velocity (cm/s)
-  int32_t          lVelEast;      //NED east velocity (cm/s)
-//  uint32_t          dSpeed;      //Speed (3-D) (cm/s)
-  uint32_t          dGroundSpeed;  //Ground Speed (2-D) (cm/s)
-  uint32_t          dSpeedAcc;     //Speed Accuracy Estimate (cm/s)
-
-//----------------------------------------------------------------------------//
-//NAV_TIMEGPS ( GPS Time Solution )
-  uint32_t          dTOW;  // GPS Milisecond Time of Week (ms)
-  int16_t          iWeek; //GPS week ( GPS time )
-  int8_t           cUTCOff;  //Leap Seconds (GPS-UTC) (s)
-  uint8_t           bValid; //Validity Flags (TOW, Week, utc)
-
-//----------------------------------------------------------------------------//
-//MON-HW ( Hardware Status )
-  GPS_teAnt       eStsAntena;
-//  GPS_tePWR       eStsPower;
-
-//----------------------------------------------------------------------------//
-//CFG-PRT (Port Configuration for UART)
-  uint8_t     bPorta;
-  uint32_t    dBaud;
-  uint16_t    wInProto;
-  uint16_t    wOutProto;
-
-//----------------------------------------------------------------------------//
-//CFG_RXM
-//  uint8_t  bLowPowerMode;
-
-//----------------------------------------------------------------------------//
-//Valores calculados
-  float      fDistancia; //Calculo da distancia percorrida
-  uint8_t     bBateria;
-
-//----------------------------------------------------------------------------//
-//MON-VER ( Receiver Software Versiom )
-  uint8_t     bSwVersion[30];
-//  uint8_t     bHwVersion[10];
-//  uint8_t     bRomVersion[30];
-
-  uint8_t     bConfigura_FIM; //True - Se finalizou a Configuracao do GPS
-
-} GPS_tsDadosGPS; // estrutura contendo os dados do gps.
 
 extern gpio_config_s sEnablePS9;
 #define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
@@ -524,173 +400,6 @@ extern gpio_config_s sEnablePS9;
 
 #define AQR_APL_FLAG_SAVE_STATIC_REG	          0x00200000
 
-
-// Listagem de dispositivos utilizados na rede CAN
-#define CAN_APL_SENSOR_SEMENTE                    0x00 //Sensor de semente
-#define CAN_APL_SENSOR_ADUBO                      0x01 //Sensor de adubo
-#define CAN_APL_SENSOR_SIMULADOR                  0x02 //Sensor de Velocidade do Simulador
-#define CAN_APL_SENSOR_DIGITAL_2                  0x03 //Sensor digital 2
-#define CAN_APL_SENSOR_DIGITAL_3                  0x04 //Sensor digital 3
-#define CAN_APL_SENSOR_DIGITAL_4                  0x05 //Sensor digital 4
-#define CAN_APL_SENSOR_DIGITAL_5                  0x06 //Sensor digital 5
-#define CAN_APL_SENSOR_DIGITAL_6                  0x07 //Sensor digital 6
-#define CAN_APL_SENSOR_TODOS                      0xFF //Todos os sensores
-#define CAN_APL_LINHA_TODAS                       0xFF //Todas as linhas
-
-//#define TRACE_SENSOR_INSTALL
-
-#if defined(TRACE_SENSOR_INSTALL)
-#define CAN_wTICKS_PRIMEIRO_CMD_PNP           2*(3 *TICK )      //Numero de ticks para o timer de timeout do comando de PnP
-#define CAN_wTICKS_CMD_PNP                    2*(3*(TICK/2))  //Numero de ticks para o timer de envio do comando de PnP
-#define CAN_wTICKS_TIMEOUT_PNP                3*(TICK)      //Numero de ticks para o timer de timeout do comando de PnP
-#define CAN_wTICKS_TIMEOUT                    3*(TICK)      //Numero de ticks para o timer de timeout de Leitura de Dados
-#define CAN_wTICKS_TIMEOUT_CFG                3*(TICK)      //Numero de ticks para o timer de timeout de Configuração
-#define CAN_wTICKS_TIMEOUT_TESTE              5*(TICK)        //Numero de ticks para o timer de timeout de Leitura de Dados no Modo Teste
-
-#define CAN_wTICKS_TIMEOUT_VEL                3*(TICK)      //Numero de ticks para o timer de timeout de Leitura de Velocidade
-#else
-// Valores para os temporizadores de comunicacao:
-#define CAN_wTICKS_PRIMEIRO_CMD_PNP           (3 *TICK )      //Numero de ticks para o timer de timeout do comando de PnP
-#define CAN_wTICKS_CMD_PNP                    (3*(TICK/2))  //Numero de ticks para o timer de envio do comando de PnP
-#define CAN_wTICKS_TIMEOUT_PNP                (TICK/4)      //Numero de ticks para o timer de timeout do comando de PnP
-#define CAN_wTICKS_TIMEOUT                    (TICK/4)      //Numero de ticks para o timer de timeout de Leitura de Dados
-#define CAN_wTICKS_TIMEOUT_CFG                (TICK/4)      //Numero de ticks para o timer de timeout de Configuração
-#define CAN_wTICKS_TIMEOUT_TESTE              (TICK)        //Numero de ticks para o timer de timeout de Leitura de Dados no Modo Teste
-
-#define CAN_wTICKS_TIMEOUT_VEL                (TICK/4)      //Numero de ticks para o timer de timeout de Leitura de Velocidade
-#endif
-
-#define CAN_bCONT_CMD_PNP                     1
-#define CAN_bCONT_TIMEOUT_CMD_PNP             1
-#define CAN_bCONT_TIMEOUT_CMD_DADOS           1
-
-// Tamanho do endereco fi�sico de cada sensor na rede
-#define CAN_bTAMANHO_END_FISICO               6
-
-// Macro para calcular a quantidade de elementos de um array
-#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
-
-#define CAN_bNUM_DE_LINHAS                    36
-#define CAN_bNUM_SENSORES_POR_LINHA           2
-#define CAN_bNUM_SENSORES_DIGITAIS            6
-#define CAN_bNUM_SENSORES_SEMENTE_E_ADUBO     (CAN_bNUM_DE_LINHAS * CAN_bNUM_SENSORES_POR_LINHA)
-#define CAN_bTAMANHO_LISTA                    (CAN_bNUM_SENSORES_SEMENTE_E_ADUBO + CAN_bNUM_SENSORES_DIGITAIS)
-
-typedef enum {
-  Novo,
-  Conectado,
-  Desconectado,
-  Verificando,
-} CAN_teEstadoSensor;
-
-typedef enum {
-  Nenhum,
-  Reprovado,
-  Aprovado
-} CAN_teAutoTeste;
-
-typedef struct {
-    bool               bNovo;
-    uint8_t            bTipoSensor;
-    uint8_t            abEnderecoFisico[ 6 ];
-    CAN_teAutoTeste    eResultadoAutoTeste;
-} CAN_tsNovoSensor;
-
-// Estrutura de Versao de SW do Sensor
-typedef struct {
-    uint16_t            wVer;                   //Numero da versao.
-    uint16_t            wRev;                   //Numero da revisao.
-    uint16_t            wBuild;                 //Numero do build.
-}CAN_tsVersaoSensor;
-
-// Lista de sensores na rede CAN
-typedef struct {
-    CAN_teEstadoSensor    eEstado;
-    uint8_t               abEnderecoFisico[ 6 ];
-    uint8_t               abUltimaLeitura[2];
-    CAN_teAutoTeste       eResultadoAutoTeste;
-    CAN_tsVersaoSensor    CAN_sVersaoSensor;
-} CAN_tsLista;
-
-// Estrutura de controle da lista de sensores na rede CAN
-typedef struct {
-    CAN_tsNovoSensor      sNovoSensor;
-    CAN_tsLista           asLista[ CAN_bTAMANHO_LISTA ];
-} CAN_tsCtrlListaSens;
-
-// Estrutura de parametros de sensores
-typedef struct {
-    uint16_t wMinimo;       //Tempo minimo em us para contagem de uma semente
-    uint16_t wMaximo;       //Tempo maximo em us para contagem de uma semente
-    uint16_t wMaximoDuplo;  //Tempo maximo em us para contagem de duas sementes
-}CAN_tsParametrosSensor;
-
-//Estrutura de parametros de sensores
-typedef struct {
-    uint8_t bMinimo;
-    uint8_t bDuplo;
-    uint8_t bMaximo;
-    uint8_t bFreqAmostra;
-    uint8_t bNAmostra;
-    uint8_t bPasso;
-    uint8_t bDivPicoOffsetMinimo;       // LSN = DivPico     / MSN = OffsetMin      (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
-    uint8_t bOffsetDuploOffsetTriplo;   // LSN = OffsetDuplo / MSN = OffsetTriplo   (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
-}CAN_tsParametrosExtended;
-
-
-typedef struct {
-
-  //uint8_t  abAdubo[32];      //Adubo por linha
-  uint32_t dSomaSem;         //Sementes em todas as Linhas
-  uint32_t dDistancia;       //Distância Percorrida  em centimetros
-  uint32_t dSegundos;        //Tempo em segundos
-  float   fArea;            //Area
-  uint32_t adSementes[36];   //Sementes por linha
-
-} tsLinhas;
-
-typedef struct {
-
-  uint32_t dDistancia;      //Distância Percorrida  em centimetros - após config
-  uint32_t dSomaSem;       //Soma de sementes parcial de todas as linhas
-
-} tsDistanciaTrab;
-
-
-typedef struct {
-
-  uint32_t    dTEV;          //Tempo total em excesso de velocidade (em trabalho)
-  uint32_t    dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
-  float      fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
-
-} tsVelocidade;
-
-typedef struct {
-
-  tsLinhas  sTrabTotal;     //Acumula valores trabalhando (Total)
-  tsLinhas  sTrabTotalDir;  //Acumula valores trabalhando em Arremate do lado direito
-  tsLinhas  sTrabTotalEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
-
-  tsLinhas  sTrabParcial;  //Acumula valores trabalhando (Parcial)
-  tsLinhas  sTrabParcDir;  //Acumula valores trabalhando em Arremate do lado direito
-  tsLinhas  sTrabParcEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
-
-  tsLinhas  sManobra;      //Acumula valores manobra (não trabalhando)
-
-  tsLinhas  sTotalReg;     //Acumula valores totais para Registro(trabalhando + manobra)
-
-  tsLinhas  sAvalia;       //Acumula valores em Avaliação (cálculo da média)
-
-  tsDistanciaTrab  sDistTrabTotal;     //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabTotalEsq;  //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabTotalDir;  //Distância parcial - o qual zera após a configuração
-
-  tsDistanciaTrab  sDistTrabParcial;     //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabParcialEsq;  //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabParcialDir;  //Distância parcial - o qual zera após a configuração
-
-
-} tsAcumulados;
 
 /******************************************************************************
 * Typedefs from Control module... Just for test...
