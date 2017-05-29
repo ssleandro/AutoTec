@@ -535,7 +535,7 @@ void SEN_vIdentifyEvent(contract_s* contract)
         }
         case MODULE_ACQUIREG:
         {
-            if ((GET_PUBLISHED_EVENT(contract) & CAN_APL_FLAG_FINISH_INSTALLATION) > 0)
+            if ((GET_PUBLISHED_EVENT(contract) & EVENT_AQR_FINISH_INSTALLATION) > 0)
             {
                 // Send final handshake messages to sensors...
 

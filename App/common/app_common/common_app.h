@@ -120,13 +120,13 @@
   ASSERT(MutexName != NULL);
 /*!< Mutex wait */  
 #define WAIT_MUTEX(MutexName, TimeToWait) \
-  (osMutexWait(MutexName, TimeToWait));
+   osMutexWait(MutexName, TimeToWait)
 /*!< Release Mutex */
 #define RELEASE_MUTEX(MutexName) \
-  (osMutexRelease(MutexName));
+   osMutexRelease(MutexName)
 /*!< Delete Mutex */
 #define DELETE_MUTEX(MutexName) \
-  (osMutexDelete(MutexName))
+   osMutexDelete(MutexName)
 /*!< Extern a mutex */
 #define EXTERN_MUTEX(MutexName) \
     extern osMutexId  MutexName
@@ -303,8 +303,10 @@ typedef enum event_e
 	EVENT_GUI_UPDATE_TEST_MODE_INTERFACE,
 	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_INTERFACE,
-	EVENT_ISOBUS_UPDATE_CURRENT_DATA_MASK,
-	EVENT_ISOBUS_UPDATE_CURRENT_CONFIGURATION,
+	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
+	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
+	EVENT_AQR_FINISH_INSTALLATION,
+	EVENT_AQR_UPDATE_INSTALLATION,
 } event_e;
 
 /******************************************************************************
@@ -395,10 +397,6 @@ extern gpio_config_s sEnablePS9;
 // Nenhum sensor conectado a rede Resposta comum a todos os comandos
 #define CAN_APL_FLAG_SENSOR_NAO_RESPONDEU         0x00040000
 #define CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO      0x00080000
-
-#define CAN_APL_FLAG_FINISH_INSTALLATION          0x00100000
-
-#define AQR_APL_FLAG_SAVE_STATIC_REG	          0x00200000
 
 
 /******************************************************************************

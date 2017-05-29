@@ -169,6 +169,10 @@ CREATE_MUTEX(MTX_VTStatus);
 extern unsigned int POOL_SIZE;
 extern uint8_t pool[];
 
+// Installation
+eInstallationStatus InstallationStatus[36];
+
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
@@ -391,7 +395,7 @@ void ISO_vIsobusPublishThread(void const *argument)
 
     	if((dFlags & ISO_UPDATE_CURRENT_DATA_MASK) > 0)
     	{
-    		sISOPubMessage.dEvent = EVENT_ISOBUS_UPDATE_CURRENT_DATA_MASK;
+    		sISOPubMessage.dEvent = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
     		sISOPubMessage.eEvtType = EVENT_SET;
     		sISOPubMessage.vPayload = (void*) &eCurrentDataMask;
             MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
@@ -400,7 +404,7 @@ void ISO_vIsobusPublishThread(void const *argument)
 
     	if((dFlags & ISO_UPDATE_CURRENT_CONFIGURATION) > 0)
     	{
-    		sISOPubMessage.dEvent = EVENT_ISOBUS_UPDATE_CURRENT_CONFIGURATION;
+    		sISOPubMessage.dEvent = EVENT_ISO_UPDATE_CURRENT_CONFIGURATION;
     		sISOPubMessage.eEvtType = EVENT_SET;
     		sISOPubMessage.vPayload = (void*) &sConfigDataMask;
             MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;

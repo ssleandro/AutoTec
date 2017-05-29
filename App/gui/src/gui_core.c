@@ -37,6 +37,7 @@
 #include "../../gui/config/gui_config.h"
 #include "gui_ThreadControl.h"
 #include <stdlib.h>
+#include "common_app.h"
 
 /******************************************************************************
 * Module Preprocessor Constants
@@ -45,6 +46,7 @@
 #define QUEUE_SIZEOFGUI 5
 
 #define THIS_MODULE MODULE_GUI
+
 
 /******************************************************************************
 * Module Variable Definitions
@@ -59,6 +61,9 @@ eDataMask eCurrDataMask = DATA_MASK_INSTALLATION;
 
 extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
+
+
+eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
 
 /******************************************************************************
 * Module typedef
@@ -162,7 +167,11 @@ void GUI_vGuiPublishThread(void const *argument)
 
     	if((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
     	{
-
+			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
+			sGUIPubMessage.eEvtType = EVENT_UPDATE;
+			sGUIPubMessage.vPayload = (void*) &eSensorStatus;
+			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
+			PUBLISH(CONTRACT(Gui), 0);
     	}
 
     	if((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
@@ -195,6 +204,60 @@ void GUI_vGuiPublishThread(void const *argument)
     osThreadTerminate(NULL);
 }
 
+void GUI_InitSensorStatus(void)
+{
+	uint8_t bConta;
+	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
+	{
+		eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+	}
+}
+
+void GUI_UpdatSensorsStatus(CAN_tsLista * pSensorStatus)
+{
+	uint8_t bConta;
+
+	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
+	{
+		// se o sensor for par, ele é de semente
+		CAN_tsLista *pSensor = &pSensorStatus[bConta * 2];
+		switch (pSensor->eEstado)
+		{
+			case Novo:
+			case Verificando:
+			{
+				eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
+				break;
+			}
+			case Conectado:
+			{
+				if (pSensor->eResultadoAutoTeste == Aprovado)
+				{
+					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
+				}
+				else
+				{
+					eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+				}
+				break;
+			}
+			case Desconectado:
+			{
+				eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+				break;
+			}
+
+			default:
+			{
+				eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+				break;
+			}
+		}
+	}
+	osFlagSet(GUI_sFlags, GUI_UPDATE_INSTALLATION_INTERFACE);
+
+}
+
 void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osFlags dFlags;
@@ -223,6 +286,15 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			}
 
+			break;
+		}
+		case MODULE_ACQUIREG:
+		{
+			if (GET_PUBLISHED_EVENT(contract) == EVENT_AQR_UPDATE_INSTALLATION)
+			{
+				GUI_UpdatSensorsStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
+
+			}
 			break;
 		}
 		default:
@@ -268,6 +340,8 @@ void GUI_vGuiThread (void const *argument)
     /* Inform Main thread that initialization was a success */
     osThreadId xMainFromIsobusID = (osThreadId) argument;
     osSignalSet(xMainFromIsobusID, MODULE_GUI);
+
+    GUI_InitSensorStatus();
 
     /* Start the main functions of the application */
     while (1)
