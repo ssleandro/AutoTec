@@ -39,9 +39,9 @@
 *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define ACQUIREG_MODULES \
-    X("AcquiregPublish"     , 150 , osPriorityNormal , AQR_vAcquiregPublishThread     , (1 << 0) , 1 ) \
-    X("AcquiregManagement"  , 150 , osPriorityNormal , AQR_vAcquiregManagementThread  , (1 << 1) , 2 ) \
-    X("AcquiregTime"        , 150 , osPriorityNormal , AQR_vAcquiregTimeThread        , (1 << 2) , 3 ) \
+    X("AcquiregPublish"     , 512 , osPriorityNormal , AQR_vAcquiregPublishThread     , (1 << 0) , 1 ) \
+    X("AcquiregManagement"  , 1024 , osPriorityNormal , AQR_vAcquiregManagementThread  , (1 << 1) , 2 ) \
+    X("AcquiregTime"        , 512 , osPriorityNormal , AQR_vAcquiregTimeThread        , (1 << 2) , 3 ) \
     X(NULL                  ,   0 , 0                , NULL                           , 0        , 4 ) \
 
 /******************************************************************************

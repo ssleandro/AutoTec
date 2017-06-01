@@ -47,10 +47,23 @@
 /******************************************************************************
 * Preprocessor Constants
 *******************************************************************************/
-#define N_NUMBER_VARIABLE_OBJECTS 7
-#define N_INPUT_LIST_OBJECTS 9
-#define N_FILL_ATTRIBUTES_OBJECTS 72
-#define N_BAR_GRAPH_OBJECTS 36
+#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 7
+#define ISO_NUM_INPUT_LIST_OBJECTS 9
+#define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 72
+#define ISO_NUM_BAR_GRAPH_OBJECTS 72
+
+#define ISO_UPDATE_CURRENT_DATA_MASK 		0x00000001
+#define ISO_UPDATE_CURRENT_CONFIGURATION    0x00000002
+#define ISO_UPDATE_INSTALLATION_INTERFACE	0x00000004
+#define ISO_UPDATE_PLANTER_INTERFACE		0x00000008
+#define ISO_UPDATE_TEST_MODE_INTERFACE		0x00000010
+#define ISO_UPDATE_TRIMMING_INTERFACE		0x00000020
+#define ISO_UPDATE_SYSTEM_INTERFACE			0x00000040
+#define ISO_INSTALLATION_REPEAT_TEST		0x00000080
+#define ISO_INSTALLATION_ERASE_INSTALLATION	0x00000100
+
+#define ISO_BUTTON_REPEAT_TEST_ID			0x6005
+#define ISO_BUTTON_ERASE_INSTALLATION_ID	0x6006
 
 #define ISO_UPDATE_CURRENT_DATA_MASK 		0x0001
 #define ISO_UPDATE_CURRENT_CONFIGURATION    0x0002
@@ -65,10 +78,33 @@
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/
+#define ISO_OBJECT_PICTURE_GRAPHIC_ID 0x1000
+#define ISO_OBJECT_SOFT_KEY_MASK_ID	  0x2000
+#define ISO_OBJECT_POINTER_ID		  0x2100
+#define ISO_OBJECT_KEY_ID			  0x3000
+#define ISO_OBJECT_CONTAINER_ID		  0x4000
+#define ISO_OBJECT_OUTPUT_STRING_ID	  0x4500
+#define ISO_OBJECT_STRING_VARIABLE_ID 0x4700
+#define ISO_OBJECT_DATA_MASK_ID		  0x5000
+#define ISO_OBJECT_OUTPUT_NUMBER_ID   0x5500
+#define ISO_OBJECT_BUTTON_ID		  0x6000
+#define ISO_OBJECT_FONT_ID			  0x6500
+#define ISO_OBJECT_BAR_GRAPH_ID		  0x7000
+#define ISO_OBJECT_NUMBER_VARIABLE_ID 0x8000
+#define ISO_OBJECT_INPUT_NUMBER_ID	  0x8200
+#define ISO_OBJECT_INPUT_BOOLEAN_ID	  0x8500
+#define ISO_OBJECT_OUTPUT_LINE_ID	  0x8900
+#define ISO_OBJECT_INPUT_LIST_ID	  0x9000
+#define ISO_OBJECT_RECTANGLE_ID		  0x9500
+#define ISO_OBJECT_FILL_ATTRIBUTES_ID 0x9600
+#define ISO_OBJECT_LINE_ID			  0x9900
 
 /******************************************************************************
 * Macros
 *******************************************************************************/
+#define GET_INDEX_FROM_ID(id) (id & 0x0FFF)
+#define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
+#define GET_UNSIGNED_INT_VALUE(value) ((uint32_t)(value*10))
 
 /******************************************************************************
 * Typedefs

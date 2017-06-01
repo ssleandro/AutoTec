@@ -477,62 +477,63 @@ static void GPIO_vEnableInterrupts(gpio_config_s *pGPIO)
 
 eMCUError_s GPIO_eInit(gpio_config_s *pGPIO)
 {
-  eMCUError_s eErrorCode = GPIO_eCheckFault(pGPIO);
+	static gpio_config_private_s sPrivate;
+	eMCUError_s eErrorCode = GPIO_eCheckFault(pGPIO);
 
-  if (eErrorCode)
-    {
-      return eErrorCode;
-    }
+	if (eErrorCode)
+	{
+		return eErrorCode;
+	}
 
-  // This part of the code will search the table for the correct main port/pin mapping
-  // and return its position on the array
-  uint8_t bPosition = GPIO_bSearchMapping(pGPIO->bMPort, pGPIO->bMPin);
+	// This part of the code will search the table for the correct main port/pin mapping
+	// and return its position on the array
+	uint8_t bPosition = GPIO_bSearchMapping(pGPIO->bMPort, pGPIO->bMPin);
 
-  if (bPosition > bGPIOMapSize) //Check if GPIO pin was already Initialized
-    {
-      return MCU_ERROR_GPIO_INVALID_PORT_OR_PIN;
-    }
+	if (bPosition > bGPIOMapSize) //Check if GPIO pin was already Initialized
+	{
+		return MCU_ERROR_GPIO_INVALID_PORT_OR_PIN;
+	}
 
-  //Create private struct, populate it and then reference it on the public struct
-  gpio_config_private_s *psPrivate = malloc(sizeof(gpio_config_private_s));
-  *psPrivate = (gpio_config_private_s)
-      {
-    .bGPort = sGPIOMap[bPosition].bGPIOPort,
-    .bGPin = sGPIOMap[bPosition].bGPIOPin,
-    .bGPIOStarted = true
-      };
-  pGPIO->vpPrivateData = psPrivate;
+	//Create private struct, populate it and then reference it on the public struct
+	gpio_config_private_s *psPrivate = &sPrivate;
+	*psPrivate = (gpio_config_private_s)
+    				  {
+						.bGPort = sGPIOMap[bPosition].bGPIOPort,
+						.bGPin = sGPIOMap[bPosition].bGPIOPin,
+						.bGPIOStarted = true
+    				  };
+	pGPIO->vpPrivateData = psPrivate;
 
-  if ((pGPIO->eInterrupt != GPIO_INTERRUPT_DISABLED) && (pGPIO->eDirection == GPIO_INPUT))
-    {
-      eErrorCode = GPIO_eSearchInterrupt(pGPIO);
-    }
+	if ((pGPIO->eInterrupt != GPIO_INTERRUPT_DISABLED) && (pGPIO->eDirection == GPIO_INPUT))
+	{
+		eErrorCode = GPIO_eSearchInterrupt(pGPIO);
+	}
 
-  if (eErrorCode)
-    {
-      return eErrorCode;
-    }
+	if (eErrorCode)
+	{
+		return eErrorCode;
+	}
 
-  BRD_GPIOConfig(bPosition, pGPIO->ePull);  //PinMux
+	BRD_GPIOConfig(bPosition, pGPIO->ePull);  //PinMux
 
-  Chip_GPIO_Init(LPC_GPIO_PORT);
+	Chip_GPIO_Init(LPC_GPIO_PORT);
 
-  if (pGPIO->eDirection & GPIO_OUTPUT) // SET GPIO DIR OUTPUT
-    {
-      Chip_GPIO_SetPinDIROutput(LPC_GPIO_PORT, psPrivate->bGPort, psPrivate->bGPin);
-      // SET DEFAULT STATE
-      Chip_GPIO_SetPinState(LPC_GPIO_PORT, psPrivate->bGPort, psPrivate->bGPin, pGPIO->bDefaultOutputHigh);
-    }
-  else // SET GPIO DIR INPUT
-    {
-      Chip_GPIO_SetPinDIRInput(LPC_GPIO_PORT, psPrivate->bGPort, psPrivate->bGPin);
-      if (pGPIO->eInterrupt != GPIO_INTERRUPT_DISABLED)
-        {
-          GPIO_vEnableInterrupts(pGPIO);
-        }
-    }
+	if (pGPIO->eDirection & GPIO_OUTPUT) // SET GPIO DIR OUTPUT
+	{
+		Chip_GPIO_SetPinDIROutput(LPC_GPIO_PORT, psPrivate->bGPort, psPrivate->bGPin);
+		// SET DEFAULT STATE
+		Chip_GPIO_SetPinState(LPC_GPIO_PORT, psPrivate->bGPort, psPrivate->bGPin, pGPIO->bDefaultOutputHigh);
+	}
+	else // SET GPIO DIR INPUT
+	{
+		Chip_GPIO_SetPinDIRInput(LPC_GPIO_PORT, psPrivate->bGPort, psPrivate->bGPin);
+		if (pGPIO->eInterrupt != GPIO_INTERRUPT_DISABLED)
+		{
+			GPIO_vEnableInterrupts(pGPIO);
+		}
+	}
 
-  return MCU_ERROR_SUCCESS;
+	return MCU_ERROR_SUCCESS;
 }
 
 void GPIO_vSet(const gpio_config_s *pGPIO)

@@ -739,12 +739,16 @@ osMessageQId osMessageCreate (const osMessageQDef_t *queue_def, osThreadId threa
 /// \note MUST REMAIN UNCHANGED: \b osMessagePut shall be consistent in every CMSIS-RTOS.
 osStatus osMessagePut (osMessageQId queue_id, uint32_t info, uint32_t millisec);
 
+osStatus osMessagePutValue (osMessageQId queue_id, void* info, uint32_t millisec);
+
 /// Get a Message or Wait for a Message from a Queue.
 /// \param[in]     queue_id      message queue ID obtained with \ref osMessageCreate.
 /// \param[in]     millisec      timeout value or 0 in case of no time-out.
 /// \return event information that includes status code.
 /// \note MUST REMAIN UNCHANGED: \b osMessageGet shall be consistent in every CMSIS-RTOS.
 osEvent osMessageGet (osMessageQId queue_id, uint32_t millisec);
+
+osEvent osMessageGetValue (osMessageQId queue_id, void* buffer, uint32_t millisec);
 
 #endif     // Message Queues available
 

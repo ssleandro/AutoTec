@@ -65,12 +65,12 @@
 #endif
 
 /*
-* @brief TERMDEV device status variable
+* @brief M2GSENSORCOMM device status variable
 * The status is a word with each bit means a status/option
 * */
 #define M2GSENSORCOMM_STATUS_ENABLED	0x00000001 /*!< Status flag - bit 0 - Device instance enabled */
 #define M2GSENSORCOMM_STATUS_DISABLED	0x00000000 /*!< Status flag - bit 0 - Device instance enabled */
-#define M2GSENSORCOMM_STATUS_BUSY	0x00000002 /*!< Status flag - bit 1 - Device instance busy */
+#define M2GSENSORCOMM_STATUS_BUSY		0x00000002 /*!< Status flag - bit 1 - Device instance busy */
 #define M2GSENSORCOMM_STATUS_WR_ERROR	0x00000004 /*!< Status flag - bit 2 - Device instance write op error */
 #define M2GSENSORCOMM_STATUS_RD_ERROR 	0x00000008 /*!< Status flag - bit 3 - Device instance read op error */
 
@@ -96,7 +96,7 @@ typedef eDEVError_s (*fpIOCTLFunction)(uint32_t wRequest, void * vpValue); /*!< 
 * Module Variable Definitions
 *******************************************************************************/
 
-/* Ringbuffer structures */
+/* Ring buffer structures */
 static canMSGStruct_s sRecvBuffer[RECV_SENSORBUFSIZE];  		//!< RingBuffer array
 static RINGBUFF_T rbM2GSENHandle;             	                //!< RingBuffer Control handle
 
@@ -108,6 +108,7 @@ static can_config_s sMCU_CAN_Handle =
     .eCANPort = M2GSENSORCOMM_CAN_CHANNEL,
     .eCANBitrate = M2GSENSORCOMM_CAN_BITRATE,
     .fpCallback = NULL,
+	.vpPrivateData = NULL
 };
 
 /*
@@ -126,7 +127,7 @@ static uint32_t wCANSendID = 0;                 /* !< Holds the current output C
 * Function Prototypes
 *******************************************************************************/
 static void M2GSEN_vRBSafeInsert(canMSGStruct_s *psData);
-static uint32_t M2GSEN_wReadBufferProcedure(canMSGStruct_s *psOutput);
+static uint32_t M2GSEN_wReadBufferProcedure(canMSGStruct_s *psOutput, uint32_t dBufferSize);
 static eDEVError_s M2GSEN_eSetActive(uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GSEN_eDisable(uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GSEN_eCANAddID(uint32_t wRequest, void * vpValue);
@@ -176,8 +177,8 @@ void M2GSEN_vRBSafeInsert(canMSGStruct_s *psData)
     if(!RingBuffer_Insert(&rbM2GSENHandle, psData)) //RingBuffer Full
     {
         //Pop from tail and then insert into head
-        canMSGStruct_s asGarbage[RECV_SENSORBUFSIZE];
-        RingBuffer_Pop(&rbM2GSENHandle, asGarbage);
+        canMSGStruct_s asGarbage;
+        RingBuffer_Pop(&rbM2GSENHandle, &asGarbage);
         RingBuffer_Insert(&rbM2GSENHandle, psData);
     }
 }
@@ -210,7 +211,7 @@ void M2GSEN_vRBSafeInsert(canMSGStruct_s *psData)
 * <hr>
 *
 *******************************************************************************/
-static uint32_t M2GSEN_wReadBufferProcedure(canMSGStruct_s *psOutput)
+static uint32_t M2GSEN_wReadBufferProcedure(canMSGStruct_s *psOutput, uint32_t dBufferSize)
 {
     /* Wait until ISR callbacks are completed */
     if (M2GSENSORCOMM_Handle.bDeviceStatus == M2GSENSORCOMM_STATUS_BUSY)
@@ -221,7 +222,7 @@ static uint32_t M2GSEN_wReadBufferProcedure(canMSGStruct_s *psOutput)
     uint32_t wReturn = 0;
     
     /* Loop until the end of ring buffer */
-    while (!RingBuffer_IsEmpty(&rbM2GSENHandle))
+    while (!RingBuffer_IsEmpty(&rbM2GSENHandle) && (wReturn < dBufferSize))
     {
         RingBuffer_Pop(&rbM2GSENHandle, &psOutput[wReturn]);
         wReturn++;
@@ -492,7 +493,7 @@ uint32_t M2GSEN_read(struct peripheral_descriptor_s* const this,
     canMSGStruct_s *psAuxPointer = (canMSGStruct_s*) vpBuffer;
     
     /* The received data is on the ring buffer */
-    return M2GSEN_wReadBufferProcedure(psAuxPointer);
+    return M2GSEN_wReadBufferProcedure(psAuxPointer, tBufferSize);
 }
 
 uint32_t M2GSEN_write(struct peripheral_descriptor_s* const this,
@@ -528,24 +529,25 @@ uint32_t M2GSEN_write(struct peripheral_descriptor_s* const this,
 	  	/* Loop until all bytes have been sent */
 	  	while (wSentBytes < tBufferSize)
 	  	{
-            if ((tBufferSize - wSentBytes) <= 8)
+	  		uint32_t dBytesToSend = (tBufferSize - wSentBytes);
+            if (dBytesToSend <= 8)
             {
-                sCANMessage.dlc = (tBufferSize - wSentBytes);
-                
-                for (bIterator = 0; bIterator < (tBufferSize - wSentBytes); bIterator++)
-                {
-                    sCANMessage.data[bIterator] = *(pbAuxPointer++);
-                }
-                wSentBytes += (tBufferSize - wSentBytes);
+            	sCANMessage.dlc = dBytesToSend;
+
+            	for (bIterator = 0; bIterator < dBytesToSend; bIterator++)
+            	{
+            		sCANMessage.data[bIterator] = *(pbAuxPointer++);
+            	}
+            	wSentBytes += dBytesToSend;
             }
             else
             {  
-                for (bIterator = 0; bIterator < 8; bIterator++)
-                {
-                    sCANMessage.data[bIterator] = *(pbAuxPointer++);
-                }
-                sCANMessage.dlc = 8;
-                wSentBytes += 8;
+            	for (bIterator = 0; bIterator < 8; bIterator++)
+            	{
+            		sCANMessage.data[bIterator] = *(pbAuxPointer++);
+            	}
+            	sCANMessage.dlc = 8;
+            	wSentBytes += 8;
             }
             /* Send CAN frame */
             CAN_vSendMessage(&sMCU_CAN_Handle, sCANMessage);

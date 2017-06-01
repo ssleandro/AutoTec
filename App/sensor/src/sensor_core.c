@@ -65,8 +65,8 @@ osThreadId xAqrRegThreadId;              // Holds the AqrRegThread ID
 // Pin to enable/disable sensor power source
 gpio_config_s sEnablePS9;
 
-//#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
-//#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
+#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
+#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
 
 /******************************************************************************
 * Module Variable Definitions from MPA2500 (can.h)
@@ -89,8 +89,6 @@ osFlagsGroupId CAN_psFlagApl;
 // Variable from UOS_sConfiguracao.sMonitor.bMonitorArea
 uint8_t bSENMonitorArea;
 
-bool bSENWaitForConfig;
-
 /******************************************************************************
 * Module Broker Queue
 *******************************************************************************/
@@ -104,8 +102,8 @@ CREATE_CONTRACT(Sensor);                            //!< Create contract for sen
 /******************************************************************************
 * Local messages queue
 *******************************************************************************/
-CREATE_LOCAL_QUEUE(SensorPublishQ, canMSGStruct_s, 10);
-CREATE_LOCAL_QUEUE(SensorWriteQ, canMSGStruct_s, 10);
+CREATE_LOCAL_QUEUE(SensorPublishQ, canMSGStruct_s, 16);
+CREATE_LOCAL_QUEUE(SensorWriteQ, canMSGStruct_s, 32);
 
 /******************************************************************************
 * Module Threads
@@ -352,21 +350,6 @@ void SEN_vSensorPublishThread(void const *argument)
 
     while(1)
     {
-//        /* Pool the device waiting for */
-//        WATCHDOG_STATE(SENPUB, WDT_SLEEP);
-//        osEvent evtPub = RECEIVE_LOCAL_QUEUE(SensorPublishQ, osWaitForever);   // Wait
-//        WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
-//
-//        if(evtPub.status == osEventMessage)
-//        {
-//            // recv = (canMSGStruct_s*) evtPub.value.p;
-//
-//            // /* Publish the array at the SENSOR topic */
-//            // MESSAGE_HEADER(Sensor, SENSOR_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE);
-//            // CONTRACT_HEADER(Sensor, 1, THIS_MODULE, TOPIC_BUZZER);
-//            // MESSAGE_PAYLOAD(Sensor) = (void*) recv->data;
-//            // PUBLISH(CONTRACT(Sensor), 0);
-//        }
         WATCHDOG_STATE(SENPUB, WDT_SLEEP);
         dValorFlag = osFlagWait (CAN_psFlagApl,
                                 (CAN_APL_FLAG_TODOS_SENS_RESP_PNP |
@@ -530,12 +513,11 @@ void SEN_vIdentifyEvent(contract_s* contract)
     {
         case MODULE_CONTROL:
         {
-            bSENWaitForConfig = true;
             break;
         }
         case MODULE_ACQUIREG:
         {
-            if ((GET_PUBLISHED_EVENT(contract) & EVENT_AQR_FINISH_INSTALLATION) > 0)
+            if (GET_PUBLISHED_EVENT(contract) == EVENT_AQR_FINISH_INSTALLATION)
             {
                 // Send final handshake messages to sensors...
 
@@ -552,14 +534,17 @@ void SEN_vIdentifyEvent(contract_s* contract)
 
                 memcpy (abParametros, &CAN_sParametrosSensor, sizeof(CAN_sParametrosSensor));
 
-                //Envia parâmetros para os sensores de semente
-                SEN_vSensorsParameters ( CAN_APL_CMD_PARAMETROS_SENSOR, CAN_APL_LINHA_TODAS,
-                                         CAN_APL_SENSOR_SEMENTE, abParametros, CAN_MSG_DLC_6);
-                //-----------------------------------------------------------------------------
-                //Envia solicitação de Versão dos sensores, se já obteve a versão , não envia a solicitação
-                if (!(dFlagsSis & UOS_SIS_FLAG_VERSAO_SW_OK))
+                if (!(dFlagsSis & UOS_SIS_FLAG_PARAMETROS_OK))
                 {
-                    SEN_vGetVersion ();
+                	//Envia parâmetros para os sensores de semente
+                	SEN_vSensorsParameters ( CAN_APL_CMD_PARAMETROS_SENSOR, CAN_APL_LINHA_TODAS,
+											 CAN_APL_SENSOR_SEMENTE, abParametros, CAN_MSG_DLC_6);
+                }
+                else if (!(dFlagsSis & UOS_SIS_FLAG_VERSAO_SW_OK))
+                {
+                	//-----------------------------------------------------------------------------
+                	//Envia solicitação de Versão dos sensores, se já obteve a versão , não envia a solicitação
+                	SEN_vGetVersion ();
                 }
 
                 //-----------------------------------------------------------------------------
@@ -622,8 +607,8 @@ void SEN_vSensorThread (void const *argument)
     CAN_sCtrlMPA.sCtrlEnl.dEventosEnl   = CAN_ENL_FLAG_NENHUM;
     
     //Inicializa a estrutura de controle de aplicacao da interface CAN
-    CAN_sCtrlMPA.sCtrlApl.psFlagApl              = &CAN_psFlagApl;                 // TODO: Test with osFlags... SensorManagement Thread ID
-    CAN_sCtrlMPA.sCtrlApl.dEventosApl            = CAN_APL_FLAG_NENHUM;            // TODO: Test with osFlags... SensorManagement Thread ID
+    CAN_sCtrlMPA.sCtrlApl.psFlagApl              = &CAN_psFlagApl;
+    CAN_sCtrlMPA.sCtrlApl.dEventosApl            = CAN_APL_FLAG_NENHUM;
     CAN_sCtrlMPA.sCtrlApl.dSensSementeConectados = CAN_APL_FLAG_NENHUM;
     CAN_sCtrlMPA.sCtrlApl.dSensAduboConectados   = CAN_APL_FLAG_NENHUM;
     CAN_sCtrlMPA.sCtrlApl.dSensDigitalConectados = CAN_APL_FLAG_NENHUM;
@@ -640,16 +625,14 @@ void SEN_vSensorThread (void const *argument)
     CAN_sCtrlMPA.sCtrlApl.dTicksTimeoutConfigura = CAN_wTICKS_TIMEOUT_CFG;
     CAN_sCtrlMPA.sCtrlApl.dTicksTimeoutComando   = CAN_wTICKS_TIMEOUT_TESTE;//CAN_wTICKS_TIMEOUT;
 
-    // Flags to receive the control module interface status and errors
-//    status = osFlagGroupCreate(&UOS_sFlagSis);
-//    ASSERT(status == osOK);
-
     // Flags to indicate the CAN application status and treatment of Auteq protocol
     status = osFlagGroupCreate(&CAN_psFlagApl);
     ASSERT(status == osOK);
 
     // Create a Mutex to access sensor buffer list on CAN network
     INITIALIZE_MUTEX(CAN_MTX_sBufferListaSensores);
+
+//    INITIALIZE_MUTEX(CAN_MTX_sMPAStruct);
 
     // Create a Mutex to access sensor file list on CAN network
 
@@ -743,43 +726,42 @@ static void SEN_vIdentifyMessage( canMSGStruct_s* sRcvMsg )
     switch ( sIDAuteq.sID_bits.bComando )
     {
         case CAN_APL_RESP_PNP :
-            // TODO: Is necessary verify if it's an data frame?
             // Increment PnP answer counter
-            //CAN_bNumRespostasPNP += 1;
+            CAN_bNumRespostasPNP += 1;
 
             // Answer to PnP command received
-            flags = osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_MSG_RESP_PNP);
+            flags = osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_MSG_RESP_PNP);
 
             break;
         case CAN_APL_RESP_LEITURA_DADOS :
 
             // Received an answer to an data read command message
-            flags = osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_MSG_RESP_LEITURA_DADOS);
+            flags = osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_MSG_RESP_LEITURA_DADOS);
 
             break;
         case CAN_APL_LEITURA_VELOCIDADE :
 
             // Received an answer to an speed read command message
-            flags = osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_MSG_LEITURA_VELOCIDADE);
+            flags = osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_MSG_LEITURA_VELOCIDADE);
 
             break;
         case CAN_APL_RESP_CONFIGURA_SENSOR :
 
             // Received an answer to an configure sensor command message
-            flags = osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_MSG_RESP_CONFIGURACAO);
+            flags = osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_MSG_RESP_CONFIGURACAO);
 
             break;
         case CAN_APL_RESP_PARAMETROS_SENSOR :
         case CAN_APL_RESP_PARAMETROS_EXTENDED:
 
             // Received an answer to an parameters command message
-            flags = osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_MSG_RESP_PARAMETROS);
+            flags = osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_MSG_RESP_PARAMETROS);
 
             break;
         case CAN_APL_RESP_VERSAO_SW_SENSOR :
 
             // Received an answer to an sensor software version command message
-            flags = osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_MSG_RESP_VERSAO_SW_SENSOR);
+            flags = osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_MSG_RESP_VERSAO_SW_SENSOR);
 
             break;
         default :
@@ -815,6 +797,11 @@ static void SEN_vIdentifyMessage( canMSGStruct_s* sRcvMsg )
 #ifndef UNITY_TEST
 void SEN_vSensorRecvThread(void const *argument)
 {
+    osEvent evt;
+    uint8_t bIterator;
+    uint8_t bRecvMessages = 0;		//!< Lenght (messages) received
+    canMSGStruct_s asPayload[32];   //!< Buffer to hold the contract and message data
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Sensor Recv Thread Created");
 #endif
@@ -824,29 +811,23 @@ void SEN_vSensorRecvThread(void const *argument)
         
     osThreadId xSenMainID = (osThreadId) argument;
     osSignalSet(xSenMainID, THREADS_RETURN_SIGNAL(bSENRCVThreadArrayPosition));//Task created, inform core
-//    osThreadSetPriority(NULL, osPriorityLow);
     
     xRecvThreadId = osThreadGetId();
-
-    canMSGStruct_s asPayload[32];   //!< Buffer to hold the contract and message data
-    
-    osEvent evt;
-    uint8_t bIterator;
-    uint8_t bRecvMessages = 0;		//!< Lenght (messages) received
 
     WATCHDOG_STATE(SENRCV, WDT_SLEEP);
     osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
     WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
     
+    uint32_t wTicks = osKernelSysTick ();
+
     while(1)
     {
         /* Pool the device waiting for */
+    	WATCHDOG_STATE(SENRCV, WDT_SLEEP);
+        osDelayUntil(&wTicks, 200);
         WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
-        osDelay(250); // Wait
-        
-        // Use an osDelayUntil function instead osDelay function
 
-        bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], sizeof(asPayload));
+        bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
         
         if(bRecvMessages)
         {
@@ -893,7 +874,10 @@ void SEN_vSensorRecvThread(void const *argument){}
 *******************************************************************************/
 #ifndef UNITY_TEST
 void SEN_vSensorWriteThread(void const *argument)
-{    
+{
+    eAPPError_s eError;
+    canMSGStruct_s sRecv;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Sensor Write Thread Created");
 #endif
@@ -903,10 +887,6 @@ void SEN_vSensorWriteThread(void const *argument)
         
     osThreadId xSenMainID = (osThreadId) argument;
     osSignalSet(xSenMainID, THREADS_RETURN_SIGNAL(bSENWRTThreadArrayPosition));//Task created, inform core
-//    osThreadSetPriority(NULL, osPriorityLow);
-    
-    eAPPError_s eError;
-    canMSGStruct_s* recv;
     
     INITIALIZE_LOCAL_QUEUE(SensorWriteQ);
     
@@ -917,20 +897,18 @@ void SEN_vSensorWriteThread(void const *argument)
     while(1)
     {
         WATCHDOG_STATE(SENWRT, WDT_SLEEP);
-        osEvent evtPub = RECEIVE_LOCAL_QUEUE(SensorWriteQ, osWaitForever);   // Wait
+        osEvent evtPub = RECEIVE_LOCAL_QUEUE(SensorWriteQ, &sRecv, osWaitForever);   // Wait
         WATCHDOG_STATE(SENWRT, WDT_ACTIVE);
         
         if(evtPub.status == osEventMessage)
         {
-            recv = (canMSGStruct_s*) evtPub.value.p;
-            
-            eError = (eAPPError_s) DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_CHANGE_SEND_ID, (void*)&recv->id);
+            eError = (eAPPError_s) DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_CHANGE_SEND_ID, (void*)&(sRecv.id));
             ASSERT(eError == APP_ERROR_SUCCESS);
 
             // wSendCANID changed
             if(eError == APP_ERROR_SUCCESS)
             {
-                DEV_write(pSENSORHandle, &(recv->data[0]), recv->dlc);
+            	DEV_write(pSENSORHandle, &(sRecv.data[0]), sRecv.dlc);
             }
         }
     }
@@ -947,38 +925,22 @@ canMSGStruct_s pMsg;
 
 void SEN_vTimerCallbackPnP(void const *arg)
 {
-    osFlags flags;
-    CAN_tsCtrlApl    *psCtrlApl;
-    psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
-    
-    osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_TMR_CMD_PNP);
+    osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_TMR_CMD_PNP);
 }
 
 void SEN_vTimerCallbackPnPTimeout(void const *arg)
 {
-    uint32_t wLastSig;
-    CAN_tsCtrlApl    *psCtrlApl;
-    psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
-    
-    osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_PNP_TIMEOUT);
+    osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_PNP_TIMEOUT);
 }
 
 void SEN_vTimerCallbackReadSensorsTimeout(void const *arg)
 {
-    uint32_t wLastSig;
-    CAN_tsCtrlApl    *psCtrlApl;
-    psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
-    
-    osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_COMANDO_TIMEOUT);
+    osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_COMANDO_TIMEOUT);
 }
 
 void SEN_vTimerCallbackConfigSensorsTimeout(void const *arg)
 {
-    uint32_t wLastSig;
-    CAN_tsCtrlApl    *psCtrlApl;
-    psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
-    
-    osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_COMANDO_CONFIGURA);
+    osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_COMANDO_CONFIGURA);
 }
 
 /******************************************************************************
@@ -1022,7 +984,6 @@ void SEN_vSensorNetworkManagementThread(void const *argument)
 
     osThreadId xSenMainID = (osThreadId) argument;
     osSignalSet(xSenMainID, THREADS_RETURN_SIGNAL(bSENMGTThreadArrayPosition));//Task created, inform core
-//    osThreadSetPriority(NULL, osPriorityLow);
 
     // Gets the Recv Thread ID
     xManagementThreadId = osThreadGetId();
@@ -1034,7 +995,6 @@ void SEN_vSensorNetworkManagementThread(void const *argument)
     ASSERT(status == osOK);
 
     // Wait for IHM start...
-    
     // Wait for receive an configuration flag
     WATCHDOG_STATE(SENMGT, WDT_SLEEP);
     osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);

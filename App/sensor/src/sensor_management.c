@@ -65,11 +65,12 @@ CAN_tsParametrosExtended CAN_sParametrosExtended;
 
 //Mutex para acesso ao buffer da lista de sensores na rede CAN
 CREATE_MUTEX(CAN_MTX_sBufferListaSensores);
+CREATE_MUTEX(CAN_MTX_sMPAStruct);
 
 //Mutex para acesso ao arquivo da lista de sensores na rede CAN
 //OS_EVENT                *CAN_MTX_sArquivoListaSensores;
 
-canMSGStruct_s pSensorMsg;         // Holds the actual message
+extern osFlagsGroupId CAN_psFlagApl;
 
 /******************************************************************************
  * Variables
@@ -120,7 +121,8 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
     uint8_t bPosicaoB;
     uint8_t bOffset;
     uint32_t dErr;
-    canMSGStruct_s* psMessage;
+//    canMSGStruct_s* psMessage;
+    canMSGStruct_s psMessage;
     CAN_teEstadoSensor eEstado  = Verificando;
     CAN_tsLista* psSensor;
     CAN_tsCtrlApl* psCtrlApl;
@@ -129,7 +131,7 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
     psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
 
     //Mensagem recebida
-    psMessage = &CAN_sCtrlMPA.sMensagemRecebida;
+    psMessage = CAN_sCtrlMPA.sMensagemRecebida;
 
     //Caso o sensor detectado seja digital, o ponteiro de sensor é ajustado para
     //somente referenciar registros deste tipo de sensor
@@ -172,7 +174,7 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
         {
             case Conectado :
                 //Verifica se o sensor já está conectado à rede CAN
-                if( !memcmp( psMessage->data,
+                if( !memcmp( psMessage.data,
                              psSensor->abEnderecoFisico,
                              sizeof( psSensor->abEnderecoFisico ) ) )
                 {
@@ -186,7 +188,7 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
                             eEstado = Conectado;
 
                             //Informa resultado do auto-teste dos sensores
-                            psSensor->eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage->data[1] >> 24 );
+                            psSensor->eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage.data[1] >> 24 );
                         }
                     }
                     else //Sensor digital
@@ -204,7 +206,7 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
 
             case Desconectado :
                 //Verifica se o sensor já está conectado à rede CAN
-                if( !memcmp( psMessage->data,
+                if( !memcmp( psMessage.data,
                              psSensor->abEnderecoFisico,
                              sizeof( psSensor->abEnderecoFisico ) ) )
                 {
@@ -248,7 +250,7 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
                             }
 
                             //Informa resultado do auto-teste dos sensores
-                            psSensor->eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage->data[1] >> 24 );
+                            psSensor->eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage.data[1] >> 24 );
 
                             osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_DET_SENSOR_RECONECTADO);
                         }
@@ -269,7 +271,7 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
                             psCtrlApl->dSensDigitalConectados |= 0x00000001 << ( bLoopLinha );
 
                             //Informa resultado do auto-teste dos sensores
-                            psSensor->eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage->data[1] >> 24 );
+                            psSensor->eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage.data[1] >> 24 );
 
                             osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_DET_SENSOR_RECONECTADO);
                         }
@@ -305,16 +307,16 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
         for(bPosicaoB = 0; (eEstado == Verificando) && (bPosicaoB < CAN_bNUM_SENSORES_SEMENTE_E_ADUBO) ; bPosicaoB++)
         {
             if(memcmp(CAN_sCtrlLista.asLista[bPosicaoB].abEnderecoFisico,
-                      psMessage->data,
+                      psMessage.data,
                       sizeof(CAN_sCtrlLista.asLista[bPosicaoB].abEnderecoFisico)))
             {                
                 //Copia o endereço recebido na mensagem, para a estrutura de novo sensor
                 memcpy( CAN_sCtrlLista.sNovoSensor.abEnderecoFisico,
-                        psMessage->data ,
+                        psMessage.data ,
                         sizeof( CAN_sCtrlLista.sNovoSensor.abEnderecoFisico ) );
 
                 //Informa resultado do auto-teste dos sensores
-                CAN_sCtrlLista.sNovoSensor.eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage->data[1] >> 24 );
+                CAN_sCtrlLista.sNovoSensor.eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage.data[1] >> 24 );
 
                 osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_DET_NOVO_SENSOR);
 
@@ -614,6 +616,7 @@ static void SEN_vSendCommand( uint8_t bComando,
                               uint8_t *pbDados,
                               uint8_t bDLC )
 {
+	static canMSGStruct_s pSensorMsg;         // Holds the actual message
     CAN_tsIDAuteq     sIDAuteq;
 
     //Limpa a estrutura do ID da Auteq
@@ -642,8 +645,6 @@ static void SEN_vSendCommand( uint8_t bComando,
     }
 
     PUT_LOCAL_QUEUE(SensorWriteQ, pSensorMsg, osWaitForever);
-    osDelay(1);
-    //    PUT_LOCAL_QUEUE(SensorWriteQ, pSensorMsg, 0);
 }
 
 /*****************************************************************************
@@ -920,9 +921,11 @@ void SEN_vManagementNetwork(void)
     CAN_tsIDAuteq      sIDAuteq;
     CAN_tsLista        *psSensor;
     osFlags             dFlagsSis;
-    canMSGStruct_s     *psMessage;
+    canMSGStruct_s     psMessage;
     CAN_teEstadoSensor eEstado;
     uint32_t wLastSig;
+
+    bool bTeste = false;
 
     //Ponteiro de trabalho da aplicação CAN
     psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
@@ -934,10 +937,10 @@ void SEN_vManagementNetwork(void)
     sIDAuteq.dID = 0x1FFFFFFF & CAN_sCtrlMPA.sMensagemRecebida.id;
 
     //Mensagem recebida
-    psMessage = &CAN_sCtrlMPA.sMensagemRecebida;
+    psMessage = CAN_sCtrlMPA.sMensagemRecebida;
 
     //Ponteiro de trabalho do sensor que enviou a mensagem
-    psSensor = CAN_sCtrlLista.asLista                                     + //Posição inicial da lista
+    psSensor = CAN_sCtrlLista.asLista                                  + //Posição inicial da lista
             ( sIDAuteq.sID_bits.bLinha * CAN_bNUM_SENSORES_POR_LINHA ) + //Posição da linha desejada
             sIDAuteq.sID_bits.bTipo;                                     //Posição do sensor
 
@@ -972,7 +975,6 @@ void SEN_vManagementNetwork(void)
             }
             else
             {
-                //                UOS_vDesligaTimer( psCtrlApl->bTimerCmdPnP );
                 status = STOP_TIMER(psCtrlApl->wTimerCmdPnP);
                 ASSERT(status == osOK);
             }            
@@ -987,7 +989,6 @@ void SEN_vManagementNetwork(void)
                 //conectados à rede CAN
                 status = START_TIMER(psCtrlApl->wTimerTimeoutPnP, psCtrlApl->dTicksTimeoutPnP);
                 ASSERT(status == osOK);
-                //                UOS_vReiniciaTimer( psCtrlApl->bTimerTimeoutPnP );
 
                 //Indica que o timer de timeout do comando de detecção deve ser reiniciado
                 psCtrlApl->bReiniciaTimeout = true;
@@ -1009,7 +1010,6 @@ void SEN_vManagementNetwork(void)
         if ( psCtrlApl->bReiniciaTimeout != false )
         {
             //Reinicia o timer de controle de timeout do comando de detecção de sensores
-            //            UOS_vReiniciaTimer( psCtrlApl->bTimerTimeoutPnP );
             status = START_TIMER(psCtrlApl->wTimerTimeoutPnP, psCtrlApl->dTicksTimeoutPnP);
             ASSERT(status == osOK);
         }
@@ -1065,9 +1065,7 @@ void SEN_vManagementNetwork(void)
                 }
 
                 case CAN_APL_SENSOR_SIMULADOR :  //Sensor de Velocidade do Simulador
-
                     CAN_bSensorSimulador = true;
-
                 case CAN_APL_SENSOR_DIGITAL_2 :  //Sensor digital 2
                 case CAN_APL_SENSOR_DIGITAL_3 :  //Sensor digital 3
                 case CAN_APL_SENSOR_DIGITAL_4 :  //Sensor digital 4
@@ -1106,7 +1104,6 @@ void SEN_vManagementNetwork(void)
                     psCtrlApl->bTodosSensDigitalRsp    )
             {
                 //Desliga o timer de timeout do comando de PnP dos sensores
-                //        UOS_vDesligaTimer( psCtrlApl->bTimerTimeoutPnP );
                 status = STOP_TIMER(psCtrlApl->wTimerTimeoutPnP);
                 ASSERT(status == osOK);
 
@@ -1120,12 +1117,14 @@ void SEN_vManagementNetwork(void)
                 dSensorSementeDescMemExt = 0x00000000;
                 dSensorAduboDescMemExt   = 0x00000000;
 
-                osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_TODOS_SENS_RESP_PNP);
+                osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_TODOS_SENS_RESP_PNP);
             }
         }
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
+
+        bTeste = true;
     } //Fim do if ( psCtrlApl->dEventosApl & CAN_APL_FLAG_MSG_RESP_PNP )
 
     //----------------------------------------------------------------------------
@@ -1146,7 +1145,7 @@ void SEN_vManagementNetwork(void)
         if ( psSensor->eEstado == Conectado )
         {
 
-            memcpy( psSensor->abUltimaLeitura, &psMessage->data[0], sizeof( psSensor->abUltimaLeitura ));
+            memcpy( psSensor->abUltimaLeitura, &psMessage.data[0], sizeof( psSensor->abUltimaLeitura ));
 
             //Verifica o tipo de sensor
             switch ( sIDAuteq.sID_bits.bTipo )
@@ -1164,13 +1163,10 @@ void SEN_vManagementNetwork(void)
                     //Indica que resposta ao comando de leitura de dados foi recebida
                     psCtrlApl->dRespostaDigital |= 0x00000001 << ( sIDAuteq.sID_bits.bLinha - CAN_bNUM_DE_LINHAS );
                     break;
-
                 }
-
                 default :
                     break;
             }
-
             //Verifica se todos os sensores digitais responderam ao comando
             psCtrlApl->bTodosSensDigitalRsp = psCtrlApl->dRespostaDigital == psCtrlApl->dSensDigitalConectados;
         }
@@ -1178,6 +1174,7 @@ void SEN_vManagementNetwork(void)
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
 
+        bTeste = true;
     } //Fim do if ( psCtrlApl->dEventosApl & CAN_APL_FLAG_MSG_RESP_LEITURA_DADOS )
 
     //----------------------------------------------------------------------------
@@ -1192,7 +1189,6 @@ void SEN_vManagementNetwork(void)
         if ( psCtrlApl->bReiniciaTimeout != false )
         {
             //Reinicia o timer de controle de timeout de comando
-            //            UOS_vAjustaTimer( CAN_sCtrlMPA.sCtrlApl.bTimerTimeoutComando, CAN_wTICKS_TIMEOUT, false );
             status = START_TIMER(psCtrlApl->wTimerTimeoutComando, CAN_wTICKS_TIMEOUT);
             ASSERT(status == osOK);
         }
@@ -1207,7 +1203,7 @@ void SEN_vManagementNetwork(void)
         if ( psSensor->eEstado == Conectado )
         {
 
-            memcpy( psSensor->abUltimaLeitura, &psMessage->data[0], sizeof( psSensor->abUltimaLeitura ));
+            memcpy( psSensor->abUltimaLeitura, &psMessage.data[0], sizeof( psSensor->abUltimaLeitura ));
 
             //Verifica o tipo de sensor
             switch ( sIDAuteq.sID_bits.bTipo )
@@ -1277,16 +1273,17 @@ void SEN_vManagementNetwork(void)
 
                 //Desliga o timer de timeout do comando de leitura de dados dos
                 //sensores
-                //                UOS_vDesligaTimer( psCtrlApl->bTimerTimeoutComando );
                 status = STOP_TIMER(psCtrlApl->wTimerTimeoutComando);
                 ASSERT(status == osOK);
 
-                osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP);
+                osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP);
             }
         }
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
+
+        bTeste = true;
     } //Fim do if ( psCtrlApl->dEventosApl & CAN_APL_FLAG_MSG_RESP_LEITURA_DADOS )
 
     //----------------------------------------------------------------------------
@@ -1301,7 +1298,6 @@ void SEN_vManagementNetwork(void)
         psCtrlApl->dEventosApl &= ( ~CAN_APL_FLAG_MSG_RESP_CONFIGURACAO );
 
         //Desliga o timer de timeout do comando enviado
-        //        UOS_vDesligaTimer( CAN_sCtrlMPA.sCtrlApl.bTimerTimeoutConfigura );
         status = STOP_TIMER(psCtrlApl->wTimerTimeoutConfigura);
         ASSERT(status == osOK);
 
@@ -1316,7 +1312,7 @@ void SEN_vManagementNetwork(void)
         }
 
         //Verifica se a mesagem recebida é realmente originária do novo sensor
-        if( !memcmp( psMessage->data,
+        if( !memcmp( psMessage.data,
                      CAN_sCtrlLista.sNovoSensor.abEnderecoFisico,
                      sizeof( CAN_sCtrlLista.sNovoSensor.abEnderecoFisico ) ) )
         {
@@ -1343,11 +1339,13 @@ void SEN_vManagementNetwork(void)
             ASSERT(status == osOK);
         }
 
-        osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_CFG_SENSOR_RESPONDEU);
+        osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_CFG_SENSOR_RESPONDEU);
 
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
+
+        bTeste = true;
     }
 
 
@@ -1360,7 +1358,6 @@ void SEN_vManagementNetwork(void)
 
         if ( psSensor->eEstado == Conectado )
         {
-
             //Verifica o tipo de sensor
             switch ( sIDAuteq.sID_bits.bTipo )
             {
@@ -1370,10 +1367,10 @@ void SEN_vManagementNetwork(void)
                     //Se o parâmetro recebido na resposta do sensor for
                     //igual ao parâmetro enviado para o sensor
                     if( !( memcmp( &CAN_sParametrosSensor,
-                                   psMessage->data,
+                                   psMessage.data,
                                    sizeof(CAN_sParametrosSensor ) ) )||
                             !( memcmp( &CAN_sParametrosExtended,
-                                       psMessage->data,
+                                       psMessage.data,
                                        sizeof(CAN_sParametrosExtended ) ) ) )
                     {
                         //Verifica se o loop é menor que 32, se não, usa os flags extendidos
@@ -1404,13 +1401,15 @@ void SEN_vManagementNetwork(void)
             if ( psCtrlApl->bTodosSensSemRspParametros   &&
                     psCtrlApl->bTodosSensSemRspParametrosExt )
             {
-                osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP);
+                osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP);
             }
 
         }
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
+
+        bTeste = true;
     }
 
 
@@ -1423,16 +1422,14 @@ void SEN_vManagementNetwork(void)
 
         if ( psSensor->eEstado == Conectado )
         {
-
             //Verifica o tipo de sensor
             switch ( sIDAuteq.sID_bits.bTipo )
             {
-
                 case CAN_APL_SENSOR_SEMENTE : //Sensor de sementes
                 {
 
                     memcpy( &psSensor->CAN_sVersaoSensor,
-                            psMessage->data,
+                            psMessage.data,
                             sizeof(psSensor->CAN_sVersaoSensor ) );
 
                     //Verifica se o loop é menor que 32, se não usa os flags extendidos
@@ -1453,7 +1450,7 @@ void SEN_vManagementNetwork(void)
                 {
 
                     memcpy( &psSensor->CAN_sVersaoSensor,
-                            psMessage->data,
+                            psMessage.data,
                             sizeof(psSensor->CAN_sVersaoSensor ) );
                     //Verifica se o loop é menor que 32, se não, usa os flags extendidos
                     if ( sIDAuteq.sID_bits.bLinha < 32)
@@ -1476,7 +1473,7 @@ void SEN_vManagementNetwork(void)
                 case CAN_APL_SENSOR_DIGITAL_6 :  //Sensor digital 6
                 {
                     memcpy( &psSensor->CAN_sVersaoSensor,
-                            psMessage->data,
+                            psMessage.data,
                             sizeof(psSensor->CAN_sVersaoSensor ) );
 
                     //Indica que resposta ao comando de leitura de dados foi recebida
@@ -1484,7 +1481,6 @@ void SEN_vManagementNetwork(void)
 
                     break;
                 }
-
                 default :
                     break;
             }
@@ -1505,15 +1501,17 @@ void SEN_vManagementNetwork(void)
                     psCtrlApl->bTodosSensAduRspVersao &&
                     psCtrlApl->bTodosSensSemRspVersaoExt &&
                     psCtrlApl->bTodosSensAduRspVersaoExt &&
-                    psCtrlApl->bTodosSensDigRspVersao   )
+                    psCtrlApl->bTodosSensDigRspVersao  )
             {
-                osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP);
+                osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP);
             }
 
         }
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
+
+        bTeste = true;
     }
 
     //----------------------------------------------------------------------------
@@ -1525,14 +1523,13 @@ void SEN_vManagementNetwork(void)
         psCtrlApl->dEventosApl &= ( ~CAN_APL_FLAG_PNP_TIMEOUT );
 
         //Desliga o timer de timeout do comando de PnP
-        //        UOS_vDesligaTimer( CAN_sCtrlMPA.sCtrlApl.bTimerTimeoutPnP );
         status = STOP_TIMER(psCtrlApl->wTimerTimeoutPnP);
         ASSERT(status == osOK);
 
         //Verifica qual(s) sensor(es) não respondeu(ram) ao comando de detecção
         SEN_vVerifyUnconnectedSensors();
 
-        osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
+        osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
     }    
 
     //----------------------------------------------------------------------------
@@ -1543,7 +1540,6 @@ void SEN_vManagementNetwork(void)
         psCtrlApl->dEventosApl &= ( ~CAN_APL_FLAG_COMANDO_CONFIGURA );
 
         //Desliga o timer de timeout do comando enviado
-        //        UOS_vDesligaTimer( CAN_sCtrlMPA.sCtrlApl.bTimerTimeoutConfigura );
         status = STOP_TIMER(psCtrlApl->wTimerTimeoutConfigura);
         ASSERT(status == osOK);
 
@@ -1558,7 +1554,7 @@ void SEN_vManagementNetwork(void)
         status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
         ASSERT(status == osOK);
 
-        osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
+        osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
     }
 
     //----------------------------------------------------------------------------
@@ -1570,7 +1566,6 @@ void SEN_vManagementNetwork(void)
         psCtrlApl->dEventosApl &= ( ~CAN_APL_FLAG_COMANDO_TIMEOUT );
 
         //Desliga o timer de timeout do comando enviado
-        //        UOS_vDesligaTimer( CAN_sCtrlMPA.sCtrlApl.bTimerTimeoutComando );
         status = STOP_TIMER(psCtrlApl->wTimerTimeoutComando);
         ASSERT(status == osOK);
 
@@ -1592,6 +1587,12 @@ void SEN_vManagementNetwork(void)
         //Verifica qual(s) sensor(es) não respondeu(ram) ao comando
         SEN_vVerifyUnconnectedSensors();
 
-        osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
+        osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
+    }
+
+    if(!bTeste)
+    {
+        wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
+        ASSERT(wLastSig != 0x80000000);
     }
 }

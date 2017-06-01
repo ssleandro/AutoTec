@@ -172,7 +172,7 @@ static node_s * BRK_sPushIntoList(node_s ** head, signature_s * sSubscriber)
       return NULL;
     }
 
-  node_s * sNewNode = malloc(sizeof(node_s));
+  node_s * sNewNode = pvPortMalloc(sizeof(node_s));
   if (NULL == sNewNode)
     {
       return NULL;

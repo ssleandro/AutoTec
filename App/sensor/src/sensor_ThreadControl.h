@@ -44,10 +44,10 @@
 *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define SENSOR_MODULES \
-    X("SensorRecv"      , 250 , osPriorityNormal      , SEN_vSensorRecvThread               , (1 << 0) , 1 ) \
-    X("SensorWrite"     , 350 , osPriorityNormal      , SEN_vSensorWriteThread              , (1 << 1) , 2 ) \
-    X("SensorManagement", 500 , osPriorityNormal      , SEN_vSensorNetworkManagementThread  , (1 << 2) , 3 ) \
-    X("SensorPublish"   , 250 , osPriorityBelowNormal , SEN_vSensorPublishThread            , (1 << 3) , 4 ) \
+    X("SensorRecv"      , 512 , osPriorityNormal      , SEN_vSensorRecvThread               , (1 << 0) , 1 ) \
+    X("SensorWrite"     , 512 , osPriorityNormal      , SEN_vSensorWriteThread              , (1 << 1) , 2 ) \
+    X("SensorManagement", 1024 , osPriorityNormal      , SEN_vSensorNetworkManagementThread  , (1 << 2) , 3 ) \
+    X("SensorPublish"   , 512 , osPriorityBelowNormal , SEN_vSensorPublishThread            , (1 << 3) , 4 ) \
     X(NULL              ,   0 , 0                     , NULL                                , 0        , 5 )
 
 // 500, 250, 150, 250

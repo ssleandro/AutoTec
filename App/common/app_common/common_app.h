@@ -163,9 +163,9 @@
   (QueueName = osMessageCreate(osMessageQ(QueueName), NULL));  \
     ASSERT(QueueName != NULL);
 /*!< Put message to an local queue */
-#define PUT_LOCAL_QUEUE(QueueName, message, time) (osMessagePut(QueueName, (uint32_t)&message, time))
+#define PUT_LOCAL_QUEUE(QueueName, message, time) (osMessagePutValue(QueueName, (void*)&message, time))
 /*!< Receive from Queue */
-#define RECEIVE_LOCAL_QUEUE(fromQueue, time) (osMessageGet(fromQueue, time))
+#define RECEIVE_LOCAL_QUEUE(fromQueue, buffer, time) (osMessageGetValue(fromQueue, buffer, time))
 
 #define GET_PUBLISHED_EVENT(contract)   ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent
 #define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
@@ -286,28 +286,32 @@ typedef enum {
     EVENT_UPDATE,
 } eEventType;
 
-typedef struct {
-    uint32_t dEvent;
-    eEventType eEvtType;
-    void* vPayload;
-} PubMessage;
-
 typedef enum event_e
 {
     EVENT_FFS_STATUS,        				//!< EVENT FFS STATUS CHANGED
 	EVENT_FFS_CFG,        					//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_FFS_INTERFACE_CFG,    			//!< EVENT FILE INTERFACE STATUS CHANGED
 	EVENT_FFS_STATIC_REG,    				//!< EVENT FILE INTERFACE STATUS CHANGED
+	EVENT_AQR_FINISH_INSTALLATION,
+	EVENT_AQR_UPDATE_INSTALLATION,
+	EVENT_GUI_UPDATE_CONFIGURATION_INTERFACE,
 	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
 	EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
 	EVENT_GUI_UPDATE_TEST_MODE_INTERFACE,
 	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_INTERFACE,
+	EVENT_GUI_INSTALLATION_FINISH,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
-	EVENT_AQR_FINISH_INSTALLATION,
-	EVENT_AQR_UPDATE_INSTALLATION,
+	EVENT_ISO_INSTALLATION_REPEAT_TEST,
+	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION
 } event_e;
+
+typedef struct {
+    uint32_t dEvent;
+    eEventType eEvtType;
+    void* vPayload;
+} PubMessage;
 
 /******************************************************************************
 * Conversion from MPA

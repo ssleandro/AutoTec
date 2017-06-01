@@ -53,6 +53,7 @@
 *******************************************************************************/
 DECLARE_QUEUE(GuiQueue, QUEUE_SIZEOFGUI);      //!< Declaration of Interface Queue
 CREATE_SIGNATURE(Gui);                             //!< Signature Declarations
+CREATE_SIGNATURE(GuiAcquireg);                             //!< Signature Declarations
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 
 osFlagsGroupId GUI_sFlags;
@@ -224,6 +225,10 @@ void GUI_UpdatSensorsStatus(CAN_tsLista * pSensorStatus)
 		switch (pSensor->eEstado)
 		{
 			case Novo:
+			{
+				eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+				break;
+			}
 			case Verificando:
 			{
 				eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
@@ -231,7 +236,8 @@ void GUI_UpdatSensorsStatus(CAN_tsLista * pSensorStatus)
 			}
 			case Conectado:
 			{
-				if (pSensor->eResultadoAutoTeste == Aprovado)
+				if ((pSensor->eResultadoAutoTeste == Aprovado) ||
+					(pSensor->eResultadoAutoTeste == Nenhum))
 				{
 					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
 				}
@@ -261,14 +267,13 @@ void GUI_UpdatSensorsStatus(CAN_tsLista * pSensorStatus)
 void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osFlags dFlags;
+	dFlags = GET_PUBLISHED_EVENT(contract);
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_ISOBUS:
 		{
-			dFlags = GET_PUBLISHED_EVENT(contract);
-
-			if((dFlags & GUI_CHANGE_CURRENT_DATA_MASK) > 0)
+			if(dFlags == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
 				eCurrDataMask = *((eDataMask*) GET_PUBLISHED_PAYLOAD(contract));
 
@@ -281,7 +286,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				}
 			}
 
-			if((dFlags & GUI_CHANGE_CURRENT_CONFIGURATION) > 0)
+			if(dFlags == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
 
 			}
@@ -290,7 +295,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_AQR_UPDATE_INSTALLATION)
+			if (dFlags == EVENT_AQR_UPDATE_INSTALLATION)
 			{
 				GUI_UpdatSensorsStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 
@@ -307,6 +312,9 @@ eAPPError_s GUI_eInitGuiSubs(void)
     /* Prepare the signature - struture that notify the broker about subscribers */
     SIGNATURE_HEADER(Gui, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
     ASSERT(SUBSCRIBE(SIGNATURE(Gui), 0) == osOK);
+
+    SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
+    ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
 
     return APP_ERROR_SUCCESS;
 }

@@ -107,13 +107,9 @@ typedef struct {
 
 // CAN application control structure
 typedef struct {
-//    osThreadId* psFlagApl;
     osFlagsGroupId* psFlagApl;
-//    osThreadId* psFlagAplAqrReg;
     osFlagsGroupId* psFlagAplAqr;
-//    uint32_t dEventosApl;               //Flags de eventos do aplicação
     osFlags dEventosApl;
-//    uint32_t dEventosAplAqrReg;         //Flags de eventos do aplicação
     osFlags dEventosAplAqr;
     uint32_t dSensSementeConectados;    //Conjunto de sensores de semente conectados à rede
     uint32_t dSensSementeConectadosExt; //Conjunto de sensores de semente conectados à rede extendido
@@ -219,74 +215,6 @@ extern osMessageQId SensorWriteQ;
 // CAN network sensors list name
 extern const uint8_t CAN_abNomeConfigLista[];
 extern const uint8_t CAN_abNomeArquivoErros[];
-
-/******************************************************************************
-* Typedefs from Control module... Just for test...
-*******************************************************************************/
-//typedef enum {
-//  Linhas_Pares,     //Linhas Pares levantadas
-//  Linhas_Impares,   //Linhas Ímpares levantadas
-//  Sem_Intercalacao  //Nenhuma linha levantada
-//
-//} UOS_teIntercala;
-//
-////Configuração do Monitor
-//typedef struct {
-//
-//  float   fLimVel;               //Limite de velocidade km/h.
-//
-//  uint16_t wSementesPorMetro;     //Meta de Sementes por Metro. (sementes/m)*10
-//  uint16_t wInsensibilidade;      //Distância de insensibilidade para falhas. (metros)*10
-//
-//  uint16_t wAvalia;               //Distância para avaliação de aplicação. (metros)*10
-//  uint16_t wDistLinhas;           //Distância entre linhas. (centímetros)*10
-//
-//  uint16_t wLargImpl;             //Largura do implemento. (centímetros)*10
-//  uint8_t  bMonitorArea;          //Se está em modo monitor de área. (0 = false, 1 = true )
-//  uint8_t  bNumLinhas;            //No. Linhas (1-36)
-//
-//  uint8_t  bDivLinhas;            //Divisão da plantadeira (bNumLinhas/2 ou bNumLinhas/2+1)
-//  uint8_t  bSensorAdubo;          //Indica presença de sensor de adubo. (bSensorAdubo = 1)
-//  uint8_t  bTolerancia;           //Tolerância ao espaçamento entre sementes. (porcentagem)
-//  uint8_t  bTeclaPausaHab;             //Habilita o uso da tecla de pausa. (bTeclaPausaHab = 1)
-//
-//  UOS_teIntercala  eIntercala;
-//  uint8_t  bPausaAuto;            //Habilita o uso da pausa automática.(bPausaAuto = 1)
-//  uint8_t  bLinhasFalhaPausaAuto;      //Número de linhas em falha para pausa automática. (1-32)
-//  uint8_t  bNumSensorAdicionais;  //Número de sensores adicionais (0-6)
-//
-//} UOS_tsCfgMonitor;
-//
-////Receptor GPS interno:
-//typedef struct {
-//  int32_t        lFusoHorario;
-//
-//  uint16_t      wDistanciaEntreFixos;
-//  uint16_t      wAnguloEntreFixos;
-//
-//  uint8_t       bHorarioVerao;       //Indica se está em horário de verão (bHorarioVerao = 1)
-//  uint8_t       bSalvaRegistro;      //Indica se gravação de registros está ativada
-//} tsCfgGPS;
-//
-////Identificação do veículo:
-//typedef struct {
-//  uint8_t       abCodigo[6];
-//} tsCfgVeiculo;
-//
-//typedef struct {
-//  //Configuração Monitor
-//  UOS_tsCfgMonitor              sMonitor;
-//
-//  //Receptor GPS interno:
-//  tsCfgGPS                      sGPS;
-//
-//  //Identificação do veículo:
-//  tsCfgVeiculo                  sVeiculo;
-//
-//  //CRC16 desta estrutura:
-//  uint16_t                        wCRC16;
-//
-//} UOS_tsConfiguracao;
 
 /******************************************************************************
 * Variables from Control module... Just for test...

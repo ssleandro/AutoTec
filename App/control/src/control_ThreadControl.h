@@ -39,8 +39,8 @@
 *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define CONTROL_MODULES \
-    X("ControlManagement"  , 150 , osPriorityNormal , CTL_vControlManagementThread  , (1 << 0) , 1 ) \
-    X("ControlPublish"     , 150 , osPriorityNormal , CTL_vControlPublishThread     , (1 << 1) , 2 ) \
+    X("ControlManagement"  , 256 , osPriorityNormal , CTL_vControlManagementThread  , (1 << 0) , 1 ) \
+    X("ControlPublish"     , 256 , osPriorityNormal , CTL_vControlPublishThread     , (1 << 1) , 2 ) \
     X(NULL                 ,   0 , 0                , NULL                          , 0        , 3 ) \
 
 //    X("ControlManagement"  , 150 , osPriorityNormal , CTL_vControlManagementThread  , (1 << 0) , 1 )
