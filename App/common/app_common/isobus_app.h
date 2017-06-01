@@ -51,10 +51,11 @@
 *******************************************************************************/
 
 typedef enum {
-	STATUS_INSTALL_INSTALLING 	 = 0x0E,
-	STATUS_INSTALL_INSTALLED 	 = 0x0A,
-	STATUS_INSTALL_INSTALL_ERROR = 0x0C,
-	STATUS_INSTALL_NONE			 = 0xE6,
+	STATUS_INSTALL_WAITING	 	 = 0x000E,
+	STATUS_INSTALL_INSTALLING 	 = 0x010E,
+	STATUS_INSTALL_INSTALLED 	 = 0x000A,
+	STATUS_INSTALL_INSTALL_ERROR = 0x000C,
+	STATUS_INSTALL_NONE			 = 0x00E6,
 	STATUS_INSTALL_INVALID
 } eInstallationStatus;
 
@@ -65,6 +66,7 @@ typedef enum {
 /******************************************************************************
 * Public Variables
 *******************************************************************************/
+
 
 /******************************************************************************
 * Function Prototypes

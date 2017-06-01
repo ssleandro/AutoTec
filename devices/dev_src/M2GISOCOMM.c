@@ -54,8 +54,7 @@
 #define NULL (void*)0
 #endif
 
-//#define RECV_ISOBUFSIZE		256
-#define RECV_ISOBUFSIZE		32      // 256 bytes on 32 CAN messages
+#define RECV_ISOBUFSIZE		32      // 512 bytes on 32 CAN messages
 
 #ifndef UNITY_TEST
 #define DEFAULT_TIMEOUT		500
@@ -96,7 +95,6 @@ typedef eDEVError_s (*fpIOCTLFunction)(uint32_t wRequest, void * vpValue); /*!< 
 *******************************************************************************/
 
 /* Ringbuffer structures */
-//static uint8_t bRecvBuffer[RECV_ISOBUFSIZE];  		    //!< RingBuffer array
 static canMSGStruct_s sRecvBuffer[RECV_ISOBUFSIZE];          //!< RingBuffer array     
 static RINGBUFF_T rbM2GISOHandle;             	        //!< RingBuffer Control handle
 
@@ -108,6 +106,7 @@ static can_config_s  sMCU_CAN_Handle =
     .eCANPort = M2GISOCOMM_CAN_CHANNEL,
     .eCANBitrate = M2GISOCOMM_CAN_BITRATE,
     .fpCallback = NULL,
+	.vpPrivateData = NULL
 };
 
 /*
@@ -126,7 +125,7 @@ static uint32_t wCANSendID = 0; /* !< Holds the current output CAN message ID */
 * Function Prototypes
 *******************************************************************************/
 static void M2GISO_vRBSafeInsert(canMSGStruct_s *psData);
-static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput);
+static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput, uint32_t dBufferSize);
 static eDEVError_s M2GISO_eSetActive(uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GISO_eDisable(uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GISO_eCANAddID(uint32_t wRequest, void * vpValue);
@@ -172,22 +171,12 @@ fpIOCTLFunction M2GISO_pIOCTLFunction[] = //!< IOCTL array of function mapping
 *******************************************************************************/
 void M2GISO_vRBSafeInsert(canMSGStruct_s *psData)
 {
-    // void M2GISO_vRBSafeInsert(uint8_t *pbData, uint32_t wNumItens)
-    //    /* Fill the ringbuffer with bytes */
-    //    if(!RingBuffer_InsertMult(&rbM2GISOHandle, pbData, wNumItens)) //RingBuffer Full
-    //    {
-    //        //Pop from tail and then insert into head
-    //        uint8_t abGarbage[256];
-    //        RingBuffer_PopMult(&rbM2GISOHandle, abGarbage, wNumItens);
-    //        RingBuffer_InsertMult(&rbM2GISOHandle, pbData, wNumItens);
-    //    }
-    
     /* Fill the ringbuffer with canMSGStruct */
     if(!RingBuffer_Insert(&rbM2GISOHandle, psData))  //RingBuffer Full
     {
         //Pop from tail and then insert into head
-        canMSGStruct_s asGarbage[RECV_ISOBUFSIZE];
-        RingBuffer_Pop(&rbM2GISOHandle, asGarbage);
+        canMSGStruct_s asGarbage;
+        RingBuffer_Pop(&rbM2GISOHandle, &asGarbage);
         RingBuffer_Insert(&rbM2GISOHandle, psData);
     }    
 }
@@ -220,7 +209,7 @@ void M2GISO_vRBSafeInsert(canMSGStruct_s *psData)
 * <hr>
 *
 *******************************************************************************/
-static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput)
+static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput, uint32_t dBufferSize)
 {
     /* Wait until ISR callbacks are completed */
     if (M2GISOCOMM_Handle.bDeviceStatus == M2GISOCOMM_STATUS_BUSY)
@@ -230,15 +219,8 @@ static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput)
     
     uint32_t wReturn = 0;
     
-    //    /* Loop until the end of ring buffer */
-    //    while (!RingBuffer_IsEmpty(&rbM2GISOHandle))
-    //    {
-    //        RingBuffer_Pop(&rbM2GISOHandle, &pbOutput[wReturn]);
-    //        wReturn++;
-    //    }
-    
     /* Loop until the end of ring buffer */
-    while (!RingBuffer_IsEmpty(&rbM2GISOHandle))
+    while (!RingBuffer_IsEmpty(&rbM2GISOHandle) && (wReturn < dBufferSize))
     {
         RingBuffer_Pop(&rbM2GISOHandle, &psOutput[wReturn]);
         wReturn++;
@@ -256,11 +238,6 @@ static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput)
 * This function is called whenever a valid CAN message is received. It will copy the received
 * bytes to the input buffer (sRecvBuffer), following a basic protocol to get multi-packet CAN
 * messages.
-*
-* If the CAN message data field starts with 0xAA, there are more packets to arrive. The callback will
-* copy the 7 bytes of the message and keep the TERMDEV_Handle status as BUSY. When the last packet arrive
-* (1st byte 0xBB) the callback will copy the remaining bytes and set the TERMDEV_Status as ENABLED,
-* to notify the TDV_read function that data has arrived.
 *
 * This function must only be used as callback for CAN interrupt handler from mculib.
 *
@@ -282,25 +259,7 @@ static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput)
 *
 *******************************************************************************/
 void M2GISO_CANCallback(eCANStatus_s eErrorCode, canMSGStruct_s CANMessage)
-{  
-    /* CAN protocol - first byte of message controls flow
-    * 0xAA -> Initial or intermediate packet
-    * 0xBB -> Last packet
-    * */
-    
-    //    if ((CANMessage.dlc < 1) || (CANMessage.dlc > 8))
-    //        return;
-    //    
-    //    /* Ringbuffer implementation */
-    //    M2GISOCOMM_Handle.bDeviceStatus = M2GISOCOMM_STATUS_BUSY;
-    //    M2GISO_vRBSafeInsert(&CANMessage.data[1], (CANMessage.dlc-1));
-    //    
-    //    if (CANMessage.data[0] == 0xBB)
-    //    {
-    //        /* Signals that the handler is not busy anymore */
-    //        M2GISOCOMM_Handle.bDeviceStatus = M2GISOCOMM_STATUS_ENABLED;
-    //    }
-    
+{
     if ((CANMessage.dlc < 1) || (CANMessage.dlc > 8))
         return;
     
@@ -519,7 +478,6 @@ eDEVError_s M2GISO_open(void)
     uint32_t wDefaultActive = M2GISOCOMM_ACTIVE_INTERFACE; // default interface defined in _config.h
     
     /* Init the receive buffer */
-    //    RingBuffer_Init(&rbM2GISOHandle, bRecvBuffer, sizeof(uint8_t), RECV_ISOBUFSIZE);
     RingBuffer_Init(&rbM2GISOHandle, sRecvBuffer, sizeof(canMSGStruct_s), RECV_ISOBUFSIZE);
     RingBuffer_Flush(&rbM2GISOHandle);
     
@@ -534,7 +492,7 @@ uint32_t M2GISO_read(struct peripheral_descriptor_s* const this,
     canMSGStruct_s *psAuxPointer = (canMSGStruct_s*) vpBuffer;
     
     /* The received data is on the ring buffer */
-    return M2GISO_wReadBufferProcedure(psAuxPointer);
+    return M2GISO_wReadBufferProcedure(psAuxPointer, tBufferSize);
 }
 
 uint32_t M2GISO_write(struct peripheral_descriptor_s* const this,
@@ -559,43 +517,28 @@ uint32_t M2GISO_write(struct peripheral_descriptor_s* const this,
         && (M2GISOCOMM_Handle.dReservedInterfaces & M2GISOCOMM_CAN))
     {
   		sCANMessage.id = wCANSendID | (1 << 30);    // Make the id extended
-
-//#define TEST_INSERT_FF
         
         /* Loop until all bytes have been sent */
 	  	while (wSentBytes < tBufferSize)
 	  	{
-            if ((tBufferSize - wSentBytes) <= 8)
+	  		uint32_t dBytesToSend = (tBufferSize - wSentBytes);
+            if (dBytesToSend <= 8)
             {
-#if defined (TEST_INSERT_FF)
-                sCANMessage.dlc = 8;
-                
-                for (bIterator = 0; bIterator < (tBufferSize - wSentBytes); bIterator++)
-                {
-                    sCANMessage.data[bIterator] = *(pbAuxPointer++);
-                }
-                for ( ; bIterator < 8; bIterator++)
-                {
-                    sCANMessage.data[bIterator] = 0xFF;
-                }
-                wSentBytes += (tBufferSize - wSentBytes);
-#else
-                sCANMessage.dlc = (tBufferSize - wSentBytes);
-                
-                for (bIterator = 0; bIterator < (tBufferSize - wSentBytes); bIterator++)
-                {
-                    sCANMessage.data[bIterator] = *(pbAuxPointer++);
-                }
-                wSentBytes += (tBufferSize - wSentBytes);
-#endif
+            	sCANMessage.dlc = dBytesToSend;
+
+            	for (bIterator = 0; bIterator < dBytesToSend; bIterator++)
+            	{
+            		sCANMessage.data[bIterator] = *(pbAuxPointer++);
+            	}
+                wSentBytes += dBytesToSend;
             }
             else
             {
-                for (bIterator = 0; bIterator < 8; bIterator++)
-                {
-                    sCANMessage.data[bIterator] = *(pbAuxPointer++);
-                }
-                sCANMessage.dlc = 8;
+            	for (bIterator = 0; bIterator < 8; bIterator++)
+            	{
+            		sCANMessage.data[bIterator] = *(pbAuxPointer++);
+            	}
+            	sCANMessage.dlc = 8;
                 wSentBytes += 8;
             }
             

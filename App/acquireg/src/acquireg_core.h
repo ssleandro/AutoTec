@@ -105,6 +105,10 @@
 //#define AQR_wCF_LIBERA_MEM        0x0402 //Liberação de memória.
 
 
+#define AQR_APL_FLAG_FINISH_INSTALLATION 	0x0001
+#define AQR_APL_FLAG_SAVE_STATIC_REG 		0x0002
+#define AQR_APL_FLAG_UPDATE_INSTALLATION	0x0004
+
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/

@@ -119,13 +119,13 @@
   ASSERT(MutexName != NULL);
 /*!< Mutex wait */  
 #define WAIT_MUTEX(MutexName, TimeToWait) \
-  (osMutexWait(MutexName, TimeToWait));
+   osMutexWait(MutexName, TimeToWait)
 /*!< Release Mutex */
 #define RELEASE_MUTEX(MutexName) \
-  (osMutexRelease(MutexName));
+   osMutexRelease(MutexName)
 /*!< Delete Mutex */
 #define DELETE_MUTEX(MutexName) \
-  (osMutexDelete(MutexName))
+   osMutexDelete(MutexName)
 /*!< Extern a mutex */
 #define EXTERN_MUTEX(MutexName) \
     extern osMutexId  MutexName
@@ -162,9 +162,9 @@
   (QueueName = osMessageCreate(osMessageQ(QueueName), NULL));  \
     ASSERT(QueueName != NULL);
 /*!< Put message to an local queue */
-#define PUT_LOCAL_QUEUE(QueueName, message, time) (osMessagePut(QueueName, (uint32_t)&message, time))
+#define PUT_LOCAL_QUEUE(QueueName, message, time) (osMessagePutValue(QueueName, (void*)&message, time))
 /*!< Receive from Queue */
-#define RECEIVE_LOCAL_QUEUE(fromQueue, time) (osMessageGet(fromQueue, time))
+#define RECEIVE_LOCAL_QUEUE(fromQueue, buffer, time) (osMessageGetValue(fromQueue, buffer, time))
 
 #define GET_PUBLISHED_EVENT(contract)   ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent
 #define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
@@ -292,6 +292,7 @@ typedef enum event_e
 	EVENT_FFS_INTERFACE_CFG,    			//!< EVENT FILE INTERFACE STATUS CHANGED
 	EVENT_FFS_STATIC_REG,    				//!< EVENT FILE INTERFACE STATUS CHANGED
 	EVENT_AQR_FINISH_INSTALLATION,
+	EVENT_AQR_UPDATE_INSTALLATION,
 	EVENT_GUI_UPDATE_CONFIGURATION_INTERFACE,
 	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
 	EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
@@ -314,15 +315,6 @@ typedef struct {
 /******************************************************************************
 * Conversion from MPA
 *******************************************************************************/
-// TODO: This variables is just for test
-// TODO: common from GPS
-
-
-
-extern gpio_config_s sEnablePS9;
-#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
-#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
-
 /* CAN sensor core */
 #define CAN_ALTA_PRIOR            0x00
 
@@ -399,10 +391,6 @@ extern gpio_config_s sEnablePS9;
 // Nenhum sensor conectado a rede Resposta comum a todos os comandos
 #define CAN_APL_FLAG_SENSOR_NAO_RESPONDEU         0x00040000
 #define CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO      0x00080000
-
-#define CAN_APL_FLAG_FINISH_INSTALLATION          0x00100000
-
-#define AQR_APL_FLAG_SAVE_STATIC_REG	          0x00200000
 
 
 /******************************************************************************

@@ -173,6 +173,10 @@ CREATE_MUTEX(MTX_VTStatus);
 extern unsigned int POOL_SIZE;
 extern uint8_t pool[];
 
+// Installation
+eInstallationStatus InstallationStatus[36];
+
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
@@ -372,6 +376,8 @@ void ISO_vIsobusPublishThread(void const *argument)
 	event_e ePubEvt;
 	PubMessage sISOPubMessage;
 
+    INITIALIZE_LOCAL_QUEUE(PublishQ);           //!< Initialise message queue to publish thread
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Publish Thread Created");
 #endif
@@ -383,15 +389,13 @@ void ISO_vIsobusPublishThread(void const *argument)
     osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bISOPUBThreadArrayPosition));//Task created, inform core
     osThreadSetPriority(NULL, osPriorityLow);
 
-    INITIALIZE_LOCAL_QUEUE(PublishQ);           //!< Initialise message queue to publish thread
-
     ISO_eInitIsobusPublisher();
 
     while(1)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
-        evt = RECEIVE_LOCAL_QUEUE(PublishQ, osWaitForever);
+        evt = RECEIVE_LOCAL_QUEUE(PublishQ, &ePubEvt, osWaitForever);
         WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
 
         if(evt.status == osEventMessage)
@@ -653,7 +657,7 @@ void ISO_vIsobusDispatcher(ISOBUSMsg* RcvMsg)
                     case PROPRIETARY_A_PGN:
                     case PROPRIETARY_A2_PGN:
                         // Send message to BootThread
-                        PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, 0);
+                        PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
                         break;
                     default:
                         break;
@@ -668,7 +672,7 @@ void ISO_vIsobusDispatcher(ISOBUSMsg* RcvMsg)
                 {
                     case VT_TO_ECU_PGN:
                         // Send message to BootThread
-                        PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, 0);
+                        PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
                         break;
                     case ECU_TO_GLOBAL_PGN:
                         break;
@@ -785,7 +789,12 @@ void ISO_vIsobusRecvThread(void const *argument){}
   *******************************************************************************/
 #ifndef UNITY_TEST
 void ISO_vIsobusWriteThread(void const *argument)
-{    
+{
+    ISOBUSMsg recv;
+    eAPPError_s eError;
+
+	INITIALIZE_LOCAL_QUEUE(WriteQ);
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Write Thread Created");
 #endif
@@ -795,30 +804,22 @@ void ISO_vIsobusWriteThread(void const *argument)
 
     osThreadId xIsoMainID = (osThreadId) argument;
     osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOWRTThreadArrayPosition));//Task created, inform core
-    osThreadSetPriority(NULL, osPriorityLow);
-
-    ISOBUSMsg* recv;
-    eAPPError_s eError;
-
-    INITIALIZE_LOCAL_QUEUE(WriteQ);
 
     while(1)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOWRT, WDT_SLEEP);
-        osEvent evtPub = RECEIVE_LOCAL_QUEUE(WriteQ, osWaitForever);   // Wait
+        osEvent evtPub = RECEIVE_LOCAL_QUEUE(WriteQ, &recv, osWaitForever);   // Wait
         WATCHDOG_STATE(ISOWRT, WDT_ACTIVE);
 
         if(evtPub.status == osEventMessage)
         {
-            recv = (ISOBUSMsg*) evtPub.value.p;
-
-            eError = (eAPPError_s) DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv->frame).id);
+            eError = (eAPPError_s) DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
             ASSERT(eError == APP_ERROR_SUCCESS);
 
             if(eError == APP_ERROR_SUCCESS)     // wSendCANID changed
             {
-                DEV_write(pISOHandle, &((recv->frame).data[0]), (recv->frame).dlc);
+                DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
             }
         }
     }
@@ -836,6 +837,10 @@ void ISO_vTimerCallbackWSMaintenance(void const *arg)
 #ifndef UNITY_TEST
 void ISO_vIsobusBootThread(void const *argument)
 {
+    ISOBUSMsg RcvMsg;
+
+    INITIALIZE_LOCAL_QUEUE(BootQ);
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Aux Boot Thread Created");
 #endif
@@ -845,11 +850,6 @@ void ISO_vIsobusBootThread(void const *argument)
 
     osThreadId xIsoMainID = (osThreadId) argument;
     osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOBOOTThreadArrayPosition));//Task created, inform core
-    osThreadSetPriority(NULL, osPriorityLow);
-
-    ISOBUSMsg* RcvMsg;
-
-    INITIALIZE_LOCAL_QUEUE(BootQ);
 
     CREATE_TIMER(WSMaintenanceTimer, ISO_vTimerCallbackWSMaintenance);
     INITIALIZE_TIMER(WSMaintenanceTimer, osTimerPeriodic);
@@ -919,19 +919,17 @@ void ISO_vIsobusBootThread(void const *argument)
                     // While object pool pointer not equal to NULL
                     do{
                         WATCHDOG_STATE(ISOBOOT, WDT_SLEEP);
-                        osEvent evtPub = RECEIVE_LOCAL_QUEUE(BootQ, osWaitForever);   // Wait
+                        osEvent evtPub = RECEIVE_LOCAL_QUEUE(BootQ, &RcvMsg, osWaitForever);   // Wait
                         WATCHDOG_STATE(ISOBOOT, WDT_ACTIVE);
 
                         if(evtPub.status == osEventMessage)
                         {
-                            RcvMsg = (ISOBUSMsg*) evtPub.value.p;
-
-                            switch(ISO_wGetPGN(RcvMsg))
+                            switch(ISO_wGetPGN(&RcvMsg))
                             {
                                 case TP_CONN_MANAGE_PGN:
-                                    switch (RcvMsg->B1) {
+                                    switch (RcvMsg.B1) {
                                         case TP_CM_CTS:
-                                            ISO_vSendObjectPool(RcvMsg->B2, RcvMsg->B3, TRANSPORT_PROTOCOL);
+                                            ISO_vSendObjectPool(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
                                             break;
                                         case TP_EndofMsgACK:
                                             eCurrState = OBJECT_POOL_SENDED;
@@ -946,11 +944,11 @@ void ISO_vIsobusBootThread(void const *argument)
                                     }
                                     break;
                                 case ETP_CONN_MANAGE_PGN:
-                                    switch (RcvMsg->B1) {
+                                    switch (RcvMsg.B1) {
                                         case ETP_CM_CTS:
                                             // Send DPO message
-                                            ISO_vSendETP_CM_DPO(RcvMsg->B2, (RcvMsg->B3|(RcvMsg->B4 << 8)|(RcvMsg->B5 << 16)));
-                                            ISO_vSendObjectPool(RcvMsg->B2, (RcvMsg->B3|(RcvMsg->B4 << 8)|(RcvMsg->B5 << 16)), EXTENDED_TRANSPORT_PROTOCOL);
+                                            ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3|(RcvMsg.B4 << 8)|(RcvMsg.B5 << 16)));
+                                            ISO_vSendObjectPool(RcvMsg.B2, (RcvMsg.B3|(RcvMsg.B4 << 8)|(RcvMsg.B5 << 16)), EXTENDED_TRANSPORT_PROTOCOL);
                                             break;
                                         case ETP_CM_EOMA:
                                             eCurrState = OBJECT_POOL_SENDED;
@@ -1074,14 +1072,14 @@ void ISO_vTreatBootState(ISOBUSMsg* sRcvMsg)
             if(sRcvMsg->PS == M2G_SOURCE_ADDRESS)
             {
                 osSignalSet(xAuxBootThreadId, WAIT_SEND_POOL);
-                PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, 0);
+                PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, osWaitForever);
             }
             break;
         case ETP_CONN_MANAGE_PGN:
             if(sRcvMsg->PS == M2G_SOURCE_ADDRESS)
             {
                 osSignalSet(xAuxBootThreadId, WAIT_SEND_POOL);
-                PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, 0);
+                PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, osWaitForever);
             }
             break;
         default:
@@ -1197,13 +1195,13 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
 							case ISO_BUTTON_REPEAT_TEST_ID:
 							{
 								ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
-								osMessagePut(PublishQ, ePubEvt, osWaitForever);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								break;
 							}
 							case ISO_BUTTON_ERASE_INSTALLATION_ID:
 							{
 								ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-								osMessagePut(PublishQ, ePubEvt, osWaitForever);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								break;
 							}
 							default:
@@ -1229,7 +1227,7 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
                     	{
                     		eCurrentDataMask = (eDataMask) dAux;
                     		ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
-                    		osMessagePut(PublishQ, ePubEvt, osWaitForever);
+                    		PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
                     	}
                         break;
                     }
@@ -1286,7 +1284,9 @@ void ISO_vTreatRunningState(ISOBUSMsg* sRcvMsg)
 void ISO_vIsobusManagementThread(void const *argument)
 {
 	osEvent evt;
-    ISOBUSMsg* sRcvMsg;
+    ISOBUSMsg sRcvMsg;
+
+    INITIALIZE_LOCAL_QUEUE(ManagementQ);
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Management Thread Created");
@@ -1297,9 +1297,6 @@ void ISO_vIsobusManagementThread(void const *argument)
 
     osThreadId xIsoMainID = (osThreadId) argument;
     osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOMGTThreadArrayPosition));//Task created, inform core
-    osThreadSetPriority(NULL, osPriorityLow);
-
-    INITIALIZE_LOCAL_QUEUE(ManagementQ);
 
     // Wait for auxiliary thread start
     /* Pool the device waiting for */
@@ -1311,20 +1308,18 @@ void ISO_vIsobusManagementThread(void const *argument)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-        evt = RECEIVE_LOCAL_QUEUE(ManagementQ, osWaitForever);   // Wait
+        evt = RECEIVE_LOCAL_QUEUE(ManagementQ, &sRcvMsg, osWaitForever);   // Wait
         WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
         if(evt.status == osEventMessage)
         {
-            sRcvMsg = (ISOBUSMsg*) evt.value.p;
-
             switch(eModCurrState)
             {
                 case BOOT:
-                    ISO_vTreatBootState(sRcvMsg);
+                    ISO_vTreatBootState(&sRcvMsg);
                     break;
                 case RUNNING:
-                    ISO_vTreatRunningState(sRcvMsg);
+                    ISO_vTreatRunningState(&sRcvMsg);
                     break;
                 default:
                     break;
@@ -1353,8 +1348,7 @@ void ISO_vUpdateNumberVariableValue(uint16_t wOutputNumberID, uint32_t dNumericV
     sSendMsg.frame.data[6] = (dNumericValue & 0xFF0000) >> 16;
     sSendMsg.frame.data[7] = (dNumericValue & 0xFF000000) >> 24;
     
-    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
-    osDelay(2);
+    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
 void ISO_vUpdateListItemValue(uint16_t wOutputNumberID, uint8_t bListItem)
@@ -1371,8 +1365,7 @@ void ISO_vUpdateListItemValue(uint16_t wOutputNumberID, uint8_t bListItem)
     sSendMsg.frame.data[6] = 0xFF;
     sSendMsg.frame.data[7] = 0xFF;
 
-    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
-    osDelay(2);
+    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
 void ISO_vUpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
@@ -1389,8 +1382,7 @@ void ISO_vUpdateBarGraphColor(uint16_t wBarGraphID, uint32_t dNumericValue)
     sSendMsg.frame.data[6] = (dNumericValue & 0xFF0000) >> 16;
     sSendMsg.frame.data[7] = (dNumericValue & 0xFF000000) >> 24;
     
-    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
-    osDelay(2);
+    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
 void ISO_vUpdateFillAttributesValue(uint16_t wFillAttrID, uint8_t bColor)
@@ -1407,8 +1399,7 @@ void ISO_vUpdateFillAttributesValue(uint16_t wFillAttrID, uint8_t bColor)
     sSendMsg.frame.data[6] = 0xFF;
     sSendMsg.frame.data[7] = 0xFF;
 
-    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, 0);
-    osDelay(2);
+    PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
 void ISO_vUpdateConfigurationDataMask(void)
@@ -1500,6 +1491,8 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
 	osEvent evt;
 	event_e ePubEvt;
 
+    INITIALIZE_LOCAL_QUEUE(UpdateQ);
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus UpdateOP Thread Created");
 #endif
@@ -1513,11 +1506,9 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOUPDTThreadArrayPosition));//Task created, inform core
     osThreadSetPriority(NULL, osPriorityLow);
 
-    INITIALIZE_LOCAL_QUEUE(UpdateQ);
-
     // Waiting for RUNNING module state
     WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    osFlagWait(ISO_sFlags, ISO_FLAG_STATE_RUNNING, false, true, osWaitForever);
+    osSignalWait(ISO_FLAG_STATE_RUNNING, osWaitForever);
     WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
     osThreadSetPriority(NULL, osPriorityHigh);
@@ -1532,13 +1523,11 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     {
     	/* Pool the device waiting for */
     	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-    	evt = RECEIVE_LOCAL_QUEUE(UpdateQ, osWaitForever);
+    	evt = RECEIVE_LOCAL_QUEUE(UpdateQ, &ePubEvt, osWaitForever);
     	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
     	if(evt.status == osEventMessage)
     	{
-    		ePubEvt = GET_PUBLISHED_EVENT(GET_CONTRACT(evt));
-
     		switch (ePubEvt) {
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{

@@ -669,12 +669,12 @@ void GPS_vGPSPublishThread (void const *argument)
         dValorGPS = osFlagWait (GPS_sFlagGPS, (GPS_FLAG_METRO | GPS_FLAG_SEGUNDO | GPS_FLAG_TIMEOUT_MTR), true, false, osWaitForever);
         WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
 
-        status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever)
+        status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
         ASSERT(status == osOK);
 
         sGPSPubMsg.vPayload = (void*) &GPS_sDadosGPS;
 
-        status = RELEASE_MUTEX(GPS_MTX_sEntradas)
+        status = RELEASE_MUTEX(GPS_MTX_sEntradas);
         ASSERT(status == osOK);
 
         // Todas as publicacoes a seguir chegaram aos modulos que estao assinados para receber as publicacoes do modulo GPS
@@ -735,7 +735,7 @@ void GPS_vAcumulaDistancia (void)
     if (((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) > 0) && ((AQR_sStatus.bErroGPS == false) || (CAN_bSensorSimulador != false)))
     {
         //Pega o mutex antes acessar dados compartilhados:
-        status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever)
+        status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
         ASSERT(status == osOK);
 
         //Se velocidade no GPS ou no simulador for maior que 0,14m/s = 0,5 km/h
@@ -1447,7 +1447,7 @@ void RTCConverteGPSToRTC (int16_t iWeek, uint32_t dTempoSeg)
     uint16_t wAux;
 
     //Pega o mutex antes de acessar dados compartilhados:
-    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever)
+    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever);
     ASSERT(status == osOK);
 
     memset (&GPS_sDataHoraLocal.abHoraAtualGPS, 0x00,
@@ -1571,7 +1571,7 @@ void RTCConverteGPSToRTC (int16_t iWeek, uint32_t dTempoSeg)
     GPS_sDataHoraLocal.abHoraAtualGPS[1] = bAux;    // segundos
 
     //Devolve o mutex:
-    status = RELEASE_MUTEX(UOS_MTX_sDataHora)
+    status = RELEASE_MUTEX(UOS_MTX_sDataHora);
     ASSERT(status == osOK);
     (void) bErr;
 }
@@ -1597,7 +1597,7 @@ void GPS_vIdentMsgRxGPS (void)
     uint8_t bChecksum_B = 0;
 
     //Pega o mutex antes acessar dados compartilhados:
-    status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever)
+    status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
     ASSERT(status == osOK);
 
     //Calcula o tamanho da mensagem com os 4 byte iniciais ( 2 sinc, 1 classe e 1 ID)
@@ -2020,7 +2020,7 @@ void GPS_vIdentMsgRxGPS (void)
     }
 
     //Devolve o mutex:
-    status = RELEASE_MUTEX(GPS_MTX_sEntradas)
+    status = RELEASE_MUTEX(GPS_MTX_sEntradas);
     ASSERT(status == osOK);
 
 } // Fim da função
@@ -2652,15 +2652,14 @@ uint32_t GPS_dDataHoraSistema (void)
     uint32_t dDataHoraSistema;
 
     //Pega o mutex antes de acessar dados compartilhados:
-    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever)
-    ;
+    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever);
     ASSERT(status == osOK);
 
     //Copia o valor da data/hora:
     dDataHoraSistema = GPS_sDataHoraLocal.dDataHoraSistema;
 
     //Devolve o mutex:
-    status = RELEASE_MUTEX(UOS_MTX_sDataHora)
+    status = RELEASE_MUTEX(UOS_MTX_sDataHora);
     ASSERT(status == osOK);
     (void) bErr;
 
@@ -2693,14 +2692,14 @@ void GPS_dDataHoraLocal (uint8_t *pabDataHoraLocal)
     osStatus status;
 
     //Pega o mutex antes de acessar dados compartilhados:
-    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever)
+    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever);
     ASSERT(status == osOK);
 
     //Copia o valor da data/hora local:
     memcpy (pabDataHoraLocal, &(GPS_sDataHoraLocal.abDataHoraBCDLocal), 8);
 
     //Devolve o mutex:
-    status = RELEASE_MUTEX(UOS_MTX_sDataHora)
+    status = RELEASE_MUTEX(UOS_MTX_sDataHora);
     ASSERT(status == osOK);
 
 } //Fim função GPS_dDataHoraLocal
@@ -2729,7 +2728,7 @@ void GPS_dDataHoraLocalHV (uint8_t *pabDataHoraLocalHV)
     osStatus status;
 
     //Pega o mutex antes de acessar dados compartilhados:
-    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever)
+    status = WAIT_MUTEX(UOS_MTX_sDataHora, osWaitForever);
     ASSERT(status == osOK);
 
     //Copia o valor da data/hora local:
@@ -2737,7 +2736,7 @@ void GPS_dDataHoraLocalHV (uint8_t *pabDataHoraLocalHV)
             8);
 
     //Devolve o mutex:
-    status = RELEASE_MUTEX(UOS_MTX_sDataHora)
+    status = RELEASE_MUTEX(UOS_MTX_sDataHora);
     ASSERT(status == osOK);
 
 } //Fim função GPS_dDataHoraLocalHV

@@ -150,7 +150,7 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
   /*INT16U wDistLinhas;*/                         0, //Distância entre linhas. (centímetros)*10
   /*INT16U wLargImpl;*/                          10, //Largura do implemento. (centímetros)*10
   /*uint8_t  bMonitorArea;*/                    false, //Se está em modo monitor de área. (0 = false, 1 = true )
-  /*uint8_t  bNumLinhas;*/                          32, //No. Linhas (1-36)
+  /*uint8_t  bNumLinhas;*/                          36, //No. Linhas (1-36)
   /*uint8_t  bDivLinhas;*/                          0, //Divisão da plantadeira (bNumLinhas/2 ou bNumLinhas/2+1)
   /*uint8_t  bSensorAdubo;*/                    false, //Indica presença de sensor de adubo. (bSensorAdubo = 1)
   /*uint8_t  bTolerancia;*/                        20, //Tolerância ao espaçamento entre sementes. (porcentagem)
