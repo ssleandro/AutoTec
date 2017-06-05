@@ -44,7 +44,7 @@
  ****************************************************************************/
 
 /* Setup EEPROM clock */
-STATIC void setClkDiv(LPC_EEPROM_T *pEEPROM)
+STATIC void setClkDiv (LPC_EEPROM_T *pEEPROM)
 {
 	uint32_t clk;
 
@@ -56,7 +56,7 @@ STATIC void setClkDiv(LPC_EEPROM_T *pEEPROM)
 }
 
 /* Setup EEPROM clock */
-STATIC INLINE void setWaitState(LPC_EEPROM_T *pEEPROM)
+STATIC INLINE void setWaitState (LPC_EEPROM_T *pEEPROM)
 {
 	/* Setup EEPROM wait states*/
 	Chip_EEPROM_SetReadWaitState(pEEPROM, EEPROM_READ_WAIT_STATE_VAL);
@@ -69,7 +69,7 @@ STATIC INLINE void setWaitState(LPC_EEPROM_T *pEEPROM)
  ****************************************************************************/
 
 /* Initializes the EEPROM peripheral with specified parameter */
-void Chip_EEPROM_Init(LPC_EEPROM_T *pEEPROM)
+void Chip_EEPROM_Init (LPC_EEPROM_T *pEEPROM)
 {
 	/* Disable EEPROM power down mode */
 	Chip_EEPROM_DisablePowerDown(pEEPROM);
@@ -78,7 +78,7 @@ void Chip_EEPROM_Init(LPC_EEPROM_T *pEEPROM)
 }
 
 /* Write data from page register to non-volatile memory */
-void Chip_EEPROM_EraseProgramPage(LPC_EEPROM_T *pEEPROM)
+void Chip_EEPROM_EraseProgramPage (LPC_EEPROM_T *pEEPROM)
 {
 	Chip_EEPROM_ClearIntStatus(pEEPROM, EEPROM_CMD_ERASE_PRG_PAGE);
 	Chip_EEPROM_SetCmd(pEEPROM, EEPROM_CMD_ERASE_PRG_PAGE);
@@ -86,12 +86,14 @@ void Chip_EEPROM_EraseProgramPage(LPC_EEPROM_T *pEEPROM)
 }
 
 /* Wait for interrupt */
-void Chip_EEPROM_WaitForIntStatus(LPC_EEPROM_T *pEEPROM, uint32_t mask)
+void Chip_EEPROM_WaitForIntStatus (LPC_EEPROM_T *pEEPROM, uint32_t mask)
 {
 	uint32_t status;
-	while (1) {
+	while (1)
+	{
 		status = Chip_EEPROM_GetIntStatus(pEEPROM);
-		if ((status & mask) == mask) {
+		if ((status & mask) == mask)
+		{
 			break;
 		}
 	}

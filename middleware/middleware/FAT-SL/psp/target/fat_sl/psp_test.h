@@ -46,30 +46,30 @@
 
 #include "../../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 #include "../../../version/ver_psp_fat_sl.h"
 #if VER_PSP_FAT_FAT_SL_MAJOR != 1 || VER_PSP_FAT_FAT_SL_MINOR != 2
- #error Incompatible PSP_FAT_FAT_SL version number!
+#error Incompatible PSP_FAT_FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Use to display text (printf). */
-void _f_dump ( char * s );
+void _f_dump (char * s);
 
 /* Use to display test result (printf). */
-uint8_t _f_result ( int linenum, uint32_t result );
+uint8_t _f_result (int linenum, uint32_t result);
 
 /* Use to build file system (mount). */
-uint8_t _f_poweron ( void );
+uint8_t _f_poweron (void);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* _PSP_FAT_FAT_SL_H */
 

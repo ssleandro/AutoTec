@@ -43,22 +43,23 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-unsigned char _f_getfatsector ( unsigned long );
-unsigned char _f_getclustervalue ( unsigned long, unsigned long * );
-void _f_clustertopos ( unsigned long, F_POS * );
-unsigned char _f_getcurrsector ( void );
+unsigned char _f_getfatsector (unsigned long);
+unsigned char _f_getclustervalue (unsigned long, unsigned long *);
+void _f_clustertopos (unsigned long, F_POS *);
+unsigned char _f_getcurrsector (void);
 
-unsigned char _f_writefatsector ( void );
-unsigned char _f_setclustervalue ( unsigned long, unsigned long );
-unsigned char _f_alloccluster ( unsigned long * );
-unsigned char _f_removechain ( unsigned long );
+unsigned char _f_writefatsector (void);
+unsigned char _f_setclustervalue (unsigned long, unsigned long);
+unsigned char _f_alloccluster (unsigned long *);
+unsigned char _f_removechain (unsigned long);
 
 #ifdef __cplusplus
 }

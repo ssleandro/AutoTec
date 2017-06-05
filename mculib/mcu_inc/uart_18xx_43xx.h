@@ -35,7 +35,8 @@
 #include "ring_buffer.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup UART_18XX_43XX CHIP: LPC18xx/43xx UART driver
@@ -46,51 +47,55 @@ extern "C" {
 /**
  * @brief USART register block structure
  */
-typedef struct {					/*!< USARTn Structure       */
+typedef struct
+{ /*!< USARTn Structure       */
 
-	union {
-		__IO uint32_t  DLL;			/*!< Divisor Latch LSB. Least significant byte of the baud rate divisor value. The full divisor is used to generate a baud rate from the fractional rate divider (DLAB = 1). */
-		__O  uint32_t  THR;			/*!< Transmit Holding Register. The next character to be transmitted is written here (DLAB = 0). */
-		__I  uint32_t  RBR;			/*!< Receiver Buffer Register. Contains the next received character to be read (DLAB = 0). */
+	union
+	{
+		__IO uint32_t DLL; /*!< Divisor Latch LSB. Least significant byte of the baud rate divisor value. The full divisor is used to generate a baud rate from the fractional rate divider (DLAB = 1). */
+		__O uint32_t THR; /*!< Transmit Holding Register. The next character to be transmitted is written here (DLAB = 0). */
+		__I uint32_t RBR; /*!< Receiver Buffer Register. Contains the next received character to be read (DLAB = 0). */
 	};
 
-	union {
-		__IO uint32_t IER;			/*!< Interrupt Enable Register. Contains individual interrupt enable bits for the 7 potential UART interrupts (DLAB = 0). */
-		__IO uint32_t DLM;			/*!< Divisor Latch MSB. Most significant byte of the baud rate divisor value. The full divisor is used to generate a baud rate from the fractional rate divider (DLAB = 1). */
+	union
+	{
+		__IO uint32_t IER; /*!< Interrupt Enable Register. Contains individual interrupt enable bits for the 7 potential UART interrupts (DLAB = 0). */
+		__IO uint32_t DLM; /*!< Divisor Latch MSB. Most significant byte of the baud rate divisor value. The full divisor is used to generate a baud rate from the fractional rate divider (DLAB = 1). */
 	};
 
-	union {
-		__O  uint32_t FCR;			/*!< FIFO Control Register. Controls UART FIFO usage and modes. */
-		__I  uint32_t IIR;			/*!< Interrupt ID Register. Identifies which interrupt(s) are pending. */
+	union
+	{
+		__O uint32_t FCR; /*!< FIFO Control Register. Controls UART FIFO usage and modes. */
+		__I uint32_t IIR; /*!< Interrupt ID Register. Identifies which interrupt(s) are pending. */
 	};
 
-	__IO uint32_t LCR;				/*!< Line Control Register. Contains controls for frame formatting and break generation. */
-	__IO uint32_t MCR;				/*!< Modem Control Register. Only present on USART ports with full modem support. */
-	__I  uint32_t LSR;				/*!< Line Status Register. Contains flags for transmit and receive status, including line errors. */
-	__I  uint32_t MSR;				/*!< Modem Status Register. Only present on USART ports with full modem support. */
-	__IO uint32_t SCR;				/*!< Scratch Pad Register. Eight-bit temporary storage for software. */
-	__IO uint32_t ACR;				/*!< Auto-baud Control Register. Contains controls for the auto-baud feature. */
-	__IO uint32_t ICR;				/*!< IrDA control register (not all UARTS) */
-	__IO uint32_t FDR;				/*!< Fractional Divider Register. Generates a clock input for the baud rate divider. */
-	__IO uint32_t OSR;				/*!< Oversampling Register. Controls the degree of oversampling during each bit time. Only on some UARTS. */
-	__IO uint32_t TER1;				/*!< Transmit Enable Register. Turns off USART transmitter for use with software flow control. */
-	uint32_t  RESERVED0[3];
-    __IO uint32_t HDEN;				/*!< Half-duplex enable Register- only on some UARTs */
-	__I  uint32_t RESERVED1[1];
-	__IO uint32_t SCICTRL;			/*!< Smart card interface control register- only on some UARTs */
+	__IO uint32_t LCR; /*!< Line Control Register. Contains controls for frame formatting and break generation. */
+	__IO uint32_t MCR; /*!< Modem Control Register. Only present on USART ports with full modem support. */
+	__I uint32_t LSR; /*!< Line Status Register. Contains flags for transmit and receive status, including line errors. */
+	__I uint32_t MSR; /*!< Modem Status Register. Only present on USART ports with full modem support. */
+	__IO uint32_t SCR; /*!< Scratch Pad Register. Eight-bit temporary storage for software. */
+	__IO uint32_t ACR; /*!< Auto-baud Control Register. Contains controls for the auto-baud feature. */
+	__IO uint32_t ICR; /*!< IrDA control register (not all UARTS) */
+	__IO uint32_t FDR; /*!< Fractional Divider Register. Generates a clock input for the baud rate divider. */
+	__IO uint32_t OSR; /*!< Oversampling Register. Controls the degree of oversampling during each bit time. Only on some UARTS. */
+	__IO uint32_t TER1; /*!< Transmit Enable Register. Turns off USART transmitter for use with software flow control. */
+	uint32_t RESERVED0[3];
+	__IO uint32_t HDEN; /*!< Half-duplex enable Register- only on some UARTs */
+	__I uint32_t RESERVED1[1];
+	__IO uint32_t SCICTRL; /*!< Smart card interface control register- only on some UARTs */
 
-	__IO uint32_t RS485CTRL;		/*!< RS-485/EIA-485 Control. Contains controls to configure various aspects of RS-485/EIA-485 modes. */
-	__IO uint32_t RS485ADRMATCH;	/*!< RS-485/EIA-485 address match. Contains the address match value for RS-485/EIA-485 mode. */
-	__IO uint32_t RS485DLY;			/*!< RS-485/EIA-485 direction control delay. */
+	__IO uint32_t RS485CTRL; /*!< RS-485/EIA-485 Control. Contains controls to configure various aspects of RS-485/EIA-485 modes. */
+	__IO uint32_t RS485ADRMATCH; /*!< RS-485/EIA-485 address match. Contains the address match value for RS-485/EIA-485 mode. */
+	__IO uint32_t RS485DLY; /*!< RS-485/EIA-485 direction control delay. */
 
-	union {
-		__IO uint32_t SYNCCTRL;		/*!< Synchronous mode control register. Only on USARTs. */
-		__I  uint32_t FIFOLVL;		/*!< FIFO Level register. Provides the current fill levels of the transmit and receive FIFOs. */
+	union
+	{
+		__IO uint32_t SYNCCTRL; /*!< Synchronous mode control register. Only on USARTs. */
+		__I uint32_t FIFOLVL; /*!< FIFO Level register. Provides the current fill levels of the transmit and receive FIFOs. */
 	};
 
-	__IO uint32_t TER2;				/*!< Transmit Enable Register. Only on LPC177X_8X UART4 and LPC18XX/43XX USART0/2/3. */
+	__IO uint32_t TER2; /*!< Transmit Enable Register. Only on LPC177X_8X UART4 and LPC18XX/43XX USART0/2/3. */
 } LPC_USART_T;
-
 
 /**
  * @brief Macro defines for UART Receive Buffer register
@@ -303,9 +308,9 @@ typedef struct {					/*!< USARTn Structure       */
  * @param	pUART	: Pointer to selected pUART peripheral
  * @return Nothing
  */
-STATIC INLINE void Chip_UART_TXEnable(LPC_USART_T *pUART)
+STATIC INLINE void Chip_UART_TXEnable (LPC_USART_T *pUART)
 {
-    pUART->TER2 = UART_TER2_TXEN;
+	pUART->TER2 = UART_TER2_TXEN;
 }
 
 /**
@@ -313,9 +318,9 @@ STATIC INLINE void Chip_UART_TXEnable(LPC_USART_T *pUART)
  * @param	pUART	: Pointer to selected pUART peripheral
  * @return Nothing
  */
-STATIC INLINE void Chip_UART_TXDisable(LPC_USART_T *pUART)
+STATIC INLINE void Chip_UART_TXDisable (LPC_USART_T *pUART)
 {
-    pUART->TER2 = 0;
+	pUART->TER2 = 0;
 }
 
 /**
@@ -326,9 +331,9 @@ STATIC INLINE void Chip_UART_TXDisable(LPC_USART_T *pUART)
  * @note	This function attempts to place a byte into the UART transmit
  *			FIFO or transmit hold register regard regardless of UART state
  */
-STATIC INLINE void Chip_UART_SendByte(LPC_USART_T *pUART, uint8_t data)
+STATIC INLINE void Chip_UART_SendByte (LPC_USART_T *pUART, uint8_t data)
 {
-	pUART->THR = (uint32_t) data;
+	pUART->THR = (uint32_t)data;
 }
 
 /**
@@ -339,9 +344,9 @@ STATIC INLINE void Chip_UART_SendByte(LPC_USART_T *pUART, uint8_t data)
  *			receive hold register regard regardless of UART state. The
  *			FIFO status should be read first prior to using this function
  */
-STATIC INLINE uint8_t Chip_UART_ReadByte(LPC_USART_T *pUART)
+STATIC INLINE uint8_t Chip_UART_ReadByte (LPC_USART_T *pUART)
 {
-	return (uint8_t) (pUART->RBR & UART_RBR_MASKBIT);
+	return (uint8_t)(pUART->RBR & UART_RBR_MASKBIT);
 }
 
 /**
@@ -354,7 +359,7 @@ STATIC INLINE uint8_t Chip_UART_ReadByte(LPC_USART_T *pUART)
  *			(DLAB) in LCR must be cleared in order to access the IER register.
  *			This function doesn't alter the DLAB state
  */
-STATIC INLINE void Chip_UART_IntEnable(LPC_USART_T *pUART, uint32_t intMask)
+STATIC INLINE void Chip_UART_IntEnable (LPC_USART_T *pUART, uint32_t intMask)
 {
 	pUART->IER |= intMask;
 }
@@ -369,7 +374,7 @@ STATIC INLINE void Chip_UART_IntEnable(LPC_USART_T *pUART, uint32_t intMask)
  *			(DLAB) in LCR must be cleared in order to access the IER register.
  *			This function doesn't alter the DLAB state
  */
-STATIC INLINE void Chip_UART_IntDisable(LPC_USART_T *pUART, uint32_t intMask)
+STATIC INLINE void Chip_UART_IntDisable (LPC_USART_T *pUART, uint32_t intMask)
 {
 	pUART->IER &= ~intMask;
 }
@@ -382,7 +387,7 @@ STATIC INLINE void Chip_UART_IntDisable(LPC_USART_T *pUART, uint32_t intMask)
  *			to determine which interrupts are enabled. You can check
  *			for multiple enabled bits if needed.
  */
-STATIC INLINE uint32_t Chip_UART_GetIntsEnabled(LPC_USART_T *pUART)
+STATIC INLINE uint32_t Chip_UART_GetIntsEnabled (LPC_USART_T *pUART)
 {
 	return pUART->IER;
 }
@@ -392,7 +397,7 @@ STATIC INLINE uint32_t Chip_UART_GetIntsEnabled(LPC_USART_T *pUART)
  * @param	pUART	: Pointer to selected UART peripheral
  * @return	Current pending interrupt status per the IIR register
  */
-STATIC INLINE uint32_t Chip_UART_ReadIntIDReg(LPC_USART_T *pUART)
+STATIC INLINE uint32_t Chip_UART_ReadIntIDReg (LPC_USART_T *pUART)
 {
 	return pUART->IIR;
 }
@@ -407,7 +412,7 @@ STATIC INLINE uint32_t Chip_UART_ReadIntIDReg(LPC_USART_T *pUART)
  *			with a RX trip level of 8 characters, use something like
  *			(UART_FCR_FIFO_EN | UART_FCR_TRG_LEV2)
  */
-STATIC INLINE void Chip_UART_SetupFIFOS(LPC_USART_T *pUART, uint32_t fcr)
+STATIC INLINE void Chip_UART_SetupFIFOS (LPC_USART_T *pUART, uint32_t fcr)
 {
 	pUART->FCR = fcr;
 }
@@ -422,7 +427,7 @@ STATIC INLINE void Chip_UART_SetupFIFOS(LPC_USART_T *pUART, uint32_t fcr)
  *			stop bit, and even (enabled) parity would be
  *			(UART_LCR_WLEN8 | UART_LCR_SBS_1BIT | UART_LCR_PARITY_EN | UART_LCR_PARITY_EVEN)
  */
-STATIC INLINE void Chip_UART_ConfigData(LPC_USART_T *pUART, uint32_t config)
+STATIC INLINE void Chip_UART_ConfigData (LPC_USART_T *pUART, uint32_t config)
 {
 	pUART->LCR = config;
 }
@@ -432,7 +437,7 @@ STATIC INLINE void Chip_UART_ConfigData(LPC_USART_T *pUART, uint32_t config)
  * @param	pUART	: Pointer to selected UART peripheral
  * @return	Nothing
  */
-STATIC INLINE void Chip_UART_EnableDivisorAccess(LPC_USART_T *pUART)
+STATIC INLINE void Chip_UART_EnableDivisorAccess (LPC_USART_T *pUART)
 {
 	pUART->LCR |= UART_LCR_DLAB_EN;
 }
@@ -442,7 +447,7 @@ STATIC INLINE void Chip_UART_EnableDivisorAccess(LPC_USART_T *pUART)
  * @param	pUART	: Pointer to selected UART peripheral
  * @return	Nothing
  */
-STATIC INLINE void Chip_UART_DisableDivisorAccess(LPC_USART_T *pUART)
+STATIC INLINE void Chip_UART_DisableDivisorAccess (LPC_USART_T *pUART)
 {
 	pUART->LCR &= ~UART_LCR_DLAB_EN;
 }
@@ -457,12 +462,11 @@ STATIC INLINE void Chip_UART_DisableDivisorAccess(LPC_USART_T *pUART)
  *			order to access the USART Divisor Latches. This function
  *			doesn't alter the DLAB state.
  */
-STATIC INLINE void Chip_UART_SetDivisorLatches(LPC_USART_T *pUART, uint8_t dll, uint8_t dlm)
+STATIC INLINE void Chip_UART_SetDivisorLatches (LPC_USART_T *pUART, uint8_t dll, uint8_t dlm)
 {
-	pUART->DLL = (uint32_t) dll;
-	pUART->DLM = (uint32_t) dlm;
+	pUART->DLL = (uint32_t)dll;
+	pUART->DLM = (uint32_t)dlm;
 }
-
 
 /**
  * @brief	Return modem control register/status
@@ -471,7 +475,7 @@ STATIC INLINE void Chip_UART_SetDivisorLatches(LPC_USART_T *pUART, uint8_t dll, 
  * @note	Mask bits of the returned status value with UART_MCR_*
  *			definitions for specific statuses.
  */
-STATIC INLINE uint32_t Chip_UART_ReadModemControl(LPC_USART_T *pUART)
+STATIC INLINE uint32_t Chip_UART_ReadModemControl (LPC_USART_T *pUART)
 {
 	return pUART->MCR;
 }
@@ -484,7 +488,7 @@ STATIC INLINE uint32_t Chip_UART_ReadModemControl(LPC_USART_T *pUART)
  * @note	Use an Or'ed value of UART_MCR_* definitions with this
  *			call to set specific options.
  */
-STATIC INLINE void Chip_UART_SetModemControl(LPC_USART_T *pUART, uint32_t mcr)
+STATIC INLINE void Chip_UART_SetModemControl (LPC_USART_T *pUART, uint32_t mcr)
 {
 	pUART->MCR |= mcr;
 }
@@ -497,7 +501,7 @@ STATIC INLINE void Chip_UART_SetModemControl(LPC_USART_T *pUART, uint32_t mcr)
  * @note	Use an Or'ed value of UART_MCR_* definitions with this
  *			call to clear specific options.
  */
-STATIC INLINE void Chip_UART_ClearModemControl(LPC_USART_T *pUART, uint32_t mcr)
+STATIC INLINE void Chip_UART_ClearModemControl (LPC_USART_T *pUART, uint32_t mcr)
 {
 	pUART->MCR &= ~mcr;
 }
@@ -509,7 +513,7 @@ STATIC INLINE void Chip_UART_ClearModemControl(LPC_USART_T *pUART, uint32_t mcr)
  * @note	Mask bits of the returned status value with UART_LSR_*
  *			definitions for specific statuses.
  */
-STATIC INLINE uint32_t Chip_UART_ReadLineStatus(LPC_USART_T *pUART)
+STATIC INLINE uint32_t Chip_UART_ReadLineStatus (LPC_USART_T *pUART)
 {
 	return pUART->LSR;
 }
@@ -521,7 +525,7 @@ STATIC INLINE uint32_t Chip_UART_ReadLineStatus(LPC_USART_T *pUART)
  * @note	Mask bits of the returned status value with UART_MSR_*
  *			definitions for specific statuses.
  */
-STATIC INLINE uint32_t Chip_UART_ReadModemStatus(LPC_USART_T *pUART)
+STATIC INLINE uint32_t Chip_UART_ReadModemStatus (LPC_USART_T *pUART)
 {
 	return pUART->MSR;
 }
@@ -532,9 +536,9 @@ STATIC INLINE uint32_t Chip_UART_ReadModemStatus(LPC_USART_T *pUART)
  * @param	data	: Byte value to write
  * @return	Nothing
  */
-STATIC INLINE void Chip_UART_SetScratch(LPC_USART_T *pUART, uint8_t data)
+STATIC INLINE void Chip_UART_SetScratch (LPC_USART_T *pUART, uint8_t data)
 {
-	pUART->SCR = (uint32_t) data;
+	pUART->SCR = (uint32_t)data;
 }
 
 /**
@@ -542,9 +546,9 @@ STATIC INLINE void Chip_UART_SetScratch(LPC_USART_T *pUART, uint8_t data)
  * @param	pUART	: Pointer to selected UART peripheral
  * @return	Byte value read from scratchpad register
  */
-STATIC INLINE uint8_t Chip_UART_ReadScratch(LPC_USART_T *pUART)
+STATIC INLINE uint8_t Chip_UART_ReadScratch (LPC_USART_T *pUART)
 {
-	return (uint8_t) (pUART->SCR & 0xFF);
+	return (uint8_t)(pUART->SCR & 0xFF);
 }
 
 /**
@@ -555,7 +559,7 @@ STATIC INLINE uint8_t Chip_UART_ReadScratch(LPC_USART_T *pUART)
  * @note	Use an Or'ed value of UART_ACR_* definitions with this
  *			call to set specific options.
  */
-STATIC INLINE void Chip_UART_SetAutoBaudReg(LPC_USART_T *pUART, uint32_t acr)
+STATIC INLINE void Chip_UART_SetAutoBaudReg (LPC_USART_T *pUART, uint32_t acr)
 {
 	pUART->ACR |= acr;
 }
@@ -568,7 +572,7 @@ STATIC INLINE void Chip_UART_SetAutoBaudReg(LPC_USART_T *pUART, uint32_t acr)
  * @note	Use an Or'ed value of UART_ACR_* definitions with this
  *			call to clear specific options.
  */
-STATIC INLINE void Chip_UART_ClearAutoBaudReg(LPC_USART_T *pUART, uint32_t acr)
+STATIC INLINE void Chip_UART_ClearAutoBaudReg (LPC_USART_T *pUART, uint32_t acr)
 {
 	pUART->ACR &= ~acr;
 }
@@ -581,7 +585,7 @@ STATIC INLINE void Chip_UART_ClearAutoBaudReg(LPC_USART_T *pUART, uint32_t acr)
  * @note	Use an Or'ed value of UART_RS485CTRL_* definitions with this
  *			call to set specific options.
  */
-STATIC INLINE void Chip_UART_SetRS485Flags(LPC_USART_T *pUART, uint32_t ctrl)
+STATIC INLINE void Chip_UART_SetRS485Flags (LPC_USART_T *pUART, uint32_t ctrl)
 {
 	pUART->RS485CTRL |= ctrl;
 }
@@ -594,7 +598,7 @@ STATIC INLINE void Chip_UART_SetRS485Flags(LPC_USART_T *pUART, uint32_t ctrl)
  * @note	Use an Or'ed value of UART_RS485CTRL_* definitions with this
  *			call to clear specific options.
  */
-STATIC INLINE void Chip_UART_ClearRS485Flags(LPC_USART_T *pUART, uint32_t ctrl)
+STATIC INLINE void Chip_UART_ClearRS485Flags (LPC_USART_T *pUART, uint32_t ctrl)
 {
 	pUART->RS485CTRL &= ~ctrl;
 }
@@ -605,9 +609,9 @@ STATIC INLINE void Chip_UART_ClearRS485Flags(LPC_USART_T *pUART, uint32_t ctrl)
  * @param	addr	: Address match value for RS-485/EIA-485 mode
  * @return	Nothing
  */
-STATIC INLINE void Chip_UART_SetRS485Addr(LPC_USART_T *pUART, uint8_t addr)
+STATIC INLINE void Chip_UART_SetRS485Addr (LPC_USART_T *pUART, uint8_t addr)
 {
-	pUART->RS485ADRMATCH = (uint32_t) addr;
+	pUART->RS485ADRMATCH = (uint32_t)addr;
 }
 
 /**
@@ -615,9 +619,9 @@ STATIC INLINE void Chip_UART_SetRS485Addr(LPC_USART_T *pUART, uint8_t addr)
  * @param	pUART	: Pointer to selected UART peripheral
  * @return	Address match value for RS-485/EIA-485 mode
  */
-STATIC INLINE uint8_t Chip_UART_GetRS485Addr(LPC_USART_T *pUART)
+STATIC INLINE uint8_t Chip_UART_GetRS485Addr (LPC_USART_T *pUART)
 {
-	return (uint8_t) (pUART->RS485ADRMATCH & 0xFF);
+	return (uint8_t)(pUART->RS485ADRMATCH & 0xFF);
 }
 
 /**
@@ -628,9 +632,9 @@ STATIC INLINE uint8_t Chip_UART_GetRS485Addr(LPC_USART_T *pUART)
  * @note	This delay time is in periods of the baud clock. Any delay
  *			time from 0 to 255 bit times may be programmed.
  */
-STATIC INLINE void Chip_UART_SetRS485Delay(LPC_USART_T *pUART, uint8_t dly)
+STATIC INLINE void Chip_UART_SetRS485Delay (LPC_USART_T *pUART, uint8_t dly)
 {
-	pUART->RS485DLY = (uint32_t) dly;
+	pUART->RS485DLY = (uint32_t)dly;
 }
 
 /**
@@ -640,9 +644,9 @@ STATIC INLINE void Chip_UART_SetRS485Delay(LPC_USART_T *pUART, uint8_t dly)
  * @note	This delay time is in periods of the baud clock. Any delay
  *			time from 0 to 255 bit times may be programmed.
  */
-STATIC INLINE uint8_t Chip_UART_GetRS485Delay(LPC_USART_T *pUART)
+STATIC INLINE uint8_t Chip_UART_GetRS485Delay (LPC_USART_T *pUART)
 {
-	return (uint8_t) (pUART->RS485DLY & 0xFF);
+	return (uint8_t)(pUART->RS485DLY & 0xFF);
 }
 
 /**
@@ -650,22 +654,21 @@ STATIC INLINE uint8_t Chip_UART_GetRS485Delay(LPC_USART_T *pUART)
  * @param	pUART		: Pointer to selected pUART peripheral
  * @return	Nothing
  */
-void Chip_UART_Init(LPC_USART_T *pUART);
+void Chip_UART_Init (LPC_USART_T *pUART);
 
 /**
  * @brief	De-initializes the pUART peripheral.
  * @param	pUART		: Pointer to selected pUART peripheral
  * @return	Nothing
  */
-void Chip_UART_DeInit(LPC_USART_T *pUART);
-
+void Chip_UART_DeInit (LPC_USART_T *pUART);
 
 /**
  * @brief	Check whether if UART is busy or not
  * @param	pUART	: Pointer to selected pUART peripheral
  * @return	RESET if UART is not busy, otherwise return SET
  */
-FlagStatus Chip_UART_CheckBusy(LPC_USART_T *pUART);
+FlagStatus Chip_UART_CheckBusy (LPC_USART_T *pUART);
 
 /**
  * @brief	Transmit a byte array through the UART peripheral (non-blocking)
@@ -678,7 +681,7 @@ FlagStatus Chip_UART_CheckBusy(LPC_USART_T *pUART);
  *			will not block in the FIFO is full. The actual number of bytes
  *			placed into the FIFO is returned. This function ignores errors.
  */
-int Chip_UART_Send(LPC_USART_T *pUART, const void *data, int numBytes);
+int Chip_UART_Send (LPC_USART_T *pUART, const void *data, int numBytes);
 
 /**
  * @brief	Read data through the UART peripheral (non-blocking)
@@ -690,7 +693,7 @@ int Chip_UART_Send(LPC_USART_T *pUART, const void *data, int numBytes);
  *			all the data has been read or the passed buffer is completely full.
  *			This function will not block. This function ignores errors.
  */
-int Chip_UART_Read(LPC_USART_T *pUART, void *data, int numBytes);
+int Chip_UART_Read (LPC_USART_T *pUART, void *data, int numBytes);
 
 /**
  * @brief	Sets best dividers to get a target bit rate (without fractional divider)
@@ -698,7 +701,7 @@ int Chip_UART_Read(LPC_USART_T *pUART, void *data, int numBytes);
  * @param	baudrate	: Target baud rate (baud rate = bit rate)
  * @return	The actual baud rate, or 0 if no rate can be found
  */
-uint32_t Chip_UART_SetBaud(LPC_USART_T *pUART, uint32_t baudrate);
+uint32_t Chip_UART_SetBaud (LPC_USART_T *pUART, uint32_t baudrate);
 
 /**
  * @brief	Sets best dividers to get a target bit rate (with fractional divider)
@@ -711,7 +714,7 @@ uint32_t Chip_UART_SetBaud(LPC_USART_T *pUART, uint32_t baudrate);
  * 			using this API. Fractional dividers can only be used for rates
  * 			lower than (clk / 48) where @a clk is the base clock of the UART.
  */
-uint32_t Chip_UART_SetBaudFDR(LPC_USART_T *pUART, uint32_t baud);
+uint32_t Chip_UART_SetBaudFDR (LPC_USART_T *pUART, uint32_t baud);
 
 /**
  * @brief	Transmit a byte array through the UART peripheral (blocking)
@@ -722,7 +725,7 @@ uint32_t Chip_UART_SetBaudFDR(LPC_USART_T *pUART, uint32_t baud);
  * @note	This function will send or place all bytes into the transmit
  *			FIFO. This function will block until the last bytes are in the FIFO.
  */
-int Chip_UART_SendBlocking(LPC_USART_T *pUART, const void *data, int numBytes);
+int Chip_UART_SendBlocking (LPC_USART_T *pUART, const void *data, int numBytes);
 
 /**
  * @brief	Read data through the UART peripheral (blocking)
@@ -734,9 +737,9 @@ int Chip_UART_SendBlocking(LPC_USART_T *pUART, const void *data, int numBytes);
  *			buffer is completely full. The function will block until full.
  *			This function ignores errors.
  */
-int Chip_UART_ReadBlocking(LPC_USART_T *pUART, void *data, int numBytes);
+int Chip_UART_ReadBlocking (LPC_USART_T *pUART, void *data, int numBytes);
 
-int Chip_UART_ReadBlocking_JP(LPC_USART_T *pUART, void *data, int numBytes);
+int Chip_UART_ReadBlocking_JP (LPC_USART_T *pUART, void *data, int numBytes);
 
 /**
  * @brief	UART receive-only interrupt handler for ring buffers
@@ -747,7 +750,7 @@ int Chip_UART_ReadBlocking_JP(LPC_USART_T *pUART, void *data, int numBytes);
  *			of data transfer, the UART interrupt should call this
  *			function for a receive based interrupt status.
  */
-void Chip_UART_RXIntHandlerRB(LPC_USART_T *pUART, RINGBUFF_T *pRB);
+void Chip_UART_RXIntHandlerRB (LPC_USART_T *pUART, RINGBUFF_T *pRB);
 
 /**
  * @brief	UART transmit-only interrupt handler for ring buffers
@@ -758,7 +761,7 @@ void Chip_UART_RXIntHandlerRB(LPC_USART_T *pUART, RINGBUFF_T *pRB);
  *			of data transfer, the UART interrupt should call this
  *			function for a transmit based interrupt status.
  */
-void Chip_UART_TXIntHandlerRB(LPC_USART_T *pUART, RINGBUFF_T *pRB);
+void Chip_UART_TXIntHandlerRB (LPC_USART_T *pUART, RINGBUFF_T *pRB);
 
 /**
  * @brief	Populate a transmit ring buffer and start UART transmit
@@ -771,7 +774,7 @@ void Chip_UART_TXIntHandlerRB(LPC_USART_T *pUART, RINGBUFF_T *pRB);
  *			transfer. If the number of bytes returned is less than the
  *			number of bytes to send, the ring buffer is considered full.
  */
-uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data, int bytes);
+uint32_t Chip_UART_SendRB (LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data, int bytes);
 
 /**
  * @brief	Copy data from a receive ring buffer
@@ -784,7 +787,7 @@ uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data,
  *			the maximum passed buffer size. Returns 0 if there is
  *			no data in the ring buffer.
  */
-int Chip_UART_ReadRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes);
+int Chip_UART_ReadRB (LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes);
 
 /**
  * @brief	UART receive/transmit interrupt handler for ring buffers
@@ -796,14 +799,14 @@ int Chip_UART_ReadRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes)
  *			handler for support of a ring buffer implementation for
  *			transmit and receive.
  */
-void Chip_UART_IRQRBHandler(LPC_USART_T *pUART, RINGBUFF_T *pRXRB, RINGBUFF_T *pTXRB);
+void Chip_UART_IRQRBHandler (LPC_USART_T *pUART, RINGBUFF_T *pRXRB, RINGBUFF_T *pTXRB);
 
 /**
  * @brief	Returns the Auto Baud status
  * @param	pUART	: Pointer to selected UART peripheral
  * @return	RESET if autobaud not completed, SET if autobaud completed
  */
-FlagStatus Chip_UART_GetABEOStatus(LPC_USART_T *pUART);
+FlagStatus Chip_UART_GetABEOStatus (LPC_USART_T *pUART);
 
 /**
  * @brief	Start/stop autobaud operation
@@ -814,8 +817,8 @@ FlagStatus Chip_UART_GetABEOStatus(LPC_USART_T *pUART);
  *                          stop autobaud operation
  * @return	Nothing
  */
-void Chip_UART_ABCmd(LPC_USART_T *pUART, uint32_t mode, bool autorestart,
-        FunctionalState NewState);
+void Chip_UART_ABCmd (LPC_USART_T *pUART, uint32_t mode, bool autorestart,
+	FunctionalState NewState);
 
 /**
  * @}

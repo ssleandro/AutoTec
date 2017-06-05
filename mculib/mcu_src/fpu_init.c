@@ -60,7 +60,7 @@
  ****************************************************************************/
 
 /* Early initialization of the FPU */
-void fpuInit(void)
+void fpuInit (void)
 {
 #if __FPU_PRESENT != 0
 	// from arm trm manual:
@@ -86,7 +86,8 @@ void fpuInit(void)
 
 	vfpPresent = ((SCB_MVFR0_RESET == Mvfr0) && (SCB_MVFR1_RESET == Mvfr1));
 
-	if (vfpPresent) {
+	if (vfpPresent)
+	{
 		Cpacr = *regCpacr;
 		Cpacr |= (0xF << 20);
 		*regCpacr = Cpacr;	// enable CP10 and CP11 for full access

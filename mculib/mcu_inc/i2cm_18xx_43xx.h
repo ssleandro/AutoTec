@@ -35,7 +35,8 @@
 #include "i2c_common_18xx_43xx.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup I2CM_18XX_43XX CHIP: LPC18xx/43xx I2C master-only driver
@@ -89,16 +90,17 @@ extern "C" {
 /**
  * @brief Master transfer data structure definitions
  */
-typedef struct {
-	uint8_t slaveAddr;		/*!< 7-bit I2C Slave address */
-	uint8_t options;		/*!< Options for transfer*/
-	uint16_t status;		/*!< Status of the current I2C transfer */
-	uint16_t txSz;			/*!< Number of bytes in transmit array,
-							   if 0 only receive transfer will be carried on */
-	uint16_t rxSz;			/*!< Number of bytes to received,
-							   if 0 only transmission we be carried on */
-	const uint8_t *txBuff;	/*!< Pointer to array of bytes to be transmitted */
-	uint8_t *rxBuff;		/*!< Pointer memory where bytes received from I2C be stored */
+typedef struct
+{
+	uint8_t slaveAddr; /*!< 7-bit I2C Slave address */
+	uint8_t options; /*!< Options for transfer*/
+	uint16_t status; /*!< Status of the current I2C transfer */
+	uint16_t txSz; /*!< Number of bytes in transmit array,
+	 if 0 only receive transfer will be carried on */
+	uint16_t rxSz; /*!< Number of bytes to received,
+	 if 0 only transmission we be carried on */
+	const uint8_t *txBuff; /*!< Pointer to array of bytes to be transmitted */
+	uint8_t *rxBuff; /*!< Pointer memory where bytes received from I2C be stored */
 } I2CM_XFER_T;
 
 /**
@@ -107,7 +109,7 @@ typedef struct {
  * @return	Nothing
  * @note	This function enables the I2C clock.
  */
-void Chip_I2CM_Init(LPC_I2C_T *pI2C);
+void Chip_I2CM_Init (LPC_I2C_T *pI2C);
 
 /**
  * @brief	Shutdown I2C Interface
@@ -115,7 +117,7 @@ void Chip_I2CM_Init(LPC_I2C_T *pI2C);
  * @return	Nothing
  * @note	This function disables the I2C clock.
  */
-void Chip_I2CM_DeInit(LPC_I2C_T *pI2C);
+void Chip_I2CM_DeInit (LPC_I2C_T *pI2C);
 
 /**
  * @brief	Sets HIGH and LOW duty cycle registers
@@ -145,7 +147,7 @@ static INLINE void Chip_I2CM_SetDutyCycle(LPC_I2C_T *pI2C, uint16_t sclH, uint16
  *          IOCON registers corresponding to I2C pads should be updated
  *          according to the bus mode.
  */
-void Chip_I2CM_SetBusSpeed(LPC_I2C_T *pI2C, uint32_t busSpeed);
+void Chip_I2CM_SetBusSpeed (LPC_I2C_T *pI2C, uint32_t busSpeed);
 
 /**
  * @brief	Transmit START or Repeat-START signal on I2C bus
@@ -237,10 +239,12 @@ static INLINE void Chip_I2CM_SendStop(LPC_I2C_T *pI2C)
 static INLINE void Chip_I2CM_ForceStart(LPC_I2C_T *pI2C)
 {
 	/* check if we are pending on start */
-	if (pI2C->CONSET & I2C_CON_STA) {
+	if (pI2C->CONSET & I2C_CON_STA)
+	{
 		pI2C->CONSET = I2C_CON_STO;
 	}
-	else {
+	else
+	{
 		Chip_I2CM_SendStart(pI2C);
 	}
 }
@@ -326,7 +330,7 @@ static INLINE void Chip_I2CM_Disable(LPC_I2C_T *pI2C)
  * The parameter @a xfer should be same as the one passed to Chip_I2CM_Xfer()
  * routine.
  */
-uint32_t Chip_I2CM_XferHandler(LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
+uint32_t Chip_I2CM_XferHandler (LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
 
 /**
  * @brief	Transmit and Receive data in master mode
@@ -366,7 +370,7 @@ uint32_t Chip_I2CM_XferHandler(LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
  *              S Addr Rd [A] [rxBuff0] A [rxBuff1] A ... [rxBuffN] NA P
  *
  */
-void Chip_I2CM_Xfer(LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
+void Chip_I2CM_Xfer (LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
 
 /**
  * @brief	Transmit and Receive data in master mode
@@ -376,7 +380,7 @@ void Chip_I2CM_Xfer(LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
  * @note
  * This function operates same as Chip_I2CM_Xfer(), but is a blocking call.
  */
-uint32_t Chip_I2CM_XferBlocking(LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
+uint32_t Chip_I2CM_XferBlocking (LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
 
 /**
  * @brief	Write given buffer of data to I2C interface
@@ -391,7 +395,7 @@ uint32_t Chip_I2CM_XferBlocking(LPC_I2C_T *pI2C, I2CM_XFER_T *xfer);
  *
  *          S Data0 [A] Data1 [A] ... DataN [A]
  */
-uint32_t Chip_I2CM_Write(LPC_I2C_T *pI2C, const uint8_t *buff, uint32_t len);
+uint32_t Chip_I2CM_Write (LPC_I2C_T *pI2C, const uint8_t *buff, uint32_t len);
 
 /**
  * @brief	Read data from I2C slave to given buffer
@@ -406,13 +410,13 @@ uint32_t Chip_I2CM_Write(LPC_I2C_T *pI2C, const uint8_t *buff, uint32_t len);
  *
  *          S [Data0] A [Data1] A ... [DataN] A
  */
-uint32_t Chip_I2CM_Read(LPC_I2C_T *pI2C, uint8_t *buff, uint32_t len);
+uint32_t Chip_I2CM_Read (LPC_I2C_T *pI2C, uint8_t *buff, uint32_t len);
 
 /**
  * @}
  */
 
- #ifdef __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

@@ -28,7 +28,8 @@
 #define __SCU_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup SCU_18XX_43XX CHIP: LPC18xx/43xx SCU Driver (configures pin functions)
@@ -36,31 +37,32 @@ extern "C" {
  * @{
  */
 
-
 /**
  * @brief Array of pin definitions passed to Chip_SCU_SetPinMuxing() must be in this format
  */
-typedef struct {
-	uint8_t pingrp;		/* Pin group */
-	uint8_t pinnum;		/* Pin number */
-	uint16_t modefunc;	/* Pin mode and function for SCU */
+typedef struct
+{
+	uint8_t pingrp; /* Pin group */
+	uint8_t pinnum; /* Pin number */
+	uint16_t modefunc; /* Pin mode and function for SCU */
 } PINMUX_GRP_T;
 
 /**
  * @brief System Control Unit register block
  */
-typedef struct {
-	__IO uint32_t  SFSP[16][32];
-	__I  uint32_t  RESERVED0[256];
-	__IO uint32_t  SFSCLK[4];			/*!< Pin configuration register for pins CLK0-3 */
-	__I  uint32_t  RESERVED16[28];
-	__IO uint32_t  SFSUSB;				/*!< Pin configuration register for USB */
-	__IO uint32_t  SFSI2C0;				/*!< Pin configuration register for I2C0-bus pins */
-	__IO uint32_t  ENAIO[3];			/*!< Analog function select registerS */
-	__I  uint32_t  RESERVED17[27];
-	__IO uint32_t  EMCDELAYCLK;			/*!< EMC clock delay register */
-	__I  uint32_t  RESERVED18[63];
-	__IO uint32_t  PINTSEL[2];			/*!< Pin interrupt select register for pin int 0 to 3 index 0, 4 to 7 index 1. */
+typedef struct
+{
+	__IO uint32_t SFSP[16][32];
+	__I uint32_t RESERVED0[256];
+	__IO uint32_t SFSCLK[4]; /*!< Pin configuration register for pins CLK0-3 */
+	__I uint32_t RESERVED16[28];
+	__IO uint32_t SFSUSB; /*!< Pin configuration register for USB */
+	__IO uint32_t SFSI2C0; /*!< Pin configuration register for I2C0-bus pins */
+	__IO uint32_t ENAIO[3]; /*!< Analog function select registerS */
+	__I uint32_t RESERVED17[27];
+	__IO uint32_t EMCDELAYCLK; /*!< EMC clock delay register */
+	__I uint32_t RESERVED18[63];
+	__IO uint32_t PINTSEL[2]; /*!< Pin interrupt select register for pin int 0 to 3 index 0, 4 to 7 index 1. */
 } LPC_SCU_T;
 
 /**
@@ -132,7 +134,7 @@ typedef struct {
  * @note	Do not use for clock pins (SFSCLK0 .. SFSCLK4). Use
  * Chip_SCU_ClockPinMux() function for SFSCLKx clock pins.
  */
-STATIC INLINE void Chip_SCU_PinMuxSet(uint8_t port, uint8_t pin, uint16_t modefunc)
+STATIC INLINE void Chip_SCU_PinMuxSet (uint8_t port, uint8_t pin, uint16_t modefunc)
 {
 	LPC_SCU->SFSP[port][pin] = modefunc;
 }
@@ -147,9 +149,9 @@ STATIC INLINE void Chip_SCU_PinMuxSet(uint8_t port, uint8_t pin, uint16_t modefu
  * @note	Do not use for clock pins (SFSCLK0 .. SFSCLK4). Use
  * Chip_SCU_ClockPinMux() function for SFSCLKx clock pins.
  */
-STATIC INLINE void Chip_SCU_PinMux(uint8_t port, uint8_t pin, uint16_t mode, uint8_t func)
+STATIC INLINE void Chip_SCU_PinMux (uint8_t port, uint8_t pin, uint16_t mode, uint8_t func)
 {
-	Chip_SCU_PinMuxSet(port, pin, (mode | (uint16_t) func));
+	Chip_SCU_PinMuxSet(port, pin, (mode | (uint16_t)func));
 }
 
 /**
@@ -158,9 +160,9 @@ STATIC INLINE void Chip_SCU_PinMux(uint8_t port, uint8_t pin, uint16_t mode, uin
  * @param	modefunc	: OR'ed values or type SCU_MODE_*
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_ClockPinMuxSet(uint8_t clknum, uint16_t modefunc)
+STATIC INLINE void Chip_SCU_ClockPinMuxSet (uint8_t clknum, uint16_t modefunc)
 {
-	LPC_SCU->SFSCLK[clknum] = (uint32_t) modefunc;
+	LPC_SCU->SFSCLK[clknum] = (uint32_t)modefunc;
 }
 
 /**
@@ -170,9 +172,9 @@ STATIC INLINE void Chip_SCU_ClockPinMuxSet(uint8_t clknum, uint16_t modefunc)
  * @param	func	: Pin function, value of type SCU_MODE_FUNC0 to SCU_MODE_FUNC7
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_ClockPinMux(uint8_t clknum, uint16_t mode, uint8_t func)
+STATIC INLINE void Chip_SCU_ClockPinMux (uint8_t clknum, uint16_t mode, uint8_t func)
 {
-	LPC_SCU->SFSCLK[clknum] = ((uint32_t) mode | (uint32_t) func);
+	LPC_SCU->SFSCLK[clknum] = ((uint32_t)mode | (uint32_t)func);
 }
 
 /**
@@ -182,7 +184,7 @@ STATIC INLINE void Chip_SCU_ClockPinMux(uint8_t clknum, uint16_t mode, uint8_t f
  * @param	PinNum	: GPIO pin number Interrupt , should be: 0 to 31
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_GPIOIntPinSel(uint8_t PortSel, uint8_t PortNum, uint8_t PinNum)
+STATIC INLINE void Chip_SCU_GPIOIntPinSel (uint8_t PortSel, uint8_t PortNum, uint8_t PinNum)
 {
 	int32_t of = (PortSel & 3) << 3;
 	uint32_t val = (((PortNum & 0x7) << 5) | (PinNum & 0x1F)) << of;
@@ -196,7 +198,7 @@ STATIC INLINE void Chip_SCU_GPIOIntPinSel(uint8_t PortSel, uint8_t PortNum, uint
  *                  - I2C0_FAST_MODE_PLUS: Fast-mode Plus transmit
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_I2C0PinConfig(uint32_t I2C0Mode)
+STATIC INLINE void Chip_SCU_I2C0PinConfig (uint32_t I2C0Mode)
 {
 	LPC_SCU->SFSI2C0 = I2C0Mode;
 }
@@ -207,7 +209,7 @@ STATIC INLINE void Chip_SCU_I2C0PinConfig(uint32_t I2C0Mode)
  * @param	channel	: ADC channel
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_ADC_Channel_Config(uint32_t ADC_ID, uint8_t channel)
+STATIC INLINE void Chip_SCU_ADC_Channel_Config (uint32_t ADC_ID, uint8_t channel)
 {
 	LPC_SCU->ENAIO[ADC_ID] |= 1UL << channel;
 }
@@ -216,7 +218,7 @@ STATIC INLINE void Chip_SCU_ADC_Channel_Config(uint32_t ADC_ID, uint8_t channel)
  * @brief	DAC Pin Configuration
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_DAC_Analog_Config(void)
+STATIC INLINE void Chip_SCU_DAC_Analog_Config (void)
 {
 	/*Enable analog function DAC on pin P4_4*/
 	LPC_SCU->ENAIO[2] |= 1;
@@ -228,10 +230,11 @@ STATIC INLINE void Chip_SCU_DAC_Analog_Config(void)
  * @param	arrayLength : Number of entries in pinArray
  * @return	Nothing
  */
-STATIC INLINE void Chip_SCU_SetPinMuxing(const PINMUX_GRP_T *pinArray, uint32_t arrayLength)
+STATIC INLINE void Chip_SCU_SetPinMuxing (const PINMUX_GRP_T *pinArray, uint32_t arrayLength)
 {
 	uint32_t ix;
-	for (ix = 0; ix < arrayLength; ix++ ) {
+	for (ix = 0; ix < arrayLength; ix++)
+	{
 		Chip_SCU_PinMuxSet(pinArray[ix].pingrp, pinArray[ix].pinnum, pinArray[ix].modefunc);
 	}
 }

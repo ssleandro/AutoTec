@@ -46,33 +46,33 @@
 
 #include "../../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 #include "../../../version/ver_psp_fat_sl.h"
 #if VER_PSP_FAT_FAT_SL_MAJOR != 1 || VER_PSP_FAT_FAT_SL_MINOR != 2
- #error Incompatible PSP_FAT_FAT_SL version number!
+#error Incompatible PSP_FAT_FAT_SL version number!
 #endif
 
 #define PRINT_BUFFER_SIZE 64
 
-extern void __printbuf ( char * buf, int len );
+extern void __printbuf (char * buf, int len);
 
 /* Use to display text (printf). */
-void _f_dump ( char * s )
+void _f_dump (char * s)
 {
 //  printf( "%s\r\n", s );
 }
 
 /* Use to display test result (printf). */
-uint8_t _f_result ( int linenum, uint32_t result )
+uint8_t _f_result (int linenum, uint32_t result)
 {
 //  printf( "Error:%d/%ld\r\n", linenum, result );
-  return 0;
+	return 0;
 }
 
 /* Use to build file system (mount). */
-uint8_t _f_poweron ( void )
+uint8_t _f_poweron (void)
 {
-  f_delvolume();
-  return f_initvolume( initfunc_span );
+	f_delvolume();
+	return f_initvolume(initfunc_span);
 }

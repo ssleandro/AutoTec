@@ -44,12 +44,11 @@
 
 #include "../../../version/ver_psp_rtc.h"
 #if VER_PSP_RTC_MAJOR != 1
- #error "VER_PSP_RTC_MAJOR invalid"
+#error "VER_PSP_RTC_MAJOR invalid"
 #endif
 #if VER_PSP_RTC_MINOR != 0
- #error "VER_PSP_RTC_MINOR invalid"
+#error "VER_PSP_RTC_MINOR invalid"
 #endif
-
 
 /****************************************************************************
  *
@@ -66,17 +65,17 @@
  * p_timedate - pointer where to store time and date
  *
  ***************************************************************************/
-void psp_getcurrenttimedate ( t_psp_timedate * p_timedate )
+void psp_getcurrenttimedate (t_psp_timedate * p_timedate)
 {
-  if ( p_timedate != NULL )
-  {
-    p_timedate->sec = 0;
-    p_timedate->min = 0;
-    p_timedate->hour = 12u;
+	if (p_timedate != NULL)
+	{
+		p_timedate->sec = 0;
+		p_timedate->min = 0;
+		p_timedate->hour = 12u;
 
-    p_timedate->day = 1u;
-    p_timedate->month = 1u;
-    p_timedate->year = 1980u;
-  }
+		p_timedate->day = 1u;
+		p_timedate->month = 1u;
+		p_timedate->year = 1980u;
+	}
 } /* psp_getcurrenttimedate */
 

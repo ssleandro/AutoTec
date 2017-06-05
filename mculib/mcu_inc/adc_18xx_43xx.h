@@ -33,7 +33,8 @@
 #define __ADC_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup ADC_18XX_43XX CHIP:  LPC18xx/43xx A/D conversion driver
@@ -48,13 +49,14 @@ extern "C" {
 /**
  * @brief 10 or 12-bit ADC register block structure
  */
-typedef struct {					/*!< ADCn Structure */
-	__IO uint32_t CR;				/*!< A/D Control Register. The AD0CR register must be written to select the operating mode before A/D conversion can occur. */
-	__I  uint32_t GDR;				/*!< A/D Global Data Register. Contains the result of the most recent A/D conversion. */
-	__I  uint32_t RESERVED0;
-	__IO uint32_t INTEN;			/*!< A/D Interrupt Enable Register. This register contains enable bits that allow the DONE flag of each A/D channel to be included or excluded from contributing to the generation of an A/D interrupt. */
-	__I  uint32_t DR[8];			/*!< A/D Channel Data Register. This register contains the result of the most recent conversion completed on channel n. */
-	__I  uint32_t STAT;				/*!< A/D Status Register. This register contains DONE and OVERRUN flags for all of the A/D channels, as well as the A/D interrupt flag. */
+typedef struct
+{ /*!< ADCn Structure */
+	__IO uint32_t CR; /*!< A/D Control Register. The AD0CR register must be written to select the operating mode before A/D conversion can occur. */
+	__I uint32_t GDR; /*!< A/D Global Data Register. Contains the result of the most recent A/D conversion. */
+	__I uint32_t RESERVED0;
+	__IO uint32_t INTEN; /*!< A/D Interrupt Enable Register. This register contains enable bits that allow the DONE flag of each A/D channel to be included or excluded from contributing to the generation of an A/D interrupt. */
+	__I uint32_t DR[8]; /*!< A/D Channel Data Register. This register contains the result of the most recent conversion completed on channel n. */
+	__I uint32_t STAT; /*!< A/D Status Register. This register contains DONE and OVERRUN flags for all of the A/D channels, as well as the A/D interrupt flag. */
 } LPC_ADC_T;
 
 /**
@@ -83,58 +85,64 @@ typedef struct {					/*!< ADCn Structure */
 /**
  * @brief	ADC status register used for IP drivers
  */
-typedef enum IP_ADC_STATUS {
-	ADC_DR_DONE_STAT,	/*!< ADC data register staus */
+typedef enum IP_ADC_STATUS
+{
+	ADC_DR_DONE_STAT, /*!< ADC data register staus */
 	ADC_DR_OVERRUN_STAT,/*!< ADC data overrun staus */
-	ADC_DR_ADINT_STAT	/*!< ADC interrupt status */
+	ADC_DR_ADINT_STAT /*!< ADC interrupt status */
 } ADC_STATUS_T;
 
 /** The channels on one ADC peripheral*/
-typedef enum CHIP_ADC_CHANNEL {
-	ADC_CH0 = 0,	/**< ADC channel 0 */
-	ADC_CH1,		/**< ADC channel 1 */
-	ADC_CH2,		/**< ADC channel 2 */
-	ADC_CH3,		/**< ADC channel 3 */
-	ADC_CH4,		/**< ADC channel 4 */
-	ADC_CH5,		/**< ADC channel 5 */
-	ADC_CH6,		/**< ADC channel 6 */
-	ADC_CH7,		/**< ADC channel 7 */
+typedef enum CHIP_ADC_CHANNEL
+{
+	ADC_CH0 = 0, /**< ADC channel 0 */
+	ADC_CH1, /**< ADC channel 1 */
+	ADC_CH2, /**< ADC channel 2 */
+	ADC_CH3, /**< ADC channel 3 */
+	ADC_CH4, /**< ADC channel 4 */
+	ADC_CH5, /**< ADC channel 5 */
+	ADC_CH6, /**< ADC channel 6 */
+	ADC_CH7, /**< ADC channel 7 */
 } ADC_CHANNEL_T;
 
 /** The number of bits of accuracy of the result in the LS bits of ADDR*/
-typedef enum CHIP_ADC_RESOLUTION {
-	ADC_10BITS = 0,		/**< ADC 10 bits */
-	ADC_9BITS,			/**< ADC 9 bits  */
-	ADC_8BITS,			/**< ADC 8 bits  */
-	ADC_7BITS,			/**< ADC 7 bits  */
-	ADC_6BITS,			/**< ADC 6 bits  */
-	ADC_5BITS,			/**< ADC 5 bits  */
-	ADC_4BITS,			/**< ADC 4 bits  */
-	ADC_3BITS,			/**< ADC 3 bits  */
+typedef enum CHIP_ADC_RESOLUTION
+{
+	ADC_10BITS = 0, /**< ADC 10 bits */
+	ADC_9BITS, /**< ADC 9 bits  */
+	ADC_8BITS, /**< ADC 8 bits  */
+	ADC_7BITS, /**< ADC 7 bits  */
+	ADC_6BITS, /**< ADC 6 bits  */
+	ADC_5BITS, /**< ADC 5 bits  */
+	ADC_4BITS, /**< ADC 4 bits  */
+	ADC_3BITS, /**< ADC 3 bits  */
 } ADC_RESOLUTION_T;
 
 /** Edge configuration, which controls rising or falling edge on the selected signal for the start of a conversion */
-typedef enum CHIP_ADC_EDGE_CFG {
-	ADC_TRIGGERMODE_RISING = 0,		/**< Trigger event: rising edge */
-	ADC_TRIGGERMODE_FALLING,		/**< Trigger event: falling edge */
+typedef enum CHIP_ADC_EDGE_CFG
+{
+	ADC_TRIGGERMODE_RISING = 0, /**< Trigger event: rising edge */
+	ADC_TRIGGERMODE_FALLING, /**< Trigger event: falling edge */
 } ADC_EDGE_CFG_T;
 
 /** Start mode, which controls the start of an A/D conversion when the BURST bit is 0. */
-typedef enum CHIP_ADC_START_MODE {
+typedef enum CHIP_ADC_START_MODE
+{
 	ADC_NO_START = 0,
-	ADC_START_NOW,			/*!< Start conversion now */
-	ADC_START_ON_CTOUT15,	/*!< Start conversion when the edge selected by bit 27 occurs on CTOUT_15 */
-	ADC_START_ON_CTOUT8,	/*!< Start conversion when the edge selected by bit 27 occurs on CTOUT_8 */
-	ADC_START_ON_ADCTRIG0,	/*!< Start conversion when the edge selected by bit 27 occurs on ADCTRIG0 */
-	ADC_START_ON_ADCTRIG1,	/*!< Start conversion when the edge selected by bit 27 occurs on ADCTRIG1 */
-	ADC_START_ON_MCOA2		/*!< Start conversion when the edge selected by bit 27 occurs on Motocon PWM output MCOA2 */
+	ADC_START_NOW, /*!< Start conversion now */
+	ADC_START_ON_CTOUT15, /*!< Start conversion when the edge selected by bit 27 occurs on CTOUT_15 */
+	ADC_START_ON_CTOUT8, /*!< Start conversion when the edge selected by bit 27 occurs on CTOUT_8 */
+	ADC_START_ON_ADCTRIG0, /*!< Start conversion when the edge selected by bit 27 occurs on ADCTRIG0 */
+	ADC_START_ON_ADCTRIG1, /*!< Start conversion when the edge selected by bit 27 occurs on ADCTRIG1 */
+	ADC_START_ON_MCOA2 /*!< Start conversion when the edge selected by bit 27 occurs on Motocon PWM output MCOA2 */
 } ADC_START_MODE_T;
 
 /** Clock setup structure for ADC controller passed to the initialize function */
-typedef struct {
-	uint32_t adcRate;		/*!< ADC rate */
-	uint8_t  bitsAccuracy;	/*!< ADC bit accuracy */
-	bool     burstMode;		/*!< ADC Burt Mode */
+typedef struct
+{
+	uint32_t adcRate; /*!< ADC rate */
+	uint8_t bitsAccuracy; /*!< ADC bit accuracy */
+	bool burstMode; /*!< ADC Burt Mode */
 } ADC_CLOCK_SETUP_T;
 
 /**
@@ -144,14 +152,14 @@ typedef struct {
  * @return	Nothing
  * @note	Default setting for ADC is 400kHz - 10bits
  */
-void Chip_ADC_Init(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup);
+void Chip_ADC_Init (LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup);
 
 /**
  * @brief	Shutdown ADC
  * @param	pADC	: The base of ADC peripheral on the chip
  * @return	Nothing
  */
-void Chip_ADC_DeInit(LPC_ADC_T *pADC);
+void Chip_ADC_DeInit (LPC_ADC_T *pADC);
 
 /**
  * @brief	Read the ADC value from a channel
@@ -160,7 +168,7 @@ void Chip_ADC_DeInit(LPC_ADC_T *pADC);
  * @param	data		: Pointer to where to put data
  * @return	SUCCESS or ERROR if no conversion is ready
  */
-Status Chip_ADC_ReadValue(LPC_ADC_T *pADC, uint8_t channel, uint16_t *data);
+Status Chip_ADC_ReadValue (LPC_ADC_T *pADC, uint8_t channel, uint16_t *data);
 
 /**
  * @brief	Read the ADC value and convert it to 8bits value
@@ -169,7 +177,7 @@ Status Chip_ADC_ReadValue(LPC_ADC_T *pADC, uint8_t channel, uint16_t *data);
  * @param	data		: Storage for data
  * @return	Status	: ERROR or SUCCESS
  */
-Status Chip_ADC_ReadByte(LPC_ADC_T *pADC, ADC_CHANNEL_T channel, uint8_t *data);
+Status Chip_ADC_ReadByte (LPC_ADC_T *pADC, ADC_CHANNEL_T channel, uint8_t *data);
 
 /**
  * @brief	Read the ADC channel status
@@ -178,7 +186,7 @@ Status Chip_ADC_ReadByte(LPC_ADC_T *pADC, ADC_CHANNEL_T channel, uint8_t *data);
  * @param	StatusType	: Status type of ADC_DR_*
  * @return	SET or RESET
  */
-FlagStatus Chip_ADC_ReadStatus(LPC_ADC_T *pADC, uint8_t channel, uint32_t StatusType);
+FlagStatus Chip_ADC_ReadStatus (LPC_ADC_T *pADC, uint8_t channel, uint32_t StatusType);
 
 /**
  * @brief	Enable/Disable interrupt for ADC channel
@@ -187,7 +195,7 @@ FlagStatus Chip_ADC_ReadStatus(LPC_ADC_T *pADC, uint8_t channel, uint32_t Status
  * @param	NewState	: New state, ENABLE or DISABLE
  * @return	SET or RESET
  */
-void Chip_ADC_Int_SetChannelCmd(LPC_ADC_T *pADC, uint8_t channel, FunctionalState NewState);
+void Chip_ADC_Int_SetChannelCmd (LPC_ADC_T *pADC, uint8_t channel, FunctionalState NewState);
 
 /**
  * @brief	Enable/Disable global interrupt for ADC channel
@@ -195,7 +203,7 @@ void Chip_ADC_Int_SetChannelCmd(LPC_ADC_T *pADC, uint8_t channel, FunctionalStat
  * @param	NewState	: New state, ENABLE or DISABLE
  * @return	Nothing
  */
-STATIC INLINE void Chip_ADC_Int_SetGlobalCmd(LPC_ADC_T *pADC, FunctionalState NewState)
+STATIC INLINE void Chip_ADC_Int_SetGlobalCmd (LPC_ADC_T *pADC, FunctionalState NewState)
 {
 	Chip_ADC_Int_SetChannelCmd(pADC, 8, NewState);
 }
@@ -216,7 +224,7 @@ STATIC INLINE void Chip_ADC_Int_SetGlobalCmd(LPC_ADC_T *pADC, FunctionalState Ne
  *							- ADC_TRIGGERMODE_FALLING	: Trigger event on falling edge
  * @return	Nothing
  */
-void Chip_ADC_SetStartMode(LPC_ADC_T *pADC, ADC_START_MODE_T mode, ADC_EDGE_CFG_T EdgeOption);
+void Chip_ADC_SetStartMode (LPC_ADC_T *pADC, ADC_START_MODE_T mode, ADC_EDGE_CFG_T EdgeOption);
 
 /**
  * @brief	Set the ADC Sample rate
@@ -225,7 +233,7 @@ void Chip_ADC_SetStartMode(LPC_ADC_T *pADC, ADC_START_MODE_T mode, ADC_EDGE_CFG_
  * @param	rate		: Sample rate, should be set so the clock for A/D converter is less than or equal to 4.5MHz.
  * @return	Nothing
  */
-void Chip_ADC_SetSampleRate(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, uint32_t rate);
+void Chip_ADC_SetSampleRate (LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, uint32_t rate);
 
 /**
  * @brief	Set the ADC accuracy bits
@@ -234,7 +242,7 @@ void Chip_ADC_SetSampleRate(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, uint32
  * @param	resolution	: The resolution, should be ADC_10BITS -> ADC_3BITS
  * @return	Nothing
  */
-void Chip_ADC_SetResolution(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, ADC_RESOLUTION_T resolution);
+void Chip_ADC_SetResolution (LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, ADC_RESOLUTION_T resolution);
 
 /**
  * @brief	Enable or disable the ADC channel on ADC peripheral
@@ -245,7 +253,7 @@ void Chip_ADC_SetResolution(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, ADC_RE
  *								- DISABLE
  * @return	Nothing
  */
-void Chip_ADC_EnableChannel(LPC_ADC_T *pADC, ADC_CHANNEL_T channel, FunctionalState NewState);
+void Chip_ADC_EnableChannel (LPC_ADC_T *pADC, ADC_CHANNEL_T channel, FunctionalState NewState);
 
 /**
  * @brief	Enable burst mode
@@ -255,7 +263,7 @@ void Chip_ADC_EnableChannel(LPC_ADC_T *pADC, ADC_CHANNEL_T channel, FunctionalSt
  *							- DISABLE
  * @return	Nothing
  */
-void Chip_ADC_SetBurstCmd(LPC_ADC_T *pADC, FunctionalState NewState);
+void Chip_ADC_SetBurstCmd (LPC_ADC_T *pADC, FunctionalState NewState);
 
 /**
  * @}

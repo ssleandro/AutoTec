@@ -43,13 +43,15 @@
  * Private functions
  ****************************************************************************/
 
-STATIC void SSP_Write2BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+STATIC void SSP_Write2BFifo (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
-	if (xf_setup->tx_data) {
-		Chip_SSP_SendFrame(pSSP, (*(uint16_t *) ((uint32_t) xf_setup->tx_data +
-												 xf_setup->tx_cnt)));
+	if (xf_setup->tx_data)
+	{
+		Chip_SSP_SendFrame(pSSP, (*(uint16_t *)((uint32_t)xf_setup->tx_data +
+			xf_setup->tx_cnt)));
 	}
-	else {
+	else
+	{
 		Chip_SSP_SendFrame(pSSP, 0xFFFF);
 	}
 
@@ -57,12 +59,14 @@ STATIC void SSP_Write2BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 }
 
 /** SSP macro: write 1 bytes to FIFO buffer */
-STATIC void SSP_Write1BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+STATIC void SSP_Write1BFifo (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
-	if (xf_setup->tx_data) {
-		Chip_SSP_SendFrame(pSSP, (*(uint8_t *) ((uint32_t) xf_setup->tx_data + xf_setup->tx_cnt)));
+	if (xf_setup->tx_data)
+	{
+		Chip_SSP_SendFrame(pSSP, (*(uint8_t *)((uint32_t)xf_setup->tx_data + xf_setup->tx_cnt)));
 	}
-	else {
+	else
+	{
 		Chip_SSP_SendFrame(pSSP, 0xFF);
 	}
 
@@ -70,15 +74,17 @@ STATIC void SSP_Write1BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 }
 
 /** SSP macro: read 1 bytes from FIFO buffer */
-STATIC void SSP_Read2BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+STATIC void SSP_Read2BFifo (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
 	uint16_t rDat;
 
 	while ((Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET) &&
-		   (xf_setup->rx_cnt < xf_setup->length)) {
+		(xf_setup->rx_cnt < xf_setup->length))
+	{
 		rDat = Chip_SSP_ReceiveFrame(pSSP);
-		if (xf_setup->rx_data) {
-			*(uint16_t *) ((uint32_t) xf_setup->rx_data + xf_setup->rx_cnt) = rDat;
+		if (xf_setup->rx_data)
+		{
+			*(uint16_t *)((uint32_t)xf_setup->rx_data + xf_setup->rx_cnt) = rDat;
 		}
 
 		xf_setup->rx_cnt += 2;
@@ -86,15 +92,17 @@ STATIC void SSP_Read2BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 }
 
 /** SSP macro: read 2 bytes from FIFO buffer */
-STATIC void SSP_Read1BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+STATIC void SSP_Read1BFifo (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
 	uint16_t rDat;
 
 	while ((Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET) &&
-		   (xf_setup->rx_cnt < xf_setup->length)) {
+		(xf_setup->rx_cnt < xf_setup->length))
+	{
 		rDat = Chip_SSP_ReceiveFrame(pSSP);
-		if (xf_setup->rx_data) {
-			*(uint8_t *) ((uint32_t) xf_setup->rx_data + xf_setup->rx_cnt) = rDat;
+		if (xf_setup->rx_data)
+		{
+			*(uint8_t *)((uint32_t)xf_setup->rx_data + xf_setup->rx_cnt) = rDat;
 		}
 
 		xf_setup->rx_cnt++;
@@ -102,14 +110,16 @@ STATIC void SSP_Read1BFifo(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 }
 
 /* Returns clock index for the register interface */
-STATIC CHIP_CCU_CLK_T Chip_SSP_GetClockIndex(LPC_SSP_T *pSSP)
+STATIC CHIP_CCU_CLK_T Chip_SSP_GetClockIndex (LPC_SSP_T *pSSP)
 {
 	CHIP_CCU_CLK_T clkSSP;
 
-	if (pSSP == LPC_SSP1) {
+	if (pSSP == LPC_SSP1)
+	{
 		clkSSP = CLK_MX_SSP1;
 	}
-	else {
+	else
+	{
 		clkSSP = CLK_MX_SSP0;
 	}
 
@@ -117,14 +127,16 @@ STATIC CHIP_CCU_CLK_T Chip_SSP_GetClockIndex(LPC_SSP_T *pSSP)
 }
 
 /* Returns clock index for the peripheral block */
-STATIC CHIP_CCU_CLK_T Chip_SSP_GetPeriphClockIndex(LPC_SSP_T *pSSP)
+STATIC CHIP_CCU_CLK_T Chip_SSP_GetPeriphClockIndex (LPC_SSP_T *pSSP)
 {
 	CHIP_CCU_CLK_T clkSSP;
 
-	if (pSSP == LPC_SSP1) {
+	if (pSSP == LPC_SSP1)
+	{
 		clkSSP = CLK_APB2_SSP1;
 	}
-	else {
+	else
+	{
 		clkSSP = CLK_APB0_SSP0;
 	}
 
@@ -135,7 +147,7 @@ STATIC CHIP_CCU_CLK_T Chip_SSP_GetPeriphClockIndex(LPC_SSP_T *pSSP)
  ****************************************************************************/
 
 /*Set up output clocks per bit for SSP bus*/
-void Chip_SSP_SetClockRate(LPC_SSP_T *pSSP, uint32_t clk_rate, uint32_t prescale)
+void Chip_SSP_SetClockRate (LPC_SSP_T *pSSP, uint32_t clk_rate, uint32_t prescale)
 {
 	uint32_t temp;
 	temp = pSSP->CR0 & (~(SSP_CR0_SCR(0xFF)));
@@ -144,25 +156,30 @@ void Chip_SSP_SetClockRate(LPC_SSP_T *pSSP, uint32_t clk_rate, uint32_t prescale
 }
 
 /* SSP Polling Read/Write in blocking mode */
-uint32_t Chip_SSP_RWFrames_Blocking(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+uint32_t Chip_SSP_RWFrames_Blocking (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
 	/* Clear all remaining frames in RX FIFO */
-	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE)) {
+	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE))
+	{
 		Chip_SSP_ReceiveFrame(pSSP);
 	}
 
 	/* Clear status */
 	Chip_SSP_ClearIntPending(pSSP, SSP_INT_CLEAR_BITMASK);
 
-	if (Chip_SSP_GetDataSize(pSSP) > SSP_BITS_8) {
-		while (xf_setup->rx_cnt < xf_setup->length || xf_setup->tx_cnt < xf_setup->length) {
+	if (Chip_SSP_GetDataSize(pSSP) > SSP_BITS_8)
+	{
+		while (xf_setup->rx_cnt < xf_setup->length || xf_setup->tx_cnt < xf_setup->length)
+		{
 			/* write data to buffer */
-			if (( Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && ( xf_setup->tx_cnt < xf_setup->length) ) {
+			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (xf_setup->tx_cnt < xf_setup->length))
+			{
 				SSP_Write2BFifo(pSSP, xf_setup);
 			}
 
 			/* Check overrun error */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
@@ -170,15 +187,19 @@ uint32_t Chip_SSP_RWFrames_Blocking(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_s
 			SSP_Read2BFifo(pSSP, xf_setup);
 		}
 	}
-	else {
-		while (xf_setup->rx_cnt < xf_setup->length || xf_setup->tx_cnt < xf_setup->length) {
+	else
+	{
+		while (xf_setup->rx_cnt < xf_setup->length || xf_setup->tx_cnt < xf_setup->length)
+		{
 			/* write data to buffer */
-			if (( Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && ( xf_setup->tx_cnt < xf_setup->length) ) {
+			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (xf_setup->tx_cnt < xf_setup->length))
+			{
 				SSP_Write1BFifo(pSSP, xf_setup);
 			}
 
 			/* Check overrun error */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
@@ -186,10 +207,12 @@ uint32_t Chip_SSP_RWFrames_Blocking(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_s
 			SSP_Read1BFifo(pSSP, xf_setup);
 		}
 	}
-	if (xf_setup->tx_data) {
+	if (xf_setup->tx_data)
+	{
 		return xf_setup->tx_cnt;
 	}
-	else if (xf_setup->rx_data) {
+	else if (xf_setup->rx_data)
+	{
 		return xf_setup->rx_cnt;
 	}
 
@@ -197,64 +220,75 @@ uint32_t Chip_SSP_RWFrames_Blocking(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_s
 }
 
 /* SSP Polling Write in blocking mode */
-uint32_t Chip_SSP_WriteFrames_Blocking(LPC_SSP_T *pSSP, const uint8_t *buffer, uint32_t buffer_len)
+uint32_t Chip_SSP_WriteFrames_Blocking (LPC_SSP_T *pSSP, const uint8_t *buffer, uint32_t buffer_len)
 {
 	uint32_t tx_cnt = 0, rx_cnt = 0;
 
 	/* Clear all remaining frames in RX FIFO */
-	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE)) {
+	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE))
+	{
 		Chip_SSP_ReceiveFrame(pSSP);
 	}
 
 	/* Clear status */
 	Chip_SSP_ClearIntPending(pSSP, SSP_INT_CLEAR_BITMASK);
 
-	if (Chip_SSP_GetDataSize(pSSP) > SSP_BITS_8) {
+	if (Chip_SSP_GetDataSize(pSSP) > SSP_BITS_8)
+	{
 		uint16_t *wdata16;
 
-		wdata16 = (uint16_t *) buffer;
+		wdata16 = (uint16_t *)buffer;
 
-		while (tx_cnt < buffer_len || rx_cnt < buffer_len) {
+		while (tx_cnt < buffer_len || rx_cnt < buffer_len)
+		{
 			/* write data to buffer */
-			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len)) {
+			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len))
+			{
 				Chip_SSP_SendFrame(pSSP, *wdata16);
 				wdata16++;
 				tx_cnt += 2;
 			}
 
 			/* Check overrun error */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
 			/* Check for any data available in RX FIFO */
-			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET) {
-				Chip_SSP_ReceiveFrame(pSSP);	/* read dummy data */
+			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET)
+			{
+				Chip_SSP_ReceiveFrame(pSSP); /* read dummy data */
 				rx_cnt += 2;
 			}
 		}
 	}
-	else {
+	else
+	{
 		const uint8_t *wdata8;
 
 		wdata8 = buffer;
 
-		while (tx_cnt < buffer_len || rx_cnt < buffer_len) {
+		while (tx_cnt < buffer_len || rx_cnt < buffer_len)
+		{
 			/* write data to buffer */
-			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len)) {
+			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len))
+			{
 				Chip_SSP_SendFrame(pSSP, *wdata8);
 				wdata8++;
 				tx_cnt++;
 			}
 
 			/* Check overrun error */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
 			/* Check for any data available in RX FIFO */
-			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET && rx_cnt < buffer_len) {
-				Chip_SSP_ReceiveFrame(pSSP);	/* read dummy data */
+			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET && rx_cnt < buffer_len)
+			{
+				Chip_SSP_ReceiveFrame(pSSP); /* read dummy data */
 				rx_cnt++;
 			}
 		}
@@ -265,62 +299,73 @@ uint32_t Chip_SSP_WriteFrames_Blocking(LPC_SSP_T *pSSP, const uint8_t *buffer, u
 }
 
 /* SSP Polling Read in blocking mode */
-uint32_t Chip_SSP_ReadFrames_Blocking(LPC_SSP_T *pSSP, uint8_t *buffer, uint32_t buffer_len)
+uint32_t Chip_SSP_ReadFrames_Blocking (LPC_SSP_T *pSSP, uint8_t *buffer, uint32_t buffer_len)
 {
 	uint32_t rx_cnt = 0, tx_cnt = 0;
 
 	/* Clear all remaining frames in RX FIFO */
-	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE)) {
+	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE))
+	{
 		Chip_SSP_ReceiveFrame(pSSP);
 	}
 
 	/* Clear status */
 	Chip_SSP_ClearIntPending(pSSP, SSP_INT_CLEAR_BITMASK);
 
-	if (Chip_SSP_GetDataSize(pSSP) > SSP_BITS_8) {
+	if (Chip_SSP_GetDataSize(pSSP) > SSP_BITS_8)
+	{
 		uint16_t *rdata16;
 
-		rdata16 = (uint16_t *) buffer;
+		rdata16 = (uint16_t *)buffer;
 
-		while (tx_cnt < buffer_len || rx_cnt < buffer_len) {
+		while (tx_cnt < buffer_len || rx_cnt < buffer_len)
+		{
 			/* write data to buffer */
-			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len)) {
-				Chip_SSP_SendFrame(pSSP, 0xFFFF);	/* just send dummy data */
+			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len))
+			{
+				Chip_SSP_SendFrame(pSSP, 0xFFFF); /* just send dummy data */
 				tx_cnt += 2;
 			}
 
 			/* Check overrun error */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
 			/* Check for any data available in RX FIFO */
-			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET && rx_cnt < buffer_len) {
+			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET && rx_cnt < buffer_len)
+			{
 				*rdata16 = Chip_SSP_ReceiveFrame(pSSP);
 				rdata16++;
 				rx_cnt += 2;
 			}
 		}
 	}
-	else {
+	else
+	{
 		uint8_t *rdata8;
 
 		rdata8 = buffer;
 
-		while (tx_cnt < buffer_len || rx_cnt < buffer_len) {
+		while (tx_cnt < buffer_len || rx_cnt < buffer_len)
+		{
 			/* write data to buffer */
-			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len)) {
-				Chip_SSP_SendFrame(pSSP, 0xFF);	/* just send dummy data		 */
+			if ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF) == SET) && (tx_cnt < buffer_len))
+			{
+				Chip_SSP_SendFrame(pSSP, 0xFF); /* just send dummy data		 */
 				tx_cnt++;
 			}
 
 			/* Check overrun error */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
 			/* Check for any data available in RX FIFO */
-			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET && rx_cnt < buffer_len) {
+			while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE) == SET && rx_cnt < buffer_len)
+			{
 				*rdata8 = Chip_SSP_ReceiveFrame(pSSP);
 				rdata8++;
 				rx_cnt++;
@@ -333,14 +378,18 @@ uint32_t Chip_SSP_ReadFrames_Blocking(LPC_SSP_T *pSSP, uint8_t *buffer, uint32_t
 }
 
 /* Clean all data in RX FIFO of SSP */
-void Chip_SSP_Int_FlushData(LPC_SSP_T *pSSP)
+void Chip_SSP_Int_FlushData (LPC_SSP_T *pSSP)
 {
-	if (Chip_SSP_GetStatus(pSSP, SSP_STAT_BSY)) {
-		while (Chip_SSP_GetStatus(pSSP, SSP_STAT_BSY)) {}
+	if (Chip_SSP_GetStatus(pSSP, SSP_STAT_BSY))
+	{
+		while (Chip_SSP_GetStatus(pSSP, SSP_STAT_BSY))
+		{
+		}
 	}
 
 	/* Clear all remaining frames in RX FIFO */
-	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE)) {
+	while (Chip_SSP_GetStatus(pSSP, SSP_STAT_RNE))
+	{
 		Chip_SSP_ReceiveFrame(pSSP);
 	}
 
@@ -349,23 +398,27 @@ void Chip_SSP_Int_FlushData(LPC_SSP_T *pSSP)
 }
 
 /* SSP Interrupt Read/Write with 8-bit frame width */
-Status Chip_SSP_Int_RWFrames8Bits(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+Status Chip_SSP_Int_RWFrames8Bits (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
 	/* Check overrun error in RIS register */
-	if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+	if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+	{
 		return ERROR;
 	}
 
-	if ((xf_setup->tx_cnt != xf_setup->length) || (xf_setup->rx_cnt != xf_setup->length)) {
+	if ((xf_setup->tx_cnt != xf_setup->length) || (xf_setup->rx_cnt != xf_setup->length))
+	{
 		/* check if RX FIFO contains data */
 		SSP_Read1BFifo(pSSP, xf_setup);
 
-		while ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF)) && (xf_setup->tx_cnt != xf_setup->length)) {
+		while ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF)) && (xf_setup->tx_cnt != xf_setup->length))
+		{
 			/* Write data to buffer */
 			SSP_Write1BFifo(pSSP, xf_setup);
 
 			/* Check overrun error in RIS register */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
@@ -380,23 +433,27 @@ Status Chip_SSP_Int_RWFrames8Bits(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_set
 }
 
 /* SSP Interrupt Read/Write with 16-bit frame width */
-Status Chip_SSP_Int_RWFrames16Bits(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
+Status Chip_SSP_Int_RWFrames16Bits (LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup)
 {
 	/* Check overrun error in RIS register */
-	if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+	if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+	{
 		return ERROR;
 	}
 
-	if ((xf_setup->tx_cnt != xf_setup->length) || (xf_setup->rx_cnt != xf_setup->length)) {
+	if ((xf_setup->tx_cnt != xf_setup->length) || (xf_setup->rx_cnt != xf_setup->length))
+	{
 		/* check if RX FIFO contains data */
 		SSP_Read2BFifo(pSSP, xf_setup);
 
-		while ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF)) && (xf_setup->tx_cnt != xf_setup->length)) {
+		while ((Chip_SSP_GetStatus(pSSP, SSP_STAT_TNF)) && (xf_setup->tx_cnt != xf_setup->length))
+		{
 			/* Write data to buffer */
 			SSP_Write2BFifo(pSSP, xf_setup);
 
 			/* Check overrun error in RIS register */
-			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET) {
+			if (Chip_SSP_GetRawIntStatus(pSSP, SSP_RORRIS) == SET)
+			{
 				return ERROR;
 			}
 
@@ -411,18 +468,20 @@ Status Chip_SSP_Int_RWFrames16Bits(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_se
 }
 
 /* Set the SSP operating modes, master or slave */
-void Chip_SSP_SetMaster(LPC_SSP_T *pSSP, bool master)
+void Chip_SSP_SetMaster (LPC_SSP_T *pSSP, bool master)
 {
-	if (master) {
+	if (master)
+	{
 		Chip_SSP_Set_Mode(pSSP, SSP_MODE_MASTER);
 	}
-	else {
+	else
+	{
 		Chip_SSP_Set_Mode(pSSP, SSP_MODE_SLAVE);
 	}
 }
 
 /* Set the clock frequency for SSP interface */
-void Chip_SSP_SetBitRate(LPC_SSP_T *pSSP, uint32_t bitRate)
+void Chip_SSP_SetBitRate (LPC_SSP_T *pSSP, uint32_t bitRate)
 {
 	uint32_t ssp_clk, cr0_div, cmp_clk, prescale;
 
@@ -432,11 +491,14 @@ void Chip_SSP_SetBitRate(LPC_SSP_T *pSSP, uint32_t bitRate)
 	cmp_clk = 0xFFFFFFFF;
 	prescale = 2;
 
-	while (cmp_clk > bitRate) {
+	while (cmp_clk > bitRate)
+	{
 		cmp_clk = ssp_clk / ((cr0_div + 1) * prescale);
-		if (cmp_clk > bitRate) {
+		if (cmp_clk > bitRate)
+		{
 			cr0_div++;
-			if (cr0_div > 0xFF) {
+			if (cr0_div > 0xFF)
+			{
 				cr0_div = 0;
 				prescale += 2;
 			}
@@ -447,7 +509,7 @@ void Chip_SSP_SetBitRate(LPC_SSP_T *pSSP, uint32_t bitRate)
 }
 
 /* Initialize the SSP */
-void Chip_SSP_Init(LPC_SSP_T *pSSP)
+void Chip_SSP_Init (LPC_SSP_T *pSSP)
 {
 	Chip_Clock_Enable(Chip_SSP_GetClockIndex(pSSP));
 	Chip_Clock_Enable(Chip_SSP_GetPeriphClockIndex(pSSP));
@@ -458,12 +520,12 @@ void Chip_SSP_Init(LPC_SSP_T *pSSP)
 }
 
 /* De-initializes the SSP peripheral */
-void Chip_SSP_DeInit(LPC_SSP_T *pSSP)
+void Chip_SSP_DeInit (LPC_SSP_T *pSSP)
 {
 	Chip_SSP_Disable(pSSP);
 
 	Chip_Clock_Disable(Chip_SSP_GetPeriphClockIndex(pSSP));
 	Chip_Clock_Disable(Chip_SSP_GetClockIndex(pSSP));
-	
+
 }
 

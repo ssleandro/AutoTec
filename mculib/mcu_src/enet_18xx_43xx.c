@@ -46,17 +46,18 @@ STATIC uint32_t phyCfg;
  * Private functions
  ****************************************************************************/
 
-STATIC INLINE void reset(LPC_ENET_T *pENET)
+STATIC INLINE void reset (LPC_ENET_T *pENET)
 {
-    Chip_RGU_TriggerReset(RGU_ETHERNET_RST);
+	Chip_RGU_TriggerReset(RGU_ETHERNET_RST);
 	while (Chip_RGU_InReset(RGU_ETHERNET_RST))
-    {}
+	{
+	}
 
 	/* Reset ethernet peripheral */
 	Chip_ENET_Reset(pENET);
 }
 
-STATIC uint32_t Chip_ENET_CalcMDCClock(void)
+STATIC uint32_t Chip_ENET_CalcMDCClock (void)
 {
 	uint32_t val = SystemCoreClock / 1000000UL;
 
@@ -74,8 +75,8 @@ STATIC uint32_t Chip_ENET_CalcMDCClock(void)
 		return 5;
 
 	/* Code should never reach here
-	   unless there is BUG in frequency settings
-	*/
+	 unless there is BUG in frequency settings
+	 */
 	return 0;
 }
 
@@ -84,7 +85,7 @@ STATIC uint32_t Chip_ENET_CalcMDCClock(void)
  ****************************************************************************/
 
 /* Basic Ethernet interface initialization */
-void Chip_ENET_Init(LPC_ENET_T *pENET, uint32_t phyAddr)
+void Chip_ENET_Init (LPC_ENET_T *pENET, uint32_t phyAddr)
 {
 	Chip_Clock_EnableOpts(CLK_MX_ETHERNET, true, true, 1);
 
@@ -97,10 +98,10 @@ void Chip_ENET_Init(LPC_ENET_T *pENET, uint32_t phyAddr)
 	pENET->DMA_BUS_MODE = DMA_BM_ATDS | DMA_BM_PBL(1) | DMA_BM_RPBL(1);
 
 	/* Initial MAC configuration for checksum offload, full duplex,
-	   100Mbps, disable receive own in half duplex, inter-frame gap
-	   of 64-bits */
+	 100Mbps, disable receive own in half duplex, inter-frame gap
+	 of 64-bits */
 	pENET->MAC_CONFIG = MAC_CFG_BL(0) | MAC_CFG_IPC | MAC_CFG_DM |
-						MAC_CFG_DO | MAC_CFG_FES | MAC_CFG_PS | MAC_CFG_IFG(3);
+	MAC_CFG_DO | MAC_CFG_FES | MAC_CFG_PS | MAC_CFG_IFG(3);
 
 	/* Setup default filter */
 	pENET->MAC_FRAME_FILTER = MAC_FF_PR | MAC_FF_RA;
@@ -109,7 +110,7 @@ void Chip_ENET_Init(LPC_ENET_T *pENET, uint32_t phyAddr)
 	pENET->DMA_OP_MODE = DMA_OM_FTF;
 
 	/* Setup DMA to flush receive FIFOs at 32 bytes, service TX FIFOs at
-	   64 bytes */
+	 64 bytes */
 	pENET->DMA_OP_MODE |= DMA_OM_RTC(1) | DMA_OM_TTC(0);
 
 	/* Clear all MAC interrupts */
@@ -120,7 +121,7 @@ void Chip_ENET_Init(LPC_ENET_T *pENET, uint32_t phyAddr)
 }
 
 /* Ethernet interface shutdown */
-void Chip_ENET_DeInit(LPC_ENET_T *pENET)
+void Chip_ENET_DeInit (LPC_ENET_T *pENET)
 {
 	/* Disable packet reception */
 	pENET->MAC_CONFIG = 0;
@@ -135,23 +136,23 @@ void Chip_ENET_DeInit(LPC_ENET_T *pENET)
 }
 
 /* Sets up the PHY link clock divider and PHY address */
-void Chip_ENET_SetupMII(LPC_ENET_T *pENET, uint32_t div, uint8_t addr)
+void Chip_ENET_SetupMII (LPC_ENET_T *pENET, uint32_t div, uint8_t addr)
 {
 	/* Save clock divider and PHY address in MII address register */
 	phyCfg = MAC_MIIA_PA(addr) | MAC_MIIA_CR(div);
 }
 
 /* Starts a PHY write via the MII */
-void Chip_ENET_StartMIIWrite(LPC_ENET_T *pENET, uint8_t reg, uint16_t data)
+void Chip_ENET_StartMIIWrite (LPC_ENET_T *pENET, uint8_t reg, uint16_t data)
 {
 	/* Write value at PHY address and register */
 	pENET->MAC_MII_ADDR = phyCfg | MAC_MIIA_GR(reg) | MAC_MIIA_W;
-	pENET->MAC_MII_DATA = (uint32_t) data;
+	pENET->MAC_MII_DATA = (uint32_t)data;
 	pENET->MAC_MII_ADDR |= MAC_MIIA_GB;
 }
 
 /*Starts a PHY read via the MII */
-void Chip_ENET_StartMIIRead(LPC_ENET_T *pENET, uint8_t reg)
+void Chip_ENET_StartMIIRead (LPC_ENET_T *pENET, uint8_t reg)
 {
 	/* Read value at PHY address and register */
 	pENET->MAC_MII_ADDR = phyCfg | MAC_MIIA_GR(reg);
@@ -159,23 +160,27 @@ void Chip_ENET_StartMIIRead(LPC_ENET_T *pENET, uint8_t reg)
 }
 
 /* Sets full or half duplex for the interface */
-void Chip_ENET_SetDuplex(LPC_ENET_T *pENET, bool full)
+void Chip_ENET_SetDuplex (LPC_ENET_T *pENET, bool full)
 {
-	if (full) {
+	if (full)
+	{
 		pENET->MAC_CONFIG |= MAC_CFG_DM;
 	}
-	else {
+	else
+	{
 		pENET->MAC_CONFIG &= ~MAC_CFG_DM;
 	}
 }
 
 /* Sets speed for the interface */
-void Chip_ENET_SetSpeed(LPC_ENET_T *pENET, bool speed100)
+void Chip_ENET_SetSpeed (LPC_ENET_T *pENET, bool speed100)
 {
-	if (speed100) {
+	if (speed100)
+	{
 		pENET->MAC_CONFIG |= MAC_CFG_FES;
 	}
-	else {
+	else
+	{
 		pENET->MAC_CONFIG &= ~MAC_CFG_FES;
 	}
 }

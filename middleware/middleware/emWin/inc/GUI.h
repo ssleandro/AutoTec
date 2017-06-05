@@ -1,45 +1,45 @@
 /*********************************************************************
-*                SEGGER Microcontroller GmbH & Co. KG                *
-*        Solutions for real time microcontroller applications        *
-**********************************************************************
-*                                                                    *
-*        (c) 1996 - 2015  SEGGER Microcontroller GmbH & Co. KG       *
-*                                                                    *
-*        Internet: www.segger.com    Support:  support@segger.com    *
-*                                                                    *
-**********************************************************************
+ *                SEGGER Microcontroller GmbH & Co. KG                *
+ *        Solutions for real time microcontroller applications        *
+ **********************************************************************
+ *                                                                    *
+ *        (c) 1996 - 2015  SEGGER Microcontroller GmbH & Co. KG       *
+ *                                                                    *
+ *        Internet: www.segger.com    Support:  support@segger.com    *
+ *                                                                    *
+ **********************************************************************
 
-** emWin V5.30 - Graphical user interface for embedded applications **
-All  Intellectual Property rights  in the Software belongs to  SEGGER.
-emWin is protected by  international copyright laws.  Knowledge of the
-source code may not be used to write a similar product.  This file may
-only be used in accordance with the following terms:
+ ** emWin V5.30 - Graphical user interface for embedded applications **
+ All  Intellectual Property rights  in the Software belongs to  SEGGER.
+ emWin is protected by  international copyright laws.  Knowledge of the
+ source code may not be used to write a similar product.  This file may
+ only be used in accordance with the following terms:
 
-The software has been licensed to  NXP Semiconductors USA, Inc.  whose
-registered  office  is  situated  at 411 E. Plumeria Drive, San  Jose,
-CA 95134, USA  solely for  the  purposes  of  creating  libraries  for
-NXPs M0, M3/M4 and  ARM7/9 processor-based  devices,  sublicensed  and
-distributed under the terms and conditions of the NXP End User License
-Agreement.
-Full source code is available at: www.segger.com
+ The software has been licensed to  NXP Semiconductors USA, Inc.  whose
+ registered  office  is  situated  at 411 E. Plumeria Drive, San  Jose,
+ CA 95134, USA  solely for  the  purposes  of  creating  libraries  for
+ NXPs M0, M3/M4 and  ARM7/9 processor-based  devices,  sublicensed  and
+ distributed under the terms and conditions of the NXP End User License
+ Agreement.
+ Full source code is available at: www.segger.com
 
-We appreciate your understanding and fairness.
-----------------------------------------------------------------------
-Licensing information
+ We appreciate your understanding and fairness.
+ ----------------------------------------------------------------------
+ Licensing information
 
-Licensor:                 SEGGER Microcontroller Systems LLC
-Licensed to:              NXP Semiconductors
-Licensed SEGGER software: emWin
-License number:           GUI-00186
-License model:            emWin License Agreement, dated August 20th 2011
-Licensed product:         -
-Licensed platform:        NXP's ARM 7/9, Cortex-M0,M3,M4
-Licensed number of seats: -
-----------------------------------------------------------------------
-File        : GUI.h
-Purpose     : GUI API include file
----------------------------END-OF-HEADER------------------------------
-*/
+ Licensor:                 SEGGER Microcontroller Systems LLC
+ Licensed to:              NXP Semiconductors
+ Licensed SEGGER software: emWin
+ License number:           GUI-00186
+ License model:            emWin License Agreement, dated August 20th 2011
+ Licensed product:         -
+ Licensed platform:        NXP's ARM 7/9, Cortex-M0,M3,M4
+ Licensed number of seats: -
+ ----------------------------------------------------------------------
+ File        : GUI.h
+ Purpose     : GUI API include file
+ ---------------------------END-OF-HEADER------------------------------
+ */
 
 #ifndef  GUI_H
 #define  GUI_H
@@ -49,106 +49,110 @@ Purpose     : GUI API include file
 #include "GUI_Version.h"
 
 #if defined(__cplusplus)
-extern "C" {     /* Make sure we have C-declarations in C++ programs */
+extern "C"
+{ /* Make sure we have C-declarations in C++ programs */
 #endif
 
 /*********************************************************************
-*
-*       Disable string function warning with newer MSVC versions
-*/
+ *
+ *       Disable string function warning with newer MSVC versions
+ */
 #if defined (_MSC_VER)
-  #if (_MSC_VER > 1200)
-    #pragma warning( disable : 4996)
-  #endif
+#if (_MSC_VER > 1200)
+#pragma warning( disable : 4996)
+#endif
 #endif
 
 /*********************************************************************
-*
-*       Macros, function replacement
-*/
+ *
+ *       Macros, function replacement
+ */
 #define GUI_COUNTOF(a)          (sizeof(a) / sizeof(a[0]))
 #define GUI_MIN(a,b)            (((a) < (b)) ? (a) : (b))
 #define GUI_MAX(a,b)            (((a) > (b)) ? (a) : (b))
 #define GUI_ZEROFILL(p, Size)   (memset(p, 0, Size))
 
 /*********************************************************************
-*
-*       Support for multitasking systems (locking)
-*/
+ *
+ *       Support for multitasking systems (locking)
+ */
 typedef struct GUI_CONTEXT GUI_CONTEXT;
 
 #if !GUI_OS
-  #define GUI_LOCK()
-  #define GUI_UNLOCK()
-  #define GUITASK_INIT()
-  #define GUITASK_COPY_CONTEXT()
+#define GUI_LOCK()
+#define GUI_UNLOCK()
+#define GUITASK_INIT()
+#define GUITASK_COPY_CONTEXT()
 #else
-  void GUI_Lock(void);
-  void GUI_Unlock(void);
-  void GUITASK_Init(void);
-  void GUITASK_CopyContext(void);
-  void GUITASK_SetMaxTask(int MaxTask);
-  int  GUITASK_GetMaxTask(void);
-  GUI_CONTEXT * GUITASK_GetpContext(int Index);
-  #define GUI_LOCK()             GUI_Lock()
-  #define GUI_UNLOCK()           GUI_Unlock()
-  #define GUITASK_INIT()         GUITASK_Init()
-  #define GUITASK_COPY_CONTEXT() GUITASK_CopyContext()
+void GUI_Lock(void);
+void GUI_Unlock(void);
+void GUITASK_Init(void);
+void GUITASK_CopyContext(void);
+void GUITASK_SetMaxTask(int MaxTask);
+int GUITASK_GetMaxTask(void);
+GUI_CONTEXT * GUITASK_GetpContext(int Index);
+#define GUI_LOCK()             GUI_Lock()
+#define GUI_UNLOCK()           GUI_Unlock()
+#define GUITASK_INIT()         GUITASK_Init()
+#define GUITASK_COPY_CONTEXT() GUITASK_CopyContext()
 #endif
 
 /*********************************************************************
-*
-*       API table of a display driver
-*/
-struct GUI_DEVICE_API {
-  //
-  // Data
-  //
-  int DeviceClassIndex;
-  //
-  // Drawing functions
-  //
-  void     (* pfDrawBitmap   )(GUI_DEVICE *  pDevice,  int x0, int y0, int xsize, int ysize, int BitsPerPixel, int BytesPerLine, const U8 * pData, int Diff, const LCD_PIXELINDEX * pTrans);
-  void     (* pfDrawHLine    )(GUI_DEVICE *  pDevice,  int x0, int y0,  int x1);
-  void     (* pfDrawVLine    )(GUI_DEVICE *  pDevice,  int x , int y0,  int y1);
-  void     (* pfFillRect     )(GUI_DEVICE *  pDevice,  int x0, int y0, int x1, int y1);
-  unsigned (* pfGetPixelIndex)(GUI_DEVICE *  pDevice,  int x, int y);
-  void     (* pfSetPixelIndex)(GUI_DEVICE *  pDevice,  int x, int y, int ColorIndex);
-  void     (* pfXorPixel     )(GUI_DEVICE *  pDevice,  int x, int y);
-  //
-  // Set origin
-  //
-  void     (* pfSetOrg       )(GUI_DEVICE *  pDevice,  int x, int y);
-  //
-  // Request information
-  //
-  void   (*(* pfGetDevFunc)   (GUI_DEVICE ** ppDevice, int Index))(void);
-  I32      (* pfGetDevProp   )(GUI_DEVICE *  pDevice,  int Index);
-  void    *(* pfGetDevData   )(GUI_DEVICE *  pDevice,  int Index);
-  void     (* pfGetRect      )(GUI_DEVICE *  pDevice,  LCD_RECT * pRect);
+ *
+ *       API table of a display driver
+ */
+struct GUI_DEVICE_API
+{
+	//
+	// Data
+	//
+	int DeviceClassIndex;
+	//
+	// Drawing functions
+	//
+	void (*pfDrawBitmap) (GUI_DEVICE * pDevice, int x0, int y0, int xsize, int ysize, int BitsPerPixel, int BytesPerLine,
+		const U8 * pData, int Diff, const LCD_PIXELINDEX * pTrans);
+	void (*pfDrawHLine) (GUI_DEVICE * pDevice, int x0, int y0, int x1);
+	void (*pfDrawVLine) (GUI_DEVICE * pDevice, int x, int y0, int y1);
+	void (*pfFillRect) (GUI_DEVICE * pDevice, int x0, int y0, int x1, int y1);
+	unsigned (*pfGetPixelIndex) (GUI_DEVICE * pDevice, int x, int y);
+	void (*pfSetPixelIndex) (GUI_DEVICE * pDevice, int x, int y, int ColorIndex);
+	void (*pfXorPixel) (GUI_DEVICE * pDevice, int x, int y);
+	//
+	// Set origin
+	//
+	void (*pfSetOrg) (GUI_DEVICE * pDevice, int x, int y);
+	//
+	// Request information
+	//
+	void (*(*pfGetDevFunc) (GUI_DEVICE ** ppDevice, int Index)) (void);
+	I32 (*pfGetDevProp) (GUI_DEVICE * pDevice, int Index);
+	void *(*pfGetDevData) (GUI_DEVICE * pDevice, int Index);
+	void (*pfGetRect) (GUI_DEVICE * pDevice, LCD_RECT * pRect);
 };
 
 /*********************************************************************
-*
-*       Device classes
-*/
-typedef enum {
-  DEVICE_CLASS_DRIVER = 0,
-  DEVICE_CLASS_DRIVER_MODIFIER,   // Zoom or delta-pixel modifier
-  DEVICE_CLASS_VNC,
-  DEVICE_CLASS_SPRITE,
-  DEVICE_CLASS_MEMDEV,
-  DEVICE_CLASS_ALPHA,
-  DEVICE_CLASS_AUTOALPHA,
-  DEVICE_CLASS_MEASDEV
+ *
+ *       Device classes
+ */
+typedef enum
+{
+	DEVICE_CLASS_DRIVER = 0,
+	DEVICE_CLASS_DRIVER_MODIFIER,   // Zoom or delta-pixel modifier
+	DEVICE_CLASS_VNC,
+	DEVICE_CLASS_SPRITE,
+	DEVICE_CLASS_MEMDEV,
+	DEVICE_CLASS_ALPHA,
+	DEVICE_CLASS_AUTOALPHA,
+	DEVICE_CLASS_MEASDEV
 } DEVICE_CLASS;
 
 #define GUI_DEVICE_STAYONTOP 1
 
 /*********************************************************************
-*
-*       Display drivers
-*/
+ *
+ *       Display drivers
+ */
 //
 // Addresses
 //
@@ -163,38 +167,40 @@ extern const GUI_DEVICE_API GUIDRV_Template_API;
 
 #if defined(WIN32) && !defined(LCD_SIMCONTROLLER)
 
-  #define GUIDRV_TEMPLATE         &GUIDRV_Win_API
+#define GUIDRV_TEMPLATE         &GUIDRV_Win_API
 
 #else
 
-  #define GUIDRV_TEMPLATE         &GUIDRV_Template_API
+#define GUIDRV_TEMPLATE         &GUIDRV_Template_API
 
 #endif
 
 /*********************************************************************
-*
-*       Definition of GUI_DEVICE structure
-*/
-struct GUI_DEVICE {
-  //
-  // Linking
-  //
-  GUI_DEVICE * pNext;
-  GUI_DEVICE * pPrev;
-  //
-  // Data
-  //
-  union {
-    GUI_HMEM hContext; // Handle of payload data like sprite- or memory device context
-    void   * pContext; // Pointer for context data in a fixed block
-  } u;
-  //
-  // API pointers
-  //
-  const GUI_DEVICE_API     * pDeviceAPI;
-  const LCD_API_COLOR_CONV * pColorConvAPI;
-  U16 Flags;
-  int LayerIndex;
+ *
+ *       Definition of GUI_DEVICE structure
+ */
+struct GUI_DEVICE
+{
+	//
+	// Linking
+	//
+	GUI_DEVICE * pNext;
+	GUI_DEVICE * pPrev;
+	//
+	// Data
+	//
+	union
+	{
+		GUI_HMEM hContext; // Handle of payload data like sprite- or memory device context
+		void * pContext; // Pointer for context data in a fixed block
+	} u;
+	//
+	// API pointers
+	//
+	const GUI_DEVICE_API * pDeviceAPI;
+	const LCD_API_COLOR_CONV * pColorConvAPI;
+	U16 Flags;
+	int LayerIndex;
 };
 
 extern const GUI_DEVICE_API GUI_MEMDEV_DEVICE_1;
@@ -203,378 +209,391 @@ extern const GUI_DEVICE_API GUI_MEMDEV_DEVICE_16;
 extern const GUI_DEVICE_API GUI_MEMDEV_DEVICE_32;
 
 /*********************************************************************
-*
-*       GUI_CONTEXT
-*
-*  This structure is public for one reason only:
-*  To allow the application to save and restore the context.
-*/
-typedef union {
-  U8  aColorIndex8[2];
-  U16 aColorIndex16[2];
-  U32 aColorIndex32[2];
+ *
+ *       GUI_CONTEXT
+ *
+ *  This structure is public for one reason only:
+ *  To allow the application to save and restore the context.
+ */
+typedef union
+{
+	U8 aColorIndex8[2];
+	U16 aColorIndex16[2];
+	U32 aColorIndex32[2];
 } LCD_COLORINDEX_UNION;
 
-struct GUI_CONTEXT {
-  //
-  // Variables in LCD module
-  //
-  LCD_COLORINDEX_UNION uLCD;
-  LCD_RECT       ClipRect;
-  U8             DrawMode;
-  U8             SelLayer;
-  U8             TextStyle;
-  //
-  // Variables in GL module
-  //
-  GUI_RECT * pClipRect_HL;                 // High level clip rectangle ... Speed optimization so drawing routines can optimize
-  U8         PenSize;
-  U8         PenShape;
-  U8         LineStyle;
-  //
-  // Variables in GUICHAR module
-  //
-  const GUI_FONT * pAFont;
-  I16P LBorder;
-  I16P DispPosX, DispPosY;
-  I16P DrawPosX, DrawPosY;
-  I16P TextMode, TextAlign;
-  GUI_COLOR Color, BkColor;                // Required only when changing devices and for speed opt (caching)
-  //
-  // Pointer to  color indices
-  //
-  LCD_PIXELINDEX * LCD_pBkColorIndex;
-  LCD_PIXELINDEX * LCD_pColorIndex;
-  LCD_PIXELINDEX * LCD_pAColorIndex;
-  //
-  // Variables in WM module
-  //
-  #if GUI_WINSUPPORT
-    const GUI_RECT * WM__pUserClipRect;
-    GUI_HWIN hAWin;
-    int xOff, yOff;
-    U8 WM_IsActive;
-  #endif
-  //
-  // Array of pointers to device chains
-  //
-  //GUI_DEVICE * apDevice[GUI_NUM_LAYERS];
-  GUI_DEVICE * apDriver[GUI_NUM_LAYERS];
-  //
-  // Variables in MEMDEV module (with memory devices only)
-  //
-  GUI_HMEM    hDevData;
-  //
-  // Variables in Anitaliasing module
-  //
-  const tLCD_HL_APIList * pLCD_HL;       // Required to reroute drawing (HLine & Pixel) to the AA module
-  U8 AA_Factor;
-  U8 AA_HiResEnable;
-  void (* AA_pfSetPixelAA)(int x, int y, U8 Intens); // Function to be used for drawing a single pixel
+struct GUI_CONTEXT
+{
+	//
+	// Variables in LCD module
+	//
+	LCD_COLORINDEX_UNION uLCD;
+	LCD_RECT ClipRect;
+	U8 DrawMode;
+	U8 SelLayer;
+	U8 TextStyle;
+	//
+	// Variables in GL module
+	//
+	GUI_RECT * pClipRect_HL;         // High level clip rectangle ... Speed optimization so drawing routines can optimize
+	U8 PenSize;
+	U8 PenShape;
+	U8 LineStyle;
+	//
+	// Variables in GUICHAR module
+	//
+	const GUI_FONT * pAFont;
+	I16P LBorder;
+	I16P DispPosX, DispPosY;
+	I16P DrawPosX, DrawPosY;
+	I16P TextMode, TextAlign;
+	GUI_COLOR Color, BkColor;                // Required only when changing devices and for speed opt (caching)
+	//
+	// Pointer to  color indices
+	//
+	LCD_PIXELINDEX * LCD_pBkColorIndex;
+	LCD_PIXELINDEX * LCD_pColorIndex;
+	LCD_PIXELINDEX * LCD_pAColorIndex;
+	//
+	// Variables in WM module
+	//
+#if GUI_WINSUPPORT
+	const GUI_RECT * WM__pUserClipRect;
+	GUI_HWIN hAWin;
+	int xOff, yOff;
+	U8 WM_IsActive;
+#endif
+	//
+	// Array of pointers to device chains
+	//
+	//GUI_DEVICE * apDevice[GUI_NUM_LAYERS];
+	GUI_DEVICE * apDriver[GUI_NUM_LAYERS];
+	//
+	// Variables in MEMDEV module (with memory devices only)
+	//
+	GUI_HMEM hDevData;
+	//
+	// Variables in Anitaliasing module
+	//
+	const tLCD_HL_APIList * pLCD_HL;       // Required to reroute drawing (HLine & Pixel) to the AA module
+	U8 AA_Factor;
+	U8 AA_HiResEnable;
+	void (*AA_pfSetPixelAA) (int x, int y, U8 Intens); // Function to be used for drawing a single pixel
 };
 
 /* Rename GUI_SaveContext in order to avoid crashes if wrong GUIConf is used */
 #if (GUI_WINSUPPORT == 1)
-  #define GUI_SaveContext GUI_SaveContext_W
+#define GUI_SaveContext GUI_SaveContext_W
 #else
-  #define GUI_SaveContext GUI_SaveContext_
+#define GUI_SaveContext GUI_SaveContext_
 #endif
 
 /*********************************************************************
-*
-*       Device management
-*/
-GUI_DEVICE * GUI_DEVICE_Create       (const GUI_DEVICE_API * pDeviceAPI, const LCD_API_COLOR_CONV * pColorConvAPI, U16 Flags, int LayerIndex);
-GUI_DEVICE * GUI_DEVICE_CreateAndLink(const GUI_DEVICE_API * pDeviceAPI, const LCD_API_COLOR_CONV * pColorConvAPI, U16 Flags, int LayerIndex);
-void         GUI_DEVICE_Delete       (GUI_DEVICE * pDevice);
-int          GUI_DEVICE_Link         (GUI_DEVICE * pDevice);
-void         GUI_DEVICE_Unlink       (GUI_DEVICE * pDevice);
-GUI_DEVICE * GUI_DEVICE__GetpDriver  (int LayerIndex);
-GUI_DEVICE * GUI_DEVICE__GetpDevice  (int LayerIndex, int DeviceClass);
+ *
+ *       Device management
+ */
+GUI_DEVICE * GUI_DEVICE_Create (const GUI_DEVICE_API * pDeviceAPI, const LCD_API_COLOR_CONV * pColorConvAPI, U16 Flags,
+	int LayerIndex);
+GUI_DEVICE * GUI_DEVICE_CreateAndLink (const GUI_DEVICE_API * pDeviceAPI, const LCD_API_COLOR_CONV * pColorConvAPI,
+	U16 Flags, int LayerIndex);
+void GUI_DEVICE_Delete (GUI_DEVICE * pDevice);
+int GUI_DEVICE_Link (GUI_DEVICE * pDevice);
+void GUI_DEVICE_Unlink (GUI_DEVICE * pDevice);
+GUI_DEVICE * GUI_DEVICE__GetpDriver (int LayerIndex);
+GUI_DEVICE * GUI_DEVICE__GetpDevice (int LayerIndex, int DeviceClass);
 
-GUI_DEVICE * GUI_DEVICE_UnlinkTaskDevices(void);
-void         GUI_DEVICE_LinkDevices      (GUI_DEVICE * pDevice);
+GUI_DEVICE * GUI_DEVICE_UnlinkTaskDevices (void);
+void GUI_DEVICE_LinkDevices (GUI_DEVICE * pDevice);
 
 /*********************************************************************
-*
-*       GUI_DIRTYDEVICE
-*/
-typedef struct {
-  void * pData;         // Pointer to first pixel
-  int    x0, y0;        // Coordinates of the upper left pixel
-  int    xSize, ySize;  // Size of dirty rectangle
-  int    LineOff;       // Virtual xSize in pixels
-  int    BytesPerPixel; // Number of bytes required per pixel
+ *
+ *       GUI_DIRTYDEVICE
+ */
+typedef struct
+{
+	void * pData;         // Pointer to first pixel
+	int x0, y0;        // Coordinates of the upper left pixel
+	int xSize, ySize;  // Size of dirty rectangle
+	int LineOff;       // Virtual xSize in pixels
+	int BytesPerPixel; // Number of bytes required per pixel
 } GUI_DIRTYDEVICE_INFO;
 
-int GUI_DIRTYDEVICE_Create  (void);
-int GUI_DIRTYDEVICE_CreateEx(int LayerIndex);
-int GUI_DIRTYDEVICE_Delete  (void);
-int GUI_DIRTYDEVICE_DeleteEx(int LayerIndex);
-int GUI_DIRTYDEVICE_Fetch   (GUI_DIRTYDEVICE_INFO * pInfo);
+int GUI_DIRTYDEVICE_Create (void);
+int GUI_DIRTYDEVICE_CreateEx (int LayerIndex);
+int GUI_DIRTYDEVICE_Delete (void);
+int GUI_DIRTYDEVICE_DeleteEx (int LayerIndex);
+int GUI_DIRTYDEVICE_Fetch (GUI_DIRTYDEVICE_INFO * pInfo);
 int GUI_DIRTYDEVICE_FetchEx (GUI_DIRTYDEVICE_INFO * pInfo, int LayerIndex);
 
 /*********************************************************************
-*
-*       GUI_SOFTLAYER
-*/
-typedef struct {
-  int xPos;
-  int yPos;
-  int xSize;
-  int ySize;
-  int Visible;
+ *
+ *       GUI_SOFTLAYER
+ */
+typedef struct
+{
+	int xPos;
+	int yPos;
+	int xSize;
+	int ySize;
+	int Visible;
 } GUI_SOFTLAYER_CONFIG;
 
-int  GUI_SOFTLAYER_Enable           (GUI_SOFTLAYER_CONFIG * pConfig, int NumLayers, GUI_COLOR CompositeColor);
-int  GUI_SOFTLAYER_Refresh          (void);
-void GUI_SOFTLAYER_SetCompositeColor(U32 Color);
-int  GUI_SOFTLAYER_MULTIBUF_Enable  (int OnOff);
+int GUI_SOFTLAYER_Enable (GUI_SOFTLAYER_CONFIG * pConfig, int NumLayers, GUI_COLOR CompositeColor);
+int GUI_SOFTLAYER_Refresh (void);
+void GUI_SOFTLAYER_SetCompositeColor (U32 Color);
+int GUI_SOFTLAYER_MULTIBUF_Enable (int OnOff);
 
 /*********************************************************************
-*
-*       General routines
-*/
-int          GUI_Init             (void);
-void         GUI_Exit             (void);
-void         GUI_SetDefaultFont   (const GUI_FONT * pFont);
-void         GUI_SetDefault       (void);
-GUI_DRAWMODE GUI_SetDrawMode      (GUI_DRAWMODE dm);
+ *
+ *       General routines
+ */
+int GUI_Init (void);
+void GUI_Exit (void);
+void GUI_SetDefaultFont (const GUI_FONT * pFont);
+void GUI_SetDefault (void);
+GUI_DRAWMODE GUI_SetDrawMode (GUI_DRAWMODE dm);
 const char * GUI_GetVersionString (void);
-void         GUI_SaveContext      (      GUI_CONTEXT * pContext);
-void         GUI_RestoreContext   (const GUI_CONTEXT * pContext);
-void         GUI_SetScreenSizeX   (int xSize);
-void         GUI_SetScreenSizeY   (int ySize);
-int          GUI_GetScreenSizeX   (void);
-int          GUI_GetScreenSizeY   (void);
-const GUI_RECT * GUI_SetClipRect  (const GUI_RECT * pRect);
-void         GUI_SetRefreshHook   (void (* pFunc)(void));
-void         MainTask             (void);
+void GUI_SaveContext (GUI_CONTEXT * pContext);
+void GUI_RestoreContext (const GUI_CONTEXT * pContext);
+void GUI_SetScreenSizeX (int xSize);
+void GUI_SetScreenSizeY (int ySize);
+int GUI_GetScreenSizeX (void);
+int GUI_GetScreenSizeY (void);
+const GUI_RECT * GUI_SetClipRect (const GUI_RECT * pRect);
+void GUI_SetRefreshHook (void (*pFunc) (void));
+void MainTask (void);
 
 /*********************************************************************
-*
-*       Rectangle helper functions
-*/
-int  GUI_RectsIntersect(const GUI_RECT * pr0, const GUI_RECT * pr1);
-void GUI_MoveRect       (GUI_RECT * pRect, int x, int y);
-void GUI_MergeRect      (GUI_RECT * pDest, const GUI_RECT * pr0, const GUI_RECT * pr1);
-int  GUI__IntersectRects(GUI_RECT * pDest, const GUI_RECT * pr0, const GUI_RECT * pr1);
+ *
+ *       Rectangle helper functions
+ */
+int GUI_RectsIntersect (const GUI_RECT * pr0, const GUI_RECT * pr1);
+void GUI_MoveRect (GUI_RECT * pRect, int x, int y);
+void GUI_MergeRect (GUI_RECT * pDest, const GUI_RECT * pr0, const GUI_RECT * pr1);
+int GUI__IntersectRects (GUI_RECT * pDest, const GUI_RECT * pr0, const GUI_RECT * pr1);
 void GUI__IntersectRect (GUI_RECT * pDest, const GUI_RECT * pr0);
-void GUI__ReduceRect    (GUI_RECT * pDest, const GUI_RECT * pRect, int Dist);
+void GUI__ReduceRect (GUI_RECT * pDest, const GUI_RECT * pRect, int Dist);
 
 /*********************************************************************
-*
-*       Misc helper functions
-*/
-I32  GUI__ATan2(I32 x, I32 y, I32 * ph);
-I32  GUI__ASinHQ(I32 SinHQ);
-int  GUI__CompactPixelIndices  (LCD_PIXELINDEX * pBuffer, int NumPixels, int BitsPerPixel);
-int  GUI__CompactPixelIndicesEx(LCD_PIXELINDEX * pBuffer, int NumPixels, int BitsPerPixel, const LCD_API_COLOR_CONV * pColorConvAPI);
-int  GUI__ConvertColor2Index   (LCD_PIXELINDEX * pBuffer, int NumPixels, int BitsPerPixel, const LCD_API_COLOR_CONV * pColorConvAPI, void * pResult);
-void GUI__Config(void);
-I32  GUI__CosHQ(I32 Ang1000);
-int  GUI__DivideRound     (int a, int b);
-I32  GUI__DivideRound32   (I32 a, I32 b);
-void GUI__ExpandPixelIndices   (void * pBuffer, int NumPixels, int BitsPerPixel);
-void GUI__ExpandPixelIndicesEx (void * pBuffer, int NumPixels, int BitsPerPixel, const LCD_API_COLOR_CONV * pColorConvAPI);
-void GUI__memcpy(void * pDest, const void * pSrc, int NumBytes);
-int  GUI__SetText(GUI_HMEM * phText, const char * s);
-I32  GUI__SinHQ(I32 Ang1000);
-I32  GUI__sqrt32(I32 Square);
-void GUI__DrawTwinArc2(int xl, int xr, int y0,         int r, GUI_COLOR ColorR0, GUI_COLOR ColorR1, GUI_COLOR ColorFill);
-void GUI__DrawTwinArc4(int x0, int y0, int x1, int y1, int r, GUI_COLOR ColorR0, GUI_COLOR ColorR1, GUI_COLOR ColorFill);
-void GUI__FillTrippleArc(int x0, int y0, int Size, GUI_COLOR ColorR0, GUI_COLOR ColorR1, GUI_COLOR ColorR2, GUI_COLOR ColorFill);
-void GUI__RegisterExit(GUI_REGISTER_EXIT * pRegisterExit);
+ *
+ *       Misc helper functions
+ */
+I32 GUI__ATan2 (I32 x, I32 y, I32 * ph);
+I32 GUI__ASinHQ (I32 SinHQ);
+int GUI__CompactPixelIndices (LCD_PIXELINDEX * pBuffer, int NumPixels, int BitsPerPixel);
+int GUI__CompactPixelIndicesEx (LCD_PIXELINDEX * pBuffer, int NumPixels, int BitsPerPixel,
+	const LCD_API_COLOR_CONV * pColorConvAPI);
+int GUI__ConvertColor2Index (LCD_PIXELINDEX * pBuffer, int NumPixels, int BitsPerPixel,
+	const LCD_API_COLOR_CONV * pColorConvAPI, void * pResult);
+void GUI__Config (void);
+I32 GUI__CosHQ (I32 Ang1000);
+int GUI__DivideRound (int a, int b);
+I32 GUI__DivideRound32 (I32 a, I32 b);
+void GUI__ExpandPixelIndices (void * pBuffer, int NumPixels, int BitsPerPixel);
+void GUI__ExpandPixelIndicesEx (void * pBuffer, int NumPixels, int BitsPerPixel,
+	const LCD_API_COLOR_CONV * pColorConvAPI);
+void GUI__memcpy (void * pDest, const void * pSrc, int NumBytes);
+int GUI__SetText (GUI_HMEM * phText, const char * s);
+I32 GUI__SinHQ (I32 Ang1000);
+I32 GUI__sqrt32 (I32 Square);
+void GUI__DrawTwinArc2 (int xl, int xr, int y0, int r, GUI_COLOR ColorR0, GUI_COLOR ColorR1, GUI_COLOR ColorFill);
+void GUI__DrawTwinArc4 (int x0, int y0, int x1, int y1, int r, GUI_COLOR ColorR0, GUI_COLOR ColorR1,
+	GUI_COLOR ColorFill);
+void GUI__FillTrippleArc (int x0, int y0, int Size, GUI_COLOR ColorR0, GUI_COLOR ColorR1, GUI_COLOR ColorR2,
+	GUI_COLOR ColorFill);
+void GUI__RegisterExit (GUI_REGISTER_EXIT * pRegisterExit);
 
 /*********************************************************************
-*
-*       Get / Set Attributes
-*/
-GUI_COLOR GUI_GetBkColor     (void);
-int       GUI_GetBkColorIndex(void);
-GUI_COLOR GUI_GetColor       (void);
-int       GUI_GetColorIndex  (void);
-U8        GUI_GetLineStyle   (void);
-U8        GUI_GetPenSize     (void);
-U8        GUI_GetPenShape    (void);
-unsigned  GUI_GetPixelIndex  (int x, int y);
+ *
+ *       Get / Set Attributes
+ */
+GUI_COLOR GUI_GetBkColor (void);
+int GUI_GetBkColorIndex (void);
+GUI_COLOR GUI_GetColor (void);
+int GUI_GetColorIndex (void);
+U8 GUI_GetLineStyle (void);
+U8 GUI_GetPenSize (void);
+U8 GUI_GetPenShape (void);
+unsigned GUI_GetPixelIndex (int x, int y);
 
-void      GUI_SetBkColor   (GUI_COLOR);
-void      GUI_SetColor     (GUI_COLOR);
-void      GUI_SetBkColorIndex(int Index);
-void      GUI_SetColorIndex(int Index);
+void GUI_SetBkColor (GUI_COLOR);
+void GUI_SetColor (GUI_COLOR);
+void GUI_SetBkColorIndex (int Index);
+void GUI_SetColorIndex (int Index);
 
-U8        GUI_SetPenSize   (U8 Size);
-U8        GUI_SetPenShape  (U8 Shape);
-U8        GUI_SetLineStyle (U8 Style);
+U8 GUI_SetPenSize (U8 Size);
+U8 GUI_SetPenShape (U8 Shape);
+U8 GUI_SetLineStyle (U8 Style);
 
 /* Get/Set Character used as decimal point (usually '.' or ',') */
-char      GUI_GetDecChar(void);
-char      GUI_SetDecChar(char c);
+char GUI_GetDecChar (void);
+char GUI_SetDecChar (char c);
 
 /*********************************************************************
-*
-*       Color / Index related functions
-*/
-int       GUI_Color2Index(GUI_COLOR color);
-GUI_COLOR GUI_Color2VisColor(GUI_COLOR color);
-char      GUI_ColorIsAvailable(GUI_COLOR color);
-GUI_COLOR GUI_Index2Color(int Index);
-U32       GUI_CalcColorDist (GUI_COLOR Color0, GUI_COLOR  Color1);
-U32       GUI_CalcVisColorError(GUI_COLOR color);
+ *
+ *       Color / Index related functions
+ */
+int GUI_Color2Index (GUI_COLOR color);
+GUI_COLOR GUI_Color2VisColor (GUI_COLOR color);
+char GUI_ColorIsAvailable (GUI_COLOR color);
+GUI_COLOR GUI_Index2Color (int Index);
+U32 GUI_CalcColorDist (GUI_COLOR Color0, GUI_COLOR Color1);
+U32 GUI_CalcVisColorError (GUI_COLOR color);
 
 /*********************************************************************
-*
-*       Error handler
-*/
-void GUI_SetOnErrorFunc(void (* pFunc)(const char * s));
+ *
+ *       Error handler
+ */
+void GUI_SetOnErrorFunc (void (*pFunc) (const char * s));
 
 /*********************************************************************
-*
-*       Logging (for debugging primarily)
-*/
-void GUI_Log      (const char * s);
-void GUI_Log1     (const char * s, I32 p0);
-void GUI_Log2     (const char * s, I32 p0, I32 p1);
-void GUI_Log3     (const char * s, I32 p0, I32 p1, I32 p2);
-void GUI_Log4     (const char * s, I32 p0, I32 p1, I32 p2,I32 p3);
-void GUI_Warn     (const char * s);
-void GUI_Warn1    (const char * s, I32 p0);
-void GUI_Warn2    (const char * s, I32 p0, I32 p1);
-void GUI_Warn3    (const char * s, I32 p0, I32 p1, I32 p2);
-void GUI_Warn4    (const char * s, I32 p0, I32 p1, I32 p2, I32 p3);
+ *
+ *       Logging (for debugging primarily)
+ */
+void GUI_Log (const char * s);
+void GUI_Log1 (const char * s, I32 p0);
+void GUI_Log2 (const char * s, I32 p0, I32 p1);
+void GUI_Log3 (const char * s, I32 p0, I32 p1, I32 p2);
+void GUI_Log4 (const char * s, I32 p0, I32 p1, I32 p2, I32 p3);
+void GUI_Warn (const char * s);
+void GUI_Warn1 (const char * s, I32 p0);
+void GUI_Warn2 (const char * s, I32 p0, I32 p1);
+void GUI_Warn3 (const char * s, I32 p0, I32 p1, I32 p2);
+void GUI_Warn4 (const char * s, I32 p0, I32 p1, I32 p2, I32 p3);
 void GUI_ErrorOut (const char * s);
-void GUI_ErrorOut1(const char * s, I32 p0);
-void GUI_ErrorOut2(const char * s, I32 p0, I32 p1);
-void GUI_ErrorOut3(const char * s, I32 p0, I32 p1, I32 p2);
-void GUI_ErrorOut4(const char * s, I32 p0, I32 p1, I32 p2, I32 p3);
+void GUI_ErrorOut1 (const char * s, I32 p0);
+void GUI_ErrorOut2 (const char * s, I32 p0, I32 p1);
+void GUI_ErrorOut3 (const char * s, I32 p0, I32 p1, I32 p2);
+void GUI_ErrorOut4 (const char * s, I32 p0, I32 p1, I32 p2, I32 p3);
 
 /*********************************************************************
-*
-*       2d - GL
-*/
-void GUI_Clear            (void);
-void GUI_ClearRect        (int x0, int y0, int x1, int y1);
-void GUI_ClearRectEx      (const GUI_RECT * pRect);
-void GUI_CopyRect         (int x0, int y0, int x1, int y1, int dx, int dy);
-void GUI_DrawArc          (int x0, int y0, int rx, int ry, int a0, int a1);
-void GUI_DrawBitmap       (const GUI_BITMAP * pBM, int x0, int y0);
-void GUI_DrawBitmapMag    (const GUI_BITMAP * pBM, int x0, int y0, int XMul, int YMul);
-void GUI_DrawBitmapEx     (const GUI_BITMAP * pBM, int x0, int y0, int xCenter, int yCenter, int xMag, int yMag);
-void GUI_DrawBitmapExp    (int x0, int y0, int XSize, int YSize, int XMul,  int YMul, int BitsPerPixel, int BytesPerLine, const U8 * pData, const GUI_LOGPALETTE * pPal);
-void GUI_DrawBitmapHWAlpha(const GUI_BITMAP * pBM, int x0, int y0);
-void GUI_DrawCircle       (int x0, int y0, int r);
-void GUI_DrawEllipse      (int x0, int y0, int rx, int ry);
-void GUI_DrawGradientH    (int x0, int y0, int x1, int y1, GUI_COLOR Color0, GUI_COLOR Color1);
-void GUI_DrawGradientV    (int x0, int y0, int x1, int y1, GUI_COLOR Color0, GUI_COLOR Color1);
-void GUI_DrawGradientRoundedH(int x0, int y0, int x1, int y1, int rd, GUI_COLOR Color0, GUI_COLOR Color1);
-void GUI_DrawGradientRoundedV(int x0, int y0, int x1, int y1, int rd, GUI_COLOR Color0, GUI_COLOR Color1);
-void GUI_DrawGraph        (I16 * pay, int NumPoints, int x0, int y0);
-void GUI_DrawGraphEx      (I16 * pay, int NumPoints, int x0, int y0, int Numerator, int Denominator, int MirrorX);
-void GUI_DrawHLine        (int y0, int x0, int x1);
-void GUI_DrawLine         (int x0, int y0, int x1, int y1);
-void GUI_DrawLineRel      (int dx, int dy);
-void GUI_DrawLineTo       (int x, int y);
-void GUI_DrawPie          (int x0, int y0, int r, int a0, int a1, int Type);
-void GUI_DrawPixel        (int x, int y);
-void GUI_DrawPoint        (int x, int y);
-void GUI_DrawPolygon      (const GUI_POINT * pPoints, int NumPoints, int x0, int y0);
-void GUI_DrawPolyLine     (const GUI_POINT * pPoints, int NumPoints, int x0, int y0);
-void GUI_DrawFocusRect    (const GUI_RECT  * pRect, int Dist);
-void GUI_DrawRect         (int x0, int y0, int x1, int y1);
-void GUI_DrawRectEx       (const GUI_RECT * pRect);
+ *
+ *       2d - GL
+ */
+void GUI_Clear (void);
+void GUI_ClearRect (int x0, int y0, int x1, int y1);
+void GUI_ClearRectEx (const GUI_RECT * pRect);
+void GUI_CopyRect (int x0, int y0, int x1, int y1, int dx, int dy);
+void GUI_DrawArc (int x0, int y0, int rx, int ry, int a0, int a1);
+void GUI_DrawBitmap (const GUI_BITMAP * pBM, int x0, int y0);
+void GUI_DrawBitmapMag (const GUI_BITMAP * pBM, int x0, int y0, int XMul, int YMul);
+void GUI_DrawBitmapEx (const GUI_BITMAP * pBM, int x0, int y0, int xCenter, int yCenter, int xMag, int yMag);
+void GUI_DrawBitmapExp (int x0, int y0, int XSize, int YSize, int XMul, int YMul, int BitsPerPixel, int BytesPerLine,
+	const U8 * pData, const GUI_LOGPALETTE * pPal);
+void GUI_DrawBitmapHWAlpha (const GUI_BITMAP * pBM, int x0, int y0);
+void GUI_DrawCircle (int x0, int y0, int r);
+void GUI_DrawEllipse (int x0, int y0, int rx, int ry);
+void GUI_DrawGradientH (int x0, int y0, int x1, int y1, GUI_COLOR Color0, GUI_COLOR Color1);
+void GUI_DrawGradientV (int x0, int y0, int x1, int y1, GUI_COLOR Color0, GUI_COLOR Color1);
+void GUI_DrawGradientRoundedH (int x0, int y0, int x1, int y1, int rd, GUI_COLOR Color0, GUI_COLOR Color1);
+void GUI_DrawGradientRoundedV (int x0, int y0, int x1, int y1, int rd, GUI_COLOR Color0, GUI_COLOR Color1);
+void GUI_DrawGraph (I16 * pay, int NumPoints, int x0, int y0);
+void GUI_DrawGraphEx (I16 * pay, int NumPoints, int x0, int y0, int Numerator, int Denominator, int MirrorX);
+void GUI_DrawHLine (int y0, int x0, int x1);
+void GUI_DrawLine (int x0, int y0, int x1, int y1);
+void GUI_DrawLineRel (int dx, int dy);
+void GUI_DrawLineTo (int x, int y);
+void GUI_DrawPie (int x0, int y0, int r, int a0, int a1, int Type);
+void GUI_DrawPixel (int x, int y);
+void GUI_DrawPoint (int x, int y);
+void GUI_DrawPolygon (const GUI_POINT * pPoints, int NumPoints, int x0, int y0);
+void GUI_DrawPolyLine (const GUI_POINT * pPoints, int NumPoints, int x0, int y0);
+void GUI_DrawFocusRect (const GUI_RECT * pRect, int Dist);
+void GUI_DrawRect (int x0, int y0, int x1, int y1);
+void GUI_DrawRectEx (const GUI_RECT * pRect);
 void GUI_DrawRoundedFrame (int x0, int y0, int x1, int y1, int r, int w);
-void GUI_DrawRoundedRect  (int x0, int y0, int x1, int y1, int r);
-void GUI_DrawVLine        (int x0, int y0, int y1);
-void GUI_FillCircle       (int x0, int y0, int r);
-void GUI_FillEllipse      (int x0, int y0, int rx, int ry);
-void GUI_FillPolygon      (const GUI_POINT * pPoints, int NumPoints, int x0, int y0);
-void GUI_FillRect         (int x0, int y0, int x1, int y1);
-void GUI_FillRectEx       (const GUI_RECT * pRect);
+void GUI_DrawRoundedRect (int x0, int y0, int x1, int y1, int r);
+void GUI_DrawVLine (int x0, int y0, int y1);
+void GUI_FillCircle (int x0, int y0, int r);
+void GUI_FillEllipse (int x0, int y0, int rx, int ry);
+void GUI_FillPolygon (const GUI_POINT * pPoints, int NumPoints, int x0, int y0);
+void GUI_FillRect (int x0, int y0, int x1, int y1);
+void GUI_FillRectEx (const GUI_RECT * pRect);
 void GUI_FillRoundedFrame (int x0, int y0, int x1, int y1, int r, int w);
-void GUI_FillRoundedRect  (int x0, int y0, int x1, int y1, int r);
+void GUI_FillRoundedRect (int x0, int y0, int x1, int y1, int r);
 void GUI_FillRoundedRectB (int x0, int y0, int x1, int y1, int r);
 void GUI_FillRoundedRectT (int x0, int y0, int x1, int y1, int r);
-void GUI_GetClientRect    (GUI_RECT * pRect);
-void GUI_InvertRect       (int x0, int y0, int x1, int y1);
-void GUI_MoveRel          (int dx, int dy);
-void GUI_MoveTo           (int x, int y);
+void GUI_GetClientRect (GUI_RECT * pRect);
+void GUI_InvertRect (int x0, int y0, int x1, int y1);
+void GUI_MoveRel (int dx, int dy);
+void GUI_MoveTo (int x, int y);
 void GUI_SetAlphaMask8888 (U32 OrMask, U32 AndMask);
 
 /*********************************************************************
-*
-*       Graphic file support
-*/
-typedef int GUI_GET_DATA_FUNC(void * p, const U8 ** ppData, unsigned NumBytes, U32 Off);
+ *
+ *       Graphic file support
+ */
+typedef int GUI_GET_DATA_FUNC (void * p, const U8 ** ppData, unsigned NumBytes, U32 Off);
 
 /*********************************************************************
-*
-*       GIF file support
-*/
-int GUI_GIF_Draw           (const void * pGIF, U32 NumBytes,         int x0, int y0);
-int GUI_GIF_DrawEx         (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
-int GUI_GIF_DrawSub        (const void * pGIF, U32 NumBytes,         int x0, int y0, int Index);
-int GUI_GIF_DrawSubEx      (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Index);
-int GUI_GIF_DrawSubScaled  (const void * pGIF, U32 NumBytes,         int x0, int y0, int Index, int Num, int Denom);
-int GUI_GIF_DrawSubScaledEx(GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Index, int Num, int Denom);
-int GUI_GIF_GetComment     (const void * pGIF, U32 NumBytes,         U8 * pBuffer, int MaxSize, int Index);
-int GUI_GIF_GetCommentEx   (GUI_GET_DATA_FUNC * pfGetData, void * p, U8 * pBuffer, int MaxSize, int Index);
-int GUI_GIF_GetImageInfo   (const void * pGIF, U32 NumBytes,         GUI_GIF_IMAGE_INFO * pInfo, int Index);
+ *
+ *       GIF file support
+ */
+int GUI_GIF_Draw (const void * pGIF, U32 NumBytes, int x0, int y0);
+int GUI_GIF_DrawEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
+int GUI_GIF_DrawSub (const void * pGIF, U32 NumBytes, int x0, int y0, int Index);
+int GUI_GIF_DrawSubEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Index);
+int GUI_GIF_DrawSubScaled (const void * pGIF, U32 NumBytes, int x0, int y0, int Index, int Num, int Denom);
+int GUI_GIF_DrawSubScaledEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Index, int Num, int Denom);
+int GUI_GIF_GetComment (const void * pGIF, U32 NumBytes, U8 * pBuffer, int MaxSize, int Index);
+int GUI_GIF_GetCommentEx (GUI_GET_DATA_FUNC * pfGetData, void * p, U8 * pBuffer, int MaxSize, int Index);
+int GUI_GIF_GetImageInfo (const void * pGIF, U32 NumBytes, GUI_GIF_IMAGE_INFO * pInfo, int Index);
 int GUI_GIF_GetImageInfoEx (GUI_GET_DATA_FUNC * pfGetData, void * p, GUI_GIF_IMAGE_INFO * pInfo, int Index);
-int GUI_GIF_GetInfo        (const void * pGIF, U32 NumBytes,         GUI_GIF_INFO * pInfo);
-int GUI_GIF_GetInfoEx      (GUI_GET_DATA_FUNC * pfGetData, void * p, GUI_GIF_INFO * pInfo);
-int GUI_GIF_GetXSize       (const void * pGIF);
-int GUI_GIF_GetXSizeEx     (GUI_GET_DATA_FUNC * pfGetData, void * p);
-int GUI_GIF_GetYSize       (const void * pGIF);
-int GUI_GIF_GetYSizeEx     (GUI_GET_DATA_FUNC * pfGetData, void * p);
-int GUI_GIF_SetFillTrans   (int OnOff);
+int GUI_GIF_GetInfo (const void * pGIF, U32 NumBytes, GUI_GIF_INFO * pInfo);
+int GUI_GIF_GetInfoEx (GUI_GET_DATA_FUNC * pfGetData, void * p, GUI_GIF_INFO * pInfo);
+int GUI_GIF_GetXSize (const void * pGIF);
+int GUI_GIF_GetXSizeEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
+int GUI_GIF_GetYSize (const void * pGIF);
+int GUI_GIF_GetYSizeEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
+int GUI_GIF_SetFillTrans (int OnOff);
 
 /*********************************************************************
-*
-*       BMP file support
-*/
-int  GUI_BMP_Draw        (const void * pFileData,                  int x0, int y0);
-int  GUI_BMP_DrawEx      (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
-int  GUI_BMP_DrawScaled  (const void * pFileData,                  int x0, int y0, int Num, int Denom);
-int  GUI_BMP_DrawScaledEx(GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Num, int Denom);
-int  GUI_BMP_GetXSize    (const void * pFileData);
-int  GUI_BMP_GetXSizeEx  (GUI_GET_DATA_FUNC * pfGetData, void * p);
-int  GUI_BMP_GetYSize    (const void * pFileData);
-int  GUI_BMP_GetYSizeEx  (GUI_GET_DATA_FUNC * pfGetData, void * p);
+ *
+ *       BMP file support
+ */
+int GUI_BMP_Draw (const void * pFileData, int x0, int y0);
+int GUI_BMP_DrawEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
+int GUI_BMP_DrawScaled (const void * pFileData, int x0, int y0, int Num, int Denom);
+int GUI_BMP_DrawScaledEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Num, int Denom);
+int GUI_BMP_GetXSize (const void * pFileData);
+int GUI_BMP_GetXSizeEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
+int GUI_BMP_GetYSize (const void * pFileData);
+int GUI_BMP_GetYSizeEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
 void GUI_BMP_EnableAlpha (void);
-void GUI_BMP_DisableAlpha(void);
+void GUI_BMP_DisableAlpha (void);
 
 /*********************************************************************
-*
-*       PNG file support
-*/
-int GUI_PNG_Draw      (const void * pFileData, int DataSize, int x0, int y0);
-int GUI_PNG_DrawEx    (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
-int GUI_PNG_GetXSize  (const void * pFileData, int FileSize);
-int GUI_PNG_GetXSizeEx(GUI_GET_DATA_FUNC * pfGetData, void * p);
-int GUI_PNG_GetYSize  (const void * pFileData, int FileSize);
-int GUI_PNG_GetYSizeEx(GUI_GET_DATA_FUNC * pfGetData, void * p);
+ *
+ *       PNG file support
+ */
+int GUI_PNG_Draw (const void * pFileData, int DataSize, int x0, int y0);
+int GUI_PNG_DrawEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
+int GUI_PNG_GetXSize (const void * pFileData, int FileSize);
+int GUI_PNG_GetXSizeEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
+int GUI_PNG_GetYSize (const void * pFileData, int FileSize);
+int GUI_PNG_GetYSizeEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
 
 /*********************************************************************
-*
-*       JPEG file support
-*/
-typedef struct {
-  int XSize;
-  int YSize;
+ *
+ *       JPEG file support
+ */
+typedef struct
+{
+	int XSize;
+	int YSize;
 } GUI_JPEG_INFO;
 
-int GUI_JPEG_Draw        (const void * pFileData, int DataSize,    int x0, int y0);
-int GUI_JPEG_DrawEx      (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
-int GUI_JPEG_DrawScaled  (const void * pFileData, int DataSize,    int x0, int y0, int Num, int Denom);
-int GUI_JPEG_DrawScaledEx(GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Num, int Denom);
-int GUI_JPEG_GetInfo     (const void * pFileData, int DataSize,    GUI_JPEG_INFO * pInfo);
-int GUI_JPEG_GetInfoEx   (GUI_GET_DATA_FUNC * pfGetData, void * p, GUI_JPEG_INFO * pInfo);
+int GUI_JPEG_Draw (const void * pFileData, int DataSize, int x0, int y0);
+int GUI_JPEG_DrawEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0);
+int GUI_JPEG_DrawScaled (const void * pFileData, int DataSize, int x0, int y0, int Num, int Denom);
+int GUI_JPEG_DrawScaledEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int x0, int y0, int Num, int Denom);
+int GUI_JPEG_GetInfo (const void * pFileData, int DataSize, GUI_JPEG_INFO * pInfo);
+int GUI_JPEG_GetInfoEx (GUI_GET_DATA_FUNC * pfGetData, void * p, GUI_JPEG_INFO * pInfo);
 
 /*********************************************************************
-*
-*       MOVIE file support
-*/
+ *
+ *       MOVIE file support
+ */
 #define GUI_MOVIE_NOTIFICATION_PREDRAW  0 // Immediately before frame is drawn
 #define GUI_MOVIE_NOTIFICATION_POSTDRAW 1 // Immediately after a frame is drawn
 #define GUI_MOVIE_NOTIFICATION_START    2 // Send when start playing a movie
@@ -583,112 +602,117 @@ int GUI_JPEG_GetInfoEx   (GUI_GET_DATA_FUNC * pfGetData, void * p, GUI_JPEG_INFO
 
 typedef GUI_HMEM GUI_MOVIE_HANDLE;
 
-typedef void GUI_MOVIE_FUNC(GUI_MOVIE_HANDLE hMovie, int Notification, U32 CurrentFrame);
+typedef void GUI_MOVIE_FUNC (GUI_MOVIE_HANDLE hMovie, int Notification, U32 CurrentFrame);
 
-typedef struct {
-  int xSize;         // X-size of images
-  int ySize;         // Y-size of images
-  int msPerFrame;    // Default duration of 1 frame
-  U32 NumFrames;     // Number of frames
+typedef struct
+{
+	int xSize;         // X-size of images
+	int ySize;         // Y-size of images
+	int msPerFrame;    // Default duration of 1 frame
+	U32 NumFrames;     // Number of frames
 } GUI_MOVIE_INFO;
 
-GUI_MOVIE_HANDLE GUI_MOVIE_Create       (const void * pFileData, U32 FileSize, GUI_MOVIE_FUNC * pfNotify);
-GUI_MOVIE_HANDLE GUI_MOVIE_CreateEx     (GUI_GET_DATA_FUNC * pfGetData, void * pParam, GUI_MOVIE_FUNC * pfNotify);
-int              GUI_MOVIE_Delete       (GUI_MOVIE_HANDLE hMovie);
-U32              GUI_MOVIE_GetFrameIndex(GUI_MOVIE_HANDLE hMovie);
-int              GUI_MOVIE_GetInfo      (const void * pFileData, U32 FileSize, GUI_MOVIE_INFO * pInfo);
-int              GUI_MOVIE_GetInfoEx    (GUI_GET_DATA_FUNC * pfGetData, void * pParam, GUI_MOVIE_INFO * pInfo);
-int              GUI_MOVIE_GetPos       (GUI_MOVIE_HANDLE hMovie, int * pxPos, int * pyPos, int * pxSize, int * pySize);
-int              GUI_MOVIE_GotoFrame    (GUI_MOVIE_HANDLE hMovie, U32 Frame);
-int              GUI_MOVIE_Pause        (GUI_MOVIE_HANDLE hMovie);
-int              GUI_MOVIE_Play         (GUI_MOVIE_HANDLE hMovie);
-int              GUI_MOVIE_SetPeriod    (GUI_MOVIE_HANDLE hMovie, unsigned Period);
-int              GUI_MOVIE_SetPos       (GUI_MOVIE_HANDLE hMovie, int xPos, int yPos);
-int              GUI_MOVIE_Show         (GUI_MOVIE_HANDLE hMovie, int xPos, int yPos, int DoLoop);
+GUI_MOVIE_HANDLE GUI_MOVIE_Create (const void * pFileData, U32 FileSize, GUI_MOVIE_FUNC * pfNotify);
+GUI_MOVIE_HANDLE GUI_MOVIE_CreateEx (GUI_GET_DATA_FUNC * pfGetData, void * pParam, GUI_MOVIE_FUNC * pfNotify);
+int GUI_MOVIE_Delete (GUI_MOVIE_HANDLE hMovie);
+U32 GUI_MOVIE_GetFrameIndex (GUI_MOVIE_HANDLE hMovie);
+int GUI_MOVIE_GetInfo (const void * pFileData, U32 FileSize, GUI_MOVIE_INFO * pInfo);
+int GUI_MOVIE_GetInfoEx (GUI_GET_DATA_FUNC * pfGetData, void * pParam, GUI_MOVIE_INFO * pInfo);
+int GUI_MOVIE_GetPos (GUI_MOVIE_HANDLE hMovie, int * pxPos, int * pyPos, int * pxSize, int * pySize);
+int GUI_MOVIE_GotoFrame (GUI_MOVIE_HANDLE hMovie, U32 Frame);
+int GUI_MOVIE_Pause (GUI_MOVIE_HANDLE hMovie);
+int GUI_MOVIE_Play (GUI_MOVIE_HANDLE hMovie);
+int GUI_MOVIE_SetPeriod (GUI_MOVIE_HANDLE hMovie, unsigned Period);
+int GUI_MOVIE_SetPos (GUI_MOVIE_HANDLE hMovie, int xPos, int yPos);
+int GUI_MOVIE_Show (GUI_MOVIE_HANDLE hMovie, int xPos, int yPos, int DoLoop);
 
 /*********************************************************************
-*
-*       Cursor routines
-*/
+ *
+ *       Cursor routines
+ */
 #define GUI_CURSOR_SHOW 0
 #define GUI_CURSOR_HIDE 1
 
-typedef struct {
-  const GUI_BITMAP  * pBitmap;
-  int                 xHot;
-  int                 yHot;
+typedef struct
+{
+	const GUI_BITMAP * pBitmap;
+	int xHot;
+	int yHot;
 } GUI_CURSOR;
 
-typedef struct {
-  const GUI_BITMAP ** ppBm;
-  int                 xHot;
-  int                 yHot;
-  unsigned            Period;
-  const unsigned    * pPeriod;
-  int                 NumItems;
+typedef struct
+{
+	const GUI_BITMAP ** ppBm;
+	int xHot;
+	int yHot;
+	unsigned Period;
+	const unsigned * pPeriod;
+	int NumItems;
 } GUI_CURSOR_ANIM;
 
 #if GUI_SUPPORT_CURSOR
-  int                GUI_CURSOR_GetState     (void);
-  int                GUI_CURSOR_GetStateEx   (int Layer);
-  void               GUI_CURSOR_Hide         (void);
-  void               GUI_CURSOR_HideEx       (int Layer);
-  const GUI_CURSOR * GUI_CURSOR_Select       (const GUI_CURSOR * pCursor);
-  const GUI_CURSOR * GUI_CURSOR_SelectEx     (const GUI_CURSOR * pCursor, int Layer);
-  int                GUI_CURSOR_SelectAnim   (const GUI_CURSOR_ANIM * pCursorAnim);
-  int                GUI_CURSOR_SelectAnimEx (const GUI_CURSOR_ANIM * pCursorAnim, int LayerIndex);
-  int                GUI_CURSOR_SetBitmap    (const GUI_BITMAP * pBM);
-  int                GUI_CURSOR_SetBitmapEx  (const GUI_BITMAP * pBM, int Layer);
-  void               GUI_CURSOR_SetPosition  (int x, int y);
-  void               GUI_CURSOR_SetPositionEx(int xNewPos, int yNewPos, int Layer);
-  void               GUI_CURSOR_Show         (void);
-  void               GUI_CURSOR_ShowEx       (int Layer);
-  GUI_HSPRITE        GUI_CURSOR__GetSpriteEx (int LayerIndex, int * pxPos, int * pyPos);
-  void               GUI_CURSOR__SetSpriteEx (GUI_HSPRITE hSprite, const GUI_CURSOR * pCursor, int LayerIndex);
+int GUI_CURSOR_GetState (void);
+int GUI_CURSOR_GetStateEx (int Layer);
+void GUI_CURSOR_Hide (void);
+void GUI_CURSOR_HideEx (int Layer);
+const GUI_CURSOR * GUI_CURSOR_Select (const GUI_CURSOR * pCursor);
+const GUI_CURSOR * GUI_CURSOR_SelectEx (const GUI_CURSOR * pCursor, int Layer);
+int GUI_CURSOR_SelectAnim (const GUI_CURSOR_ANIM * pCursorAnim);
+int GUI_CURSOR_SelectAnimEx (const GUI_CURSOR_ANIM * pCursorAnim, int LayerIndex);
+int GUI_CURSOR_SetBitmap (const GUI_BITMAP * pBM);
+int GUI_CURSOR_SetBitmapEx (const GUI_BITMAP * pBM, int Layer);
+void GUI_CURSOR_SetPosition (int x, int y);
+void GUI_CURSOR_SetPositionEx(int xNewPos, int yNewPos, int Layer);
+void GUI_CURSOR_Show (void);
+void GUI_CURSOR_ShowEx (int Layer);
+GUI_HSPRITE GUI_CURSOR__GetSpriteEx (int LayerIndex, int * pxPos, int * pyPos);
+void GUI_CURSOR__SetSpriteEx (GUI_HSPRITE hSprite, const GUI_CURSOR * pCursor, int LayerIndex);
 #else
-  #define GUI_CURSOR_Show();
-  #define GUI_CURSOR_Clear();
+#define GUI_CURSOR_Show();
+#define GUI_CURSOR_Clear();
 #endif
 
 /*********************************************************************
-*
-*       Sprite support
-*/
+ *
+ *       Sprite support
+ */
 #define GUI_SPRITE_CF_STAYONTOP (1 << 0)
 #define GUI_SPRITE_CF_SHOW      (1 << 1)
 
 #define GUI_SPRITE_SHOW 0
 #define GUI_SPRITE_HIDE 1
 
-GUI_HSPRITE GUI_SPRITE__CreateEx           (const GUI_BITMAP * pBM, int x, int y, int Layer, U16 Flags); /* Not to be documented, only used by cursor modul */
-void        GUI_SPRITE__SetCallback        (GUI_HSPRITE hSprite, GUI_HMEM hContext, void (* pCB)(GUI_HSPRITE, int));
-GUI_HSPRITE GUI_SPRITE_Create              (const GUI_BITMAP * pBM, int x, int y);
-GUI_HSPRITE GUI_SPRITE_CreateAnim          (const GUI_BITMAP ** ppBm, int x, int y, unsigned Period, const unsigned * pPeriod, int NumItems);
-GUI_HSPRITE GUI_SPRITE_CreateEx            (const GUI_BITMAP * pBM, int x, int y, int Layer);
-GUI_HSPRITE GUI_SPRITE_CreateExAnim        (const GUI_BITMAP ** ppBm, int x, int y, unsigned Period, const unsigned * pPeriod, int NumItems, int LayerIndex);
-GUI_HSPRITE GUI_SPRITE_CreateHidden        (const GUI_BITMAP * pBM, int x, int y);
-GUI_HSPRITE GUI_SPRITE_CreateHiddenEx      (const GUI_BITMAP * pBM, int x, int y, int Layer);
-void        GUI_SPRITE_Delete              (GUI_HSPRITE hSprite);
-int         GUI_SPRITE_GetState            (GUI_HSPRITE hSprite);
-void        GUI_SPRITE_Hide                (GUI_HSPRITE hSprite);
-int         GUI_SPRITE_SetBitmap           (GUI_HSPRITE hSprite, const GUI_BITMAP * pBM);
-int         GUI_SPRITE_SetBitmapAndPosition(GUI_HSPRITE hSprite, const GUI_BITMAP * pBM, int x, int y);
-int         GUI_SPRITE_SetLoop             (GUI_HSPRITE hSprite, int OnOff);
-void        GUI_SPRITE_SetPosition         (GUI_HSPRITE hSprite, int x, int y);
-int         GUI_SPRITE_StartAnim           (GUI_HSPRITE hSprite);
-int         GUI_SPRITE_StopAnim            (GUI_HSPRITE hSprite);
-void        GUI_SPRITE_Show                (GUI_HSPRITE hSprite);
+GUI_HSPRITE GUI_SPRITE__CreateEx (const GUI_BITMAP * pBM, int x, int y, int Layer, U16 Flags); /* Not to be documented, only used by cursor modul */
+void GUI_SPRITE__SetCallback (GUI_HSPRITE hSprite, GUI_HMEM hContext, void (*pCB) (GUI_HSPRITE, int));
+GUI_HSPRITE GUI_SPRITE_Create (const GUI_BITMAP * pBM, int x, int y);
+GUI_HSPRITE GUI_SPRITE_CreateAnim (const GUI_BITMAP ** ppBm, int x, int y, unsigned Period, const unsigned * pPeriod,
+	int NumItems);
+GUI_HSPRITE GUI_SPRITE_CreateEx (const GUI_BITMAP * pBM, int x, int y, int Layer);
+GUI_HSPRITE GUI_SPRITE_CreateExAnim (const GUI_BITMAP ** ppBm, int x, int y, unsigned Period, const unsigned * pPeriod,
+	int NumItems, int LayerIndex);
+GUI_HSPRITE GUI_SPRITE_CreateHidden (const GUI_BITMAP * pBM, int x, int y);
+GUI_HSPRITE GUI_SPRITE_CreateHiddenEx (const GUI_BITMAP * pBM, int x, int y, int Layer);
+void GUI_SPRITE_Delete (GUI_HSPRITE hSprite);
+int GUI_SPRITE_GetState (GUI_HSPRITE hSprite);
+void GUI_SPRITE_Hide (GUI_HSPRITE hSprite);
+int GUI_SPRITE_SetBitmap (GUI_HSPRITE hSprite, const GUI_BITMAP * pBM);
+int GUI_SPRITE_SetBitmapAndPosition (GUI_HSPRITE hSprite, const GUI_BITMAP * pBM, int x, int y);
+int GUI_SPRITE_SetLoop (GUI_HSPRITE hSprite, int OnOff);
+void GUI_SPRITE_SetPosition (GUI_HSPRITE hSprite, int x, int y);
+int GUI_SPRITE_StartAnim (GUI_HSPRITE hSprite);
+int GUI_SPRITE_StopAnim (GUI_HSPRITE hSprite);
+void GUI_SPRITE_Show (GUI_HSPRITE hSprite);
 
 /*********************************************************************
-*
-*       Cursors and their bitmaps
-*/
-extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorArrowS,  GUI_CursorArrowSI;
-extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorArrowM,  GUI_CursorArrowMI;
-extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorArrowL,  GUI_CursorArrowLI;
-extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorCrossS,  GUI_CursorCrossSI;
-extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorCrossM,  GUI_CursorCrossMI;
-extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorCrossL,  GUI_CursorCrossLI;
+ *
+ *       Cursors and their bitmaps
+ */
+extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorArrowS, GUI_CursorArrowSI;
+extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorArrowM, GUI_CursorArrowMI;
+extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorArrowL, GUI_CursorArrowLI;
+extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorCrossS, GUI_CursorCrossSI;
+extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorCrossM, GUI_CursorCrossMI;
+extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorCrossL, GUI_CursorCrossLI;
 extern GUI_CONST_STORAGE GUI_CURSOR GUI_CursorHeaderM, GUI_CursorHeaderMI;
 
 extern GUI_CONST_STORAGE GUI_BITMAP GUI_BitmapArrowS, GUI_BitmapArrowSI;
@@ -701,362 +725,376 @@ extern GUI_CONST_STORAGE GUI_BITMAP GUI_BitmapCrossL, GUI_BitmapCrossLI;
 extern GUI_CONST_STORAGE GUI_CURSOR_ANIM GUI_CursorAnimHourglassM;
 
 /*********************************************************************
-*
-*       Wrap modes
-*/
-typedef enum { GUI_WRAPMODE_NONE, GUI_WRAPMODE_WORD, GUI_WRAPMODE_CHAR } GUI_WRAPMODE;
+ *
+ *       Wrap modes
+ */
+typedef enum
+{
+	GUI_WRAPMODE_NONE,
+	GUI_WRAPMODE_WORD,
+	GUI_WRAPMODE_CHAR
+} GUI_WRAPMODE;
 
 /*********************************************************************
-*
-*       Text related routines
-*/
-void  GUI_DispCEOL             (void);
-void  GUI_DispChar             (U16 c);
-void  GUI_DispCharAt           (U16 c, I16P x, I16P y);
-void  GUI_DispChars            (U16 c, int Cnt);
-void  GUI_DispNextLine         (void);
-void  GUI_DispString           (const char * s);
-void  GUI_DispStringAt         (const char * s, int x, int y);
-void  GUI_DispStringAtCEOL     (const char * s, int x, int y);
-void  GUI_DispStringHCenterAt  (const char * s, int x, int y);
-void  GUI__DispStringInRect    (const char * s, GUI_RECT * pRect, int TextAlign, int MaxNumChars);
-void  GUI_DispStringInRect     (const char * s, GUI_RECT * pRect, int TextAlign);
+ *
+ *       Text related routines
+ */
+void GUI_DispCEOL (void);
+void GUI_DispChar (U16 c);
+void GUI_DispCharAt (U16 c, I16P x, I16P y);
+void GUI_DispChars (U16 c, int Cnt);
+void GUI_DispNextLine (void);
+void GUI_DispString (const char * s);
+void GUI_DispStringAt (const char * s, int x, int y);
+void GUI_DispStringAtCEOL (const char * s, int x, int y);
+void GUI_DispStringHCenterAt (const char * s, int x, int y);
+void GUI__DispStringInRect (const char * s, GUI_RECT * pRect, int TextAlign, int MaxNumChars);
+void GUI_DispStringInRect (const char * s, GUI_RECT * pRect, int TextAlign);
 #if GUI_SUPPORT_ROTATION
-  void  GUI_DispStringInRectEx (const char * s, GUI_RECT * pRect, int TextAlign, int MaxLen, const GUI_ROTATION * pLCD_Api);
+void GUI_DispStringInRectEx (const char * s, GUI_RECT * pRect, int TextAlign, int MaxLen, const GUI_ROTATION * pLCD_Api);
 #endif
-void  GUI_DispStringInRectMax  (const char * s, GUI_RECT * pRect, int TextAlign, int MaxLen); /* Not to be doc. */
-void  GUI_DispStringInRectWrap (const char * s, GUI_RECT * pRect, int TextAlign, GUI_WRAPMODE WrapMode); /* Not to be doc. */
-void  GUI_DispStringLen        (const char * s, int Len);
-void  GUI_GetTextExtend        (GUI_RECT* pRect, const char * s, int Len);
-int   GUI_GetYAdjust           (void);
-int   GUI_GetDispPosX          (void);
-int   GUI_GetDispPosY          (void);
-const GUI_FONT * GUI_GetFont(void);
-int   GUI_GetCharDistX         (U16 c);
-int   GUI_GetCharDistXEx       (U16 c, int * pSizeX);
-int   GUI_GetStringDistX       (const char * s);
-GUI_DRAWMODE GUI_GetDrawMode   (void);
-int   GUI_GetFontDistY         (void);
-int   GUI_GetFontSizeY         (void);
-void  GUI_GetFontInfo          (const GUI_FONT * pFont, GUI_FONTINFO * pfi);
-void  GUI_GetOrg               (int * px, int * py);
-int   GUI_GetYSizeOfFont       (const GUI_FONT * pFont);
-int   GUI_GetYDistOfFont       (const GUI_FONT * pFont);
-int   GUI_GetTextAlign         (void);
-int   GUI_GetTextMode          (void);
-char  GUI_IsInFont             (const GUI_FONT * pFont, U16 c);
-int   GUI_SetTextAlign         (int Align);
-int   GUI_SetTextMode          (int Mode);
-char  GUI_SetTextStyle         (char Style);
-int   GUI_SetLBorder           (int x);
-const GUI_FONT * GUI_SetFont(const GUI_FONT * pNewFont);
-char  GUI_GotoXY               (int x, int y);
-char  GUI_GotoX                (int x);
-char  GUI_GotoY                (int y);
-int   GUI_WrapGetNumLines      (const char * pText, int xSize, GUI_WRAPMODE WrapMode);
+void GUI_DispStringInRectMax (const char * s, GUI_RECT * pRect, int TextAlign, int MaxLen); /* Not to be doc. */
+void GUI_DispStringInRectWrap (const char * s, GUI_RECT * pRect, int TextAlign, GUI_WRAPMODE WrapMode); /* Not to be doc. */
+void GUI_DispStringLen (const char * s, int Len);
+void GUI_GetTextExtend (GUI_RECT* pRect, const char * s, int Len);
+int GUI_GetYAdjust (void);
+int GUI_GetDispPosX (void);
+int GUI_GetDispPosY (void);
+const GUI_FONT * GUI_GetFont (void);
+int GUI_GetCharDistX (U16 c);
+int GUI_GetCharDistXEx (U16 c, int * pSizeX);
+int GUI_GetStringDistX (const char * s);
+GUI_DRAWMODE GUI_GetDrawMode (void);
+int GUI_GetFontDistY (void);
+int GUI_GetFontSizeY (void);
+void GUI_GetFontInfo (const GUI_FONT * pFont, GUI_FONTINFO * pfi);
+void GUI_GetOrg (int * px, int * py);
+int GUI_GetYSizeOfFont (const GUI_FONT * pFont);
+int GUI_GetYDistOfFont (const GUI_FONT * pFont);
+int GUI_GetTextAlign (void);
+int GUI_GetTextMode (void);
+char GUI_IsInFont (const GUI_FONT * pFont, U16 c);
+int GUI_SetTextAlign (int Align);
+int GUI_SetTextMode (int Mode);
+char GUI_SetTextStyle (char Style);
+int GUI_SetLBorder (int x);
+const GUI_FONT * GUI_SetFont (const GUI_FONT * pNewFont);
+char GUI_GotoXY (int x, int y);
+char GUI_GotoX (int x);
+char GUI_GotoY (int y);
+int GUI_WrapGetNumLines (const char * pText, int xSize, GUI_WRAPMODE WrapMode);
 
-int   GUI_GetLeadingBlankCols (U16 c);
-int   GUI_GetTrailingBlankCols(U16 c);
-
-
-/*********************************************************************
-*
-*       System independent fonts (SIF)
-*/
-void GUI_SIF_CreateFont(const void * pFontData, GUI_FONT * pFont, const GUI_SIF_TYPE * pFontType);
-void GUI_SIF_DeleteFont(GUI_FONT * pFont);
+int GUI_GetLeadingBlankCols (U16 c);
+int GUI_GetTrailingBlankCols (U16 c);
 
 /*********************************************************************
-*
-*       External binary fonts (XBF)
-*/
-int  GUI_XBF_CreateFont(GUI_FONT * pFont, GUI_XBF_DATA * pXBF, const GUI_XBF_TYPE * pFontType, GUI_XBF_GET_DATA_FUNC * pfGetData, void * pVoid);
-void GUI_XBF_DeleteFont(GUI_FONT * pFont);
+ *
+ *       System independent fonts (SIF)
+ */
+void GUI_SIF_CreateFont (const void * pFontData, GUI_FONT * pFont, const GUI_SIF_TYPE * pFontType);
+void GUI_SIF_DeleteFont (GUI_FONT * pFont);
 
 /*********************************************************************
-*
-*       TrueType support (TTF)
-*/
-int  GUI_TTF_CreateFont   (GUI_FONT * pFont, GUI_TTF_CS * pCS);
-int  GUI_TTF_CreateFontAA (GUI_FONT * pFont, GUI_TTF_CS * pCS);
+ *
+ *       External binary fonts (XBF)
+ */
+int GUI_XBF_CreateFont (GUI_FONT * pFont, GUI_XBF_DATA * pXBF, const GUI_XBF_TYPE * pFontType,
+	GUI_XBF_GET_DATA_FUNC * pfGetData, void * pVoid);
+void GUI_XBF_DeleteFont (GUI_FONT * pFont);
+
+/*********************************************************************
+ *
+ *       TrueType support (TTF)
+ */
+int GUI_TTF_CreateFont (GUI_FONT * pFont, GUI_TTF_CS * pCS);
+int GUI_TTF_CreateFontAA (GUI_FONT * pFont, GUI_TTF_CS * pCS);
 void GUI_TTF_DestroyCache (void);
-void GUI_TTF_Done         (void);
-int  GUI_TTF_GetFamilyName(GUI_FONT * pFont, char * pBuffer, int NumBytes);
-int  GUI_TTF_GetStyleName (GUI_FONT * pFont, char * pBuffer, int NumBytes);
+void GUI_TTF_Done (void);
+int GUI_TTF_GetFamilyName (GUI_FONT * pFont, char * pBuffer, int NumBytes);
+int GUI_TTF_GetStyleName (GUI_FONT * pFont, char * pBuffer, int NumBytes);
 void GUI_TTF_SetCacheSize (unsigned MaxFaces, unsigned MaxSizes, U32 MaxBytes);
 
 /*********************************************************************
-*
-*       Resource file support
-*/
-int          GUI_LANG_GetNumItems      (int IndexLang);
-const char * GUI_LANG_GetText          (int IndexText);
-int          GUI_LANG_GetTextBuffered  (int IndexText, char * pBuffer, int SizeOfBuffer);
-int          GUI_LANG_GetTextBufferedEx(int IndexText, int IndexLang, char * pBuffer, int SizeOfBuffer);
-const char * GUI_LANG_GetTextEx        (int IndexText, int IndexLang);
-int          GUI_LANG_LoadCSV          (U8 * pFileData, U32 FileSize);
-int          GUI_LANG_LoadCSVEx        (GUI_GET_DATA_FUNC * pfGetData, void * p);
-int          GUI_LANG_LoadText         (U8 * pFileData, U32 FileSize, int IndexLang);
-int          GUI_LANG_LoadTextEx       (GUI_GET_DATA_FUNC * pfGetData, void * p, int IndexLang);
-int          GUI_LANG_SetLang          (int IndexLang);
-unsigned     GUI_LANG_SetMaxNumLang    (unsigned MaxNumLang);
-U16          GUI_LANG_SetSep           (U16 Sep);
+ *
+ *       Resource file support
+ */
+int GUI_LANG_GetNumItems (int IndexLang);
+const char * GUI_LANG_GetText (int IndexText);
+int GUI_LANG_GetTextBuffered (int IndexText, char * pBuffer, int SizeOfBuffer);
+int GUI_LANG_GetTextBufferedEx (int IndexText, int IndexLang, char * pBuffer, int SizeOfBuffer);
+const char * GUI_LANG_GetTextEx (int IndexText, int IndexLang);
+int GUI_LANG_LoadCSV (U8 * pFileData, U32 FileSize);
+int GUI_LANG_LoadCSVEx (GUI_GET_DATA_FUNC * pfGetData, void * p);
+int GUI_LANG_LoadText (U8 * pFileData, U32 FileSize, int IndexLang);
+int GUI_LANG_LoadTextEx (GUI_GET_DATA_FUNC * pfGetData, void * p, int IndexLang);
+int GUI_LANG_SetLang (int IndexLang);
+unsigned GUI_LANG_SetMaxNumLang (unsigned MaxNumLang);
+U16 GUI_LANG_SetSep (U16 Sep);
 
 /*********************************************************************
-*
-*       Unicode support
-*/
-int   GUI_UC_ConvertUC2UTF8   (const U16 * s, int Len, char * pBuffer, int BufferSize);
-int   GUI_UC_ConvertUTF82UC   (const char * s, int Len, U16 * pBuffer, int BufferSize);
-int   GUI_UC_Encode           (char * s, U16 Char);
-int   GUI_UC_GetCharSize      (const char * s);
-U16   GUI_UC_GetCharCode      (const char * s);
-void  GUI_UC_SetEncodeNone    (void);
-void  GUI_UC_SetEncodeUTF8    (void);
-int   GUI_UC_EnableBIDI       (int OnOff);
+ *
+ *       Unicode support
+ */
+int GUI_UC_ConvertUC2UTF8 (const U16 * s, int Len, char * pBuffer, int BufferSize);
+int GUI_UC_ConvertUTF82UC (const char * s, int Len, U16 * pBuffer, int BufferSize);
+int GUI_UC_Encode (char * s, U16 Char);
+int GUI_UC_GetCharSize (const char * s);
+U16 GUI_UC_GetCharCode (const char * s);
+void GUI_UC_SetEncodeNone (void);
+void GUI_UC_SetEncodeUTF8 (void);
+int GUI_UC_EnableBIDI (int OnOff);
 
-void GUI_UC_DispString(const U16 * s);
+void GUI_UC_DispString (const U16 * s);
 void GUI_UC2DB (U16 Code, U8 * pOut);
-U16  GUI_DB2UC (U8 Byte0, U8 Byte1);
+U16 GUI_DB2UC (U8 Byte0, U8 Byte1);
 
 /*********************************************************************
-*
-*       Drawing of binary, decimal and hexadecimal values
-*/
-void GUI_DispBin  (U32  v, U8 Len);
-void GUI_DispBinAt(U32  v, I16P x, I16P y, U8 Len);
-void GUI_DispDec  (I32 v, U8 Len);
+ *
+ *       Drawing of binary, decimal and hexadecimal values
+ */
+void GUI_DispBin (U32 v, U8 Len);
+void GUI_DispBinAt (U32 v, I16P x, I16P y, U8 Len);
+void GUI_DispDec (I32 v, U8 Len);
 void GUI_DispDecAt (I32 v, I16P x, I16P y, U8 Len);
-void GUI_DispDecMin(I32 v);
-void GUI_DispDecShift(I32 v, U8 Len, U8 Shift);
-void GUI_DispDecSpace(I32 v, U8 MaxDigits);
-void GUI_DispHex  (U32 v, U8 Len);
-void GUI_DispHexAt(U32 v, I16P x, I16P y, U8 Len);
-void GUI_DispSDec(I32 v, U8 Len);
-void GUI_DispSDecShift(I32 v, U8 Len, U8 Shift);
+void GUI_DispDecMin (I32 v);
+void GUI_DispDecShift (I32 v, U8 Len, U8 Shift);
+void GUI_DispDecSpace (I32 v, U8 MaxDigits);
+void GUI_DispHex (U32 v, U8 Len);
+void GUI_DispHexAt (U32 v, I16P x, I16P y, U8 Len);
+void GUI_DispSDec (I32 v, U8 Len);
+void GUI_DispSDecShift (I32 v, U8 Len, U8 Shift);
 
 /*********************************************************************
-*
-*       Drawing of floating point values
-*/
-void GUI_DispFloat    (float v, char Len);
+ *
+ *       Drawing of floating point values
+ */
+void GUI_DispFloat (float v, char Len);
 void GUI_DispFloatFix (float v, char Len, char Fract);
 void GUI_DispFloatMin (float v, char Fract);
-void GUI_DispSFloatFix(float v, char Len, char Fract);
-void GUI_DispSFloatMin(float v, char Fract);
+void GUI_DispSFloatFix (float v, char Len, char Fract);
+void GUI_DispSFloatMin (float v, char Fract);
 
 /*********************************************************************
-*
-*       Dynamic memory management
-*/
-typedef struct {
-  U32 TotalBytes;
-  U32 FreeBytes;
-  U32 UsedBytes;
-  U32 AllocSize;
-  U32 NumFixedBytes;
-  U32 MaxUsedBytes;
+ *
+ *       Dynamic memory management
+ */
+typedef struct
+{
+	U32 TotalBytes;
+	U32 FreeBytes;
+	U32 UsedBytes;
+	U32 AllocSize;
+	U32 NumFixedBytes;
+	U32 MaxUsedBytes;
 } GUI_ALLOC_INFO;
 
-GUI_ALLOC_DATATYPE GUI_ALLOC_GetNumFreeBlocks(void);
+GUI_ALLOC_DATATYPE GUI_ALLOC_GetNumFreeBlocks (void);
 GUI_ALLOC_DATATYPE GUI_ALLOC_GetNumFreeBytes (void);
-GUI_ALLOC_DATATYPE GUI_ALLOC_GetNumUsedBlocks(void);
+GUI_ALLOC_DATATYPE GUI_ALLOC_GetNumUsedBlocks (void);
 GUI_ALLOC_DATATYPE GUI_ALLOC_GetNumUsedBytes (void);
 GUI_ALLOC_DATATYPE GUI_ALLOC_GetMaxUsedBytes (void);
 
-void GUI_ALLOC_GetMemInfo  (GUI_ALLOC_INFO * pInfo);
-void GUI_ALLOC_SuppressPeak(int OnOff);
+void GUI_ALLOC_GetMemInfo (GUI_ALLOC_INFO * pInfo);
+void GUI_ALLOC_SuppressPeak (int OnOff);
 
-GUI_HMEM           GUI_ALLOC_AllocInit       (const void * pInitData, GUI_ALLOC_DATATYPE Size);
-GUI_HMEM           GUI_ALLOC_AllocNoInit     (GUI_ALLOC_DATATYPE size);
-GUI_HMEM           GUI_ALLOC_AllocZero       (GUI_ALLOC_DATATYPE size);
-void               GUI_ALLOC_AssignMemory    (void * p, U32 NumBytes);
-void               GUI_ALLOC_Free            (GUI_HMEM  hMem);
-void               GUI_ALLOC_FreeFixedBlock  (void * p);
-void               GUI_ALLOC_FreePtrArray    (GUI_HMEM * pArray, int NumElems);
-void               GUI_ALLOC_FreePtr         (GUI_HMEM * phMem);
-void *             GUI_ALLOC_GetFixedBlock   (GUI_ALLOC_DATATYPE Size);
-GUI_ALLOC_DATATYPE GUI_ALLOC_GetMaxSize      (void);
-GUI_ALLOC_DATATYPE GUI_ALLOC_GetSize         (GUI_HMEM  hMem);
-void *             GUI_ALLOC_h2p             (GUI_HMEM  hMem);
-GUI_HMEM           GUI_ALLOC_p2h             (void * p);
-void               GUI_ALLOC_Init            (void);
-void               GUI_ALLOC_Lock            (void);
-void *             GUI_ALLOC_LockH           (GUI_HMEM  hMem);
-GUI_HMEM           GUI_ALLOC_Realloc         (GUI_HMEM hOld, int NewSize);
-GUI_ALLOC_DATATYPE GUI_ALLOC_RequestSize     (void);
-void               GUI_ALLOC_SetAvBlockSize  (U32 BlockSize);
-void               GUI_ALLOC_Unlock          (void);
-void *             GUI_ALLOC_UnlockH         (void ** pp);
-int                GUI_ALLOC_SetMaxPercentage(int MaxPercentage);
+GUI_HMEM GUI_ALLOC_AllocInit (const void * pInitData, GUI_ALLOC_DATATYPE Size);
+GUI_HMEM GUI_ALLOC_AllocNoInit (GUI_ALLOC_DATATYPE size);
+GUI_HMEM GUI_ALLOC_AllocZero (GUI_ALLOC_DATATYPE size);
+void GUI_ALLOC_AssignMemory (void * p, U32 NumBytes);
+void GUI_ALLOC_Free (GUI_HMEM hMem);
+void GUI_ALLOC_FreeFixedBlock (void * p);
+void GUI_ALLOC_FreePtrArray (GUI_HMEM * pArray, int NumElems);
+void GUI_ALLOC_FreePtr (GUI_HMEM * phMem);
+void * GUI_ALLOC_GetFixedBlock (GUI_ALLOC_DATATYPE Size);
+GUI_ALLOC_DATATYPE GUI_ALLOC_GetMaxSize (void);
+GUI_ALLOC_DATATYPE GUI_ALLOC_GetSize (GUI_HMEM hMem);
+void * GUI_ALLOC_h2p (GUI_HMEM hMem);
+GUI_HMEM GUI_ALLOC_p2h (void * p);
+void GUI_ALLOC_Init (void);
+void GUI_ALLOC_Lock (void);
+void * GUI_ALLOC_LockH (GUI_HMEM hMem);
+GUI_HMEM GUI_ALLOC_Realloc (GUI_HMEM hOld, int NewSize);
+GUI_ALLOC_DATATYPE GUI_ALLOC_RequestSize (void);
+void GUI_ALLOC_SetAvBlockSize (U32 BlockSize);
+void GUI_ALLOC_Unlock (void);
+void * GUI_ALLOC_UnlockH (void ** pp);
+int GUI_ALLOC_SetMaxPercentage (int MaxPercentage);
 
 /*********************************************************************
-*
-*       Memory devices: GUI_MEMDEV
-*/
+ *
+ *       Memory devices: GUI_MEMDEV
+ */
 #define GUI_MEMDEV_HASTRANS       0
 #define GUI_MEMDEV_NOTRANS  (1 << 0)
 
 typedef GUI_HMEM GUI_MEMDEV_Handle;
-typedef void     GUI_CALLBACK_VOID_P        (void * p);
-typedef int      GUI_ANIMATION_CALLBACK_FUNC(int TimeRem, void * pVoid);
-typedef void     GUI_DRAWMEMDEV_16BPP_FUNC  (void * pDst, const void * pSrc, int xSize, int ySize, int BytesPerLineDst, int BytesPerLineSrc);
+typedef void GUI_CALLBACK_VOID_P (void * p);
+typedef int GUI_ANIMATION_CALLBACK_FUNC (int TimeRem, void * pVoid);
+typedef void GUI_DRAWMEMDEV_16BPP_FUNC (void * pDst, const void * pSrc, int xSize, int ySize, int BytesPerLineDst,
+	int BytesPerLineSrc);
 
 extern GUI_ANIMATION_CALLBACK_FUNC * GUI_MEMDEV__pCbAnimation;
-extern void                        * GUI_MEMDEV__pVoid;
+extern void * GUI_MEMDEV__pVoid;
 
-typedef struct {
-  GUI_RECT rView, rPrev;
-  char FirstCall;
+typedef struct
+{
+	GUI_RECT rView, rPrev;
+	char FirstCall;
 } GUI_AUTODEV;
 
-typedef struct {
-  char DrawFixed;
-  char IsMeasurement;
+typedef struct
+{
+	char DrawFixed;
+	char IsMeasurement;
 } GUI_AUTODEV_INFO;
 
-int  GUI_MEMDEV_CreateAuto(GUI_AUTODEV * pAutoDev);
-void GUI_MEMDEV_DeleteAuto(GUI_AUTODEV * pAutoDev);
-int  GUI_MEMDEV_DrawAuto  (GUI_AUTODEV * pAutoDev, GUI_AUTODEV_INFO * pAutoDevInfo, GUI_CALLBACK_VOID_P * pfDraw, void * pData);
+int GUI_MEMDEV_CreateAuto (GUI_AUTODEV * pAutoDev);
+void GUI_MEMDEV_DeleteAuto (GUI_AUTODEV * pAutoDev);
+int GUI_MEMDEV_DrawAuto (GUI_AUTODEV * pAutoDev, GUI_AUTODEV_INFO * pAutoDevInfo, GUI_CALLBACK_VOID_P * pfDraw,
+	void * pData);
 
 /* Create a memory device which is compatible to the selected LCD */
-GUI_MEMDEV_Handle GUI_MEMDEV_Create       (int x0, int y0, int xSize, int ySize);
-GUI_MEMDEV_Handle GUI_MEMDEV_CreateEx     (int x0, int y0, int xSize, int ySize, int Flags);
-GUI_MEMDEV_Handle GUI_MEMDEV_CreateFixed  (int x0, int y0, int xSize, int ySize, int Flags,
-                                           const GUI_DEVICE_API     * pDeviceAPI,
-                                           const LCD_API_COLOR_CONV * pColorConvAPI);
-GUI_MEMDEV_Handle GUI_MEMDEV_CreateFixed32(int x0, int y0, int xSize, int ySize);
+GUI_MEMDEV_Handle GUI_MEMDEV_Create (int x0, int y0, int xSize, int ySize);
+GUI_MEMDEV_Handle GUI_MEMDEV_CreateEx (int x0, int y0, int xSize, int ySize, int Flags);
+GUI_MEMDEV_Handle GUI_MEMDEV_CreateFixed (int x0, int y0, int xSize, int ySize, int Flags,
+	const GUI_DEVICE_API * pDeviceAPI,
+	const LCD_API_COLOR_CONV * pColorConvAPI);
+GUI_MEMDEV_Handle GUI_MEMDEV_CreateFixed32 (int x0, int y0, int xSize, int ySize);
 
-void GUI_MEMDEV_Clear                (GUI_MEMDEV_Handle hMem);
-int  GUI_MEMDEV_ClearAlpha           (GUI_MEMDEV_Handle hMemData, GUI_MEMDEV_Handle hMemMask);
-void GUI_MEMDEV_CopyFromLCD          (GUI_MEMDEV_Handle hMem);
-void GUI_MEMDEV_CopyFromLCDAA        (GUI_MEMDEV_Handle hMem);
-void GUI_MEMDEV_CopyToLCD            (GUI_MEMDEV_Handle hMem);
-void GUI_MEMDEV_CopyToLCDAA          (GUI_MEMDEV_Handle hMem);
-void GUI_MEMDEV_CopyToLCDAt          (GUI_MEMDEV_Handle hMem, int x, int y);
-int  GUI_MEMDEV_CompareWithLCD       (GUI_MEMDEV_Handle hMem, int * px, int * py, int * pExp, int * pAct);
-void GUI_MEMDEV_Delete               (GUI_MEMDEV_Handle MemDev);
-void GUI_MEMDEV_DrawPerspectiveX     (GUI_MEMDEV_Handle hMem, int x, int y, int h0, int h1, int dx, int dy);
-int  GUI_MEMDEV_GetXPos              (GUI_MEMDEV_Handle hMem);
-int  GUI_MEMDEV_GetXSize             (GUI_MEMDEV_Handle hMem);
-int  GUI_MEMDEV_GetYPos              (GUI_MEMDEV_Handle hMem);
-int  GUI_MEMDEV_GetYSize             (GUI_MEMDEV_Handle hMem);
-void GUI_MEMDEV_MarkDirty            (GUI_MEMDEV_Handle hMem, int x0, int y0, int x1, int y1);
-void GUI_MEMDEV_ReduceYSize          (GUI_MEMDEV_Handle hMem, int YSize);
-void GUI_MEMDEV_Rotate               (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
-void GUI_MEMDEV_RotateAlpha          (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag, U8 Alpha);
-void GUI_MEMDEV_RotateHR             (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, I32 dx, I32 dy, int a, int Mag);
-void GUI_MEMDEV__Rotate              (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag, U32 Mask);
-void GUI_MEMDEV__RotateHR            (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, I32 dx, I32 dy, int a, int Mag, U32 Mask);
-void GUI_MEMDEV_RotateHQ             (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
-void GUI_MEMDEV_RotateHQAlpha        (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag, U8 Alpha);
-void GUI_MEMDEV_RotateHQHR           (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, I32 dx, I32 dy, int a, int Mag);
-void GUI_MEMDEV_RotateHQT            (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
-void GUI_MEMDEV_RotateHQTI           (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
-GUI_MEMDEV_Handle GUI_MEMDEV_Select  (GUI_MEMDEV_Handle hMem);  /* Select (activate) a particular memory device. */
-void  GUI_MEMDEV_SetOrg              (GUI_MEMDEV_Handle hMem, int x0, int y0);
-void  GUI_MEMDEV_WriteAt             (GUI_MEMDEV_Handle hMem, int x, int y);
-void  GUI_MEMDEV_Write               (GUI_MEMDEV_Handle hMem);
-void  GUI_MEMDEV_WriteAlphaAt        (GUI_MEMDEV_Handle hMem, int Alpha, int x, int y);
-void  GUI_MEMDEV_WriteAlpha          (GUI_MEMDEV_Handle hMem, int Alpha);
-void  GUI_MEMDEV_WriteExAt           (GUI_MEMDEV_Handle hMem, int x, int y, int xMag, int yMag, int Alpha);
-void  GUI_MEMDEV_WriteEx             (GUI_MEMDEV_Handle hMem, int xMag, int yMag, int Alpha);
-void  GUI_MEMDEV_WriteOpaque         (GUI_MEMDEV_Handle hMem);
-void  GUI_MEMDEV_WriteOpaqueAt       (GUI_MEMDEV_Handle hMem, int x, int y);
-int   GUI_MEMDEV_Draw                (GUI_RECT * pRect, GUI_CALLBACK_VOID_P * pfDraw, void * pData, int NumLines, int Flags);
-void* GUI_MEMDEV_GetDataPtr          (GUI_MEMDEV_Handle hMem);
-void  GUI_MEMDEV_SetColorConv        (GUI_MEMDEV_Handle hMem, const LCD_API_COLOR_CONV * pColorConvAPI);
-const LCD_API_COLOR_CONV * GUI_MEMDEV_GetColorConv(GUI_MEMDEV_Handle hMemDev);
-int   GUI_MEMDEV_GetBitsPerPixel     (GUI_MEMDEV_Handle hMemDev);
-int   GUI_MEMDEV_FadeInDevices       (GUI_MEMDEV_Handle hMem0, GUI_MEMDEV_Handle hMem1, int Period);
-int   GUI_MEMDEV_FadeOutDevices      (GUI_MEMDEV_Handle hMem0, GUI_MEMDEV_Handle hMem1, int Period);
-void  GUI_MEMDEV_SerializeBMP        (GUI_MEMDEV_Handle hDev, GUI_CALLBACK_VOID_U8_P * pfSerialize, void * p);
-void  GUI_MEMDEV_SetAnimationCallback(GUI_ANIMATION_CALLBACK_FUNC * pCbAnimation, void * pVoid);
-void  GUI_MEMDEV__FadeDevice         (GUI_MEMDEV_Handle hMemWin, GUI_MEMDEV_Handle hMemBk, GUI_MEMDEV_Handle hMemDst, U8 Intens);
-void  GUI_MEMDEV__FadeDeviceEx       (GUI_MEMDEV_Handle hMemWin, GUI_MEMDEV_Handle hMemBk, GUI_MEMDEV_Handle hMemDst, U8 Intens, int xPosWin, int yPosWin);
-int   GUI_MEMDEV_PunchOutDevice      (GUI_MEMDEV_Handle hMemData, GUI_MEMDEV_Handle hMemMask);
-void  GUI_MEMDEV_SetTimePerFrame     (unsigned TimePerFrame);
+void GUI_MEMDEV_Clear (GUI_MEMDEV_Handle hMem);
+int GUI_MEMDEV_ClearAlpha (GUI_MEMDEV_Handle hMemData, GUI_MEMDEV_Handle hMemMask);
+void GUI_MEMDEV_CopyFromLCD (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_CopyFromLCDAA (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_CopyToLCD (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_CopyToLCDAA (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_CopyToLCDAt (GUI_MEMDEV_Handle hMem, int x, int y);
+int GUI_MEMDEV_CompareWithLCD (GUI_MEMDEV_Handle hMem, int * px, int * py, int * pExp, int * pAct);
+void GUI_MEMDEV_Delete (GUI_MEMDEV_Handle MemDev);
+void GUI_MEMDEV_DrawPerspectiveX (GUI_MEMDEV_Handle hMem, int x, int y, int h0, int h1, int dx, int dy);
+int GUI_MEMDEV_GetXPos (GUI_MEMDEV_Handle hMem);
+int GUI_MEMDEV_GetXSize (GUI_MEMDEV_Handle hMem);
+int GUI_MEMDEV_GetYPos (GUI_MEMDEV_Handle hMem);
+int GUI_MEMDEV_GetYSize (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_MarkDirty (GUI_MEMDEV_Handle hMem, int x0, int y0, int x1, int y1);
+void GUI_MEMDEV_ReduceYSize (GUI_MEMDEV_Handle hMem, int YSize);
+void GUI_MEMDEV_Rotate (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
+void GUI_MEMDEV_RotateAlpha (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag, U8 Alpha);
+void GUI_MEMDEV_RotateHR (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, I32 dx, I32 dy, int a, int Mag);
+void GUI_MEMDEV__Rotate (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag, U32 Mask);
+void GUI_MEMDEV__RotateHR (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, I32 dx, I32 dy, int a, int Mag, U32 Mask);
+void GUI_MEMDEV_RotateHQ (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
+void GUI_MEMDEV_RotateHQAlpha (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag, U8 Alpha);
+void GUI_MEMDEV_RotateHQHR (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, I32 dx, I32 dy, int a, int Mag);
+void GUI_MEMDEV_RotateHQT (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
+void GUI_MEMDEV_RotateHQTI (GUI_MEMDEV_Handle hSrc, GUI_MEMDEV_Handle hDst, int dx, int dy, int a, int Mag);
+GUI_MEMDEV_Handle GUI_MEMDEV_Select (GUI_MEMDEV_Handle hMem); /* Select (activate) a particular memory device. */
+void GUI_MEMDEV_SetOrg (GUI_MEMDEV_Handle hMem, int x0, int y0);
+void GUI_MEMDEV_WriteAt (GUI_MEMDEV_Handle hMem, int x, int y);
+void GUI_MEMDEV_Write (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_WriteAlphaAt (GUI_MEMDEV_Handle hMem, int Alpha, int x, int y);
+void GUI_MEMDEV_WriteAlpha (GUI_MEMDEV_Handle hMem, int Alpha);
+void GUI_MEMDEV_WriteExAt (GUI_MEMDEV_Handle hMem, int x, int y, int xMag, int yMag, int Alpha);
+void GUI_MEMDEV_WriteEx (GUI_MEMDEV_Handle hMem, int xMag, int yMag, int Alpha);
+void GUI_MEMDEV_WriteOpaque (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_WriteOpaqueAt (GUI_MEMDEV_Handle hMem, int x, int y);
+int GUI_MEMDEV_Draw (GUI_RECT * pRect, GUI_CALLBACK_VOID_P * pfDraw, void * pData, int NumLines, int Flags);
+void* GUI_MEMDEV_GetDataPtr (GUI_MEMDEV_Handle hMem);
+void GUI_MEMDEV_SetColorConv (GUI_MEMDEV_Handle hMem, const LCD_API_COLOR_CONV * pColorConvAPI);
+const LCD_API_COLOR_CONV * GUI_MEMDEV_GetColorConv (GUI_MEMDEV_Handle hMemDev);
+int GUI_MEMDEV_GetBitsPerPixel (GUI_MEMDEV_Handle hMemDev);
+int GUI_MEMDEV_FadeInDevices (GUI_MEMDEV_Handle hMem0, GUI_MEMDEV_Handle hMem1, int Period);
+int GUI_MEMDEV_FadeOutDevices (GUI_MEMDEV_Handle hMem0, GUI_MEMDEV_Handle hMem1, int Period);
+void GUI_MEMDEV_SerializeBMP (GUI_MEMDEV_Handle hDev, GUI_CALLBACK_VOID_U8_P * pfSerialize, void * p);
+void GUI_MEMDEV_SetAnimationCallback (GUI_ANIMATION_CALLBACK_FUNC * pCbAnimation, void * pVoid);
+void GUI_MEMDEV__FadeDevice (GUI_MEMDEV_Handle hMemWin, GUI_MEMDEV_Handle hMemBk, GUI_MEMDEV_Handle hMemDst, U8 Intens);
+void GUI_MEMDEV__FadeDeviceEx (GUI_MEMDEV_Handle hMemWin, GUI_MEMDEV_Handle hMemBk, GUI_MEMDEV_Handle hMemDst,
+	U8 Intens, int xPosWin, int yPosWin);
+int GUI_MEMDEV_PunchOutDevice (GUI_MEMDEV_Handle hMemData, GUI_MEMDEV_Handle hMemMask);
+void GUI_MEMDEV_SetTimePerFrame (unsigned TimePerFrame);
 
-void  GUI_SelectLCD(void);
+void GUI_SelectLCD (void);
 
 /* Blurring, dithering and blending */
-GUI_MEMDEV_Handle GUI_MEMDEV_CreateBlurredDevice32  (GUI_MEMDEV_Handle hMem, U8 Depth);
-GUI_MEMDEV_Handle GUI_MEMDEV_CreateBlurredDevice32HQ(GUI_MEMDEV_Handle hMem, U8 Depth);
-GUI_MEMDEV_Handle GUI_MEMDEV_CreateBlurredDevice32LQ(GUI_MEMDEV_Handle hMem, U8 Depth);
-void              GUI_MEMDEV_SetBlurHQ              (void);
-void              GUI_MEMDEV_SetBlurLQ              (void);
-int               GUI_MEMDEV_BlendColor32           (GUI_MEMDEV_Handle hMem, U32 BlendColor, U8 BlendIntens);
-int               GUI_MEMDEV_Dither32               (GUI_MEMDEV_Handle hMem, const LCD_API_COLOR_CONV * pColorConvAPI);
+GUI_MEMDEV_Handle GUI_MEMDEV_CreateBlurredDevice32 (GUI_MEMDEV_Handle hMem, U8 Depth);
+GUI_MEMDEV_Handle GUI_MEMDEV_CreateBlurredDevice32HQ (GUI_MEMDEV_Handle hMem, U8 Depth);
+GUI_MEMDEV_Handle GUI_MEMDEV_CreateBlurredDevice32LQ (GUI_MEMDEV_Handle hMem, U8 Depth);
+void GUI_MEMDEV_SetBlurHQ (void);
+void GUI_MEMDEV_SetBlurLQ (void);
+int GUI_MEMDEV_BlendColor32 (GUI_MEMDEV_Handle hMem, U32 BlendColor, U8 BlendIntens);
+int GUI_MEMDEV_Dither32 (GUI_MEMDEV_Handle hMem, const LCD_API_COLOR_CONV * pColorConvAPI);
 
 /* Optional custom drawing of 16bpp memory devices */
-void GUI_MEMDEV_SetDrawMemdev16bppFunc(GUI_DRAWMEMDEV_16BPP_FUNC * pfDrawMemdev16bppFunc);
+void GUI_MEMDEV_SetDrawMemdev16bppFunc (GUI_DRAWMEMDEV_16BPP_FUNC * pfDrawMemdev16bppFunc);
 
 /*********************************************************************
-*
-*       Alpha blending
-*/
-typedef struct {
-  U32 UserAlpha;
+ *
+ *       Alpha blending
+ */
+typedef struct
+{
+	U32 UserAlpha;
 } GUI_ALPHA_STATE;
 
 #define GUI_MAKE_ALPHA(Alpha, Color) ((U32)(((U32)Alpha << 24) | (Color & 0xFFFFFF)))
 
-unsigned GUI_EnableAlpha         (unsigned OnOff);
-U32      GUI_RestoreUserAlpha    (GUI_ALPHA_STATE * pAlphaState);
-unsigned GUI_SetAlpha            (U8 Alpha);
-U32      GUI_SetUserAlpha        (GUI_ALPHA_STATE * pAlphaState, U32 UserAlpha);
-void     GUI_SetFuncAlphaBlending(void (* pfAlphaBlending)(LCD_COLOR *, LCD_COLOR *, LCD_COLOR *, U32));
-void     GUI_SetFuncMixColors    (LCD_COLOR (* pFunc)(LCD_COLOR Color, LCD_COLOR BkColor, U8 Intens));
-void     GUI_SetFuncMixColorsBulk(void (* pFunc)(U32 * pFG, U32 * pBG, U32 * pDst, unsigned OffFG, unsigned OffBG, unsigned OffDest, unsigned xSize, unsigned ySize, U8 Intens));
-unsigned GUI_PreserveTrans       (unsigned OnOff);
+unsigned GUI_EnableAlpha (unsigned OnOff);
+U32 GUI_RestoreUserAlpha (GUI_ALPHA_STATE * pAlphaState);
+unsigned GUI_SetAlpha (U8 Alpha);
+U32 GUI_SetUserAlpha (GUI_ALPHA_STATE * pAlphaState, U32 UserAlpha);
+void GUI_SetFuncAlphaBlending (void (*pfAlphaBlending) (LCD_COLOR *, LCD_COLOR *, LCD_COLOR *, U32));
+void GUI_SetFuncMixColors (LCD_COLOR (*pFunc) (LCD_COLOR Color, LCD_COLOR BkColor, U8 Intens));
+void GUI_SetFuncMixColorsBulk (
+	void (*pFunc) (U32 * pFG, U32 * pBG, U32 * pDst, unsigned OffFG, unsigned OffBG, unsigned OffDest, unsigned xSize,
+		unsigned ySize, U8 Intens));
+unsigned GUI_PreserveTrans (unsigned OnOff);
 
 /*********************************************************************
-*
-*       Multi layer support
-*/
-unsigned GUI_SelectLayer(unsigned Index);
-unsigned GUI_GetSelLayer(void);
+ *
+ *       Multi layer support
+ */
+unsigned GUI_SelectLayer (unsigned Index);
+unsigned GUI_GetSelLayer (void);
 
-int  GUI_SetLayerPosEx  (unsigned Index, int xPos, int yPos);
-int  GUI_SetLayerSizeEx (unsigned Index, int xSize, int ySize);
-int  GUI_SetLayerVisEx  (unsigned Index, int OnOff);
-int  GUI_SetLayerAlphaEx(unsigned Index, int Alpha);
-void GUI_GetLayerPosEx  (unsigned Index, int * pxPos, int * pyPos);
+int GUI_SetLayerPosEx (unsigned Index, int xPos, int yPos);
+int GUI_SetLayerSizeEx (unsigned Index, int xSize, int ySize);
+int GUI_SetLayerVisEx (unsigned Index, int OnOff);
+int GUI_SetLayerAlphaEx (unsigned Index, int Alpha);
+void GUI_GetLayerPosEx (unsigned Index, int * pxPos, int * pyPos);
 
-void     GUI_AssignCursorLayer(unsigned Index, unsigned CursorLayer);
-unsigned GUI_GetCursorLayer   (unsigned Index);
-
-/*********************************************************************
-*
-*       Multiple buffers and display origin
-*/
-void GUI_SetOrg(int x, int y);
-
-void GUI_MULTIBUF_Begin          (void);
-void GUI_MULTIBUF_BeginEx        (int LayerIndex);
-void GUI_MULTIBUF_End            (void);
-void GUI_MULTIBUF_EndEx          (int LayerIndex);
-void GUI_MULTIBUF_Config         (int NumBuffers);
-void GUI_MULTIBUF_ConfigEx       (int LayerIndex, int NumBuffers);
-void GUI_MULTIBUF_Confirm        (int Index);
-void GUI_MULTIBUF_ConfirmEx      (int LayerIndex, int BufferIndex);
-int  GUI_MULTIBUF_GetNumBuffers  (void);
-int  GUI_MULTIBUF_GetNumBuffersEx(int LayerIndex);
-void GUI_MULTIBUF_UseSingleBuffer(void);
+void GUI_AssignCursorLayer (unsigned Index, unsigned CursorLayer);
+unsigned GUI_GetCursorLayer (unsigned Index);
 
 /*********************************************************************
-*
-*       emWinSPY
-*/
-int  GUI_SPY_Process      (GUI_tSend pfSend, GUI_tRecv pfRecv, void * pConnectInfo);
-void GUI_SPY_SetMemHandler(GUI_tMalloc pMalloc, GUI_tFree pFree);
-int  GUI_SPY_StartServer  (void);
-int  GUI_SPY_X_StartServer(void);
+ *
+ *       Multiple buffers and display origin
+ */
+void GUI_SetOrg (int x, int y);
+
+void GUI_MULTIBUF_Begin (void);
+void GUI_MULTIBUF_BeginEx (int LayerIndex);
+void GUI_MULTIBUF_End (void);
+void GUI_MULTIBUF_EndEx (int LayerIndex);
+void GUI_MULTIBUF_Config (int NumBuffers);
+void GUI_MULTIBUF_ConfigEx (int LayerIndex, int NumBuffers);
+void GUI_MULTIBUF_Confirm (int Index);
+void GUI_MULTIBUF_ConfirmEx (int LayerIndex, int BufferIndex);
+int GUI_MULTIBUF_GetNumBuffers (void);
+int GUI_MULTIBUF_GetNumBuffersEx (int LayerIndex);
+void GUI_MULTIBUF_UseSingleBuffer (void);
 
 /*********************************************************************
-*
-*       Basics for animations
-*/
+ *
+ *       emWinSPY
+ */
+int GUI_SPY_Process (GUI_tSend pfSend, GUI_tRecv pfRecv, void * pConnectInfo);
+void GUI_SPY_SetMemHandler (GUI_tMalloc pMalloc, GUI_tFree pFree);
+int GUI_SPY_StartServer (void);
+int GUI_SPY_X_StartServer (void);
+
+/*********************************************************************
+ *
+ *       Basics for animations
+ */
 #define ANIM_LINEAR     GUI_ANIM__Linear
 #define ANIM_ACCEL      GUI_ANIM__Accel
 #define ANIM_DECEL      GUI_ANIM__Decel
@@ -1067,50 +1105,55 @@ int  GUI_SPY_X_StartServer(void);
 #define GUI_ANIM_END     2
 
 #ifndef   GUI_ANIM_RANGE
-  #define GUI_ANIM_RANGE 32767L
+#define GUI_ANIM_RANGE 32767L
 #endif
 
 typedef GUI_HMEM GUI_ANIM_HANDLE;
 
-typedef I32 (* GUI_ANIM_GETPOS_FUNC)(GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
+typedef I32 (*GUI_ANIM_GETPOS_FUNC) (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
 
-typedef struct {
-  int Pos;
-  int State;
-  GUI_ANIM_HANDLE hAnim;
-  GUI_TIMER_TIME Period;
+typedef struct
+{
+	int Pos;
+	int State;
+	GUI_ANIM_HANDLE hAnim;
+	GUI_TIMER_TIME Period;
 } GUI_ANIM_INFO;
 
-typedef void GUI_ANIMATION_FUNC(GUI_ANIM_INFO * pInfo, void * pVoid);
+typedef void GUI_ANIMATION_FUNC (GUI_ANIM_INFO * pInfo, void * pVoid);
 
-I32 GUI_ANIM__Linear    (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
-I32 GUI_ANIM__Decel     (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
-I32 GUI_ANIM__Accel     (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
-I32 GUI_ANIM__AccelDecel(GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
+I32 GUI_ANIM__Linear (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
+I32 GUI_ANIM__Decel (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
+I32 GUI_ANIM__Accel (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
+I32 GUI_ANIM__AccelDecel (GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_TIMER_TIME tNow);
 
-int             GUI_ANIM_AddItem(GUI_ANIM_HANDLE hAnim, GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_ANIM_GETPOS_FUNC pfGetPos, void * pVoid, GUI_ANIMATION_FUNC * pfAnim);
-GUI_ANIM_HANDLE GUI_ANIM_Create (GUI_TIMER_TIME Period, unsigned MinTimePerFrame, void * pVoid, void (* pfSliceInfo)(int State, void * pVoid));
-void            GUI_ANIM_Delete (GUI_ANIM_HANDLE hAnim);
-int             GUI_ANIM_Exec   (GUI_ANIM_HANDLE hAnim);
-void            GUI_ANIM_Start  (GUI_ANIM_HANDLE hAnim);
+int GUI_ANIM_AddItem (GUI_ANIM_HANDLE hAnim, GUI_TIMER_TIME ts, GUI_TIMER_TIME te, GUI_ANIM_GETPOS_FUNC pfGetPos,
+	void * pVoid, GUI_ANIMATION_FUNC * pfAnim);
+GUI_ANIM_HANDLE GUI_ANIM_Create (GUI_TIMER_TIME Period, unsigned MinTimePerFrame, void * pVoid,
+	void (*pfSliceInfo) (int State, void * pVoid));
+void GUI_ANIM_Delete (GUI_ANIM_HANDLE hAnim);
+int GUI_ANIM_Exec (GUI_ANIM_HANDLE hAnim);
+void GUI_ANIM_Start (GUI_ANIM_HANDLE hAnim);
 
 /*********************************************************************
-*
-*       Display orientation
-*/
+ *
+ *       Display orientation
+ */
 /*********************************************************************
-*
-*       GUI_ORIENTATION_API
-*/
-typedef struct {
-  void     (* pfDrawBitmap   )(GUI_DEVICE * pDevice, int x0, int y0, int xsize, int ysize, int BitsPerPixel, int BytesPerLine, const U8 * pData, int Diff, const LCD_PIXELINDEX * pTrans);
-  void     (* pfDrawHLine    )(GUI_DEVICE * pDevice, int x0, int y0,  int x1);
-  void     (* pfDrawVLine    )(GUI_DEVICE * pDevice, int x , int y0,  int y1);
-  void     (* pfFillRect     )(GUI_DEVICE * pDevice, int x0, int y0, int x1, int y1);
-  unsigned (* pfGetPixelIndex)(GUI_DEVICE * pDevice, int x, int y);
-  void     (* pfSetPixelIndex)(GUI_DEVICE * pDevice, int x, int y, int ColorIndex);
-  void     (* pfXorPixel     )(GUI_DEVICE * pDevice, int x, int y);
-  int      BytesPerPixel;
+ *
+ *       GUI_ORIENTATION_API
+ */
+typedef struct
+{
+	void (*pfDrawBitmap) (GUI_DEVICE * pDevice, int x0, int y0, int xsize, int ysize, int BitsPerPixel, int BytesPerLine,
+		const U8 * pData, int Diff, const LCD_PIXELINDEX * pTrans);
+	void (*pfDrawHLine) (GUI_DEVICE * pDevice, int x0, int y0, int x1);
+	void (*pfDrawVLine) (GUI_DEVICE * pDevice, int x, int y0, int y1);
+	void (*pfFillRect) (GUI_DEVICE * pDevice, int x0, int y0, int x1, int y1);
+	unsigned (*pfGetPixelIndex) (GUI_DEVICE * pDevice, int x, int y);
+	void (*pfSetPixelIndex) (GUI_DEVICE * pDevice, int x, int y, int ColorIndex);
+	void (*pfXorPixel) (GUI_DEVICE * pDevice, int x, int y);
+	int BytesPerPixel;
 } GUI_ORIENTATION_API;
 
 extern const GUI_ORIENTATION_API GUI_OrientationAPI_C0;
@@ -1123,34 +1166,34 @@ extern const GUI_ORIENTATION_API GUI_OrientationAPI_C32;
 #define GUI_ORIENTATION_C16 &GUI_OrientationAPI_C16
 #define GUI_ORIENTATION_C32 &GUI_OrientationAPI_C32
 
-int GUI_SetOrientation        (int Orientation);
-int GUI_SetOrientationEx      (int Orientation, int LayerIndex);
-int GUI_SetOrientationExCached(int Orientation, int LayerIndex, const GUI_ORIENTATION_API * pAPI);
+int GUI_SetOrientation (int Orientation);
+int GUI_SetOrientationEx (int Orientation, int LayerIndex);
+int GUI_SetOrientationExCached (int Orientation, int LayerIndex, const GUI_ORIENTATION_API * pAPI);
 
 /*********************************************************************
-*
-*       Measure device: GUI_MEASDEV
-*/
+ *
+ *       Measure device: GUI_MEASDEV
+ */
 typedef GUI_HMEM GUI_MEASDEV_Handle;
 
 GUI_MEASDEV_Handle GUI_MEASDEV_Create (void);
-void               GUI_MEASDEV_Delete (GUI_MEASDEV_Handle hMemDev);
-void               GUI_MEASDEV_Select (GUI_MEASDEV_Handle hMem);
-void               GUI_MEASDEV_GetRect(GUI_MEASDEV_Handle hMem, GUI_RECT * pRect);
-void               GUI_MEASDEV_ClearRect(GUI_MEASDEV_Handle hMem);
+void GUI_MEASDEV_Delete (GUI_MEASDEV_Handle hMemDev);
+void GUI_MEASDEV_Select (GUI_MEASDEV_Handle hMem);
+void GUI_MEASDEV_GetRect (GUI_MEASDEV_Handle hMem, GUI_RECT * pRect);
+void GUI_MEASDEV_ClearRect (GUI_MEASDEV_Handle hMem);
 
 /*********************************************************************
-*
-*       Polygon helpers
-*/
+ *
+ *       Polygon helpers
+ */
 void GUI_RotatePolygon (GUI_POINT * pDest, const GUI_POINT * pSrc, int NumPoints, float Angle);
-void GUI_MagnifyPolygon(GUI_POINT * pDest, const GUI_POINT * pSrc, int NumPoints, int Mag);
-void GUI_EnlargePolygon(GUI_POINT * pDest, const GUI_POINT * pSrc, int NumPoints, int Len);
+void GUI_MagnifyPolygon (GUI_POINT * pDest, const GUI_POINT * pSrc, int NumPoints, int Mag);
+void GUI_EnlargePolygon (GUI_POINT * pDest, const GUI_POINT * pSrc, int NumPoints, int Len);
 
 /*********************************************************************
-*
-*       Streamed bitmaps
-*/
+ *
+ *       Streamed bitmaps
+ */
 #define GUI_BITMAPSTREAM_GET_BUFFER     1
 #define GUI_BITMAPSTREAM_RELEASE_BUFFER 2
 #define GUI_BITMAPSTREAM_MODIFY_PALETTE 3
@@ -1182,51 +1225,52 @@ DECLARE_CREATE_FROM_STREAM(M444_12_1)
 DECLARE_CREATE_FROM_STREAM(444_16)
 DECLARE_CREATE_FROM_STREAM(M444_16)
 
-int  GUI_CreateBitmapFromStream   (GUI_BITMAP * pBMP, GUI_LOGPALETTE * pPAL, const void * p);
-void GUI_DrawStreamedBitmap       (const void * p, int x, int y);
-void GUI_DrawStreamedBitmapAuto   (const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapEx     (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapExAuto (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmap555Ex  (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapM555Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmap565Ex  (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapM565Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapA555Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapAM555Ex(GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapA565Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmapAM565Ex(GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-int  GUI_DrawStreamedBitmap24Ex   (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
-void GUI_GetStreamedBitmapInfo    (const void * p, GUI_BITMAPSTREAM_INFO * pInfo);
-int  GUI_GetStreamedBitmapInfoEx  (GUI_GET_DATA_FUNC * pfGetData, const void * p, GUI_BITMAPSTREAM_INFO * pInfo);
-void GUI_SetStreamedBitmapHook    (GUI_BITMAPSTREAM_CALLBACK pfStreamedBitmapHook);
+int GUI_CreateBitmapFromStream (GUI_BITMAP * pBMP, GUI_LOGPALETTE * pPAL, const void * p);
+void GUI_DrawStreamedBitmap (const void * p, int x, int y);
+void GUI_DrawStreamedBitmapAuto (const void * p, int x, int y);
+int GUI_DrawStreamedBitmapEx (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapExAuto (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmap555Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapM555Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmap565Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapM565Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapA555Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapAM555Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapA565Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmapAM565Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+int GUI_DrawStreamedBitmap24Ex (GUI_GET_DATA_FUNC * pfGetData, const void * p, int x, int y);
+void GUI_GetStreamedBitmapInfo (const void * p, GUI_BITMAPSTREAM_INFO * pInfo);
+int GUI_GetStreamedBitmapInfoEx (GUI_GET_DATA_FUNC * pfGetData, const void * p, GUI_BITMAPSTREAM_INFO * pInfo);
+void GUI_SetStreamedBitmapHook (GUI_BITMAPSTREAM_CALLBACK pfStreamedBitmapHook);
 
 void LCD__RLE4_SetFunc (GUI_GET_DATA_FUNC * pfGetData, void * pVoid, U32 Off, const LCD_LOGPALETTE * pLogPal);
 void LCD__RLE8_SetFunc (GUI_GET_DATA_FUNC * pfGetData, void * pVoid, U32 Off, const LCD_LOGPALETTE * pLogPal);
-void LCD__RLE16_SetFunc(GUI_GET_DATA_FUNC * pfGetData, void * pVoid, U32 Off);
-void LCD__RLE32_SetFunc(GUI_GET_DATA_FUNC * pfGetData, void * pVoid, U32 Off);
+void LCD__RLE16_SetFunc (GUI_GET_DATA_FUNC * pfGetData, void * pVoid, U32 Off);
+void LCD__RLE32_SetFunc (GUI_GET_DATA_FUNC * pfGetData, void * pVoid, U32 Off);
 
 /*********************************************************************
-*
-*       BMP-export
-*/
-void GUI_BMP_Serialize     (GUI_CALLBACK_VOID_U8_P * pfSerialize, void * p);
-void GUI_BMP_SerializeEx   (GUI_CALLBACK_VOID_U8_P * pfSerialize, int x0, int y0, int xSize, int ySize, void * p);
-void GUI_BMP_SerializeExBpp(GUI_CALLBACK_VOID_U8_P * pfSerialize, int x0, int y0, int xSize, int ySize, void * p, int BitsPerPixel);
+ *
+ *       BMP-export
+ */
+void GUI_BMP_Serialize (GUI_CALLBACK_VOID_U8_P * pfSerialize, void * p);
+void GUI_BMP_SerializeEx (GUI_CALLBACK_VOID_U8_P * pfSerialize, int x0, int y0, int xSize, int ySize, void * p);
+void GUI_BMP_SerializeExBpp (GUI_CALLBACK_VOID_U8_P * pfSerialize, int x0, int y0, int xSize, int ySize, void * p,
+	int BitsPerPixel);
 
 /*********************************************************************
-*
-*       Time / execution related routines
-*/
-void           GUI_Delay  (int Period);
-GUI_TIMER_TIME GUI_GetTime(void);
-int            GUI_Exec(void);         /* Execute all jobs ... Return 0 if nothing was done. */
-int            GUI_Exec1(void);        /* Execute one job  ... Return 0 if nothing was done. */
+ *
+ *       Time / execution related routines
+ */
+void GUI_Delay (int Period);
+GUI_TIMER_TIME GUI_GetTime (void);
+int GUI_Exec (void); /* Execute all jobs ... Return 0 if nothing was done. */
+int GUI_Exec1 (void); /* Execute one job  ... Return 0 if nothing was done. */
 
 /*********************************************************************
-*
-*       MessageBox
-*/
-int     GUI_MessageBox   (const char * sMessage, const char * sCaption, int Flags);
+ *
+ *       MessageBox
+ */
+int GUI_MessageBox (const char * sMessage, const char * sCaption, int Flags);
 #define GUI_MESSAGEBOX_CF_MOVEABLE (1 << 0)
 #define GUI_MESSAGEBOX_CF_MODAL    (1 << 1)
 
@@ -1234,212 +1278,214 @@ int     GUI_MessageBox   (const char * sMessage, const char * sCaption, int Flag
 #define GUI_MB_WARNING           21
 
 /*********************************************************************
-*
-*       GUI_TIMER module
-*/
+ *
+ *       GUI_TIMER module
+ */
 #define GUI_TIMER_CF_WINDOW (1 << 0)
 #define GUI_TIMER_CF_CURSOR (1 << 1)
 
 typedef GUI_HMEM GUI_TIMER_HANDLE;
 
-typedef struct {
-  GUI_TIMER_TIME   Time;
-  U32              Context;
-  GUI_TIMER_HANDLE hTimer;
+typedef struct
+{
+	GUI_TIMER_TIME Time;
+	U32 Context;
+	GUI_TIMER_HANDLE hTimer;
 } GUI_TIMER_MESSAGE;
 
-typedef void GUI_TIMER_CALLBACK(/*const*/ GUI_TIMER_MESSAGE* pTM);
+typedef void GUI_TIMER_CALLBACK (/*const*/GUI_TIMER_MESSAGE* pTM);
 
-GUI_TIMER_HANDLE GUI_TIMER_Create   (GUI_TIMER_CALLBACK * cb, GUI_TIMER_TIME Time, U32 Context, U16 Flags);
-void             GUI_TIMER_Delete   (GUI_TIMER_HANDLE hObj);
+GUI_TIMER_HANDLE GUI_TIMER_Create (GUI_TIMER_CALLBACK * cb, GUI_TIMER_TIME Time, U32 Context, U16 Flags);
+void GUI_TIMER_Delete (GUI_TIMER_HANDLE hObj);
 
 /* Methods changing properties */
-GUI_TIMER_TIME GUI_TIMER_GetPeriod(GUI_TIMER_HANDLE hObj);
-void           GUI_TIMER_SetPeriod(GUI_TIMER_HANDLE hObj, GUI_TIMER_TIME Period);
-void           GUI_TIMER_SetTime  (GUI_TIMER_HANDLE hObj, GUI_TIMER_TIME Period);
-void           GUI_TIMER_SetDelay (GUI_TIMER_HANDLE hObj, GUI_TIMER_TIME Delay);
-void           GUI_TIMER_Restart  (GUI_TIMER_HANDLE hObj);
-int            GUI_TIMER_GetFlag  (GUI_TIMER_HANDLE hObj, int Flag); /* Not to be documented */
-int            GUI_TIMER_Exec     (void);
+GUI_TIMER_TIME GUI_TIMER_GetPeriod (GUI_TIMER_HANDLE hObj);
+void GUI_TIMER_SetPeriod (GUI_TIMER_HANDLE hObj, GUI_TIMER_TIME Period);
+void GUI_TIMER_SetTime (GUI_TIMER_HANDLE hObj, GUI_TIMER_TIME Period);
+void GUI_TIMER_SetDelay (GUI_TIMER_HANDLE hObj, GUI_TIMER_TIME Delay);
+void GUI_TIMER_Restart (GUI_TIMER_HANDLE hObj);
+int GUI_TIMER_GetFlag (GUI_TIMER_HANDLE hObj, int Flag); /* Not to be documented */
+int GUI_TIMER_Exec (void);
 
 /*********************************************************************
-*
-*       Anti Aliasing
-*/
+ *
+ *       Anti Aliasing
+ */
 #define GUI_AA_TRANS   0 // Foreground color mixed up with current content of framebuffer
 #define GUI_AA_NOTRANS 1 // Foreground color mixed up with current background color
 
-void GUI_AA_DisableHiRes     (void);
-void GUI_AA_EnableHiRes      (void);
-int  GUI_AA_GetFactor        (void);
-void GUI_AA_SetFactor        (int Factor);
-void GUI_AA_DrawArc          (int x0, int y0, int rx, int ry, int a0, int a1);
-void GUI_AA_DrawLine         (int x0, int y0, int x1, int y1);
-void GUI_AA_DrawPolyOutline  (const GUI_POINT * pSrc, int NumPoints, int Thickness, int x, int y);
-void GUI_AA_DrawPolyOutlineEx(const GUI_POINT * pSrc, int NumPoints, int Thickness, int x, int y, GUI_POINT * pBuffer);
-void GUI_AA_DrawRoundedRect  (int x0, int y0, int x1, int y1, int r);
-void GUI_AA_DrawRoundedRectEx(GUI_RECT * pRect, int r);
-void GUI_AA_FillCircle       (int x0, int y0, int r);
-void GUI_AA_FillEllipse      (int x0, int y0, int rx, int ry);
-void GUI_AA_FillPolygon      (GUI_POINT * pPoints, int NumPoints, int x0, int y0);
-void GUI_AA_FillRoundedRect  (int x0, int y0, int x1, int y1, int r);
-void GUI_AA_FillRoundedRectEx(GUI_RECT * pRect, int r);
+void GUI_AA_DisableHiRes (void);
+void GUI_AA_EnableHiRes (void);
+int GUI_AA_GetFactor (void);
+void GUI_AA_SetFactor (int Factor);
+void GUI_AA_DrawArc (int x0, int y0, int rx, int ry, int a0, int a1);
+void GUI_AA_DrawLine (int x0, int y0, int x1, int y1);
+void GUI_AA_DrawPolyOutline (const GUI_POINT * pSrc, int NumPoints, int Thickness, int x, int y);
+void GUI_AA_DrawPolyOutlineEx (const GUI_POINT * pSrc, int NumPoints, int Thickness, int x, int y, GUI_POINT * pBuffer);
+void GUI_AA_DrawRoundedRect (int x0, int y0, int x1, int y1, int r);
+void GUI_AA_DrawRoundedRectEx (GUI_RECT * pRect, int r);
+void GUI_AA_FillCircle (int x0, int y0, int r);
+void GUI_AA_FillEllipse (int x0, int y0, int rx, int ry);
+void GUI_AA_FillPolygon (GUI_POINT * pPoints, int NumPoints, int x0, int y0);
+void GUI_AA_FillRoundedRect (int x0, int y0, int x1, int y1, int r);
+void GUI_AA_FillRoundedRectEx (GUI_RECT * pRect, int r);
 //int  GUI_AA_PreserveTrans    (int OnOff);
-int  GUI_AA_SetDrawMode      (int Mode);
-void GUI_AA_SetpfDrawCharAA4 (int (* pfDrawChar)(int LayerIndex, int x, int y, U8 const * p, int xSize, int ySize, int BytesPerLine));
+int GUI_AA_SetDrawMode (int Mode);
+void GUI_AA_SetpfDrawCharAA4 (
+	int (*pfDrawChar) (int LayerIndex, int x, int y, U8 const * p, int xSize, int ySize, int BytesPerLine));
 
 #define GUI_AA_PreserveTrans(OnOff) GUI_PreserveTrans(OnOff)
 
 /*********************************************************************
-*
-*       Keyboard
-*/
+ *
+ *       Keyboard
+ */
 /* Message layer */
-void GUI_StoreKeyMsg(int Key, int Pressed);
+void GUI_StoreKeyMsg (int Key, int Pressed);
 void GUI_SendKeyMsg (int Key, int Pressed);
-int  GUI_PollKeyMsg (void);
-void GUI_GetKeyState(GUI_KEY_STATE * pState);
+int GUI_PollKeyMsg (void);
+void GUI_GetKeyState (GUI_KEY_STATE * pState);
 
-void GUI_KEY__SetHook(void (* pfHook)(const GUI_KEY_STATE *));
+void GUI_KEY__SetHook (void (*pfHook) (const GUI_KEY_STATE *));
 
 /* Application layer */
-int  GUI_GetKey(void);
-int  GUI_WaitKey(void);
-void GUI_StoreKey(int c);
-void GUI_ClearKeyBuffer(void);
+int GUI_GetKey (void);
+int GUI_WaitKey (void);
+void GUI_StoreKey (int c);
+void GUI_ClearKeyBuffer (void);
 
 /*********************************************************************
-*
-*       Task synchronization
-*/
-void GUI_WaitEvent            (void);
-void GUI_SignalEvent          (void);
-void GUI_SetSignalEventFunc   (GUI_SIGNAL_EVENT_FUNC     pfSignalEvent);
-void GUI_SetWaitEventFunc     (GUI_WAIT_EVENT_FUNC       pfWaitEvent);
-void GUI_SetWaitEventTimedFunc(GUI_WAIT_EVENT_TIMED_FUNC pfWaitEventTimed);
+ *
+ *       Task synchronization
+ */
+void GUI_WaitEvent (void);
+void GUI_SignalEvent (void);
+void GUI_SetSignalEventFunc (GUI_SIGNAL_EVENT_FUNC pfSignalEvent);
+void GUI_SetWaitEventFunc (GUI_WAIT_EVENT_FUNC pfWaitEvent);
+void GUI_SetWaitEventTimedFunc (GUI_WAIT_EVENT_TIMED_FUNC pfWaitEventTimed);
 
 /*********************************************************************
-*
-*       Joystick, generic
-*/
-void GUI_JOYSTICK_StoreState(const GUI_PID_STATE * pState);
+ *
+ *       Joystick, generic
+ */
+void GUI_JOYSTICK_StoreState (const GUI_PID_STATE * pState);
 
 /*********************************************************************
-*
-*       PID  (Pointer input device ... mouse/touch)
-*/
-void GUI_PID_StoreState     (const GUI_PID_STATE * pState);
-int  GUI_PID_GetState       (      GUI_PID_STATE * pState);
-void GUI_PID_GetCurrentState(      GUI_PID_STATE * pState);
-int  GUI_PID_IsEmpty        (void);
-int  GUI_PID_IsPressed      (void);
-void GUI_PID__SetHook       (void (* pfHook)(const GUI_PID_STATE *));
+ *
+ *       PID  (Pointer input device ... mouse/touch)
+ */
+void GUI_PID_StoreState (const GUI_PID_STATE * pState);
+int GUI_PID_GetState (GUI_PID_STATE * pState);
+void GUI_PID_GetCurrentState (GUI_PID_STATE * pState);
+int GUI_PID_IsEmpty (void);
+int GUI_PID_IsPressed (void);
+void GUI_PID__SetHook (void (*pfHook) (const GUI_PID_STATE *));
 
 /*********************************************************************
-*
-*       Mouse, generic
-*/
-int  GUI_MOUSE_GetState  (      GUI_PID_STATE * pState);
-void GUI_MOUSE_StoreState(const GUI_PID_STATE * pState);
+ *
+ *       Mouse, generic
+ */
+int GUI_MOUSE_GetState (GUI_PID_STATE * pState);
+void GUI_MOUSE_StoreState (const GUI_PID_STATE * pState);
 
 /*********************************************************************
-*
-*       TOUCH screen, generic
-*/
-int  GUI_TOUCH_GetState     (GUI_PID_STATE * pState);
-void GUI_TOUCH_GetUnstable  (int * px, int * py);  /* for diagnostics only */
-void GUI_TOUCH_SetLayer     (int Layer);
-void GUI_TOUCH_StoreState   (int x, int y);
+ *
+ *       TOUCH screen, generic
+ */
+int GUI_TOUCH_GetState (GUI_PID_STATE * pState);
+void GUI_TOUCH_GetUnstable (int * px, int * py); /* for diagnostics only */
+void GUI_TOUCH_SetLayer (int Layer);
+void GUI_TOUCH_StoreState (int x, int y);
 void GUI_TOUCH_StoreStateEx (const GUI_PID_STATE * pState);
-void GUI_TOUCH_StoreUnstable(int x, int y);
+void GUI_TOUCH_StoreUnstable (int x, int y);
 
 /*********************************************************************
-*
-*       Mouse, PS2 driver
-*/
-void GUI_MOUSE_DRIVER_PS2_Init(void);               /* optional */
-void GUI_MOUSE_DRIVER_PS2_OnRx(unsigned char Data);
+ *
+ *       Mouse, PS2 driver
+ */
+void GUI_MOUSE_DRIVER_PS2_Init (void); /* optional */
+void GUI_MOUSE_DRIVER_PS2_OnRx (unsigned char Data);
 
 /*********************************************************************
-*
-*       TOUCH screen, analog driver
-*/
-void GUI_TOUCH_Exec                 (void);
-int  GUI_TOUCH_Calibrate            (int Coord, int Log0, int Log1, int Phys0, int Phys1);
-void GUI_TOUCH_SetDefaultCalibration(void);
-int  GUI_TOUCH_GetxPhys             (void);    /* for diagnostics only */
-int  GUI_TOUCH_GetyPhys             (void);    /* for diagnostics only */
-void GUI_TOUCH_GetCalData           (int Coord, int * pMin, int * pMax);
-void GUI_TOUCH_SetOrientation       (unsigned Orientation);
-void GUI_TOUCH_SetOrientationPhys   (unsigned Orientation);
+ *
+ *       TOUCH screen, analog driver
+ */
+void GUI_TOUCH_Exec (void);
+int GUI_TOUCH_Calibrate (int Coord, int Log0, int Log1, int Phys0, int Phys1);
+void GUI_TOUCH_SetDefaultCalibration (void);
+int GUI_TOUCH_GetxPhys (void); /* for diagnostics only */
+int GUI_TOUCH_GetyPhys (void); /* for diagnostics only */
+void GUI_TOUCH_GetCalData (int Coord, int * pMin, int * pMax);
+void GUI_TOUCH_SetOrientation (unsigned Orientation);
+void GUI_TOUCH_SetOrientationPhys (unsigned Orientation);
 
 /*********************************************************************
-*
-*       TOUCH: imports
-*
-* Please note: The following functions are required by the module.
-* They need to be part of your application software (or rather, part
-* of the hardware-layer of your software).
-*/
-void GUI_TOUCH_X_ActivateX(void);
-void GUI_TOUCH_X_ActivateY(void);
-void GUI_TOUCH_X_Disable  (void);
-int  GUI_TOUCH_X_MeasureX (void);
-int  GUI_TOUCH_X_MeasureY (void);
+ *
+ *       TOUCH: imports
+ *
+ * Please note: The following functions are required by the module.
+ * They need to be part of your application software (or rather, part
+ * of the hardware-layer of your software).
+ */
+void GUI_TOUCH_X_ActivateX (void);
+void GUI_TOUCH_X_ActivateY (void);
+void GUI_TOUCH_X_Disable (void);
+int GUI_TOUCH_X_MeasureX (void);
+int GUI_TOUCH_X_MeasureY (void);
 
 /*********************************************************************
-*
-*       GUI_X_
-*
-* Externals, to be defined by application
-*
-* The externals defined below should be defined by the
-* application. They are per default contained in the module
-* GUI_X.c.
-* Note that a lot if not all of these are not required in most target
-* systems.
-* For this module, samples are available for configurations
-* with or without operating system.
-*/
+ *
+ *       GUI_X_
+ *
+ * Externals, to be defined by application
+ *
+ * The externals defined below should be defined by the
+ * application. They are per default contained in the module
+ * GUI_X.c.
+ * Note that a lot if not all of these are not required in most target
+ * systems.
+ * For this module, samples are available for configurations
+ * with or without operating system.
+ */
 //
 // Configuration
 //
-void GUI_X_Config(void);
-void GUI_X_Init  (void);
+void GUI_X_Config (void);
+void GUI_X_Init (void);
 
 //
 // Timing routines
 //
-GUI_TIMER_TIME GUI_X_GetTime(void);
-void           GUI_X_Delay  (int Period);
+GUI_TIMER_TIME GUI_X_GetTime (void);
+void GUI_X_Delay (int Period);
 
 //
 // Multitask routines - required only if multitasking is used (#define GUI_OS 1)
 //
-void GUI_X_Unlock   (void);
-void GUI_X_Lock     (void);
-U32  GUI_X_GetTaskId(void);
-void GUI_X_InitOS   (void);
+void GUI_X_Unlock (void);
+void GUI_X_Lock (void);
+U32 GUI_X_GetTaskId (void);
+void GUI_X_InitOS (void);
 
 //
 // Event driving (optional with multitasking)
 //
-void GUI_X_ExecIdle      (void);
-void GUI_X_WaitEvent     (void);
-void GUI_X_WaitEventTimed(int Period);
-void GUI_X_SignalEvent   (void);
+void GUI_X_ExecIdle (void);
+void GUI_X_WaitEvent (void);
+void GUI_X_WaitEventTimed (int Period);
+void GUI_X_SignalEvent (void);
 
 //
 // Recording (logs/warnings and errors) - required only for higher levels
 //
-void GUI_X_Log     (const char * s);
-void GUI_X_Warn    (const char * s);
-void GUI_X_ErrorOut(const char * s);
+void GUI_X_Log (const char * s);
+void GUI_X_Warn (const char * s);
+void GUI_X_ErrorOut (const char * s);
 
 /*********************************************************************
-*
-*       Constants for fonts and bitmaps
-*/
+ *
+ *       Constants for fonts and bitmaps
+ */
 extern const GUI_BITMAP_METHODS GUI_BitmapMethodsRLE4;
 extern const GUI_BITMAP_METHODS GUI_BitmapMethodsRLE4Ex;
 extern const GUI_BITMAP_METHODS GUI_BitmapMethodsRLE8;
@@ -1517,14 +1563,14 @@ extern const tGUI_XBF_APIList GUI_XBF_APIList_Prop_AA2_Ext;
 extern const tGUI_XBF_APIList GUI_XBF_APIList_Prop_AA4_Ext;
 
 /*********************************************************************
-*
-*       GUI_KEY_...
-*
-* These ID values are basically meant to be used with widgets
-* Note that we have chosen the values to be close to existing
-* "standards", so do not change them unless forced to.
-*
-*/
+ *
+ *       GUI_KEY_...
+ *
+ * These ID values are basically meant to be used with widgets
+ * Note that we have chosen the values to be close to existing
+ * "standards", so do not change them unless forced to.
+ *
+ */
 #define GUI_KEY_BACKSPACE         8         /* ASCII: BACKSPACE Crtl-H */
 #define GUI_KEY_TAB               9         /* ASCII: TAB       Crtl-I */
 #define GUI_KEY_BACKTAB           10
@@ -1548,14 +1594,14 @@ extern const tGUI_XBF_APIList GUI_XBF_APIList_Prop_AA4_Ext;
 #define GUI_KEY_F2                41
 
 /*********************************************************************
-*
-*       Dialog item IDs
-*
-*  The IDs below are arbitrary values. They just have to be unique
-*  within the dialog.
-*
-*  If you use your own Ids, we recommend to use values above GUI_ID_USER.
-*/
+ *
+ *       Dialog item IDs
+ *
+ *  The IDs below are arbitrary values. They just have to be unique
+ *  within the dialog.
+ *
+ *  If you use your own Ids, we recommend to use values above GUI_ID_USER.
+ */
 #define GUI_ID_OK                1
 #define GUI_ID_CANCEL            2
 #define GUI_ID_YES               3
@@ -1731,27 +1777,27 @@ extern const tGUI_XBF_APIList GUI_XBF_APIList_Prop_AA4_Ext;
 #define GUI_ID_USER       0x800
 
 /*********************************************************************
-*
-*       Mouse buttons
-*/
+ *
+ *       Mouse buttons
+ */
 #define GUI_LBUTTON (1 << 0) /* Left button */
 #define GUI_RBUTTON (1 << 1) /* Right button */
 #define GUI_MBUTTON (1 << 2) /* Middle button */
 #define GUI_DBUTTON (1 << 7) /* Double-click button */
 
 /*********************************************************************
-*
-*       Text styles
-*/
+ *
+ *       Text styles
+ */
 #define GUI_TS_NORMAL           (0)
 #define GUI_TS_UNDERLINE        (1 << 0)
 #define GUI_TS_STRIKETHRU       (1 << 1)
 #define GUI_TS_OVERLINE         (1 << 2)
 
 /*********************************************************************
-*
-*       Line styles
-*/
+ *
+ *       Line styles
+ */
 #define GUI_LS_SOLID        (0)
 #define GUI_LS_DASH         (1)
 #define GUI_LS_DOT          (2)
@@ -1759,120 +1805,119 @@ extern const tGUI_XBF_APIList GUI_XBF_APIList_Prop_AA4_Ext;
 #define GUI_LS_DASHDOTDOT   (4)
 
 /*********************************************************************
-*
-*       Pen shapes
-*/
+ *
+ *       Pen shapes
+ */
 #define GUI_PS_ROUND        (0)
 #define GUI_PS_FLAT         (1)
 #define GUI_PS_SQUARE       (2)
 
 /*********************************************************************
-*
-*       Standard colors
-*/
+ *
+ *       Standard colors
+ */
 #if (GUI_USE_ARGB)
-  #define GUI_BLUE          0xFF0000FF
-  #define GUI_GREEN         0xFF00FF00
-  #define GUI_RED           0xFFFF0000
-  #define GUI_CYAN          0xFF00FFFF
-  #define GUI_MAGENTA       0xFFFF00FF
-  #define GUI_YELLOW        0xFFFFFF00
-  #define GUI_LIGHTBLUE     0xFF8080FF
-  #define GUI_LIGHTGREEN    0xFF80FF80
-  #define GUI_LIGHTRED      0xFFFF8080
-  #define GUI_LIGHTCYAN     0xFF80FFFF
-  #define GUI_LIGHTMAGENTA  0xFFFF80FF
-  #define GUI_LIGHTYELLOW   0xFFFFFF80
-  #define GUI_DARKBLUE      0xFF000080
-  #define GUI_DARKGREEN     0xFF008000
-  #define GUI_DARKRED       0xFF800000
-  #define GUI_DARKCYAN      0xFF008080
-  #define GUI_DARKMAGENTA   0xFF800080
-  #define GUI_DARKYELLOW    0xFF808000
-  #define GUI_WHITE         0xFFFFFFFF
-  #define GUI_LIGHTGRAY     0xFFD3D3D3
-  #define GUI_GRAY          0xFF808080
-  #define GUI_DARKGRAY      0xFF404040
-  #define GUI_BLACK         0xFF000000
-  #define GUI_BROWN         0xFFA52A2A
-  #define GUI_ORANGE        0xFFFFA500
-  #define GUI_TRANSPARENT   0x00000000
+#define GUI_BLUE          0xFF0000FF
+#define GUI_GREEN         0xFF00FF00
+#define GUI_RED           0xFFFF0000
+#define GUI_CYAN          0xFF00FFFF
+#define GUI_MAGENTA       0xFFFF00FF
+#define GUI_YELLOW        0xFFFFFF00
+#define GUI_LIGHTBLUE     0xFF8080FF
+#define GUI_LIGHTGREEN    0xFF80FF80
+#define GUI_LIGHTRED      0xFFFF8080
+#define GUI_LIGHTCYAN     0xFF80FFFF
+#define GUI_LIGHTMAGENTA  0xFFFF80FF
+#define GUI_LIGHTYELLOW   0xFFFFFF80
+#define GUI_DARKBLUE      0xFF000080
+#define GUI_DARKGREEN     0xFF008000
+#define GUI_DARKRED       0xFF800000
+#define GUI_DARKCYAN      0xFF008080
+#define GUI_DARKMAGENTA   0xFF800080
+#define GUI_DARKYELLOW    0xFF808000
+#define GUI_WHITE         0xFFFFFFFF
+#define GUI_LIGHTGRAY     0xFFD3D3D3
+#define GUI_GRAY          0xFF808080
+#define GUI_DARKGRAY      0xFF404040
+#define GUI_BLACK         0xFF000000
+#define GUI_BROWN         0xFFA52A2A
+#define GUI_ORANGE        0xFFFFA500
+#define GUI_TRANSPARENT   0x00000000
 
-  #define GUI_GRAY_3F       0xFF3F3F3F
-  #define GUI_GRAY_50       0xFF505050
-  #define GUI_GRAY_55       0xFF555555
-  #define GUI_GRAY_60       0xFF606060
-  #define GUI_GRAY_7C       0xFF7C7C7C
-  #define GUI_GRAY_9A       0xFF9A9A9A
-  #define GUI_GRAY_AA       0xFFAAAAAA
-  #define GUI_GRAY_C0       0xFFC0C0C0
-  #define GUI_GRAY_C8       0xFFC8C8C8
-  #define GUI_GRAY_D0       0xFFD0D0D0
-  #define GUI_GRAY_E7       0xFFE7E7E7
-  #define GUI_BLUE_98       0xFF000098
+#define GUI_GRAY_3F       0xFF3F3F3F
+#define GUI_GRAY_50       0xFF505050
+#define GUI_GRAY_55       0xFF555555
+#define GUI_GRAY_60       0xFF606060
+#define GUI_GRAY_7C       0xFF7C7C7C
+#define GUI_GRAY_9A       0xFF9A9A9A
+#define GUI_GRAY_AA       0xFFAAAAAA
+#define GUI_GRAY_C0       0xFFC0C0C0
+#define GUI_GRAY_C8       0xFFC8C8C8
+#define GUI_GRAY_D0       0xFFD0D0D0
+#define GUI_GRAY_E7       0xFFE7E7E7
+#define GUI_BLUE_98       0xFF000098
 #else
-  #define GUI_BLUE          0x00FF0000
-  #define GUI_GREEN         0x0000FF00
-  #define GUI_RED           0x000000FF
-  #define GUI_CYAN          0x00FFFF00
-  #define GUI_MAGENTA       0x00FF00FF
-  #define GUI_YELLOW        0x0000FFFF
-  #define GUI_LIGHTBLUE     0x00FF8080
-  #define GUI_LIGHTGREEN    0x0080FF80
-  #define GUI_LIGHTRED      0x008080FF
-  #define GUI_LIGHTCYAN     0x00FFFF80
-  #define GUI_LIGHTMAGENTA  0x00FF80FF
-  #define GUI_LIGHTYELLOW   0x0080FFFF
-  #define GUI_DARKBLUE      0x00800000
-  #define GUI_DARKGREEN     0x00008000
-  #define GUI_DARKRED       0x00000080
-  #define GUI_DARKCYAN      0x00808000
-  #define GUI_DARKMAGENTA   0x00800080
-  #define GUI_DARKYELLOW    0x00008080
-  #define GUI_WHITE         0x00FFFFFF
-  #define GUI_LIGHTGRAY     0x00D3D3D3
-  #define GUI_GRAY          0x00808080
-  #define GUI_DARKGRAY      0x00404040
-  #define GUI_BLACK         0x00000000
-  #define GUI_BROWN         0x002A2AA5
-  #define GUI_ORANGE        0x0000A5FF
-  #define GUI_TRANSPARENT   0xFF000000
+#define GUI_BLUE          0x00FF0000
+#define GUI_GREEN         0x0000FF00
+#define GUI_RED           0x000000FF
+#define GUI_CYAN          0x00FFFF00
+#define GUI_MAGENTA       0x00FF00FF
+#define GUI_YELLOW        0x0000FFFF
+#define GUI_LIGHTBLUE     0x00FF8080
+#define GUI_LIGHTGREEN    0x0080FF80
+#define GUI_LIGHTRED      0x008080FF
+#define GUI_LIGHTCYAN     0x00FFFF80
+#define GUI_LIGHTMAGENTA  0x00FF80FF
+#define GUI_LIGHTYELLOW   0x0080FFFF
+#define GUI_DARKBLUE      0x00800000
+#define GUI_DARKGREEN     0x00008000
+#define GUI_DARKRED       0x00000080
+#define GUI_DARKCYAN      0x00808000
+#define GUI_DARKMAGENTA   0x00800080
+#define GUI_DARKYELLOW    0x00008080
+#define GUI_WHITE         0x00FFFFFF
+#define GUI_LIGHTGRAY     0x00D3D3D3
+#define GUI_GRAY          0x00808080
+#define GUI_DARKGRAY      0x00404040
+#define GUI_BLACK         0x00000000
+#define GUI_BROWN         0x002A2AA5
+#define GUI_ORANGE        0x0000A5FF
+#define GUI_TRANSPARENT   0xFF000000
 
-  #define GUI_GRAY_3F       0x003F3F3F
-  #define GUI_GRAY_50       0x00505050
-  #define GUI_GRAY_55       0x00555555
-  #define GUI_GRAY_60       0x00606060
-  #define GUI_GRAY_7C       0x007C7C7C
-  #define GUI_GRAY_9A       0x009A9A9A
-  #define GUI_GRAY_AA       0x00AAAAAA
-  #define GUI_GRAY_C0       0x00C0C0C0
-  #define GUI_GRAY_C8       0x00C8C8C8
-  #define GUI_GRAY_D0       0x00D0D0D0
-  #define GUI_GRAY_E7       0x00E7E7E7
-  #define GUI_BLUE_98       0x00980000
+#define GUI_GRAY_3F       0x003F3F3F
+#define GUI_GRAY_50       0x00505050
+#define GUI_GRAY_55       0x00555555
+#define GUI_GRAY_60       0x00606060
+#define GUI_GRAY_7C       0x007C7C7C
+#define GUI_GRAY_9A       0x009A9A9A
+#define GUI_GRAY_AA       0x00AAAAAA
+#define GUI_GRAY_C0       0x00C0C0C0
+#define GUI_GRAY_C8       0x00C8C8C8
+#define GUI_GRAY_D0       0x00D0D0D0
+#define GUI_GRAY_E7       0x00E7E7E7
+#define GUI_BLUE_98       0x00980000
 #endif
 
 #define GUI_INVALID_COLOR 0xFFFFFFF      /* Invalid color - more than 24 bits */
 
 #if (GUI_USE_ARGB)
-  #define GUI_MAKE_COLOR(ABGR)  (((((U32)ABGR) & 0xFF000000ul) ^ 0xFF000000ul) | ((((U32)ABGR) & 0x00FF0000ul) >> 16) | (((U32)ABGR) & 0x0000FF00ul) | ((((U32)ABGR) & 0x000000FFul) << 16))
-  #define GUI_MAKE_TRANS(Alpha) (255 - (Alpha))
+#define GUI_MAKE_COLOR(ABGR)  (((((U32)ABGR) & 0xFF000000ul) ^ 0xFF000000ul) | ((((U32)ABGR) & 0x00FF0000ul) >> 16) | (((U32)ABGR) & 0x0000FF00ul) | ((((U32)ABGR) & 0x000000FFul) << 16))
+#define GUI_MAKE_TRANS(Alpha) (255 - (Alpha))
 #else
-  #define GUI_MAKE_COLOR(ABGR)  (ABGR)
-  #define GUI_MAKE_TRANS(Alpha) (Alpha)
+#define GUI_MAKE_COLOR(ABGR)  (ABGR)
+#define GUI_MAKE_TRANS(Alpha) (Alpha)
 #endif
 
 #if (GUI_USE_ARGB)
-  #define GUI_TRANS_BYTE 0x00
+#define GUI_TRANS_BYTE 0x00
 #else
-  #define GUI_TRANS_BYTE 0xFF
+#define GUI_TRANS_BYTE 0xFF
 #endif
 
-
 /*********************************************************************
-*
-*       MultiTouch-Support
-*/
+ *
+ *       MultiTouch-Support
+ */
 //
 // Defines
 //
@@ -1888,43 +1933,43 @@ extern T_GUI_MTOUCH_STOREEVENT GUI_MTOUCH__pStoreEvent;
 //
 // Interface
 //
-void GUI_MTOUCH_Enable          (int OnOff);
-int  GUI_MTOUCH_GetEvent        (GUI_MTOUCH_EVENT * pEvent);
-int  GUI_MTOUCH_GetTouchInput   (GUI_MTOUCH_EVENT * pEvent, GUI_MTOUCH_INPUT * pBuffer, unsigned Index);
-int  GUI_MTOUCH_IsEmpty         (void);
-void GUI_MTOUCH_SetOrientation  (int Orientation);
-void GUI_MTOUCH_SetOrientationEx(int Orientation, int LayerIndex);
-void GUI_MTOUCH_StoreEvent      (GUI_MTOUCH_EVENT * pEvent, GUI_MTOUCH_INPUT * pInput);
+void GUI_MTOUCH_Enable (int OnOff);
+int GUI_MTOUCH_GetEvent (GUI_MTOUCH_EVENT * pEvent);
+int GUI_MTOUCH_GetTouchInput (GUI_MTOUCH_EVENT * pEvent, GUI_MTOUCH_INPUT * pBuffer, unsigned Index);
+int GUI_MTOUCH_IsEmpty (void);
+void GUI_MTOUCH_SetOrientation (int Orientation);
+void GUI_MTOUCH_SetOrientationEx (int Orientation, int LayerIndex);
+void GUI_MTOUCH_StoreEvent (GUI_MTOUCH_EVENT * pEvent, GUI_MTOUCH_INPUT * pInput);
 
 /*********************************************************************
-*
-*       Coordinates used in touch driver
-*/
+ *
+ *       Coordinates used in touch driver
+ */
 #define GUI_COORD_X 0
 #define GUI_COORD_Y 1
 
 /*********************************************************************
-*
-*       Addresses of standard fonts
-*/
+ *
+ *       Addresses of standard fonts
+ */
 //
 // Proportional fonts
 //
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8_ASCII,        GUI_Font8_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font10S_ASCII,      GUI_Font10S_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font10_ASCII,       GUI_Font10_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font13_ASCII,       GUI_Font13_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font13B_ASCII,      GUI_Font13B_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font13H_ASCII,      GUI_Font13H_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font13HB_ASCII,     GUI_Font13HB_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font16_ASCII,       GUI_Font16_1,       GUI_Font16_HK,    GUI_Font16_1HK;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font16B_ASCII,      GUI_Font16B_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font20_ASCII,       GUI_Font20_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font20B_ASCII,      GUI_Font20B_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font24_ASCII,       GUI_Font24_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font24B_ASCII,      GUI_Font24B_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font32_ASCII,       GUI_Font32_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font32B_ASCII,      GUI_Font32B_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8_ASCII, GUI_Font8_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font10S_ASCII, GUI_Font10S_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font10_ASCII, GUI_Font10_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font13_ASCII, GUI_Font13_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font13B_ASCII, GUI_Font13B_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font13H_ASCII, GUI_Font13H_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font13HB_ASCII, GUI_Font13HB_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font16_ASCII, GUI_Font16_1, GUI_Font16_HK, GUI_Font16_1HK;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font16B_ASCII, GUI_Font16B_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font20_ASCII, GUI_Font20_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font20B_ASCII, GUI_Font20B_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font24_ASCII, GUI_Font24_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font24B_ASCII, GUI_Font24B_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font32_ASCII, GUI_Font32_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font32B_ASCII, GUI_Font32B_1;
 
 //
 // Proportional fonts, framed
@@ -1935,17 +1980,17 @@ extern GUI_CONST_STORAGE GUI_FONT GUI_Font20F_ASCII;
 // Monospaced
 //
 extern GUI_CONST_STORAGE GUI_FONT GUI_Font4x6;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font6x8,            GUI_Font6x9;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font6x8_ASCII,      GUI_Font6x8_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x8,            GUI_Font8x9;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x8_ASCII,      GUI_Font8x8_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font6x8, GUI_Font6x9;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font6x8_ASCII, GUI_Font6x8_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x8, GUI_Font8x9;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x8_ASCII, GUI_Font8x8_1;
 extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x10_ASCII;
 extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x12_ASCII;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x13_ASCII,     GUI_Font8x13_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x15B_ASCII,    GUI_Font8x15B_1;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x16,           GUI_Font8x17,       GUI_Font8x18;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x16x1x2,       GUI_Font8x16x2x2,   GUI_Font8x16x3x3;
-extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x16_ASCII,     GUI_Font8x16_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x13_ASCII, GUI_Font8x13_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x15B_ASCII, GUI_Font8x15B_1;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x16, GUI_Font8x17, GUI_Font8x18;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x16x1x2, GUI_Font8x16x2x2, GUI_Font8x16x3x3;
+extern GUI_CONST_STORAGE GUI_FONT GUI_Font8x16_ASCII, GUI_Font8x16_1;
 
 //
 // Digits
@@ -1966,9 +2011,9 @@ extern GUI_CONST_STORAGE GUI_FONT GUI_FontComic18B_ASCII, GUI_FontComic18B_1;
 extern GUI_CONST_STORAGE GUI_FONT GUI_FontComic24B_ASCII, GUI_FontComic24B_1;
 
 /*********************************************************************
-*
-*       Macros to be used
-*/
+ *
+ *       Macros to be used
+ */
 //
 // Proportional fonts
 //
@@ -2058,13 +2103,13 @@ extern GUI_CONST_STORAGE GUI_FONT GUI_FontComic24B_ASCII, GUI_FontComic24B_1;
 #define GUI_FONT_COMIC24B_1     &GUI_FontComic24B_1
 
 /*********************************************************************
-*
-*       Text and drawing modes
-*
-* These defines come in two flavors: the long version (.._DRAWMODE_..)
-* and the short ones (.._DM_..). They are identical, feel free to use
-* which ever one you like best.
-*/
+ *
+ *       Text and drawing modes
+ *
+ * These defines come in two flavors: the long version (.._DRAWMODE_..)
+ * and the short ones (.._DM_..). They are identical, feel free to use
+ * which ever one you like best.
+ */
 #define GUI_DRAWMODE_NORMAL  LCD_DRAWMODE_NORMAL
 #define GUI_DRAWMODE_XOR     LCD_DRAWMODE_XOR
 #define GUI_DRAWMODE_TRANS   LCD_DRAWMODE_TRANS
@@ -2103,27 +2148,27 @@ extern GUI_CONST_STORAGE GUI_FONT GUI_FontComic24B_ASCII, GUI_FontComic24B_1;
 #define GUI_SWAP_XY  (1 << 2)
 
 /*********************************************************************
-*
-*       Min/Max coordinates
-*
-* Define minimum and maximum coordinates in x and y
-*/
+ *
+ *       Min/Max coordinates
+ *
+ * Define minimum and maximum coordinates in x and y
+ */
 #if 1
-  #define GUI_XMIN -16383
-  #define GUI_XMAX  16383
-  #define GUI_YMIN -16383
-  #define GUI_YMAX  16383
+#define GUI_XMIN -16383
+#define GUI_XMAX  16383
+#define GUI_YMIN -16383
+#define GUI_YMAX  16383
 #else
-  #define GUI_XMIN -4095
-  #define GUI_XMAX  4095
-  #define GUI_YMIN -4095
-  #define GUI_YMAX  4095
+#define GUI_XMIN -4095
+#define GUI_XMAX  4095
+#define GUI_YMIN -4095
+#define GUI_YMAX  4095
 #endif
 
 /*********************************************************************
-*
-*       Defines for constants
-*/
+ *
+ *       Defines for constants
+ */
 #define	________	0x0
 #define	_______X	0x1
 #define	______X_	0x2
@@ -2382,9 +2427,9 @@ extern GUI_CONST_STORAGE GUI_FONT GUI_FontComic24B_ASCII, GUI_FontComic24B_1;
 #define	XXXXXXXX	0xff
 
 /*********************************************************************
-*
-*       Compatibility with older versions
-*/
+ *
+ *       Compatibility with older versions
+ */
 #define GUI_DispString_UC      GUI_UC_DispString
 #define TOUCH_X_ActivateX      GUI_TOUCH_X_ActivateX
 #define TOUCH_X_ActivateY      GUI_TOUCH_X_ActivateY

@@ -1,35 +1,35 @@
 /* file: ftl_if_ex.h */
 /**************************************************************************
-* Copyright (C)2012 Spansion Inc. All Rights Reserved. 
-*
-* This software is owned and published by: 
-* Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
-*
-* BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
-* BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
-*
-* This software constitutes driver source code for use in programming Spansion's 
-* Flash memory components. This software is licensed by Spansion to be adapted only 
-* for use in systems utilizing Spansion's Flash memories. Spansion is not be 
-* responsible for misuse or illegal use of this software for devices not 
-* supported herein.  Spansion is providing this source code "AS IS" and will 
-* not be responsible for issues arising from incorrect user implementation 
-* of the source code herein.  
-*
-* SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
-* REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
-* USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
-* FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
-* HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
-* OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
-* INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
-* SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
-* EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
-*
-* This software may be replicated in part or whole for the licensed use, 
-* with the restriction that this Copyright notice must be included with 
-* this software, whether used in part or whole, at all times.  
-*/
+ * Copyright (C)2012 Spansion Inc. All Rights Reserved. 
+ *
+ * This software is owned and published by: 
+ * Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
+ *
+ * BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
+ * BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
+ *
+ * This software constitutes driver source code for use in programming Spansion's 
+ * Flash memory components. This software is licensed by Spansion to be adapted only 
+ * for use in systems utilizing Spansion's Flash memories. Spansion is not be 
+ * responsible for misuse or illegal use of this software for devices not 
+ * supported herein.  Spansion is providing this source code "AS IS" and will 
+ * not be responsible for issues arising from incorrect user implementation 
+ * of the source code herein.  
+ *
+ * SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
+ * REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
+ * USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
+ * FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
+ * HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
+ * OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
+ * INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
+ * EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
+ *
+ * This software may be replicated in part or whole for the licensed use, 
+ * with the restriction that this Copyright notice must be included with 
+ * this software, whether used in part or whole, at all times.  
+ */
 
 /* external APIs suppied to the outside world */
 
@@ -74,7 +74,6 @@
 #define FTL_ERR_FLASH_OPS_BASE    (FTL_ERR_BASE + 27000)
 #define FTL_ERR_SUPER_BASE        (FTL_ERR_BASE + 28000)
 #define FTL_ERR_CACHE_BASE        (FTL_ERR_BASE + 29000)
-
 
 #define FTL_ERR_PASS              (FTL_ERR_BASE + 0)
 #define FTL_ERR_FAIL              (FTL_ERR_BASE + 1)
@@ -235,8 +234,8 @@
 #define FTL_ERR_FREEPAGE_PAGE_LD  (FTL_ERR_FREEPAGE_BASE + 0)
 #define FTL_ERR_FREEPAGE_PAGE_RD  (FTL_ERR_FREEPAGE_BASE + 1)
 #define FTL_ERR_FREEPAGE_END      (FTL_ERR_FREEPAGE_BASE + 2) /*Don't use this error code in *.c files*/
-                                                           
-/*RPB Cache Error Codes*//*starts at 114*/                 
+
+/*RPB Cache Error Codes*//*starts at 114*/
 #define FTL_ERR_RPB_CACHE_FLUSH    (FTL_ERR_RPB_CACHE_BASE + 0)
 #define FTL_ERR_RPB_CACHE_EMPTY_01 (FTL_ERR_RPB_CACHE_BASE + 1)
 #define FTL_ERR_RPB_CACHE_EMPTY_02 (FTL_ERR_RPB_CACHE_BASE + 2)
@@ -351,7 +350,7 @@
 #define FTL_ERR_BACKGROUND_GT2         (FTL_ERR_BACKGROUND_BASE + 1)
 #define FTL_ERR_BACKGROUND_END         (FTL_ERR_BACKGROUND_BASE + 2) /*Don't use this error code in *.c files*/
 
-/* Debug and Test Codes*/  /*starts at 210*/
+/* Debug and Test Codes*//*starts at 210*/
 #define FTL_ERR_DEBUG_DUPLICATE_BLOCK  (FTL_ERR_DEBUG_TST_BASE + 0)
 #define FTL_ERR_DEBUG_MISSING_BLOCK    (FTL_ERR_DEBUG_TST_BASE + 1)
 #define FTL_ERR_DEBUG_LOG_CHAIN_BROKE  (FTL_ERR_DEBUG_TST_BASE + 2)
@@ -361,18 +360,18 @@
 #define FTL_ERR_TST_LBA_MISMATCH       (FTL_ERR_DEBUG_TST_BASE + 6)
 #define FTL_ERR_TST_INDEX_NOT_ONE      (FTL_ERR_DEBUG_TST_BASE + 7)
 #define FTL_ERR_NO_ROOM_IN_GCSAVE      (FTL_ERR_DEBUG_TST_BASE + 8)
-                                                                 
-/* Pre Erased Codes */  /* starts at 219 */
+
+/* Pre Erased Codes *//* starts at 219 */
 #define FTL_ERR_PRE_ERASED_PARAMETER   (FTL_ERR_PRE_ERASED_BASE + 0)
 #define FTL_ERR_PRE_ERASED_CHAINED     (FTL_ERR_PRE_ERASED_BASE + 1)
 
-/* Delete Codes */  /* starts at 230 */
+/* Delete Codes *//* starts at 230 */
 #define FTL_ERR_DEL_INFO_EMPTY         (FTL_ERR_DEL_INFO_BASE + 0)
 #define FTL_ERR_DEL_INFO_MISS          (FTL_ERR_DEL_INFO_BASE + 1)
 
 /*------ Room For More ------*/
 
-/* new GC Codes */ /* starts at 300*/
+/* new GC Codes *//* starts at 300*/
 #define FTL_ERR_LOG_WR                 (FTL_ERR_DATA_GC_BASE + 0)
 #define FTL_ERR_EBLOCK_FULL            (FTL_ERR_DATA_GC_BASE + 1)
 #define FTL_ERR_LOGICAL_PAGE_NOT_FOUND (FTL_ERR_DATA_GC_BASE + 2)
@@ -380,8 +379,8 @@
 #define FTL_ERR_DATA_GC_FLASH_TIMEOUT2 (FTL_ERR_DATA_GC_BASE + 4)
 #define FTL_ERR_BB_BUSY_TIMEOUT1       (FTL_ERR_DATA_GC_BASE + 5)
 #define FTL_ERR_BB_BUSY_TIMEOUT2       (FTL_ERR_DATA_GC_BASE + 6)
-                                                               
-/* new Flush Codes */ /* starts at 320 */                      
+
+/* new Flush Codes *//* starts at 320 */
 #define FTL_ERR_FLUSH_NO_ENTRIES       (FTL_ERR_FLUSH_BASE + 0)
 #define FTL_ERR_FLUSH_NEXT_ENTRY       (FTL_ERR_FLUSH_BASE + 1)
 #define FTL_ERR_FLUSH_NO_EBLOCKS       (FTL_ERR_FLUSH_BASE + 2)
@@ -401,7 +400,7 @@
 #define FTL_ERR_FLUSH_FLUSH_GC_FAIL    (FTL_ERR_FLUSH_BASE + 16)
 #define FTL_ERR_FLUSH_END              (FTL_ERR_FLUSH_BASE + 17) /*Don't use this error code in *.c files*/
 
-/* new Log Codes */  /* starts at 338 */
+/* new Log Codes *//* starts at 338 */
 #define FTL_ERR_LOG_UNLINK_A1_SEQUENCE (FTL_ERR_LOG_BASE + 0)
 #define FTL_ERR_LOG_UNLINK_A2_SEQUENCE (FTL_ERR_LOG_BASE + 1)
 #define FTL_ERR_CANNOT_FIND_NEXT_ENTRY (FTL_ERR_LOG_BASE + 2)
@@ -442,8 +441,8 @@
 #define FTL_ERR_LOG_TYPE_SPARE_SEQ     (FTL_ERR_LOG_BASE + 37)
 #define FTL_ERR_LOG_TYPE_A_ENTRY       (FTL_ERR_LOG_BASE + 38)
 #define FTL_ERR_LOG_END                (FTL_ERR_LOG_BASE + 39) /*Don't use this error code in *.c files*/
-                                                            
-/* new Table Codes */  /* starts at 375 */                  
+
+/* new Table Codes *//* starts at 375 */
 #define FTL_ERR_TABLE_PPA_BITMAP_01    (FTL_ERR_TABLE_PPA_BASE + 0)
 #define FTL_ERR_TABLE_PPA_BITMAP_02    (FTL_ERR_TABLE_PPA_BASE + 1)
 #define FTL_ERR_TABLE_PPA_BITMAP_03    (FTL_ERR_TABLE_PPA_BASE + 2)
@@ -451,15 +450,15 @@
 #define FTL_ERR_TABLE_PPA_BITMAP_05    (FTL_ERR_TABLE_PPA_BASE + 4)
 #define FTL_ERR_TABLE_PPA_BITMAP_06    (FTL_ERR_TABLE_PPA_BASE + 5)
 #define FTL_ERR_TABLE_END              (FTL_ERR_TABLE_PPA_BASE + 6) /*Don't use this error code in *.c files*/
-                                                                 
-/* Error Codes */  /* starts at 381 */                           
+
+/* Error Codes *//* starts at 381 */
 #define FTL_ERR_MOUNTED                 (FTL_ERR_MOUNT_LOCK_BASE + 0)
 #define FTL_ERR_NOT_MOUNTED             (FTL_ERR_MOUNT_LOCK_BASE + 1)
 #define FTL_ERR_LOCKED                  (FTL_ERR_MOUNT_LOCK_BASE + 2)
 #define FTL_ERR_UNLOCKED                (FTL_ERR_MOUNT_LOCK_BASE + 3)
 #define FTL_ERR_FLUSH_GC_SANITY         (FTL_ERR_MOUNT_LOCK_BASE + 4)
 
-/* new Flash Error codes */  /* starts at 400 */
+/* new Flash Error codes *//* starts at 400 */
 #define FTL_ERR_FLASH_READ_01           (FTL_ERR_FLASH_OPS_BASE + 0)
 #define FTL_ERR_FLASH_READ_02           (FTL_ERR_FLASH_OPS_BASE + 1)
 #define FTL_ERR_FLASH_READ_03           (FTL_ERR_FLASH_OPS_BASE + 2)
@@ -548,7 +547,6 @@
 #define FTL_ERR_FLASH_INIT_02           (FTL_ERR_FLASH_OPS_BASE + 85)
 #define FTL_ERR_FLASH_SHUTDOWN_01       (FTL_ERR_FLASH_OPS_BASE + 86)
 
-
 #define FTL_ERR_SUPER_READ_01                 (FTL_ERR_SUPER_BASE + 0)
 #define FTL_ERR_SUPER_READ_02                 (FTL_ERR_SUPER_BASE + 1)
 #define FTL_ERR_SUPER_READ_03                 (FTL_ERR_SUPER_BASE + 2)
@@ -579,7 +577,6 @@
 #define FTL_ERR_SUPER_FLASH_WRITE_01          (FTL_ERR_SUPER_BASE + 27)
 #define FTL_ERR_SUPER_FLASH_WRITE_02          (FTL_ERR_SUPER_BASE + 28)
 #define FTL_ERR_SUPER_FLASH_WRITE_03          (FTL_ERR_SUPER_BASE + 29)
-
 
 #define FTL_ERR_CACHE_EB_LOAD                                     (FTL_ERR_CACHE_BASE + 0) // not use
 #define FTL_ERR_CACHE_NOT_FOUND                                   (FTL_ERR_CACHE_BASE + 1)
@@ -654,7 +651,6 @@
 #define FTL_FORCE_FORMAT               (14)
 #define FTL_DATA_WEAR_LEVEL_RANGE      (20)
 #define DELETE_GC_THRESHOLD            (32)
-
 
 #define AUTOFILL_0xFF_UNMAPPED_SECTORS FTL_TRUE
 
@@ -781,147 +777,148 @@ unsigned long gTotal_ram_allowed;
 #if (DEBUG_ENABLE_LOGGING == FTL_TRUE)
 typedef struct _ftlDebugLogElement
 {
-    unsigned long LBA;
-    unsigned long NB;
-    unsigned char operation;
-} FTL_DEBUG_LOG_ELEMENT;
+	unsigned long LBA;
+	unsigned long NB;
+	unsigned char operation;
+}FTL_DEBUG_LOG_ELEMENT;
 #endif
 
 typedef struct _transMap
 {
-    unsigned char  devID;                /*1*/
-    unsigned char  numSectors;           /*1*/
-    unsigned char  startSector;          /*1*/
-    unsigned long  startLBA;             /*4*/
-    unsigned long  phyPageAddr;          /*4*/
-    unsigned long  mergePageForWrite;    /*4*/
-    unsigned short logEBlockEntryIndex;  /*4*/    
-} TRANSFER_MAP_STRUCT;             /*Total 23 bytes*/
+	unsigned char devID; /*1*/
+	unsigned char numSectors; /*1*/
+	unsigned char startSector; /*1*/
+	unsigned long startLBA; /*4*/
+	unsigned long phyPageAddr; /*4*/
+	unsigned long mergePageForWrite; /*4*/
+	unsigned short logEBlockEntryIndex; /*4*/
+} TRANSFER_MAP_STRUCT; /*Total 23 bytes*/
 
-typedef  TRANSFER_MAP_STRUCT* TRANS_MAP_ENTRY_PTR;
-typedef  TRANS_MAP_ENTRY_PTR* TRANS_MAP_ENTRY_PTR_PTR;
+typedef TRANSFER_MAP_STRUCT* TRANS_MAP_ENTRY_PTR;
+typedef TRANS_MAP_ENTRY_PTR* TRANS_MAP_ENTRY_PTR_PTR;
 
 typedef struct _ftlInitVars
 {
-    unsigned char format;
-    unsigned char os_type;
-    unsigned char table_storage;
-    unsigned char allocate;
-    unsigned char mode;
-    #if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
-    unsigned long total_ram_allowed;
-    #endif
+	unsigned char format;
+	unsigned char os_type;
+	unsigned char table_storage;
+	unsigned char allocate;
+	unsigned char mode;
+#if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
+unsigned long total_ram_allowed;
+#endif
 } FTL_INIT_STRUCT;
 
 typedef struct _capacity
 {
-   unsigned long totalSize;    //In Bytes
-   unsigned long numDBlocks;
-   unsigned long numEBlocks;
-   unsigned long eBlockSizeBytes;
-   unsigned long eBlockSizePages;
-   unsigned long pageSizeDBlocks;
-   unsigned long pageSizeBytes;
-   unsigned long numBlocks;    // is equivalent to numDBlocks OBSOLETE
-   unsigned long blockSize;    // is equivalent to numEBlocks OBSOLETE
-   unsigned long pageSize;     // is equivalent to pageSizeBytes OBSOLETE
-   unsigned long busWidth;
-   unsigned long numDevices;
+unsigned long totalSize;    //In Bytes
+unsigned long numDBlocks;
+unsigned long numEBlocks;
+unsigned long eBlockSizeBytes;
+unsigned long eBlockSizePages;
+unsigned long pageSizeDBlocks;
+unsigned long pageSizeBytes;
+unsigned long numBlocks;    // is equivalent to numDBlocks OBSOLETE
+unsigned long blockSize;    // is equivalent to numEBlocks OBSOLETE
+unsigned long pageSize;     // is equivalent to pageSizeBytes OBSOLETE
+unsigned long busWidth;
+unsigned long numDevices;
 } FTL_CAPACITY;
 
 typedef struct _devConfig
 {
-   unsigned short dataEBlkStart;
-   unsigned short dataEBlkEnd;
-   unsigned short reserveEBlkStart;
-   unsigned short reserveEBlkEnd;
-   unsigned short sysEBlkStart;
-   unsigned short sysEBlkEnd;
-   unsigned short numDevices;
-   unsigned short sectorsPerPage;
-   unsigned short dataPagesPerEBlock;
-   unsigned short sysPagesPerEBlock;
-   unsigned short eblockChainingEnabled;
+unsigned short dataEBlkStart;
+unsigned short dataEBlkEnd;
+unsigned short reserveEBlkStart;
+unsigned short reserveEBlkEnd;
+unsigned short sysEBlkStart;
+unsigned short sysEBlkEnd;
+unsigned short numDevices;
+unsigned short sectorsPerPage;
+unsigned short dataPagesPerEBlock;
+unsigned short sysPagesPerEBlock;
+unsigned short eblockChainingEnabled;
 } FTL_DEV_CONFIG;
 
 typedef struct _defect
 {
-    unsigned short devID;         /*2*/
-    unsigned short phyEBNum;      /*2*/
-} FTL_DEFECT;          /*Total 4 bytes*/
+unsigned short devID; /*2*/
+unsigned short phyEBNum; /*2*/
+} FTL_DEFECT; /*Total 4 bytes*/
 
 /* used for LBA to PBA conversion */
-typedef struct _PBAStruct{
-    unsigned char devID;
-    unsigned long PPA;
-    unsigned long PBA;
+typedef struct _PBAStruct
+{
+unsigned char devID;
+unsigned long PPA;
+unsigned long PBA;
 } PBA_STRUCT;
 typedef PBA_STRUCT* PBA_STRUCT_PTR;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-FTL_STATUS FTL_InitAll(FTL_INIT_STRUCT *initStructPtr);
+FTL_STATUS FTL_InitAll (FTL_INIT_STRUCT *initStructPtr);
 #if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
 FTL_STATUS FTL_Format(FTL_INIT_STRUCT *initStructPtr);
 #else
-FTL_STATUS FTL_Format(void);
+FTL_STATUS FTL_Format (void);
 #endif
-FTL_STATUS FTL_Shutdown(void);
+FTL_STATUS FTL_Shutdown (void);
 /* Utiltiy */
-FTL_STATUS FTL_GetCapacity( FTL_CAPACITY * capacity );
-FTL_STATUS FTL_SetXtremeModeProgramming(unsigned char mode);
-FTL_STATUS FTL_GetUtilizationInfo(unsigned long DeviceID, unsigned long * Free, unsigned long * Used, 
-    unsigned long * Dirty );
-FTL_STATUS FTL_GetEraseCycles(unsigned long DeviceID, unsigned long * high_block_number, 
-    unsigned long * high_erase_count, unsigned long * low_block_number, unsigned long * low_erase_count );
+FTL_STATUS FTL_GetCapacity (FTL_CAPACITY * capacity);
+FTL_STATUS FTL_SetXtremeModeProgramming (unsigned char mode);
+FTL_STATUS FTL_GetUtilizationInfo (unsigned long DeviceID, unsigned long * Free, unsigned long * Used,
+	unsigned long * Dirty);
+FTL_STATUS FTL_GetEraseCycles (unsigned long DeviceID, unsigned long * high_block_number,
+	unsigned long * high_erase_count, unsigned long * low_block_number, unsigned long * low_erase_count);
 /* Cache and Tanslation Table */
-FTL_STATUS FTL_FlushDataCache(void);
-FTL_STATUS FTL_FlushTableCache(void);
+FTL_STATUS FTL_FlushDataCache (void);
+FTL_STATUS FTL_FlushTableCache (void);
 /* Read */
-FTL_STATUS FTL_DeviceObjectsRead( unsigned char * buffer, unsigned long LBA, unsigned long NB, 
-    unsigned long * bytesDone );
+FTL_STATUS FTL_DeviceObjectsRead (unsigned char * buffer, unsigned long LBA, unsigned long NB,
+	unsigned long * bytesDone);
 /* Write */
-FTL_STATUS FTL_DeviceObjectsWrite(unsigned char * buffer , unsigned long LBA, unsigned long NB, 
-    unsigned long * bytesDone );
+FTL_STATUS FTL_DeviceObjectsWrite (unsigned char * buffer, unsigned long LBA, unsigned long NB,
+	unsigned long * bytesDone);
 /* Delete */
-FTL_STATUS FTL_DeviceObjectsDelete(unsigned long LBA, unsigned long NB, unsigned long * sectorsDeleted );
+FTL_STATUS FTL_DeviceObjectsDelete (unsigned long LBA, unsigned long NB, unsigned long * sectorsDeleted);
 /* Garbage Collection */
-FTL_STATUS FTL_ForcedGC(FTL_DEV DeviceID, unsigned short logicalEBNum, unsigned short * FreedUpPages, 
-    unsigned short * freePageIndex );
-FTL_STATUS FTL_SetGCThreshold(unsigned char type, unsigned long threshold );
+FTL_STATUS FTL_ForcedGC (FTL_DEV DeviceID, unsigned short logicalEBNum, unsigned short * FreedUpPages,
+	unsigned short * freePageIndex);
+FTL_STATUS FTL_SetGCThreshold (unsigned char type, unsigned long threshold);
 /*Trafer map*/
-FTL_STATUS FTL_BuildTransferMapForWriteBlocking(unsigned long LBA, 
-    unsigned long NB, unsigned long * resultingEntries );
-FTL_STATUS FTL_BuildTransferMapForReadBlocking(unsigned long LBA, 
-    unsigned long NB, unsigned long * resultingEntries );
-FTL_STATUS FTL_GetTransferMapEntry(unsigned short int entryIndex, TRANS_MAP_ENTRY_PTR transferMapEntry);
-FTL_STATUS FTL_TransferPageForWrite(unsigned char **byteBuffer, unsigned long *remainingEntries);
-FTL_STATUS FTL_TransferPageForRead(unsigned char **byteBuffer, unsigned long * remainingEntries);
-FTL_STATUS FTL_BackgroundTask(void);
-FTL_STATUS FTL_ManageRead(void);
+FTL_STATUS FTL_BuildTransferMapForWriteBlocking (unsigned long LBA,
+	unsigned long NB, unsigned long * resultingEntries);
+FTL_STATUS FTL_BuildTransferMapForReadBlocking (unsigned long LBA,
+	unsigned long NB, unsigned long * resultingEntries);
+FTL_STATUS FTL_GetTransferMapEntry (unsigned short int entryIndex, TRANS_MAP_ENTRY_PTR transferMapEntry);
+FTL_STATUS FTL_TransferPageForWrite (unsigned char **byteBuffer, unsigned long *remainingEntries);
+FTL_STATUS FTL_TransferPageForRead (unsigned char **byteBuffer, unsigned long * remainingEntries);
+FTL_STATUS FTL_BackgroundTask (void);
+FTL_STATUS FTL_ManageRead (void);
 /* Defect Management */
-FTL_STATUS TST_WriteDefectList(FTL_DEFECT* buffer, unsigned short replace);
-FTL_STATUS TST_ReadDefectList(FTL_DEFECT* buffer);
+FTL_STATUS TST_WriteDefectList (FTL_DEFECT* buffer, unsigned short replace);
+FTL_STATUS TST_ReadDefectList (FTL_DEFECT* buffer);
 /*Helper funntion for BDT*/
-FTL_STATUS TST_LBAToPBA(unsigned long LBA, PBA_STRUCT_PTR pbaStruct, unsigned char verifyFlash);
+FTL_STATUS TST_LBAToPBA (unsigned long LBA, PBA_STRUCT_PTR pbaStruct, unsigned char verifyFlash);
 /*Wearleveling Test functions*/
-FTL_STATUS TST_GetDevConfig(FTL_DEV_CONFIG* devConfig);
-FTL_STATUS TST_GetLogicalEBEraseCount(unsigned char devID, unsigned short logicalEBNum, 
-    unsigned short* physicalEBNum, unsigned long* eraseCount);
-FTL_STATUS TST_GetPhysicalEBEraseCount(unsigned char devID, unsigned short phyEBNum, unsigned long* eraseCount);
-FTL_STATUS TST_GetAverageEraseCount(unsigned char devID, unsigned short Start_Logical_eBlk, 
-    unsigned short End_Logical_eBlk, unsigned short* avgEraseCount);
-FTL_STATUS TST_CheckEraseCount(unsigned char devID, unsigned short Start_Logical_eBlk,
-    unsigned short End_Logical_eBlk, unsigned short expected_value);
-FLASH_STATUS TST_ResetFlash(unsigned long devId);
+FTL_STATUS TST_GetDevConfig (FTL_DEV_CONFIG* devConfig);
+FTL_STATUS TST_GetLogicalEBEraseCount (unsigned char devID, unsigned short logicalEBNum,
+	unsigned short* physicalEBNum, unsigned long* eraseCount);
+FTL_STATUS TST_GetPhysicalEBEraseCount (unsigned char devID, unsigned short phyEBNum, unsigned long* eraseCount);
+FTL_STATUS TST_GetAverageEraseCount (unsigned char devID, unsigned short Start_Logical_eBlk,
+	unsigned short End_Logical_eBlk, unsigned short* avgEraseCount);
+FTL_STATUS TST_CheckEraseCount (unsigned char devID, unsigned short Start_Logical_eBlk,
+	unsigned short End_Logical_eBlk, unsigned short expected_value);
+FLASH_STATUS TST_ResetFlash (unsigned long devId);
 #if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
 FTL_STATUS CACHE_GetUsedRamSize(unsigned long* miniRamSize, unsigned long* maxRamSize);
 #endif
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif  // #ifndef FTL_IF_EX_H

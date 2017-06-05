@@ -1,34 +1,34 @@
 /**********************************************************************
-* $Id$		lpc43xx_mcpwm.h		2011-06-02
-*//**
-* @file		lpc43xx_mcpwm.h
-* @brief	Contains all macro definitions and function prototypes
-* 			support for Motor Control PWM firmware library on lpc43xx
-* @version	1.0
-* @date		02. June. 2011
-* @author	NXP MCU SW Application Team
-*
-* Copyright(C) 2011, NXP Semiconductor
-* All rights reserved.
-*
-***********************************************************************
-* Software that is described herein is for illustrative purposes only
-* which provides customers with programming information regarding the
-* products. This software is supplied "AS IS" without any warranties.
-* NXP Semiconductors assumes no responsibility or liability for the
-* use of the software, conveys no license or title under any patent,
-* copyright, or mask work right to the product. NXP Semiconductors
-* reserves the right to make changes in the software without
-* notification. NXP Semiconductors also make no representation or
-* warranty that such application will be suitable for the specified
-* use without further testing or modification.
-* Permission to use, copy, modify, and distribute this software and its
-* documentation is hereby granted, under NXP Semiconductors’
-* relevant copyright in the software, without fee, provided that it
-* is used in conjunction with NXP Semiconductors microcontrollers.  This
-* copyright, permission, and disclaimer notice must appear in all copies of
-* this code.
-**********************************************************************/
+ * $Id$		lpc43xx_mcpwm.h		2011-06-02
+ *//**
+ * @file		lpc43xx_mcpwm.h
+ * @brief	Contains all macro definitions and function prototypes
+ * 			support for Motor Control PWM firmware library on lpc43xx
+ * @version	1.0
+ * @date		02. June. 2011
+ * @author	NXP MCU SW Application Team
+ *
+ * Copyright(C) 2011, NXP Semiconductor
+ * All rights reserved.
+ *
+ ***********************************************************************
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation is hereby granted, under NXP Semiconductorsï¿½
+ * relevant copyright in the software, without fee, provided that it
+ * is used in conjunction with NXP Semiconductors microcontrollers.  This
+ * copyright, permission, and disclaimer notice must appear in all copies of
+ * this code.
+ **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
 /** @defgroup MCPWM MCPWM (Motor Control PWM)
@@ -44,12 +44,10 @@
 #include "mcpwm_18xx_43xx.h"
 //#include "lpc_types.h"
 
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
 
 /* Private Macros ------------------------------------------------------------- */
 /** @defgroup MCPWM_Private_Macros MCPWM Private Macros
@@ -202,11 +200,9 @@ extern "C"
 /** Clear the MCCAP (n) register */
 #define MCPWM_CAPCLR_CAP(n)		(((n<=2)) ? ((uint32_t)(1<<n)) : (0))
 
-
 /**
  * @}
  */
-
 
 /* Public Types --------------------------------------------------------------- */
 /** @defgroup MCPWM_Public_Types MCPWM Public Types
@@ -221,11 +217,10 @@ extern "C"
  */
 typedef enum
 {
-	MCPWM_CHANNEL_0 = 0,		/**< MCPWM channel 0 */
-	MCPWM_CHANNEL_1,			/**< MCPWM channel 1 */
-	MCPWM_CHANNEL_2				/**< MCPWM channel 2 */
+	MCPWM_CHANNEL_0 = 0, /**< MCPWM channel 0 */
+	MCPWM_CHANNEL_1, /**< MCPWM channel 1 */
+	MCPWM_CHANNEL_2 /**< MCPWM channel 2 */
 } en_MCPWM_Channel_Id;
-
 
 /*********************************************************************//**
  * @brief MCPWM structure definitions
@@ -233,100 +228,101 @@ typedef enum
 /**
  * @brief Motor Control PWM Channel Configuration structure type definition
  */
-typedef struct {
-	uint32_t channelType;					/**< Edge/center aligned mode for this channel,
-												should be:
-												- MCPWM_CHANNEL_EDGE_MODE: Channel is in Edge mode
-												- MCPWM_CHANNEL_CENTER_MODE: Channel is in Center mode
-												*/
-	uint32_t channelPolarity;				/**< Polarity of the MCOA and MCOB pins, should be:
-												- MCPWM_CHANNEL_PASSIVE_LO: Passive state is LOW, active state is HIGH
-												- MCPWM_CHANNEL_PASSIVE_HI: Passive state is HIGH, active state is LOW
-												*/
-	uint32_t channelDeadtimeEnable;			/**< Enable/Disable DeadTime function for channel, should be:
-												- ENABLE.
-												- DISABLE.
-												*/
-	uint32_t channelDeadtimeValue;			/**< DeadTime value, should be less than 0x3FF */
-	uint32_t channelUpdateEnable;			/**< Enable/Disable updates of functional registers,
-												 should be:
-												- ENABLE.
-												- DISABLE.
-												*/
-	uint32_t channelTimercounterValue;		/**< MCPWM Timer Counter value */
-	uint32_t channelPeriodValue;			/**< MCPWM Period value */
-	uint32_t channelPulsewidthValue;		/**< MCPWM Pulse Width value */
+typedef struct
+{
+	uint32_t channelType; /**< Edge/center aligned mode for this channel,
+	 should be:
+	 - MCPWM_CHANNEL_EDGE_MODE: Channel is in Edge mode
+	 - MCPWM_CHANNEL_CENTER_MODE: Channel is in Center mode
+	 */
+	uint32_t channelPolarity; /**< Polarity of the MCOA and MCOB pins, should be:
+	 - MCPWM_CHANNEL_PASSIVE_LO: Passive state is LOW, active state is HIGH
+	 - MCPWM_CHANNEL_PASSIVE_HI: Passive state is HIGH, active state is LOW
+	 */
+	uint32_t channelDeadtimeEnable; /**< Enable/Disable DeadTime function for channel, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
+	uint32_t channelDeadtimeValue; /**< DeadTime value, should be less than 0x3FF */
+	uint32_t channelUpdateEnable; /**< Enable/Disable updates of functional registers,
+	 should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
+	uint32_t channelTimercounterValue; /**< MCPWM Timer Counter value */
+	uint32_t channelPeriodValue; /**< MCPWM Period value */
+	uint32_t channelPulsewidthValue; /**< MCPWM Pulse Width value */
 } MCPWM_CHANNEL_CFG_Type;
 
 /**
  * @brief MCPWM Capture Configuration type definition
  */
-typedef struct {
-	uint32_t captureChannel;		/**< Capture Channel Number, should be in range from 0 to 2 */
-	uint32_t captureRising;			/**< Enable/Disable Capture on Rising Edge event, should be:
-										- ENABLE.
-										- DISABLE.
-										*/
-	uint32_t captureFalling;		/**< Enable/Disable Capture on Falling Edge event, should be:
-										- ENABLE.
-										- DISABLE.
-										*/
-	uint32_t timerReset;			/**< Enable/Disable Timer reset function an capture, should be:
-										- ENABLE.
-										- DISABLE.
-										*/
-	uint32_t hnfEnable;				/**< Enable/Disable Hardware noise filter function, should be:
-										- ENABLE.
-										- DISABLE.
-										*/
+typedef struct
+{
+	uint32_t captureChannel; /**< Capture Channel Number, should be in range from 0 to 2 */
+	uint32_t captureRising; /**< Enable/Disable Capture on Rising Edge event, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
+	uint32_t captureFalling; /**< Enable/Disable Capture on Falling Edge event, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
+	uint32_t timerReset; /**< Enable/Disable Timer reset function an capture, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
+	uint32_t hnfEnable; /**< Enable/Disable Hardware noise filter function, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
 } MCPWM_CAPTURE_CFG_Type;
-
 
 /**
  * @brief MCPWM Count Control Configuration type definition
  */
-typedef struct {
-	uint32_t counterChannel;		/**< Counter Channel Number, should be in range from 0 to 2 */
-	uint32_t countRising;			/**< Enable/Disable Capture on Rising Edge event, should be:
-										- ENABLE.
-										- DISABLE.
-										*/
-	uint32_t countFalling;		/**< Enable/Disable Capture on Falling Edge event, should be:
-										- ENABLE.
-										- DISABLE.
-										*/
+typedef struct
+{
+	uint32_t counterChannel; /**< Counter Channel Number, should be in range from 0 to 2 */
+	uint32_t countRising; /**< Enable/Disable Capture on Rising Edge event, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
+	uint32_t countFalling; /**< Enable/Disable Capture on Falling Edge event, should be:
+	 - ENABLE.
+	 - DISABLE.
+	 */
 } MCPWM_COUNT_CFG_Type;
 
 /**
  * @}
  */
 
-
 /* Public Functions ----------------------------------------------------------- */
 /** @defgroup MCPWM_Public_Functions MCPWM Public Functions
  * @{
  */
 
-void MCPWM_Init(LPC_MCPWM_T *MCPWMx);
-void MCPWM_ConfigChannel(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-						MCPWM_CHANNEL_CFG_Type * channelSetup);
-void MCPWM_WriteToShadow(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-						MCPWM_CHANNEL_CFG_Type *channelSetup);
-void MCPWM_ConfigCapture(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-						MCPWM_CAPTURE_CFG_Type *captureConfig);
-void MCPWM_ClearCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel);
-uint32_t MCPWM_GetCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel);
-void MCPWM_CountConfig(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-					uint32_t countMode, MCPWM_COUNT_CFG_Type *countConfig);
-void MCPWM_Start(LPC_MCPWM_T *MCPWMx,uint32_t channel0, uint32_t channel1, uint32_t channel2);
-void MCPWM_Stop(LPC_MCPWM_T *MCPWMx,uint32_t channel0, uint32_t channel1, uint32_t channel2);
-void MCPWM_ACMode(LPC_MCPWM_T *MCPWMx,uint32_t acMode);
-void MCPWM_DCMode(LPC_MCPWM_T *MCPWMx, uint32_t dcMode,
-					uint32_t outputInvered, uint32_t outputPattern);
-void MCPWM_IntConfig(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType, FunctionalState NewState);
-void MCPWM_IntSet(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType);
-void MCPWM_IntClear(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType);
-FlagStatus MCPWM_GetIntStatus(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType);
+void MCPWM_Init (LPC_MCPWM_T *MCPWMx);
+void MCPWM_ConfigChannel (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	MCPWM_CHANNEL_CFG_Type * channelSetup);
+void MCPWM_WriteToShadow (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	MCPWM_CHANNEL_CFG_Type *channelSetup);
+void MCPWM_ConfigCapture (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	MCPWM_CAPTURE_CFG_Type *captureConfig);
+void MCPWM_ClearCapture (LPC_MCPWM_T *MCPWMx, uint32_t captureChannel);
+uint32_t MCPWM_GetCapture (LPC_MCPWM_T *MCPWMx, uint32_t captureChannel);
+void MCPWM_CountConfig (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	uint32_t countMode, MCPWM_COUNT_CFG_Type *countConfig);
+void MCPWM_Start (LPC_MCPWM_T *MCPWMx, uint32_t channel0, uint32_t channel1, uint32_t channel2);
+void MCPWM_Stop (LPC_MCPWM_T *MCPWMx, uint32_t channel0, uint32_t channel1, uint32_t channel2);
+void MCPWM_ACMode (LPC_MCPWM_T *MCPWMx, uint32_t acMode);
+void MCPWM_DCMode (LPC_MCPWM_T *MCPWMx, uint32_t dcMode,
+	uint32_t outputInvered, uint32_t outputPattern);
+void MCPWM_IntConfig (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType, FunctionalState NewState);
+void MCPWM_IntSet (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType);
+void MCPWM_IntClear (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType);
+FlagStatus MCPWM_GetIntStatus (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType);
 
 /**
  * @}

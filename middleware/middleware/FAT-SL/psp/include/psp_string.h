@@ -46,7 +46,7 @@
 
 #include "../../version/ver_psp_string.h"
 #if VER_PSP_STRING_MAJOR != 1 || VER_PSP_STRING_MINOR != 4
- #error Incompatible PSP_STRING version number!
+#error Incompatible PSP_STRING version number!
 #endif
 
 #define psp_memcpy( d, s, l )    memcpy( ( d ), ( s ), (size_t)( l ) )

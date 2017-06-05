@@ -47,11 +47,10 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
-F_DRIVER * mdrv = NULL;  /* driver structure */
-
+F_DRIVER * mdrv = NULL; /* driver structure */
 
 /****************************************************************************
  *
@@ -64,20 +63,19 @@ F_DRIVER * mdrv = NULL;  /* driver structure */
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char _f_checkstatus ( void )
+unsigned char _f_checkstatus (void)
 {
-  if ( mdrv->getstatus != NULL )
-  {
-    if ( mdrv->getstatus( mdrv ) & ( F_ST_MISSING | F_ST_CHANGED ) )
-    {
-      gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
-      return F_ERR_CARDREMOVED;
-    }
-  }
+	if (mdrv->getstatus != NULL)
+	{
+		if (mdrv->getstatus(mdrv) & ( F_ST_MISSING | F_ST_CHANGED))
+		{
+			gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
+			return F_ERR_CARDREMOVED;
+		}
+	}
 
-  return F_NO_ERROR;
+	return F_NO_ERROR;
 }
-
 
 /****************************************************************************
  *
@@ -93,73 +91,71 @@ unsigned char _f_checkstatus ( void )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char _f_writeglsector ( unsigned long sector )
+unsigned char _f_writeglsector (unsigned long sector)
 {
-  unsigned char  retry;
+	unsigned char retry;
 
-  if ( mdrv->writesector == NULL )
-  {
-    gl_volume.state = F_STATE_NEEDMOUNT; /*no write function*/
-    return F_ERR_ACCESSDENIED;
-  }
+	if (mdrv->writesector == NULL)
+	{
+		gl_volume.state = F_STATE_NEEDMOUNT; /*no write function*/
+		return F_ERR_ACCESSDENIED;
+	}
 
-  if ( sector == (unsigned long)-1 )
-  {
-    if ( gl_file.modified )
-    {
-      sector = gl_file.pos.sector;
-    }
-    else
-    {
-      sector = gl_volume.actsector;
-    }
-  }
+	if (sector == (unsigned long)-1)
+	{
+		if (gl_file.modified)
+		{
+			sector = gl_file.pos.sector;
+		}
+		else
+		{
+			sector = gl_volume.actsector;
+		}
+	}
 
-  if ( sector != (unsigned long)-1 )
-  {
-    if ( mdrv->getstatus != NULL )
-    {
-      unsigned int  status;
+	if (sector != (unsigned long)-1)
+	{
+		if (mdrv->getstatus != NULL)
+		{
+			unsigned int status;
 
-      status = mdrv->getstatus( mdrv );
+			status = mdrv->getstatus(mdrv);
 
-      if ( status & ( F_ST_MISSING | F_ST_CHANGED ) )
-      {
-        gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
-        return F_ERR_CARDREMOVED;
-      }
+			if (status & ( F_ST_MISSING | F_ST_CHANGED))
+			{
+				gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
+				return F_ERR_CARDREMOVED;
+			}
 
-      if ( status & ( F_ST_WRPROTECT ) )
-      {
-        gl_volume.state = F_STATE_NEEDMOUNT;  /*card has been removed;*/
-        return F_ERR_WRITEPROTECT;
-      }
-    }
+			if (status & ( F_ST_WRPROTECT))
+			{
+				gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
+				return F_ERR_WRITEPROTECT;
+			}
+		}
 
-    gl_volume.modified = 0;
-    gl_file.modified = 0;
-    gl_volume.actsector = sector;
-    for ( retry = 3 ; retry ; retry-- )
-    {
-      int mdrv_ret;
-      mdrv_ret = mdrv->writesector( mdrv, (unsigned char *)gl_sector, sector );
-      if ( !mdrv_ret )
-      {
-        return F_NO_ERROR;
-      }
+		gl_volume.modified = 0;
+		gl_file.modified = 0;
+		gl_volume.actsector = sector;
+		for (retry = 3; retry; retry--)
+		{
+			int mdrv_ret;
+			mdrv_ret = mdrv->writesector(mdrv, (unsigned char *)gl_sector, sector);
+			if (!mdrv_ret)
+			{
+				return F_NO_ERROR;
+			}
 
-      if ( mdrv_ret == -1 )
-      {
-        gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
-        return F_ERR_CARDREMOVED;
-      }
-    }
-  }
+			if (mdrv_ret == -1)
+			{
+				gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
+				return F_ERR_CARDREMOVED;
+			}
+		}
+	}
 
-
-  return F_ERR_ONDRIVE;
+	return F_ERR_ONDRIVE;
 } /* _f_writeglsector */
-
 
 /****************************************************************************
  *
@@ -175,44 +171,43 @@ unsigned char _f_writeglsector ( unsigned long sector )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char _f_readglsector ( unsigned long sector )
+unsigned char _f_readglsector (unsigned long sector)
 {
-  unsigned char  retry;
-  unsigned char  ret;
+	unsigned char retry;
+	unsigned char ret;
 
-  if ( sector == gl_volume.actsector )
-  {
-    return F_NO_ERROR;
-  }
+	if (sector == gl_volume.actsector)
+	{
+		return F_NO_ERROR;
+	}
 
-  if ( gl_volume.modified || gl_file.modified )
-  {
-    ret = _f_writeglsector( (unsigned long)-1 );
-    if ( ret )
-    {
-      return ret;
-    }
-  }
+	if (gl_volume.modified || gl_file.modified)
+	{
+		ret = _f_writeglsector((unsigned long)-1);
+		if (ret)
+		{
+			return ret;
+		}
+	}
 
+	for (retry = 3; retry; retry--)
+	{
+		int mdrv_ret;
+		mdrv_ret = mdrv->readsector(mdrv, (unsigned char *)gl_sector, sector);
+		if (!mdrv_ret)
+		{
+			gl_volume.actsector = sector;
+			return F_NO_ERROR;
+		}
 
-  for ( retry = 3 ; retry ; retry-- )
-  {
-    int mdrv_ret;
-    mdrv_ret = mdrv->readsector( mdrv, (unsigned char *)gl_sector, sector );
-    if ( !mdrv_ret )
-    {
-      gl_volume.actsector = sector;
-      return F_NO_ERROR;
-    }
+		if (mdrv_ret == -1)
+		{
+			gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
+			return F_ERR_CARDREMOVED;
+		}
+	}
 
-    if ( mdrv_ret == -1 )
-    {
-      gl_volume.state = F_STATE_NEEDMOUNT; /*card has been removed;*/
-      return F_ERR_CARDREMOVED;
-    }
-  }
-
-  gl_volume.actsector = (unsigned long)-1;
-  return F_ERR_ONDRIVE;
+	gl_volume.actsector = (unsigned long)-1;
+	return F_ERR_ONDRIVE;
 } /* _f_readglsector */
 

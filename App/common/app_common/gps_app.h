@@ -31,12 +31,12 @@
 #define APP_COMMON_APP_COMMON_GPS_APP_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 //Valores para os temporizadores de comunicacao:
 #define GPS_wTICKS_WDT  (TICK/2)      //Numero de ticks ate o watchdog timeout.
@@ -85,83 +85,86 @@
 #define GPS_VALID_TIME ( VALID_TOW | VALID_WEEK | VALID_UTCOFF )
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
-typedef enum {
-  No_Fix,
-  Dead_Reckoning_only,
-  GPS_2D_Fix,
-  GPS_3D_Fix,
-  GPS_and_Dead_Reckoning_Combined,
-  Time_only_fix
-}GPS_teFix;
+typedef enum
+{
+	No_Fix,
+	Dead_Reckoning_only,
+	GPS_2D_Fix,
+	GPS_3D_Fix,
+	GPS_and_Dead_Reckoning_Combined,
+	Time_only_fix
+} GPS_teFix;
 
-typedef enum {
-  INIT,
-  DONT_KNOW,
-  OK,
-  SHORT,
-  OPEN
-}GPS_teAnt;
+typedef enum
+{
+	INIT,
+	DONT_KNOW,
+	OK,
+	SHORT,
+	OPEN
+} GPS_teAnt;
 
-typedef enum {
-  POWER_OFF,
-  POWER_ON,
-  DONTKNOW
-}GPS_tePWR;
+typedef enum
+{
+	POWER_OFF,
+	POWER_ON,
+	DONTKNOW
+} GPS_tePWR;
 
 typedef struct
 {
 
 //----------------------------------------------------------------------------//
 //NAV-POSLLH (Geodetic Position Solution)
-  int32_t          lLon;  // Longitude (deg) 1e-7
-  int32_t          lLat;  // Latitude (deg) 1e-7
-  uint32_t          dHAcc; // Horizontal Accuracy Estimate (mm)
-  uint32_t          dVAcc; // Vertical Accuracy Estimate (mm)
+	int32_t lLon;  // Longitude (deg) 1e-7
+	int32_t lLat;  // Latitude (deg) 1e-7
+	uint32_t dHAcc; // Horizontal Accuracy Estimate (mm)
+	uint32_t dVAcc; // Vertical Accuracy Estimate (mm)
 
 //----------------------------------------------------------------------------//
 //NAV-SOL ( Navigation Solution Information )
-  GPS_teFix       eGpsFix; //GPS fix type
-  uint8_t           bFlagsFix; //Fix Status Flags
-  uint16_t          wPDOP; //Position DOP (0.01)
-  uint8_t           bNSV;  //Number of SVs used in Nav Solution
+	GPS_teFix eGpsFix; //GPS fix type
+	uint8_t bFlagsFix; //Fix Status Flags
+	uint16_t wPDOP; //Position DOP (0.01)
+	uint8_t bNSV;  //Number of SVs used in Nav Solution
 
 //----------------------------------------------------------------------------//
 //NAV-VELNED ( Velocity Solution in NED )
-  int32_t          lVelNorth;     //NED north velocity (cm/s)
-  int32_t          lVelEast;      //NED east velocity (cm/s)
+	int32_t lVelNorth;     //NED north velocity (cm/s)
+	int32_t lVelEast;      //NED east velocity (cm/s)
 //  uint32_t          dSpeed;      //Speed (3-D) (cm/s)
-  uint32_t          dGroundSpeed;  //Ground Speed (2-D) (cm/s)
-  uint32_t          dSpeedAcc;     //Speed Accuracy Estimate (cm/s)
+	uint32_t dGroundSpeed;  //Ground Speed (2-D) (cm/s)
+	uint32_t dSpeedAcc;     //Speed Accuracy Estimate (cm/s)
 
 //----------------------------------------------------------------------------//
 //NAV_TIMEGPS ( GPS Time Solution )
-  uint32_t          dTOW;  // GPS Milisecond Time of Week (ms)
-  int16_t          iWeek; //GPS week ( GPS time )
-  int8_t           cUTCOff;  //Leap Seconds (GPS-UTC) (s)
-  uint8_t           bValid; //Validity Flags (TOW, Week, utc)
+	uint32_t dTOW;  // GPS Milisecond Time of Week (ms)
+	int16_t iWeek; //GPS week ( GPS time )
+	int8_t cUTCOff;  //Leap Seconds (GPS-UTC) (s)
+	uint8_t bValid; //Validity Flags (TOW, Week, utc)
 
 //----------------------------------------------------------------------------//
 //MON-HW ( Hardware Status )
-  GPS_teAnt       eStsAntena;
+	GPS_teAnt eStsAntena;
 //  GPS_tePWR       eStsPower;
 
 //----------------------------------------------------------------------------//
 //CFG-PRT (Port Configuration for UART)
-  uint8_t     bPorta;
-  uint32_t    dBaud;
-  uint16_t    wInProto;
-  uint16_t    wOutProto;
+	uint8_t bPorta;
+	uint32_t dBaud;
+	uint16_t wInProto;
+	uint16_t wOutProto;
 
 //----------------------------------------------------------------------------//
 //CFG_RXM
@@ -169,29 +172,29 @@ typedef struct
 
 //----------------------------------------------------------------------------//
 //Valores calculados
-  float      fDistancia; //Calculo da distancia percorrida
-  uint8_t     bBateria;
+	float fDistancia; //Calculo da distancia percorrida
+	uint8_t bBateria;
 
 //----------------------------------------------------------------------------//
 //MON-VER ( Receiver Software Versiom )
-  uint8_t     bSwVersion[30];
+	uint8_t bSwVersion[30];
 //  uint8_t     bHwVersion[10];
 //  uint8_t     bRomVersion[30];
 
-  uint8_t     bConfigura_FIM; //True - Se finalizou a Configuracao do GPS
+	uint8_t bConfigura_FIM; //True - Se finalizou a Configuracao do GPS
 
 } GPS_tsDadosGPS; // estrutura contendo os dados do gps.
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Public Variables
-*******************************************************************************/
+ * Public Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 
 #endif /* APP_COMMON_APP_COMMON_GPS_APP_H_ */

@@ -31,45 +31,98 @@
 #define APP_COMMON_APP_COMMON_ISOBUS_APP_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
-typedef enum {
-	STATUS_INSTALL_WAITING	 	 = 0x000E,
-	STATUS_INSTALL_INSTALLING 	 = 0x010E,
-	STATUS_INSTALL_INSTALLED 	 = 0x000A,
-	STATUS_INSTALL_INSTALL_ERROR = 0x000C,
-	STATUS_INSTALL_NONE			 = 0x00E6,
+typedef enum
+{
+	STATUS_INSTALL_WAITING = 0xE6,
+	STATUS_INSTALL_INSTALLING = 0x0E,
+	STATUS_INSTALL_INSTALLED = 0x0A,
+	STATUS_INSTALL_INSTALL_ERROR = 0x0C,
+	STATUS_INSTALL_NONE = 0x07,
 	STATUS_INSTALL_INVALID
 } eInstallationStatus;
 
-/******************************************************************************
-* Variables
-*******************************************************************************/
+typedef enum
+{
+	LANGUAGE_PORTUGUESE,
+	LANGUAGE_ENGLISH,
+	LANGUAGE_SPANISH,
+	LANGUAGE_RUSSIAN,
+	LANGUAGE_INVALID
+} eSelectedLanguage;
+
+typedef enum
+{
+	UNIT_INTERNATIONAL_SYSTEM,
+	UNIT_IMPERIAL_SYSTEM,
+	UNIT_SYSTEM_INVALID
+} eSelectedUnitMeasurement;
+
+typedef enum
+{
+	AREA_MONITOR_DISABLED,
+	AREA_MONITOR_ENABLED,
+	AREA_MONITOR_INVALID
+} eAreaMonitor;
+
+typedef enum
+{
+	ALTERNATE_ROWS_DISABLED,
+	ALTERNATE_ROWS_ENABLED,
+	ALTERNATE_ROWS_INVALID
+} eAlternateRows;
+
+typedef enum
+{
+	ALTERNATED_ROWS_ODD,
+	ALTERNATED_ROWS_EVEN,
+	ALTERNATED_ROWS_INVALID
+} eAlternatedRowsType;
+
+typedef struct sConfigurationData
+{
+	eSelectedLanguage eLanguage;
+	eSelectedUnitMeasurement eUnit;
+	uint32_t dVehicleID;
+	eAreaMonitor eMonitor;
+	float fSeedsPerMeter;
+	uint8_t bNumOfRows;
+	float fImplementWidth;
+	float fEvaluationDistance;
+	uint8_t bTolerance;
+	float fMaxSpeed;
+	eAlternateRows eAlterRows;
+	eAlternatedRowsType eAltType;
+} sConfigurationData;
 
 /******************************************************************************
-* Public Variables
-*******************************************************************************/
-
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Public Variables
+ *******************************************************************************/
+
+/******************************************************************************
+ * Function Prototypes
+ *******************************************************************************/
 
 #endif /* APP_COMMON_APP_COMMON_ISOBUS_APP_H_ */

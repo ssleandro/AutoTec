@@ -48,13 +48,14 @@
  ****************************************************************************/
 
 /* Initialize the RTC peripheral */
-void Chip_RTC_Init(LPC_RTC_T *pRTC)
+void Chip_RTC_Init (LPC_RTC_T *pRTC)
 {
 	Chip_Clock_RTCEnable();
 
 	/* 2-Second delay after enabling RTC clock */
 	LPC_ATIMER->DOWNCOUNTER = 2048;
-	while (LPC_ATIMER->DOWNCOUNTER);
+	while (LPC_ATIMER->DOWNCOUNTER)
+		;
 
 	/* Disable RTC */
 	Chip_RTC_Enable(pRTC, DISABLE);
@@ -67,7 +68,9 @@ void Chip_RTC_Init(LPC_RTC_T *pRTC)
 
 	/* Clear counter increment and alarm interrupt */
 	pRTC->ILR = RTC_IRL_RTCCIF | RTC_IRL_RTCALF;
-	while (pRTC->ILR != 0) {}
+	while (pRTC->ILR != 0)
+	{
+	}
 
 	/* Clear all register to be default */
 	pRTC->CIIR = 0x00;
@@ -76,71 +79,88 @@ void Chip_RTC_Init(LPC_RTC_T *pRTC)
 }
 
 /*De-initialize the RTC peripheral */
-void Chip_RTC_DeInit(LPC_RTC_T *pRTC)
+void Chip_RTC_DeInit (LPC_RTC_T *pRTC)
 {
 	pRTC->CCR = 0x00;
 }
 
 /* Reset clock tick counter in the RTC peripheral */
-void Chip_RTC_ResetClockTickCounter(LPC_RTC_T *pRTC)
+void Chip_RTC_ResetClockTickCounter (LPC_RTC_T *pRTC)
 {
 	/* Reset RTC clock*/
 	pRTC->CCR |= RTC_CCR_CTCRST;
-	while (!(pRTC->CCR & RTC_CCR_CTCRST)) {}
+	while (!(pRTC->CCR & RTC_CCR_CTCRST))
+	{
+	}
 
 	/* Finish resetting RTC clock */
 	pRTC->CCR = (pRTC->CCR & ~RTC_CCR_CTCRST) & RTC_CCR_BITMASK;
-	while (pRTC->CCR & RTC_CCR_CTCRST) {}
+	while (pRTC->CCR & RTC_CCR_CTCRST)
+	{
+	}
 }
 
 /* Start/Stop RTC peripheral */
-void Chip_RTC_Enable(LPC_RTC_T *pRTC, FunctionalState NewState)
+void Chip_RTC_Enable (LPC_RTC_T *pRTC, FunctionalState NewState)
 {
-	if (NewState == ENABLE) {
+	if (NewState == ENABLE)
+	{
 		pRTC->CCR |= RTC_CCR_CLKEN;
-	} else {
+	}
+	else
+	{
 		pRTC->CCR = (pRTC->CCR & ~RTC_CCR_CLKEN) & RTC_CCR_BITMASK;
 	}
 }
 
 /* Enable/Disable Counter increment interrupt for a time type in the RTC peripheral */
-void Chip_RTC_CntIncrIntConfig(LPC_RTC_T *pRTC, uint32_t cntrMask, FunctionalState NewState)
+void Chip_RTC_CntIncrIntConfig (LPC_RTC_T *pRTC, uint32_t cntrMask, FunctionalState NewState)
 {
-	if (NewState == ENABLE) {
+	if (NewState == ENABLE)
+	{
 		pRTC->CIIR |= cntrMask;
 	}
 
-	else {
+	else
+	{
 		pRTC->CIIR &= (~cntrMask) & RTC_AMR_CIIR_BITMASK;
-		while (pRTC->CIIR & cntrMask) {}
+		while (pRTC->CIIR & cntrMask)
+		{
+		}
 	}
 }
 
 /* Enable/Disable Alarm interrupt for a time type in the RTC peripheral */
-void Chip_RTC_AlarmIntConfig(LPC_RTC_T *pRTC, uint32_t alarmMask, FunctionalState NewState)
+void Chip_RTC_AlarmIntConfig (LPC_RTC_T *pRTC, uint32_t alarmMask, FunctionalState NewState)
 {
-	if (NewState == ENABLE) {
+	if (NewState == ENABLE)
+	{
 		pRTC->AMR &= (~alarmMask) & RTC_AMR_CIIR_BITMASK;
 	}
-	else {
+	else
+	{
 		pRTC->AMR |= (alarmMask);
-		while ((pRTC->AMR & alarmMask) == 0) {}
+		while ((pRTC->AMR & alarmMask) == 0)
+		{
+		}
 	}
 }
 
 /* Set full time in the RTC peripheral */
-void Chip_RTC_SetFullTime(LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
+void Chip_RTC_SetFullTime (LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
 {
 	RTC_TIMEINDEX_T i;
 	uint32_t ccr_val = pRTC->CCR;
 
 	/* Temporarily disable */
-	if (ccr_val & RTC_CCR_CLKEN) {
+	if (ccr_val & RTC_CCR_CLKEN)
+	{
 		pRTC->CCR = ccr_val & (~RTC_CCR_CLKEN) & RTC_CCR_BITMASK;
 	}
 
 	/* Date time setting */
-	for (i = RTC_TIMETYPE_SECOND; i < RTC_TIMETYPE_LAST; i++) {
+	for (i = RTC_TIMETYPE_SECOND; i < RTC_TIMETYPE_LAST; i++)
+	{
 		pRTC->TIME[i] = pFullTime->time[i];
 	}
 
@@ -149,57 +169,64 @@ void Chip_RTC_SetFullTime(LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
 }
 
 /* Get full time from the RTC peripheral */
-void Chip_RTC_GetFullTime(LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
+void Chip_RTC_GetFullTime (LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
 {
 	RTC_TIMEINDEX_T i;
 	uint32_t secs = 0xFF;
 
 	/* Read full time, but verify second tick didn't change during the read. If
-	   it did, re-read the time again so it will be consistent across all fields. */
-	while (secs != pRTC->TIME[RTC_TIMETYPE_SECOND]) {
+	 it did, re-read the time again so it will be consistent across all fields. */
+	while (secs != pRTC->TIME[RTC_TIMETYPE_SECOND])
+	{
 		secs = pFullTime->time[RTC_TIMETYPE_SECOND] = pRTC->TIME[RTC_TIMETYPE_SECOND];
-		for (i = RTC_TIMETYPE_MINUTE; i < RTC_TIMETYPE_LAST; i++) {
+		for (i = RTC_TIMETYPE_MINUTE; i < RTC_TIMETYPE_LAST; i++)
+		{
 			pFullTime->time[i] = pRTC->TIME[i];
 		}
 	}
 }
 
 /* Set full alarm time in the RTC peripheral */
-void Chip_RTC_SetFullAlarmTime(LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
+void Chip_RTC_SetFullAlarmTime (LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
 {
 	RTC_TIMEINDEX_T i;
 
-	for (i = RTC_TIMETYPE_SECOND; i < RTC_TIMETYPE_LAST; i++) {
+	for (i = RTC_TIMETYPE_SECOND; i < RTC_TIMETYPE_LAST; i++)
+	{
 		pRTC->ALRM[i] = pFullTime->time[i];
 	}
 }
 
 /* Get full alarm time in the RTC peripheral */
-void Chip_RTC_GetFullAlarmTime(LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
+void Chip_RTC_GetFullAlarmTime (LPC_RTC_T *pRTC, RTC_TIME_T *pFullTime)
 {
 	RTC_TIMEINDEX_T i;
 
-	for (i = RTC_TIMETYPE_SECOND; i < RTC_TIMETYPE_LAST; i++) {
+	for (i = RTC_TIMETYPE_SECOND; i < RTC_TIMETYPE_LAST; i++)
+	{
 		pFullTime->time[i] = pRTC->ALRM[i];
 	}
 }
 
 /* Enable/Disable calibration counter in the RTC peripheral */
-void Chip_RTC_CalibCounterCmd(LPC_RTC_T *pRTC, FunctionalState NewState)
+void Chip_RTC_CalibCounterCmd (LPC_RTC_T *pRTC, FunctionalState NewState)
 {
-	if (NewState == ENABLE) {
-		do {
+	if (NewState == ENABLE)
+	{
+		do
+		{
 			pRTC->CCR &= (~RTC_CCR_CCALEN) & RTC_CCR_BITMASK;
 		} while (pRTC->CCR & RTC_CCR_CCALEN);
 	}
-	else {
+	else
+	{
 		pRTC->CCR |= RTC_CCR_CCALEN;
 	}
 }
 
 #if RTC_EV_SUPPORT
 /* Get first timestamp value */
-void Chip_RTC_EV_GetFirstTimeStamp(LPC_RTC_T *pRTC, RTC_EV_CHANNEL_T ch, RTC_EV_TIMESTAMP_T *pTimeStamp)
+void Chip_RTC_EV_GetFirstTimeStamp (LPC_RTC_T *pRTC, RTC_EV_CHANNEL_T ch, RTC_EV_TIMESTAMP_T *pTimeStamp)
 {
 	pTimeStamp->sec = RTC_ER_TIMESTAMP_SEC(pRTC->ERFIRSTSTAMP[ch]);
 	pTimeStamp->min = RTC_ER_TIMESTAMP_MIN(pRTC->ERFIRSTSTAMP[ch]);
@@ -208,7 +235,7 @@ void Chip_RTC_EV_GetFirstTimeStamp(LPC_RTC_T *pRTC, RTC_EV_CHANNEL_T ch, RTC_EV_
 }
 
 /* Get last timestamp value */
-void Chip_RTC_EV_GetLastTimeStamp(LPC_RTC_T *pRTC, RTC_EV_CHANNEL_T ch, RTC_EV_TIMESTAMP_T *pTimeStamp)
+void Chip_RTC_EV_GetLastTimeStamp (LPC_RTC_T *pRTC, RTC_EV_CHANNEL_T ch, RTC_EV_TIMESTAMP_T *pTimeStamp)
 {
 	pTimeStamp->sec = RTC_ER_TIMESTAMP_SEC(pRTC->ERLASTSTAMP[ch]);
 	pTimeStamp->min = RTC_ER_TIMESTAMP_MIN(pRTC->ERLASTSTAMP[ch]);

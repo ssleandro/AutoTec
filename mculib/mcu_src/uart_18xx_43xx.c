@@ -45,45 +45,49 @@ STATIC volatile FlagStatus ABsyncSts = RESET;
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
- /* UART Peripheral clocks */
-static const CHIP_CCU_CLK_T UART_PClock[] = {CLK_MX_UART0, CLK_MX_UART1, CLK_MX_UART2, CLK_MX_UART3};
+/* UART Peripheral clocks */
+static const CHIP_CCU_CLK_T UART_PClock[] = { CLK_MX_UART0, CLK_MX_UART1, CLK_MX_UART2, CLK_MX_UART3 };
 
 /* UART Bus clocks */
-static const CHIP_CCU_CLK_T UART_BClock[] = {CLK_APB0_UART0, CLK_APB0_UART1, CLK_APB2_UART2, CLK_APB2_UART3};
+static const CHIP_CCU_CLK_T UART_BClock[] = { CLK_APB0_UART0, CLK_APB0_UART1, CLK_APB2_UART2, CLK_APB2_UART3 };
 
 /* Returns clock index for the peripheral block */
-static int Chip_UART_GetIndex(LPC_USART_T *pUART)
+static int Chip_UART_GetIndex (LPC_USART_T *pUART)
 {
-	uint32_t base = (uint32_t) pUART;
-	switch(base) {
+	uint32_t base = (uint32_t)pUART;
+	switch (base)
+	{
 		case LPC_USART0_BASE:
-			return 0;
+		return 0;
 		case LPC_UART1_BASE:
-			return 1;
+		return 1;
 		case LPC_USART2_BASE:
-			return 2;
+		return 2;
 		case LPC_USART3_BASE:
-			return 3;
+		return 3;
 		default:
-			return 0; /* Should never come here */
+		return 0; /* Should never come here */
 	}
 }
 
 /* UART Autobaud command interrupt handler */
-STATIC void Chip_UART_ABIntHandler(LPC_USART_T *pUART)
+STATIC void Chip_UART_ABIntHandler (LPC_USART_T *pUART)
 {
 	/* Handle End Of Autobaud interrupt */
-	if((Chip_UART_ReadIntIDReg(pUART) & UART_IIR_ABEO_INT) != 0) {
-        Chip_UART_SetAutoBaudReg(pUART, UART_ACR_ABEOINT_CLR);
+	if ((Chip_UART_ReadIntIDReg(pUART) & UART_IIR_ABEO_INT) != 0)
+	{
+		Chip_UART_SetAutoBaudReg(pUART, UART_ACR_ABEOINT_CLR);
 		Chip_UART_IntDisable(pUART, UART_IER_ABEOINT);
-	    if (ABsyncSts == RESET) {
-	        ABsyncSts = SET;
-        }
+		if (ABsyncSts == RESET)
+		{
+			ABsyncSts = SET;
+		}
 	}
 
-    /* Handle Autobaud Timeout interrupt */
-	if((Chip_UART_ReadIntIDReg(pUART) & UART_IIR_ABTO_INT) != 0) {
-        Chip_UART_SetAutoBaudReg(pUART, UART_ACR_ABTOINT_CLR);
+	/* Handle Autobaud Timeout interrupt */
+	if ((Chip_UART_ReadIntIDReg(pUART) & UART_IIR_ABTO_INT) != 0)
+	{
+		Chip_UART_SetAutoBaudReg(pUART, UART_ACR_ABTOINT_CLR);
 		Chip_UART_IntDisable(pUART, UART_IER_ABTOINT);
 	}
 }
@@ -93,9 +97,9 @@ STATIC void Chip_UART_ABIntHandler(LPC_USART_T *pUART)
  ****************************************************************************/
 
 /* Initializes the pUART peripheral */
-void Chip_UART_Init(LPC_USART_T *pUART)
+void Chip_UART_Init (LPC_USART_T *pUART)
 {
-    volatile uint32_t tmp;
+	volatile uint32_t tmp;
 
 	/* Enable UART clocking. UART base clock(s) must already be enabled */
 	Chip_Clock_EnableOpts(UART_PClock[Chip_UART_GetIndex(pUART)], true, true, 1);
@@ -103,24 +107,25 @@ void Chip_UART_Init(LPC_USART_T *pUART)
 	/* Enable FIFOs by default, reset them */
 	Chip_UART_SetupFIFOS(pUART, (UART_FCR_FIFO_EN | UART_FCR_RX_RS | UART_FCR_TX_RS));
 
-    /* Disable Tx */
-    Chip_UART_TXDisable(pUART);
+	/* Disable Tx */
+	Chip_UART_TXDisable(pUART);
 
-    /* Disable interrupts */
+	/* Disable interrupts */
 	pUART->IER = 0;
 	/* Set LCR to default state */
 	pUART->LCR = 0;
 	/* Set ACR to default state */
 	pUART->ACR = 0;
-    /* Set RS485 control to default state */
+	/* Set RS485 control to default state */
 	pUART->RS485CTRL = 0;
 	/* Set RS485 delay timer to default state */
 	pUART->RS485DLY = 0;
 	/* Set RS485 addr match to default state */
 	pUART->RS485ADRMATCH = 0;
 
-    /* Clear MCR */
-    if (pUART == LPC_UART1) {
+	/* Clear MCR */
+	if (pUART == LPC_UART1)
+	{
 		/* Set Modem Control to default state */
 		pUART->MCR = 0;
 		/*Dummy Reading to Clear Status */
@@ -136,24 +141,25 @@ void Chip_UART_Init(LPC_USART_T *pUART)
 }
 
 /* De-initializes the pUART peripheral */
-void Chip_UART_DeInit(LPC_USART_T *pUART)
+void Chip_UART_DeInit (LPC_USART_T *pUART)
 {
-    /* Disable Tx */
-    Chip_UART_TXDisable(pUART);
+	/* Disable Tx */
+	Chip_UART_TXDisable(pUART);
 
-    /* Disable clock */
+	/* Disable clock */
 	Chip_Clock_Disable(UART_PClock[Chip_UART_GetIndex(pUART)]);
 }
 
 /* Transmit a byte array through the UART peripheral (non-blocking) */
-int Chip_UART_Send(LPC_USART_T *pUART, const void *data, int numBytes)
+int Chip_UART_Send (LPC_USART_T *pUART, const void *data, int numBytes)
 {
 	int sent = 0;
-	uint8_t *p8 = (uint8_t *) data;
+	uint8_t *p8 = (uint8_t *)data;
 
 	/* Send until the transmit FIFO is full or out of bytes */
 	while ((sent < numBytes) &&
-		   ((Chip_UART_ReadLineStatus(pUART) & UART_LSR_THRE) != 0)) {
+		((Chip_UART_ReadLineStatus(pUART) & UART_LSR_THRE) != 0))
+	{
 		Chip_UART_SendByte(pUART, *p8);
 		p8++;
 		sent++;
@@ -163,23 +169,26 @@ int Chip_UART_Send(LPC_USART_T *pUART, const void *data, int numBytes)
 }
 
 /* Check whether if UART is busy or not */
-FlagStatus Chip_UART_CheckBusy(LPC_USART_T *pUART)
+FlagStatus Chip_UART_CheckBusy (LPC_USART_T *pUART)
 {
-	if (pUART->LSR & UART_LSR_TEMT) {
+	if (pUART->LSR & UART_LSR_TEMT)
+	{
 		return RESET;
 	}
-	else {
+	else
+	{
 		return SET;
 	}
 }
 
 /* Transmit a byte array through the UART peripheral (blocking) */
-int Chip_UART_SendBlocking(LPC_USART_T *pUART, const void *data, int numBytes)
+int Chip_UART_SendBlocking (LPC_USART_T *pUART, const void *data, int numBytes)
 {
 	int pass, sent = 0;
-	uint8_t *p8 = (uint8_t *) data;
+	uint8_t *p8 = (uint8_t *)data;
 
-	while (numBytes > 0) {
+	while (numBytes > 0)
+	{
 		pass = Chip_UART_Send(pUART, p8, numBytes);
 		numBytes -= pass;
 		sent += pass;
@@ -190,14 +199,15 @@ int Chip_UART_SendBlocking(LPC_USART_T *pUART, const void *data, int numBytes)
 }
 
 /* Read data through the UART peripheral (non-blocking) */
-int Chip_UART_Read(LPC_USART_T *pUART, void *data, int numBytes)
+int Chip_UART_Read (LPC_USART_T *pUART, void *data, int numBytes)
 {
 	int readBytes = 0;
-	uint8_t *p8 = (uint8_t *) data;
+	uint8_t *p8 = (uint8_t *)data;
 
 	/* Send until the transmit FIFO is full or out of bytes */
 	while ((readBytes < numBytes) &&
-		   ((Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR) != 0)) {
+		((Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR) != 0))
+	{
 		*p8 = Chip_UART_ReadByte(pUART);
 		p8++;
 		readBytes++;
@@ -208,12 +218,13 @@ int Chip_UART_Read(LPC_USART_T *pUART, void *data, int numBytes)
 
 /* TODO: FIXME the variable numBytes is incorrectly decremented */
 /* Read data through the UART peripheral (blocking) */
-int Chip_UART_ReadBlocking(LPC_USART_T *pUART, void *data, int numBytes)
+int Chip_UART_ReadBlocking (LPC_USART_T *pUART, void *data, int numBytes)
 {
 	int pass, readBytes = 0;
-	uint8_t *p8 = (uint8_t *) data;
+	uint8_t *p8 = (uint8_t *)data;
 
-	while (readBytes < numBytes) {
+	while (readBytes < numBytes)
+	{
 		pass = Chip_UART_Read(pUART, p8, numBytes);
 		numBytes -= pass;
 		readBytes += pass;
@@ -224,7 +235,7 @@ int Chip_UART_ReadBlocking(LPC_USART_T *pUART, void *data, int numBytes)
 }
 
 /* Determines and sets best dividers to get a target bit rate */
-uint32_t Chip_UART_SetBaud(LPC_USART_T *pUART, uint32_t baudrate)
+uint32_t Chip_UART_SetBaud (LPC_USART_T *pUART, uint32_t baudrate)
 {
 	uint32_t div, divh, divl, clkin;
 
@@ -246,38 +257,41 @@ uint32_t Chip_UART_SetBaud(LPC_USART_T *pUART, uint32_t baudrate)
 }
 
 /* UART receive-only interrupt handler for ring buffers */
-void Chip_UART_RXIntHandlerRB(LPC_USART_T *pUART, RINGBUFF_T *pRB)
+void Chip_UART_RXIntHandlerRB (LPC_USART_T *pUART, RINGBUFF_T *pRB)
 {
 	/* New data will be ignored if data not popped in time */
-	while (Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR) {
+	while (Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR)
+	{
 		uint8_t ch = Chip_UART_ReadByte(pUART);
 		RingBuffer_Insert(pRB, &ch);
 	}
 }
 
 /* UART transmit-only interrupt handler for ring buffers */
-void Chip_UART_TXIntHandlerRB(LPC_USART_T *pUART, RINGBUFF_T *pRB)
+void Chip_UART_TXIntHandlerRB (LPC_USART_T *pUART, RINGBUFF_T *pRB)
 {
 	uint8_t ch;
 
 	/* Fill FIFO until full or until TX ring buffer is empty */
 	while ((Chip_UART_ReadLineStatus(pUART) & UART_LSR_THRE) != 0 &&
-		   RingBuffer_Pop(pRB, &ch)) {
+		RingBuffer_Pop(pRB, &ch))
+	{
 		Chip_UART_SendByte(pUART, ch);
 	}
 
 	/* Turn off interrupt if the ring buffer is empty */
-	if (RingBuffer_IsEmpty(pRB)) {
+	if (RingBuffer_IsEmpty(pRB))
+	{
 		/* Shut down transmit */
 		Chip_UART_IntDisable(pUART, UART_IER_THREINT);
 	}
 }
 
 /* Populate a transmit ring buffer and start UART transmit */
-uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data, int bytes)
+uint32_t Chip_UART_SendRB (LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data, int bytes)
 {
 	uint32_t ret;
-	uint8_t *p8 = (uint8_t *) data;
+	uint8_t *p8 = (uint8_t *)data;
 
 	/* Don't let UART transmit ring buffer change in the UART IRQ handler */
 	Chip_UART_IntDisable(pUART, UART_IER_THREINT);
@@ -296,22 +310,24 @@ uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data,
 }
 
 /* Copy data from a receive ring buffer */
-int Chip_UART_ReadRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes)
+int Chip_UART_ReadRB (LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes)
 {
-	(void) pUART;
+	(void)pUART;
 
-	return RingBuffer_PopMult(pRB, (uint8_t *) data, bytes);
+	return RingBuffer_PopMult(pRB, (uint8_t *)data, bytes);
 }
 
 /* UART receive/transmit interrupt handler for ring buffers */
-void Chip_UART_IRQRBHandler(LPC_USART_T *pUART, RINGBUFF_T *pRXRB, RINGBUFF_T *pTXRB)
+void Chip_UART_IRQRBHandler (LPC_USART_T *pUART, RINGBUFF_T *pRXRB, RINGBUFF_T *pTXRB)
 {
 	/* Handle transmit interrupt if enabled */
-	if (pUART->IER & UART_IER_THREINT) {
+	if (pUART->IER & UART_IER_THREINT)
+	{
 		Chip_UART_TXIntHandlerRB(pUART, pTXRB);
 
 		/* Disable transmit interrupt if the ring buffer is empty */
-		if (RingBuffer_IsEmpty(pTXRB)) {
+		if (RingBuffer_IsEmpty(pTXRB))
+		{
 			Chip_UART_IntDisable(pUART, UART_IER_THREINT);
 		}
 	}
@@ -319,12 +335,12 @@ void Chip_UART_IRQRBHandler(LPC_USART_T *pUART, RINGBUFF_T *pRXRB, RINGBUFF_T *p
 	/* Handle receive interrupt */
 	Chip_UART_RXIntHandlerRB(pUART, pRXRB);
 
-    /* Handle Autobaud interrupts */
-    Chip_UART_ABIntHandler(pUART);
+	/* Handle Autobaud interrupts */
+	Chip_UART_ABIntHandler(pUART);
 }
 
 /* Determines and sets best dividers to get a target baud rate */
-uint32_t Chip_UART_SetBaudFDR(LPC_USART_T *pUART, uint32_t baud)
+uint32_t Chip_UART_SetBaudFDR (LPC_USART_T *pUART, uint32_t baud)
 {
 	uint32_t sdiv = 0, sm = 1, sd = 0;
 	uint32_t pclk, m, d;
@@ -334,24 +350,28 @@ uint32_t Chip_UART_SetBaudFDR(LPC_USART_T *pUART, uint32_t baud)
 	pclk = Chip_Clock_GetRate(UART_BClock[Chip_UART_GetIndex(pUART)]);
 
 	/* Loop through all possible fractional divider values */
-	for (m = 1; odiff && m < 16; m++) {
-		for (d = 0; d < m; d++) {
+	for (m = 1; odiff && m < 16; m++)
+	{
+		for (d = 0; d < m; d++)
+		{
 			uint32_t diff, div;
-			uint64_t dval = (((uint64_t) pclk << 28) * m) / (baud * (m + d));
+			uint64_t dval = (((uint64_t)pclk << 28) * m) / (baud * (m + d));
 
 			/* Lower 32-bit of dval has diff */
-			diff = (uint32_t) dval;
+			diff = (uint32_t)dval;
 			/* Upper 32-bit of dval has div */
-			div = (uint32_t) (dval >> 32);
+			div = (uint32_t)(dval >> 32);
 
 			/* Closer to next div */
-			if ((int)diff < 0) {
+			if ((int)diff < 0)
+			{
 				diff = -diff;
-				div ++;
+				div++;
 			}
 
 			/* Check if new value is worse than old or out of range */
-			if (odiff < diff || !div || (div >> 16) || (div < 3 && d)) {
+			if (odiff < diff || !div || (div >> 16) || (div < 3 && d))
+			{
 				continue;
 			}
 
@@ -362,14 +382,16 @@ uint32_t Chip_UART_SetBaudFDR(LPC_USART_T *pUART, uint32_t baud)
 			odiff = diff;
 
 			/* On perfect match, break loop */
-			if(!diff) {
+			if (!diff)
+			{
 				break;
 			}
 		}
 	}
 
 	/* Return 0 if a vaild divisor is not possible */
-	if (!sdiv) {
+	if (!sdiv)
+	{
 		return 0;
 	}
 
@@ -386,18 +408,19 @@ uint32_t Chip_UART_SetBaudFDR(LPC_USART_T *pUART, uint32_t baud)
 }
 
 /* UART interrupt service routine */
-FlagStatus Chip_UART_GetABEOStatus(LPC_USART_T *pUART)
+FlagStatus Chip_UART_GetABEOStatus (LPC_USART_T *pUART)
 {
-	(void) pUART;
+	(void)pUART;
 	return ABsyncSts;
 }
 
 /* Start/Stop Auto Baudrate activity */
-void Chip_UART_ABCmd(LPC_USART_T *pUART, uint32_t mode, bool autorestart, FunctionalState NewState)
+void Chip_UART_ABCmd (LPC_USART_T *pUART, uint32_t mode, bool autorestart, FunctionalState NewState)
 {
-    uint32_t tmp = 0;
+	uint32_t tmp = 0;
 
-	if (NewState == ENABLE) {
+	if (NewState == ENABLE)
+	{
 		/* Clear DLL and DLM value */
 		pUART->LCR |= UART_LCR_DLAB_EN;
 		pUART->DLL = 0;
@@ -407,19 +430,23 @@ void Chip_UART_ABCmd(LPC_USART_T *pUART, uint32_t mode, bool autorestart, Functi
 		/* FDR value must be reset to default value */
 		pUART->FDR = 0x10;
 
-		if (mode == UART_ACR_MODE1) {
+		if (mode == UART_ACR_MODE1)
+		{
 			tmp = UART_ACR_START | UART_ACR_MODE;
 		}
-		else {
+		else
+		{
 			tmp = UART_ACR_START;
 		}
 
-		if (autorestart == true) {
+		if (autorestart == true)
+		{
 			tmp |= UART_ACR_AUTO_RESTART;
 		}
 		pUART->ACR = tmp;
 	}
-	else {
+	else
+	{
 		pUART->ACR = 0;
 	}
 }

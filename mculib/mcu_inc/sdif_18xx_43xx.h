@@ -33,7 +33,8 @@
 #define __SDIF_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup SDIF_18XX_43XX CHIP: LPC18xx/43xx SD/SDIO driver
@@ -44,46 +45,47 @@ extern "C" {
 /**
  * @brief SD/MMC & SDIO register block structure
  */
-typedef struct {				/*!< SDMMC Structure        */
-	__IO uint32_t  CTRL;		/*!< Control Register       */
-	__IO uint32_t  PWREN;		/*!< Power Enable Register  */
-	__IO uint32_t  CLKDIV;		/*!< Clock Divider Register */
-	__IO uint32_t  CLKSRC;		/*!< SD Clock Source Register */
-	__IO uint32_t  CLKENA;		/*!< Clock Enable Register  */
-	__IO uint32_t  TMOUT;		/*!< Timeout Register       */
-	__IO uint32_t  CTYPE;		/*!< Card Type Register     */
-	__IO uint32_t  BLKSIZ;		/*!< Block Size Register    */
-	__IO uint32_t  BYTCNT;		/*!< Byte Count Register    */
-	__IO uint32_t  INTMASK;		/*!< Interrupt Mask Register */
-	__IO uint32_t  CMDARG;		/*!< Command Argument Register */
-	__IO uint32_t  CMD;			/*!< Command Register       */
-	__I  uint32_t  RESP0;		/*!< Response Register 0    */
-	__I  uint32_t  RESP1;		/*!< Response Register 1    */
-	__I  uint32_t  RESP2;		/*!< Response Register 2    */
-	__I  uint32_t  RESP3;		/*!< Response Register 3    */
-	__I  uint32_t  MINTSTS;		/*!< Masked Interrupt Status Register */
-	__IO uint32_t  RINTSTS;		/*!< Raw Interrupt Status Register */
-	__I  uint32_t  STATUS;		/*!< Status Register        */
-	__IO uint32_t  FIFOTH;		/*!< FIFO Threshold Watermark Register */
-	__I  uint32_t  CDETECT;		/*!< Card Detect Register   */
-	__I  uint32_t  WRTPRT;		/*!< Write Protect Register */
-	__IO uint32_t  GPIO;		/*!< General Purpose Input/Output Register */
-	__I  uint32_t  TCBCNT;		/*!< Transferred CIU Card Byte Count Register */
-	__I  uint32_t  TBBCNT;		/*!< Transferred Host to BIU-FIFO Byte Count Register */
-	__IO uint32_t  DEBNCE;		/*!< Debounce Count Register */
-	__IO uint32_t  USRID;		/*!< User ID Register       */
-	__I  uint32_t  VERID;		/*!< Version ID Register    */
-	__I  uint32_t  RESERVED0;
-	__IO uint32_t  UHS_REG;		/*!< UHS-1 Register         */
-	__IO uint32_t  RST_N;		/*!< Hardware Reset         */
-	__I  uint32_t  RESERVED1;
-	__IO uint32_t  BMOD;		/*!< Bus Mode Register      */
-	__O  uint32_t  PLDMND;		/*!< Poll Demand Register   */
-	__IO uint32_t  DBADDR;		/*!< Descriptor List Base Address Register */
-	__IO uint32_t  IDSTS;		/*!< Internal DMAC Status Register */
-	__IO uint32_t  IDINTEN;		/*!< Internal DMAC Interrupt Enable Register */
-	__I  uint32_t  DSCADDR;		/*!< Current Host Descriptor Address Register */
-	__I  uint32_t  BUFADDR;		/*!< Current Buffer Descriptor Address Register */
+typedef struct
+{ /*!< SDMMC Structure        */
+	__IO uint32_t CTRL; /*!< Control Register       */
+	__IO uint32_t PWREN; /*!< Power Enable Register  */
+	__IO uint32_t CLKDIV; /*!< Clock Divider Register */
+	__IO uint32_t CLKSRC; /*!< SD Clock Source Register */
+	__IO uint32_t CLKENA; /*!< Clock Enable Register  */
+	__IO uint32_t TMOUT; /*!< Timeout Register       */
+	__IO uint32_t CTYPE; /*!< Card Type Register     */
+	__IO uint32_t BLKSIZ; /*!< Block Size Register    */
+	__IO uint32_t BYTCNT; /*!< Byte Count Register    */
+	__IO uint32_t INTMASK; /*!< Interrupt Mask Register */
+	__IO uint32_t CMDARG; /*!< Command Argument Register */
+	__IO uint32_t CMD; /*!< Command Register       */
+	__I uint32_t RESP0; /*!< Response Register 0    */
+	__I uint32_t RESP1; /*!< Response Register 1    */
+	__I uint32_t RESP2; /*!< Response Register 2    */
+	__I uint32_t RESP3; /*!< Response Register 3    */
+	__I uint32_t MINTSTS; /*!< Masked Interrupt Status Register */
+	__IO uint32_t RINTSTS; /*!< Raw Interrupt Status Register */
+	__I uint32_t STATUS; /*!< Status Register        */
+	__IO uint32_t FIFOTH; /*!< FIFO Threshold Watermark Register */
+	__I uint32_t CDETECT; /*!< Card Detect Register   */
+	__I uint32_t WRTPRT; /*!< Write Protect Register */
+	__IO uint32_t GPIO; /*!< General Purpose Input/Output Register */
+	__I uint32_t TCBCNT; /*!< Transferred CIU Card Byte Count Register */
+	__I uint32_t TBBCNT; /*!< Transferred Host to BIU-FIFO Byte Count Register */
+	__IO uint32_t DEBNCE; /*!< Debounce Count Register */
+	__IO uint32_t USRID; /*!< User ID Register       */
+	__I uint32_t VERID; /*!< Version ID Register    */
+	__I uint32_t RESERVED0;
+	__IO uint32_t UHS_REG; /*!< UHS-1 Register         */
+	__IO uint32_t RST_N; /*!< Hardware Reset         */
+	__I uint32_t RESERVED1;
+	__IO uint32_t BMOD; /*!< Bus Mode Register      */
+	__O uint32_t PLDMND; /*!< Poll Demand Register   */
+	__IO uint32_t DBADDR; /*!< Descriptor List Base Address Register */
+	__IO uint32_t IDSTS; /*!< Internal DMAC Status Register */
+	__IO uint32_t IDINTEN; /*!< Internal DMAC Interrupt Enable Register */
+	__I uint32_t DSCADDR; /*!< Current Host Descriptor Address Register */
+	__I uint32_t BUFADDR; /*!< Current Buffer Descriptor Address Register */
 } LPC_SDMMC_T;
 
 /** @brief  SDIO DMA descriptor control (des0) register defines
@@ -230,31 +232,33 @@ typedef struct {				/*!< SDMMC Structure        */
 #define SD_FIFO_SZ              32				/*!< Size of SDIO FIFOs (32-bit wide) */
 
 /** Function prototype for SD interface IRQ callback */
-typedef uint32_t (*MCI_IRQ_CB_FUNC_T)(uint32_t);
+typedef uint32_t (*MCI_IRQ_CB_FUNC_T) (uint32_t);
 
 /** Function prototype for SD detect and write protect status check */
-typedef int32_t (*PSCHECK_FUNC_T)(void);
+typedef int32_t (*PSCHECK_FUNC_T) (void);
 
 /** Function prototype for SD slot power enable or slot reset */
-typedef void (*PS_POWER_FUNC_T)(int32_t enable);
+typedef void (*PS_POWER_FUNC_T) (int32_t enable);
 
 /** @brief  SDIO chained DMA descriptor
  */
-typedef struct {
-	volatile uint32_t des0;						/*!< Control and status */
-	volatile uint32_t des1;						/*!< Buffer size(s) */
-	volatile uint32_t des2;						/*!< Buffer address pointer 1 */
-	volatile uint32_t des3;						/*!< Buffer address pointer 2 */
+typedef struct
+{
+	volatile uint32_t des0; /*!< Control and status */
+	volatile uint32_t des1; /*!< Buffer size(s) */
+	volatile uint32_t des2; /*!< Buffer address pointer 1 */
+	volatile uint32_t des3; /*!< Buffer address pointer 2 */
 } pSDMMC_DMA_T;
 
 /** @brief  SDIO device type
  */
-typedef struct _sdif_device {
+typedef struct _sdif_device
+{
 	/* MCI_IRQ_CB_FUNC_T irq_cb; */
 	pSDMMC_DMA_T mci_dma_dd[1 + (0x10000 / MCI_DMADES1_MAXTR)];
-	/* uint32_t sdio_clk_rate; */
-	/* uint32_t sdif_slot_clk_rate; */
-	/* int32_t clock_enabled; */
+/* uint32_t sdio_clk_rate; */
+/* uint32_t sdif_slot_clk_rate; */
+/* int32_t clock_enabled; */
 } sdif_device;
 
 /** @brief Setup options for the SDIO driver
@@ -276,7 +280,7 @@ typedef struct _sdif_device {
  * @param	bytes	: block size in bytes
  * @return	None
  */
-STATIC INLINE void Chip_SDIF_SetBlkSize(LPC_SDMMC_T *pSDMMC, uint32_t bytes)
+STATIC INLINE void Chip_SDIF_SetBlkSize (LPC_SDMMC_T *pSDMMC, uint32_t bytes)
 {
 	pSDMMC->BLKSIZ = bytes;
 }
@@ -289,12 +293,14 @@ STATIC INLINE void Chip_SDIF_SetBlkSize(LPC_SDMMC_T *pSDMMC, uint32_t bytes)
  * @note	Reset card in slot, must manually de-assert reset after assertion
  * (Uses SD_RST pin, set per reset parameter state)
  */
-STATIC INLINE void Chip_SDIF_Reset(LPC_SDMMC_T *pSDMMC, int32_t reset)
+STATIC INLINE void Chip_SDIF_Reset (LPC_SDMMC_T *pSDMMC, int32_t reset)
 {
-	if (reset) {
+	if (reset)
+	{
 		pSDMMC->RST_N = 1;
 	}
-	else {
+	else
+	{
 		pSDMMC->RST_N = 0;
 	}
 }
@@ -306,7 +312,7 @@ STATIC INLINE void Chip_SDIF_Reset(LPC_SDMMC_T *pSDMMC, int32_t reset)
  * @note	Detect if an SD card is inserted
  * (uses SD_CD pin, returns 0 on card detect)
  */
-STATIC INLINE int32_t Chip_SDIF_CardNDetect(LPC_SDMMC_T *pSDMMC)
+STATIC INLINE int32_t Chip_SDIF_CardNDetect (LPC_SDMMC_T *pSDMMC)
 {
 	return (pSDMMC->CDETECT & 1);
 }
@@ -318,7 +324,7 @@ STATIC INLINE int32_t Chip_SDIF_CardNDetect(LPC_SDMMC_T *pSDMMC)
  * @note	Detect if write protect is enabled
  * (uses SD_WP pin, returns 1 if card is write protected)
  */
-STATIC INLINE int32_t Chip_SDIF_CardWpOn(LPC_SDMMC_T *pSDMMC)
+STATIC INLINE int32_t Chip_SDIF_CardWpOn (LPC_SDMMC_T *pSDMMC)
 {
 	return (pSDMMC->WRTPRT & 1);
 }
@@ -329,7 +335,7 @@ STATIC INLINE int32_t Chip_SDIF_CardWpOn(LPC_SDMMC_T *pSDMMC)
  * @return	None
  * @note	Uses SD_POW pin, set to low.
  */
-STATIC INLINE void Chip_SDIF_PowerOff(LPC_SDMMC_T *pSDMMC)
+STATIC INLINE void Chip_SDIF_PowerOff (LPC_SDMMC_T *pSDMMC)
 {
 	pSDMMC->PWREN = 0;
 }
@@ -340,7 +346,7 @@ STATIC INLINE void Chip_SDIF_PowerOff(LPC_SDMMC_T *pSDMMC)
  * @return	None
  * @note	Uses SD_POW pin, set to high.
  */
-STATIC INLINE void Chip_SDIF_PowerOn(LPC_SDMMC_T *pSDMMC)
+STATIC INLINE void Chip_SDIF_PowerOn (LPC_SDMMC_T *pSDMMC)
 {
 	pSDMMC->PWREN = 1;
 }
@@ -351,7 +357,7 @@ STATIC INLINE void Chip_SDIF_PowerOn(LPC_SDMMC_T *pSDMMC)
  * @param	ctype	: card type
  * @return	None
  */
-STATIC INLINE void Chip_SDIF_SetCardType(LPC_SDMMC_T *pSDMMC, uint32_t ctype)
+STATIC INLINE void Chip_SDIF_SetCardType (LPC_SDMMC_T *pSDMMC, uint32_t ctype)
 {
 	pSDMMC->CTYPE = ctype;
 }
@@ -361,7 +367,7 @@ STATIC INLINE void Chip_SDIF_SetCardType(LPC_SDMMC_T *pSDMMC, uint32_t ctype)
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	Current pending interrupt status of Or'ed values MCI_INT_*
  */
-STATIC INLINE uint32_t Chip_SDIF_GetIntStatus(LPC_SDMMC_T *pSDMMC)
+STATIC INLINE uint32_t Chip_SDIF_GetIntStatus (LPC_SDMMC_T *pSDMMC)
 {
 	return pSDMMC->RINTSTS;
 }
@@ -372,7 +378,7 @@ STATIC INLINE uint32_t Chip_SDIF_GetIntStatus(LPC_SDMMC_T *pSDMMC)
  * @param	iVal	: Interrupts to be cleared, Or'ed values MCI_INT_*
  * @return	None
  */
-STATIC INLINE void Chip_SDIF_ClrIntStatus(LPC_SDMMC_T *pSDMMC, uint32_t iVal)
+STATIC INLINE void Chip_SDIF_ClrIntStatus (LPC_SDMMC_T *pSDMMC, uint32_t iVal)
 {
 	pSDMMC->RINTSTS = iVal;
 }
@@ -383,7 +389,7 @@ STATIC INLINE void Chip_SDIF_ClrIntStatus(LPC_SDMMC_T *pSDMMC, uint32_t iVal)
  * @param	iVal	: Interrupts to enable, Or'ed values MCI_INT_*
  * @return	None
  */
-STATIC INLINE void Chip_SDIF_SetIntMask(LPC_SDMMC_T *pSDMMC, uint32_t iVal)
+STATIC INLINE void Chip_SDIF_SetIntMask (LPC_SDMMC_T *pSDMMC, uint32_t iVal)
 {
 	pSDMMC->INTMASK = iVal;
 }
@@ -394,7 +400,7 @@ STATIC INLINE void Chip_SDIF_SetIntMask(LPC_SDMMC_T *pSDMMC, uint32_t iVal)
  * @param	blk_size: block size and byte count in bytes
  * @return	None
  */
-STATIC INLINE void Chip_SDIF_SetBlkSizeByteCnt(LPC_SDMMC_T *pSDMMC, uint32_t blk_size)
+STATIC INLINE void Chip_SDIF_SetBlkSizeByteCnt (LPC_SDMMC_T *pSDMMC, uint32_t blk_size)
 {
 	pSDMMC->BLKSIZ = blk_size;
 	pSDMMC->BYTCNT = blk_size;
@@ -406,7 +412,7 @@ STATIC INLINE void Chip_SDIF_SetBlkSizeByteCnt(LPC_SDMMC_T *pSDMMC, uint32_t blk
  * @param	bytes	: block size and byte count in bytes
  * @return	None
  */
-STATIC INLINE void Chip_SDIF_SetByteCnt(LPC_SDMMC_T *pSDMMC, uint32_t bytes)
+STATIC INLINE void Chip_SDIF_SetByteCnt (LPC_SDMMC_T *pSDMMC, uint32_t bytes)
 {
 	pSDMMC->BYTCNT = bytes;
 }
@@ -416,14 +422,14 @@ STATIC INLINE void Chip_SDIF_SetByteCnt(LPC_SDMMC_T *pSDMMC, uint32_t bytes)
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	None
  */
-void Chip_SDIF_Init(LPC_SDMMC_T *pSDMMC);
+void Chip_SDIF_Init (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Shutdown the SD/MMC card controller
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	None
  */
-void Chip_SDIF_DeInit(LPC_SDMMC_T *pSDMMC);
+void Chip_SDIF_DeInit (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Function to send command to Card interface unit (CIU)
@@ -432,7 +438,7 @@ void Chip_SDIF_DeInit(LPC_SDMMC_T *pSDMMC);
  * @param	arg		: Argument for the command
  * @return	TRUE on times-out, otherwise FALSE
  */
-int32_t Chip_SDIF_SendCmd(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg);
+int32_t Chip_SDIF_SendCmd (LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg);
 
 /**
  * @brief	Read the response from the last command
@@ -440,7 +446,7 @@ int32_t Chip_SDIF_SendCmd(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg);
  * @param	resp	: Pointer to response array to fill
  * @return	None
  */
-void Chip_SDIF_GetResponse(LPC_SDMMC_T *pSDMMC, uint32_t *resp);
+void Chip_SDIF_GetResponse (LPC_SDMMC_T *pSDMMC, uint32_t *resp);
 
 /**
  * @brief	Sets the SD bus clock speed
@@ -449,14 +455,14 @@ void Chip_SDIF_GetResponse(LPC_SDMMC_T *pSDMMC, uint32_t *resp);
  * @param	speed		: Desired clock speed to the card
  * @return	None
  */
-void Chip_SDIF_SetClock(LPC_SDMMC_T *pSDMMC, uint32_t clk_rate, uint32_t speed);
+void Chip_SDIF_SetClock (LPC_SDMMC_T *pSDMMC, uint32_t clk_rate, uint32_t speed);
 
 /**
  * @brief	Function to clear interrupt & FIFOs
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	None
  */
-void Chip_SDIF_SetClearIntFifo(LPC_SDMMC_T *pSDMMC);
+void Chip_SDIF_SetClearIntFifo (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Setup DMA descriptors
@@ -466,7 +472,7 @@ void Chip_SDIF_SetClearIntFifo(LPC_SDMMC_T *pSDMMC);
  * @param	size		: size of buffer in bytes (64K max)
  * @return	None
  */
-void Chip_SDIF_DmaSetup(LPC_SDMMC_T *pSDMMC, sdif_device *psdif_dev, uint32_t addr, uint32_t size);
+void Chip_SDIF_DmaSetup (LPC_SDMMC_T *pSDMMC, sdif_device *psdif_dev, uint32_t addr, uint32_t size);
 
 /**
  * @}

@@ -44,10 +44,8 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
-
-
 
 /****************************************************************************
  *
@@ -63,34 +61,34 @@
  * RETURNS
  *
  ***************************************************************************/
-static unsigned char _f_checknameprim ( char * ptr, unsigned char len )
+static unsigned char _f_checknameprim (char * ptr, unsigned char len)
 {
-  unsigned char  inspace = 0;
+	unsigned char inspace = 0;
 
-  while ( len-- )
-  {
-    char  ch = *ptr++;
-    if ( !inspace )
-    {
-      if ( ch == ' ' )
-      {
-        inspace = 1;
-      }
+	while (len--)
+	{
+		char ch = *ptr++;
+		if (!inspace)
+		{
+			if (ch == ' ')
+			{
+				inspace = 1;
+			}
 
-      if ( ( ch == '|' ) || ( ch == '[' ) || ( ch == ']' ) || ( ch == '<' ) || ( ch == '>' ) || ( ch == '/' ) || ( ch == '\\' ) || ( ch == ':' ) )
-      {
-        return 1;
-      }
-    }
-    else if ( ch != ' ' )
-    {
-      return 1;                     /*no inspace allowed*/
-    }
-  }
+			if ((ch == '|') || (ch == '[') || (ch == ']') || (ch == '<') || (ch == '>') || (ch == '/') || (ch == '\\')
+				|| (ch == ':'))
+			{
+				return 1;
+			}
+		}
+		else if (ch != ' ')
+		{
+			return 1; /*no inspace allowed*/
+		}
+	}
 
-  return 0;
+	return 0;
 } /* _f_checknameprim */
-
 
 /****************************************************************************
  *
@@ -109,21 +107,20 @@ static unsigned char _f_checknameprim ( char * ptr, unsigned char len )
  * other - if contains any invalid character
  *
  ***************************************************************************/
-unsigned char _f_checkname ( char * name, char * ext )
+unsigned char _f_checkname (char * name, char * ext)
 {
-  if ( _f_checknameprim( name, F_MAXNAME ) )
-  {
-    return 1;
-  }
+	if (_f_checknameprim(name, F_MAXNAME))
+	{
+		return 1;
+	}
 
-  if ( _f_checknameprim( ext, F_MAXEXT ) )
-  {
-    return 1;
-  }
+	if (_f_checknameprim(ext, F_MAXEXT))
+	{
+		return 1;
+	}
 
-  return 0;
+	return 0;
 }
-
 
 /****************************************************************************
  *
@@ -142,33 +139,30 @@ unsigned char _f_checkname ( char * name, char * ext )
  * other - if contains any wildcard character
  *
  ***************************************************************************/
-unsigned char _f_checknamewc ( const char * name, const char * ext )
+unsigned char _f_checknamewc (const char * name, const char * ext)
 {
-  unsigned char  a = 0;
+	unsigned char a = 0;
 
-  for ( a = 0 ; a < F_MAXNAME ; a++ )
-  {
-    char  ch = name[a];
-    if ( ( ch == '?' ) || ( ch == '*' ) )
-    {
-      return 1;
-    }
-  }
+	for (a = 0; a < F_MAXNAME; a++)
+	{
+		char ch = name[a];
+		if ((ch == '?') || (ch == '*'))
+		{
+			return 1;
+		}
+	}
 
-  for ( a = 0 ; a < F_MAXEXT ; a++ )
-  {
-    char  ch = ext[a];
-    if ( ( ch == '?' ) || ( ch == '*' ) )
-    {
-      return 1;
-    }
-  }
+	for (a = 0; a < F_MAXEXT; a++)
+	{
+		char ch = ext[a];
+		if ((ch == '?') || (ch == '*'))
+		{
+			return 1;
+		}
+	}
 
-  return _f_checkname( (char *)name, (char *)ext );
+	return _f_checkname((char *)name, (char *)ext);
 } /* _f_checknamewc */
-
-
-
 
 /****************************************************************************
  *
@@ -188,83 +182,81 @@ unsigned char _f_checknamewc ( const char * name, const char * ext )
  * length of the used bytes from source string array
  *
  ***************************************************************************/
-unsigned char _f_setnameext ( char * s, char * name, char * ext )
+unsigned char _f_setnameext (char * s, char * name, char * ext)
 {
-  unsigned char  len, extlen = 0;
-  unsigned char  a;
-  unsigned char  setext = 1;
+	unsigned char len, extlen = 0;
+	unsigned char a;
+	unsigned char setext = 1;
 
-  for ( len = 0 ; ; )
-  {
-    unsigned char  ch = s[len];
-    if ( ( ch == 0 ) || ( ch == '\\' ) || ( ch == '/' ) )
-    {
-      break;
-    }
+	for (len = 0;;)
+	{
+		unsigned char ch = s[len];
+		if ((ch == 0) || (ch == '\\') || (ch == '/'))
+		{
+			break;
+		}
 
-    len++;                      /*calculate len*/
-  }
+		len++; /*calculate len*/
+	}
 
-  if ( len && ( s[0] == '.' ) )
-  {
-/*		if (len==1 || (s[1]=='.' && len==2)) goto dots;		*/
-    if ( ( len == 1 ) || ( s[1] == '.' ) )
-    {
-      goto dots;
-    }
-  }
+	if (len && (s[0] == '.'))
+	{
+		/*		if (len==1 || (s[1]=='.' && len==2)) goto dots;		*/
+		if ((len == 1) || (s[1] == '.'))
+		{
+			goto dots;
+		}
+	}
 
-  for ( a = len ; a ; a-- )
-  {
-    if ( s[a - 1] == '.' )
-    {
-      unsigned char  b;
+	for (a = len; a; a--)
+	{
+		if (s[a - 1] == '.')
+		{
+			unsigned char b;
 
-      extlen = (unsigned char)( len - a + 1 );
-      len = (unsigned char)( a - 1 );
+			extlen = (unsigned char)(len - a + 1);
+			len = (unsigned char)(a - 1);
 
-      for ( b = 0 ; b < F_MAXEXT ; b++ )
-      {
-        if ( b < extlen - 1 )
-        {
-          ext[b] = _f_toupper( s[a++] );
-        }
-        else
-        {
-          ext[b] = ' ';
-        }
-      }
+			for (b = 0; b < F_MAXEXT; b++)
+			{
+				if (b < extlen - 1)
+				{
+					ext[b] = _f_toupper(s[a++]);
+				}
+				else
+				{
+					ext[b] = ' ';
+				}
+			}
 
-      setext = 0;
-      break;
-    }
-  }
+			setext = 0;
+			break;
+		}
+	}
 
-dots:
-  if ( setext )
-  {
-    for ( a = 0 ; a < F_MAXEXT ; a++ )
-    {
-      ext[a] = ' ';
-    }
-  }
+	dots:
+	if (setext)
+	{
+		for (a = 0; a < F_MAXEXT; a++)
+		{
+			ext[a] = ' ';
+		}
+	}
 
-  for ( a = 0 ; a < F_MAXNAME ; a++ )
-  {
-    if ( a < len )
-    {
-      name[a] = _f_toupper( s[a] );
-    }
-    else
-    {
-      name[a] = ' ';
-    }
-  }
+	for (a = 0; a < F_MAXNAME; a++)
+	{
+		if (a < len)
+		{
+			name[a] = _f_toupper(s[a]);
+		}
+		else
+		{
+			name[a] = ' ';
+		}
+	}
 
-  return (unsigned char)( len + extlen );
+	return (unsigned char)(len + extlen);
 } /* _f_setnameext */
-
-
 
 /****************************************************************************
  *
@@ -283,135 +275,133 @@ dots:
  * other - if name contains invalid path or name
  *
  ***************************************************************************/
-unsigned char _f_setfsname ( const char * name, F_NAME * fsname )
+unsigned char _f_setfsname (const char * name, F_NAME * fsname)
 {
-  char           s[F_MAXPATH];
-  unsigned char  namepos = 0;
+	char s[F_MAXPATH];
+	unsigned char namepos = 0;
 
-  unsigned char  pathpos = 0;
-  unsigned char  a;
+	unsigned char pathpos = 0;
+	unsigned char a;
 
-  s[0] = 0;
+	s[0] = 0;
 
-  if ( !name[0] )
-  {
-    return 1;               /*no name*/
-  }
+	if (!name[0])
+	{
+		return 1; /*no name*/
+	}
 
-  if ( name[1] == ':' )
-  {
-    name += 2;
-  }
+	if (name[1] == ':')
+	{
+		name += 2;
+	}
 
-  if ( ( name[0] != '/' ) && ( name[0] != '\\' ) )
-  {
-    if ( fn_getcwd( fsname->path, F_MAXPATH, 0 ) )
-    {
-      return 1;                                            /*error*/
-    }
+	if ((name[0] != '/') && (name[0] != '\\'))
+	{
+		if (fn_getcwd(fsname->path, F_MAXPATH, 0))
+		{
+			return 1; /*error*/
+		}
 
-    for ( pathpos = 0 ; fsname->path[pathpos] ; )
-    {
-      pathpos++;
-    }
-  }
+		for (pathpos = 0; fsname->path[pathpos];)
+		{
+			pathpos++;
+		}
+	}
 
+	for (;;)
+	{
+		char ch = _f_toupper(*name++);
 
-  for ( ; ; )
-  {
-    char  ch = _f_toupper( *name++ );
+		if (!ch)
+		{
+			break;
+		}
 
-    if ( !ch )
-    {
-      break;
-    }
+		if (ch == ':')
+		{
+			return 1; /*not allowed*/
+		}
 
-    if ( ch == ':' )
-    {
-      return 1;                /*not allowed*/
-    }
+		if ((ch == '/') || (ch == '\\'))
+		{
+			if (pathpos)
+			{
+				if (fsname->path[pathpos - 1] == '/')
+				{
+					return 1; /*not allowed double */
+				}
 
-    if ( ( ch == '/' ) || ( ch == '\\' ) )
-    {
-      if ( pathpos )
-      {
-        if ( fsname->path[pathpos - 1] == '/' )
-        {
-          return 1;                                         /*not allowed double */
-        }
+				if (pathpos >= F_MAXPATH - 2)
+				{
+					return 1; /*path too long*/
+				}
 
-        if ( pathpos >= F_MAXPATH - 2 )
-        {
-          return 1;                                 /*path too long*/
-        }
+				fsname->path[pathpos++] = '/';
+			}
 
-        fsname->path[pathpos++] = '/';
-      }
+			for (; namepos;)
+			{
+				if (s[namepos - 1] != ' ')
+				{
+					break;
+				}
 
-      for ( ; namepos ; )
-      {
-        if ( s[namepos - 1] != ' ' )
-        {
-          break;
-        }
+				namepos--; /*remove end spaces*/
+			}
 
-        namepos--;                /*remove end spaces*/
-      }
+			for (a = 0; a < namepos; a++)
+			{
+				if (pathpos >= F_MAXPATH - 2)
+				{
+					return 1; /*path too long*/
+				}
 
-      for ( a = 0 ; a < namepos ; a++ )
-      {
-        if ( pathpos >= F_MAXPATH - 2 )
-        {
-          return 1;                                 /*path too long*/
-        }
+				fsname->path[pathpos++] = s[a];
+			}
 
-        fsname->path[pathpos++] = s[a];
-      }
+			namepos = 0;
+			continue;
+		}
 
-      namepos = 0;
-      continue;
-    }
+		if ((ch == ' ') && (!namepos))
+		{
+			continue; /*remove start spaces*/
+		}
 
-    if ( ( ch == ' ' ) && ( !namepos ) )
-    {
-      continue;                              /*remove start spaces*/
-    }
+		if (namepos >= (sizeof(s) - 2))
+		{
+			return 1; /*name too long*/
+		}
 
-    if ( namepos >= ( sizeof( s ) - 2 ) )
-    {
-      return 1;                               /*name too long*/
-    }
+		s[namepos++] = ch;
+	}
 
-    s[namepos++] = ch;
-  }
+	s[namepos] = 0; /*terminates it*/
+	fsname->path[pathpos] = 0; /*terminates it*/
 
-  s[namepos] = 0; /*terminates it*/
-  fsname->path[pathpos] = 0;  /*terminates it*/
+	for (; namepos;)
+	{
+		if (s[namepos - 1] != ' ')
+		{
+			break;
+		}
 
-  for ( ; namepos ; )
-  {
-    if ( s[namepos - 1] != ' ' )
-    {
-      break;
-    }
+		s[namepos - 1] = 0; /*remove end spaces*/
+		namepos--;
+	}
 
-    s[namepos - 1] = 0; /*remove end spaces*/
-    namepos--;
-  }
+	if (!_f_setnameext(s, fsname->filename, fsname->fileext))
+	{
+		return 2; /*no name*/
+	}
 
-  if ( !_f_setnameext( s, fsname->filename, fsname->fileext ) )
-  {
-    return 2;                                                         /*no name*/
-  }
+	if (fsname->filename[0] == ' ')
+	{
+		return 1; /*cannot be*/
+	}
 
-  if ( fsname->filename[0] == ' ' )
-  {
-    return 1;                               /*cannot be*/
-  }
-
-  return 0;
+	return 0;
 } /* _f_setfsname */
-
 
 /****************************************************************************
  *
@@ -434,109 +424,107 @@ unsigned char _f_setfsname ( const char * name, F_NAME * fsname )
  * 0 - not found
  *
  ***************************************************************************/
-int _f_createfullname ( char * buffer, int buffersize, char * path, char * filename, char * fileext )
+int _f_createfullname (char * buffer, int buffersize, char * path, char * filename, char * fileext)
 {
-  char * fullname = buffer;
-  int    a;
+	char * fullname = buffer;
+	int a;
 
-  /* adding drive letter */
-  if ( buffersize < 1 )
-  {
-    return 1;
-  }
+	/* adding drive letter */
+	if (buffersize < 1)
+	{
+		return 1;
+	}
 
-  *fullname++ = '/';
-  buffersize -= 1;
+	*fullname++ = '/';
+	buffersize -= 1;
 
-  /* adding path */
-  if ( path[0] )
-  {
-    for ( ; ; )
-    {
-      char  ch = *path++;
+	/* adding path */
+	if (path[0])
+	{
+		for (;;)
+		{
+			char ch = *path++;
 
-      if ( !ch )
-      {
-        break;
-      }
+			if (!ch)
+			{
+				break;
+			}
 
-      if ( buffersize <= 0 )
-      {
-        return 1;
-      }
+			if (buffersize <= 0)
+			{
+				return 1;
+			}
 
-      *fullname++ = ch;
-      buffersize--;
-    }
+			*fullname++ = ch;
+			buffersize--;
+		}
 
-    /* adding separator */
-    if ( buffersize <= 0 )
-    {
-      return 1;
-    }
+		/* adding separator */
+		if (buffersize <= 0)
+		{
+			return 1;
+		}
 
-    *fullname++ = '/';
-  }
+		*fullname++ = '/';
+	}
 
-  /* adding name */
-  for ( a = 0 ; a < F_MAXNAME ; a++ )
-  {
-    char  ch = *filename++;
+	/* adding name */
+	for (a = 0; a < F_MAXNAME; a++)
+	{
+		char ch = *filename++;
 
-    if ( ( !ch ) || ( ch == 32 ) )
-    {
-      break;
-    }
+		if ((!ch) || (ch == 32))
+		{
+			break;
+		}
 
-    if ( buffersize <= 0 )
-    {
-      return 1;
-    }
+		if (buffersize <= 0)
+		{
+			return 1;
+		}
 
-    *fullname++ = ch;
-    buffersize--;
-  }
+		*fullname++ = ch;
+		buffersize--;
+	}
 
-  /* adding ext*/
-  if ( fileext[0] && ( fileext[0] != 32 ) )
-  {
-    /* adding dot */
-    if ( !buffersize )
-    {
-      return 1;
-    }
+	/* adding ext*/
+	if (fileext[0] && (fileext[0] != 32))
+	{
+		/* adding dot */
+		if (!buffersize)
+		{
+			return 1;
+		}
 
-    *fullname++ = '.';
+		*fullname++ = '.';
 
-    for ( a = 0 ; a < F_MAXEXT ; a++ )
-    {
-      char  ch = *fileext++;
+		for (a = 0; a < F_MAXEXT; a++)
+		{
+			char ch = *fileext++;
 
-      if ( ( !ch ) || ( ch == 32 ) )
-      {
-        break;
-      }
+			if ((!ch) || (ch == 32))
+			{
+				break;
+			}
 
-      if ( buffersize <= 0 )
-      {
-        return 1;
-      }
+			if (buffersize <= 0)
+			{
+				return 1;
+			}
 
-      *fullname++ = ch;
-      buffersize--;
-    }
-  }
+			*fullname++ = ch;
+			buffersize--;
+		}
+	}
 
-  /* adding terminator */
-  if ( buffersize <= 0 )
-  {
-    return 1;
-  }
+	/* adding terminator */
+	if (buffersize <= 0)
+	{
+		return 1;
+	}
 
-  *fullname++ = 0;
+	*fullname++ = 0;
 
-  return 0;
+	return 0;
 } /* _f_createfullname */
-
-
 

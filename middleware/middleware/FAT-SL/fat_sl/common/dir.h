@@ -43,13 +43,13 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 /* definitions for ctime */
 #define F_CTIME_SEC_SHIFT   0
@@ -59,7 +59,6 @@ extern "C" {
 #define F_CTIME_HOUR_SHIFT  11
 #define F_CTIME_HOUR_MASK   0xf800  /*0-23*/
 
-
 /* definitions for cdate */
 #define F_CDATE_DAY_SHIFT   0
 #define F_CDATE_DAY_MASK    0x001f  /*0-31*/
@@ -68,38 +67,35 @@ extern "C" {
 #define F_CDATE_YEAR_SHIFT  9
 #define F_CDATE_YEAR_MASK   0xfe00  /*0-119 (1980+value)*/
 
-
 #define NTRES_LOW           0x08 /*lower case name*/
-
 
 typedef struct
 {
-  unsigned char  name[F_MAXNAME];   /* 8+3 */
-  unsigned char  ext[F_MAXEXT];
-  unsigned char  attr;                  /* 00ADVSHR */
+	unsigned char name[F_MAXNAME]; /* 8+3 */
+	unsigned char ext[F_MAXEXT];
+	unsigned char attr; /* 00ADVSHR */
 
-  unsigned char  ntres;             /* FAT32 only  */
-  unsigned char  crttimetenth;      /* FAT32 only  */
-  unsigned char  crttime[2];        /* FAT32 only  */
-  unsigned char  crtdate[2];        /* FAT32 only */
-  unsigned char  lastaccessdate[2]; /* FAT32 only */
+	unsigned char ntres; /* FAT32 only  */
+	unsigned char crttimetenth; /* FAT32 only  */
+	unsigned char crttime[2]; /* FAT32 only  */
+	unsigned char crtdate[2]; /* FAT32 only */
+	unsigned char lastaccessdate[2]; /* FAT32 only */
 
-  unsigned char  clusterhi[2]; /* FAT32 only */
-  unsigned char  ctime[2];
-  unsigned char  cdate[2];
-  unsigned char  clusterlo[2]; /* fat12,fat16,fat32 */
-  unsigned char  filesize[4];
+	unsigned char clusterhi[2]; /* FAT32 only */
+	unsigned char ctime[2];
+	unsigned char cdate[2];
+	unsigned char clusterlo[2]; /* fat12,fat16,fat32 */
+	unsigned char filesize[4];
 } F_DIRENTRY;
 
+unsigned char _f_getdirsector (unsigned long);
+unsigned char _f_findfilewc (char *, char *, F_POS *, F_DIRENTRY * *, unsigned char);
+unsigned char _f_findpath (F_NAME *, F_POS *);
+unsigned long _f_getdecluster (F_DIRENTRY *);
 
-unsigned char _f_getdirsector ( unsigned long );
-unsigned char _f_findfilewc ( char *, char *, F_POS *, F_DIRENTRY * *, unsigned char );
-unsigned char _f_findpath ( F_NAME *, F_POS * );
-unsigned long _f_getdecluster ( F_DIRENTRY * );
-
-unsigned char _f_writedirsector ( void );
-void _f_setdecluster ( F_DIRENTRY *, unsigned long );
-unsigned char _f_addentry ( F_NAME *, F_POS *, F_DIRENTRY * * );
+unsigned char _f_writedirsector (void);
+void _f_setdecluster (F_DIRENTRY *, unsigned long);
+unsigned char _f_addentry (F_NAME *, F_POS *, F_DIRENTRY * *);
 
 #ifdef __cplusplus
 }

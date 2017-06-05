@@ -167,31 +167,31 @@ void vApplicationIdleHook (void)
 
 int main (void)
 {
-	MCU_vSysInit ();
-	MCU_vFFSInit ();
+	MCU_vSysInit();
+	MCU_vFFSInit();
 
-    /* Configure and initialize SystemView */
+	/* Configure and initialize SystemView */
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-    SEGGER_SYSVIEW_Conf();
+	SEGGER_SYSVIEW_Conf();
 #endif
 
-    osKernelInitialize ();
+	osKernelInitialize();
 
-    //Main Task
-    osThreadDef_t sMainThread;
+	//Main Task
+	osThreadDef_t sMainThread;
 
-    sMainThread.name = "Main";
-    sMainThread.stacksize = 300;
-    sMainThread.tpriority = osPriorityRealtime;
-    sMainThread.pthread = MAI_M2GMainThread;
+	sMainThread.name = "Main";
+	sMainThread.stacksize = 300;
+	sMainThread.tpriority = osPriorityRealtime;
+	sMainThread.pthread = MAI_M2GMainThread;
 
-    ASSERT_LEVEL(osThreadCreate(&sMainThread, NULL) != NULL, LEVEL_CRITICAL);
+	ASSERT_LEVEL(osThreadCreate(&sMainThread, NULL) != NULL, LEVEL_CRITICAL);
 
-    osKernelStart ();
+	osKernelStart();
 
-    while (1)
-    {
-    } //You Shall not PASS !!!!!!
+	while (1)
+	{
+	} //You Shall not PASS !!!!!!
 }
 #endif
 /******************************************************************************

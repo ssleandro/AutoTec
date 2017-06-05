@@ -33,7 +33,8 @@
 #define __PMC_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup PMC_18XX_43XX CHIP: LPC18xx/43xx Power Management Controller driver
@@ -44,10 +45,11 @@ extern "C" {
 /**
  * @brief Power Management Controller register block structure
  */
-typedef struct {						/*!< PMC Structure          */
-	__IO uint32_t  PD0_SLEEP0_HW_ENA;	/*!< Hardware sleep event enable register */
-	__I  uint32_t  RESERVED0[6];
-	__IO uint32_t  PD0_SLEEP0_MODE;		/*!< Sleep power mode register */
+typedef struct
+{ /*!< PMC Structure          */
+	__IO uint32_t PD0_SLEEP0_HW_ENA; /*!< Hardware sleep event enable register */
+	__I uint32_t RESERVED0[6];
+	__IO uint32_t PD0_SLEEP0_MODE; /*!< Sleep power mode register */
 } LPC_PMC_T;
 
 /**
@@ -69,24 +71,25 @@ typedef struct {						/*!< PMC Structure          */
 /*
  * @brief PMC power states
  */
-typedef enum {
-	PMC_DeepSleep = PMC_PWR_DEEP_SLEEP_MODE,			/*!< Deep sleep state */
-	PMC_PowerDown = PMC_PWR_POWER_DOWN_MODE,			/*!< Power Down state */
-	PMC_DeepPowerDown = PMC_PWR_DEEP_POWER_DOWN_MODE,	/*!< Power Down state */
+typedef enum
+{
+	PMC_DeepSleep = PMC_PWR_DEEP_SLEEP_MODE, /*!< Deep sleep state */
+	PMC_PowerDown = PMC_PWR_POWER_DOWN_MODE, /*!< Power Down state */
+	PMC_DeepPowerDown = PMC_PWR_DEEP_POWER_DOWN_MODE, /*!< Power Down state */
 } CHIP_PMC_PWR_STATE_T;
 
 /**
  * @brief	Set to sleep power state
  * @return	Nothing
  */
-void Chip_PMC_Sleep(void);
+void Chip_PMC_Sleep (void);
 
 /**
  * @brief	Set to sleep power mode
  * @param	PwrState	: Power State as specified in /a CHIP_PMC_PWR_STATE_T enum
  * @return	Nothing
  */
-void Chip_PMC_Set_PwrState(CHIP_PMC_PWR_STATE_T PwrState);
+void Chip_PMC_Set_PwrState (CHIP_PMC_PWR_STATE_T PwrState);
 
 /**
  * @}

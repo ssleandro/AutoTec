@@ -1,26 +1,26 @@
 /***********************************************************************
-* $Id:: mw_usbd_msc.h 331 2012-08-09 18:54:34Z usb10131                       $
-*
-* Project: USB device ROM Stack
-*
-* Description:
-*     Mass Storage Class definitions.
-*
-***********************************************************************
-*   Copyright(C) 2011, NXP Semiconductor
-*   All rights reserved.
-*
-* Software that is described herein is for illustrative purposes only
-* which provides customers with programming information regarding the
-* products. This software is supplied "AS IS" without any warranties.
-* NXP Semiconductors assumes no responsibility or liability for the
-* use of the software, conveys no license or title under any patent,
-* copyright, or mask work right to the product. NXP Semiconductors
-* reserves the right to make changes in the software without
-* notification. NXP Semiconductors also make no representation or
-* warranty that such application will be suitable for the specified
-* use without further testing or modification.
-**********************************************************************/
+ * $Id:: mw_usbd_msc.h 331 2012-08-09 18:54:34Z usb10131                       $
+ *
+ * Project: USB device ROM Stack
+ *
+ * Description:
+ *     Mass Storage Class definitions.
+ *
+ ***********************************************************************
+ *   Copyright(C) 2011, NXP Semiconductor
+ *   All rights reserved.
+ *
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ **********************************************************************/
 
 #ifndef __MSC_H__
 #define __MSC_H__
@@ -47,11 +47,9 @@
 #define MSC_PROTOCOL_CBI_NOINT          0x01
 #define MSC_PROTOCOL_BULK_ONLY          0x50
 
-
 /* MSC Request Codes */
 #define MSC_REQUEST_RESET               0xFF
 #define MSC_REQUEST_GET_MAX_LUN         0xFE
-
 
 /* MSC Bulk-only Stage */
 #define MSC_BS_CBW                      0       /* Command Block Wrapper */
@@ -62,39 +60,36 @@
 #define MSC_BS_CSW                      5       /* Command Status Wrapper */
 #define MSC_BS_ERROR                    6       /* Error */
 
-
 /* Bulk-only Command Block Wrapper */
 PRE_PACK struct POST_PACK _MSC_CBW
 {
-  uint32_t dSignature;
-  uint32_t dTag;
-  uint32_t dDataLength;
-  uint8_t  bmFlags;
-  uint8_t  bLUN;
-  uint8_t  bCBLength;
-  uint8_t  CB[16];
-} ;
+	uint32_t dSignature;
+	uint32_t dTag;
+	uint32_t dDataLength;
+	uint8_t bmFlags;
+	uint8_t bLUN;
+	uint8_t bCBLength;
+	uint8_t CB[16];
+};
 typedef struct _MSC_CBW MSC_CBW;
 
 /* Bulk-only Command Status Wrapper */
 PRE_PACK struct POST_PACK _MSC_CSW
 {
-  uint32_t dSignature;
-  uint32_t dTag;
-  uint32_t dDataResidue;
-  uint8_t  bStatus;
-} ;
+	uint32_t dSignature;
+	uint32_t dTag;
+	uint32_t dDataResidue;
+	uint8_t bStatus;
+};
 typedef struct _MSC_CSW MSC_CSW;
 
 #define MSC_CBW_Signature               0x43425355
 #define MSC_CSW_Signature               0x53425355
 
-
 /* CSW Status Definitions */
 #define CSW_CMD_PASSED                  0x00
 #define CSW_CMD_FAILED                  0x01
 #define CSW_PHASE_ERROR                 0x02
-
 
 /* SCSI Commands */
 #define SCSI_TEST_UNIT_READY            0x00
@@ -114,6 +109,5 @@ typedef struct _MSC_CSW MSC_CSW;
 #define SCSI_WRITE12                    0xAA
 #define SCSI_MODE_SELECT10              0x55
 #define SCSI_MODE_SENSE10               0x5A
-
 
 #endif  /* __MSC_H__ */

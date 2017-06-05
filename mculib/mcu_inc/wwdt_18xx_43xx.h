@@ -33,7 +33,8 @@
 #define __WWDT_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup WWDT_18XX_43XX CHIP: LPC18xx/43xx Windowed Watchdog driver
@@ -49,15 +50,16 @@ extern "C" {
 /**
  * @brief Windowed Watchdog register block structure
  */
-typedef struct {				/*!< WWDT Structure         */
-	__IO uint32_t  MOD;			/*!< Watchdog mode register. This register contains the basic mode and status of the Watchdog Timer. */
-	__IO uint32_t  TC;			/*!< Watchdog timer constant register. This register determines the time-out value. */
-	__O  uint32_t  FEED;		/*!< Watchdog feed sequence register. Writing 0xAA followed by 0x55 to this register reloads the Watchdog timer with the value contained in WDTC. */
-	__I  uint32_t  TV;			/*!< Watchdog timer value register. This register reads out the current value of the Watchdog timer. */
-	__I  uint32_t  RESERVED0;
+typedef struct
+{ /*!< WWDT Structure         */
+	__IO uint32_t MOD; /*!< Watchdog mode register. This register contains the basic mode and status of the Watchdog Timer. */
+	__IO uint32_t TC; /*!< Watchdog timer constant register. This register determines the time-out value. */
+	__O uint32_t FEED; /*!< Watchdog feed sequence register. Writing 0xAA followed by 0x55 to this register reloads the Watchdog timer with the value contained in WDTC. */
+	__I uint32_t TV; /*!< Watchdog timer value register. This register reads out the current value of the Watchdog timer. */
+	__I uint32_t RESERVED0;
 #ifdef WATCHDOG_WINDOW_SUPPORT
-	__IO uint32_t  WARNINT;		/*!< Watchdog warning interrupt register. This register contains the Watchdog warning interrupt compare value. */
-	__IO uint32_t  WINDOW;		/*!< Watchdog timer window register. This register contains the Watchdog window value. */
+	__IO uint32_t WARNINT; /*!< Watchdog warning interrupt register. This register contains the Watchdog warning interrupt compare value. */
+	__IO uint32_t WINDOW; /*!< Watchdog timer window register. This register contains the Watchdog window value. */
 #endif
 } LPC_WWDT_T;
 
@@ -82,14 +84,14 @@ typedef struct {				/*!< WWDT Structure         */
  * @param	pWWDT	: The base of WatchDog Timer peripheral on the chip
  * @return	None
  */
-void Chip_WWDT_Init(LPC_WWDT_T *pWWDT);
+void Chip_WWDT_Init (LPC_WWDT_T *pWWDT);
 
 /**
  * @brief	Shutdown the Watchdog timer
  * @param	pWWDT	: The base of WatchDog Timer peripheral on the chip
  * @return	None
  */
-void Chip_WWDT_DeInit(LPC_WWDT_T *pWWDT);
+void Chip_WWDT_DeInit (LPC_WWDT_T *pWWDT);
 
 /**
  * @brief	Set WDT timeout constant value used for feed
@@ -97,7 +99,7 @@ void Chip_WWDT_DeInit(LPC_WWDT_T *pWWDT);
  * @param	timeout	: WDT timeout in ticks, between WWDT_TICKS_MIN and WWDT_TICKS_MAX
  * @return	none
  */
-STATIC INLINE void Chip_WWDT_SetTimeOut(LPC_WWDT_T *pWWDT, uint32_t timeout)
+STATIC INLINE void Chip_WWDT_SetTimeOut (LPC_WWDT_T *pWWDT, uint32_t timeout)
 {
 	pWWDT->TC = timeout;
 }
@@ -109,7 +111,7 @@ STATIC INLINE void Chip_WWDT_SetTimeOut(LPC_WWDT_T *pWWDT, uint32_t timeout)
  * @note	If this function isn't called, a watchdog timer warning will occur.
  * After the warning, a timeout will occur if a feed has happened.
  */
-STATIC INLINE void Chip_WWDT_Feed(LPC_WWDT_T *pWWDT)
+STATIC INLINE void Chip_WWDT_Feed (LPC_WWDT_T *pWWDT)
 {
 	pWWDT->FEED = 0xAA;
 	pWWDT->FEED = 0x55;
@@ -124,7 +126,7 @@ STATIC INLINE void Chip_WWDT_Feed(LPC_WWDT_T *pWWDT)
  * @note	This is the number of ticks after the watchdog interrupt that the
  * warning interrupt will be generated.
  */
-STATIC INLINE void Chip_WWDT_SetWarning(LPC_WWDT_T *pWWDT, uint32_t timeout)
+STATIC INLINE void Chip_WWDT_SetWarning (LPC_WWDT_T *pWWDT, uint32_t timeout)
 {
 	pWWDT->WARNINT = timeout;
 }
@@ -138,7 +140,7 @@ STATIC INLINE void Chip_WWDT_SetWarning(LPC_WWDT_T *pWWDT, uint32_t timeout)
  * function and this function, with this function defining the last tick before the
  * watchdog window interrupt occurs.
  */
-STATIC INLINE void Chip_WWDT_SetWindow(LPC_WWDT_T *pWWDT, uint32_t timeout)
+STATIC INLINE void Chip_WWDT_SetWindow (LPC_WWDT_T *pWWDT, uint32_t timeout)
 {
 	pWWDT->WINDOW = timeout;
 }
@@ -156,7 +158,7 @@ STATIC INLINE void Chip_WWDT_SetWindow(LPC_WWDT_T *pWWDT, uint32_t timeout)
  * are set (or unset) with no other options. If WWDT_WDMOD_LOCK is used, it cannot
  * be unset.
  */
-STATIC INLINE void Chip_WWDT_SetOption(LPC_WWDT_T *pWWDT, uint32_t options)
+STATIC INLINE void Chip_WWDT_SetOption (LPC_WWDT_T *pWWDT, uint32_t options)
 {
 	pWWDT->MOD |= options;
 }
@@ -170,7 +172,7 @@ STATIC INLINE void Chip_WWDT_SetOption(LPC_WWDT_T *pWWDT, uint32_t options)
  * @note	You can disable more than one option at once (ie, WWDT_WDMOD_WDRESET |
  * WWDT_WDMOD_WDTOF).
  */
-STATIC INLINE void Chip_WWDT_UnsetOption(LPC_WWDT_T *pWWDT, uint32_t options)
+STATIC INLINE void Chip_WWDT_UnsetOption (LPC_WWDT_T *pWWDT, uint32_t options)
 {
 	pWWDT->MOD &= (~options) & WWDT_WDMOD_BITMASK;
 }
@@ -180,7 +182,7 @@ STATIC INLINE void Chip_WWDT_UnsetOption(LPC_WWDT_T *pWWDT, uint32_t options)
  * @param	pWWDT	: The base of WatchDog Timer peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_WWDT_Start(LPC_WWDT_T *pWWDT)
+STATIC INLINE void Chip_WWDT_Start (LPC_WWDT_T *pWWDT)
 {
 	Chip_WWDT_SetOption(pWWDT, WWDT_WDMOD_WDEN);
 	Chip_WWDT_Feed(pWWDT);
@@ -191,7 +193,7 @@ STATIC INLINE void Chip_WWDT_Start(LPC_WWDT_T *pWWDT)
  * @param	pWWDT	: The base of WatchDog Timer peripheral on the chip
  * @return	Watchdog status, an Or'ed value of WWDT_WDMOD_*
  */
-STATIC INLINE uint32_t Chip_WWDT_GetStatus(LPC_WWDT_T *pWWDT)
+STATIC INLINE uint32_t Chip_WWDT_GetStatus (LPC_WWDT_T *pWWDT)
 {
 	return pWWDT->MOD;
 }
@@ -204,14 +206,14 @@ STATIC INLINE uint32_t Chip_WWDT_GetStatus(LPC_WWDT_T *pWWDT)
  *              - WWDT_WDMOD_WDINT: Clear watchdog warning flag
  * @return	None
  */
-void Chip_WWDT_ClearStatusFlag(LPC_WWDT_T *pWWDT, uint32_t status);
+void Chip_WWDT_ClearStatusFlag (LPC_WWDT_T *pWWDT, uint32_t status);
 
 /**
  * @brief	Get the current value of WDT
  * @param	pWWDT	: The base of WatchDog Timer peripheral on the chip
  * @return	current value of WDT
  */
-STATIC INLINE uint32_t Chip_WWDT_GetCurrentCount(LPC_WWDT_T *pWWDT)
+STATIC INLINE uint32_t Chip_WWDT_GetCurrentCount (LPC_WWDT_T *pWWDT)
 {
 	return pWWDT->TV;
 }

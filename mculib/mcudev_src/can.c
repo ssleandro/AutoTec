@@ -71,15 +71,15 @@
  * This Struct holds private CAN configuration
  */
 /*typedef struct can_private_config_s
-{
+ {
 
-}can_private_config_s;*/
+ }can_private_config_s;*/
 
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
 
-static bool CANInitiated[2] = {false, false}; //!< Indicates if a CAN port is initialized
+static bool CANInitiated[2] = { false, false }; //!< Indicates if a CAN port is initialized
 
 static CCAN_MSG_IF_T sCANInterface[2] = { CCAN_MSG_IF1, CCAN_MSG_IF2 }; //!< Indicates which CAN interface to use
 
@@ -87,8 +87,8 @@ static can_config_s * CANlist[CAN_MAX_CHANNELS] = { NULL, NULL };  //!< List of 
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
-extern void CAN0_IRQHandler(void);
-extern void CAN1_IRQHandler(void);
+extern void CAN0_IRQHandler (void);
+extern void CAN1_IRQHandler (void);
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
@@ -107,22 +107,22 @@ extern void CAN1_IRQHandler(void);
  * @return     Void
  *
  * \b Example
-~~~~~~~~~~~~~~~{.c}
-  *  //Not available.
-~~~~~~~~~~~~~~~
-  *
-  * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
-  *
-  * <br><b> - HISTORY OF CHANGES - </b>
-  *
-  * <table align="left" style="width:800px">
-  * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-  * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-  * </table><br><br>
-  * <hr>
-  *
-  *******************************************************************************/
-static void CAN_vTreatInterruptsISR(uint8_t bCANChannel)
+ ~~~~~~~~~~~~~~~{.c}
+ *  //Not available.
+ ~~~~~~~~~~~~~~~
+ *
+ * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+static void CAN_vTreatInterruptsISR (uint8_t bCANChannel)
 {
 	can_config_s * pCAN = NULL;
 	canMSGStruct_s sCANMessage;
@@ -134,10 +134,10 @@ static void CAN_vTreatInterruptsISR(uint8_t bCANChannel)
 		pCAN = CANlist[bCANChannel];
 	}
 
-	if(pCAN != NULL)
+	if (pCAN != NULL)
 	{
 		uint32_t wCANint;
-		while((wCANint = Chip_CCAN_GetIntID(CAN_MAP_REGISTER(pCAN->eCANPort))) != 0)
+		while ((wCANint = Chip_CCAN_GetIntID(CAN_MAP_REGISTER(pCAN->eCANPort))) != 0)
 		{
 			memset(sCANMessage.data, 0x00, 8);
 			sCANMessage.dlc = 0;
@@ -154,9 +154,10 @@ static void CAN_vTreatInterruptsISR(uint8_t bCANChannel)
 				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_RXOK);
 				pCAN->fpCallback(eCANStat, sCANMessage);
 			}
-			else if (( 1 <= CCAN_INT_MSG_NUM(wCANint)) && (CCAN_INT_MSG_NUM(wCANint) <= 0x20))
+			else if ((1 <= CCAN_INT_MSG_NUM(wCANint)) && (CCAN_INT_MSG_NUM(wCANint) <= 0x20))
 			{
-				Chip_CCAN_GetMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], wCANint, (CCAN_MSG_OBJ_T*)&sCANMessage);
+				Chip_CCAN_GetMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], wCANint,
+					(CCAN_MSG_OBJ_T*)&sCANMessage);
 
 				eCANStat = Chip_CCAN_GetStatus(CAN_MAP_REGISTER(pCAN->eCANPort));
 
@@ -183,22 +184,22 @@ static void CAN_vTreatInterruptsISR(uint8_t bCANChannel)
  * @return     Void
  *
  * \b Example
-~~~~~~~~~~~~~~~{.c}
-  *  //Not available, IRQ is activated via CAN_vAddMessageID
-~~~~~~~~~~~~~~~
-  *
-  * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
-  *
-  * <br><b> - HISTORY OF CHANGES - </b>
-  *
-  * <table align="left" style="width:800px">
-  * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-  * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-  * </table><br><br>
-  * <hr>
-  *
-  *******************************************************************************/
-void CAN0_IRQHandler(void)
+ ~~~~~~~~~~~~~~~{.c}
+ *  //Not available, IRQ is activated via CAN_vAddMessageID
+ ~~~~~~~~~~~~~~~
+ *
+ * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void CAN0_IRQHandler (void)
 {
 #ifdef USE_SYSVIEW
 	SEGGER_SYSVIEW_RecordEnterISR();
@@ -224,22 +225,22 @@ void CAN0_IRQHandler(void)
  * @return     Void
  *
  * \b Example
-~~~~~~~~~~~~~~~{.c}
-  *  //Not available, IRQ is activated via CAN_vAddMessageID
-~~~~~~~~~~~~~~~
-  *
-  * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
-  *
-  * <br><b> - HISTORY OF CHANGES - </b>
-  *
-  * <table align="left" style="width:800px">
-  * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-  * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-  * </table><br><br>
-  * <hr>
-  *
-  *******************************************************************************/
-void CAN1_IRQHandler(void)
+ ~~~~~~~~~~~~~~~{.c}
+ *  //Not available, IRQ is activated via CAN_vAddMessageID
+ ~~~~~~~~~~~~~~~
+ *
+ * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void CAN1_IRQHandler (void)
 {
 #ifdef USE_SYSVIEW
 	SEGGER_SYSVIEW_RecordEnterISR();
@@ -264,22 +265,22 @@ void CAN1_IRQHandler(void)
  * @return     eMCUError_s error type
  *
  * \b Example
-~~~~~~~~~~~~~~~{.c}
-  *  //Not available
-~~~~~~~~~~~~~~~
-  *
-  * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
-  *
-  * <br><b> - HISTORY OF CHANGES - </b>
-  *
-  * <table align="left" style="width:800px">
-  * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-  * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-  * </table><br><br>
-  * <hr>
-  *
-  *******************************************************************************/
-static eMCUError_s CAN_eCheckFault(const can_config_s *pCAN)
+ ~~~~~~~~~~~~~~~{.c}
+ *  //Not available
+ ~~~~~~~~~~~~~~~
+ *
+ * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+static eMCUError_s CAN_eCheckFault (const can_config_s *pCAN)
 {
 	if (pCAN->eCANBitrate >= CAN_BITRATE_INVALID)
 	{
@@ -292,8 +293,7 @@ static eMCUError_s CAN_eCheckFault(const can_config_s *pCAN)
 	return MCU_ERROR_SUCCESS;
 }
 
-
-eMCUError_s CAN_eInit(can_config_s *pCAN)
+eMCUError_s CAN_eInit (can_config_s *pCAN)
 {
 	//Verify if it is a valid CAN port, if it is not already initiated, if it is a valid bitrate and if
 	//it has a valid message id
@@ -305,10 +305,10 @@ eMCUError_s CAN_eInit(can_config_s *pCAN)
 			return eErrorcode;
 		}
 
-		if(BRD_CANConfig(pCAN->eCANPort) > CAN_MAX_CLOCK) //PinMux CAN on Board.c
-						{
+		if (BRD_CANConfig(pCAN->eCANPort) > CAN_MAX_CLOCK) //PinMux CAN on Board.c
+		{
 			return MCU_ERROR_CAN_INVALID_CLOCK;
-						}
+		}
 
 		CANInitiated[pCAN->eCANPort] = true; //Indicate that given CAN is initiated
 
@@ -329,7 +329,7 @@ eMCUError_s CAN_eInit(can_config_s *pCAN)
 	return MCU_ERROR_CAN_INVALID_CAN_PORT;
 }
 
-void CAN_vDeInit(can_config_s *pCAN)
+void CAN_vDeInit (can_config_s *pCAN)
 {
 	NVIC_DisableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
 	Chip_CCAN_DeInit(CAN_MAP_REGISTER(pCAN->eCANPort));
@@ -337,7 +337,7 @@ void CAN_vDeInit(can_config_s *pCAN)
 	CANlist[pCAN->eCANPort] = NULL;
 }
 
-void CAN_vAddMessageID(const can_config_s *pCAN, const uint16_t hCANmsgID)
+void CAN_vAddMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID)
 {
 	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
 	{
@@ -352,56 +352,63 @@ void CAN_vAddMessageID(const can_config_s *pCAN, const uint16_t hCANmsgID)
 	}
 }
 
-STATIC uint8_t getFreeMsgObject(LPC_CCAN_T *pCCAN)
+STATIC uint8_t getFreeMsgObject (LPC_CCAN_T *pCCAN)
 {
 	/* Return 1->32; 0 if not find free msg */
 	uint32_t msg_valid;
 	uint8_t i;
 	msg_valid = Chip_CCAN_GetValidMsg(pCCAN);
-	for (i = 0; i < CCAN_MSG_MAX_NUM; i++) {
-		if (!((msg_valid >> i) & 1UL)) {
+	for (i = 0; i < CCAN_MSG_MAX_NUM; i++)
+	{
+		if (!((msg_valid >> i) & 1UL))
+		{
 			return i + 1;
 		}
 	}
 	return 0;	// No free object
 }
 
-void CCAN_SetMsgObject_ReceiveAll_ID(LPC_CCAN_T *pCCAN,
-									 CCAN_MSG_IF_T IFSel,
-									 CCAN_TRANSFER_DIR_T dir,
-									 bool remoteFrame,
-									 uint8_t msgNum,
-									 const CCAN_MSG_OBJ_T *pMsgObj)
+void CCAN_SetMsgObject_ReceiveAll_ID (LPC_CCAN_T *pCCAN,
+	CCAN_MSG_IF_T IFSel,
+	CCAN_TRANSFER_DIR_T dir,
+	bool remoteFrame,
+	uint8_t msgNum,
+	const CCAN_MSG_OBJ_T *pMsgObj)
 {
 	/* Set a message into the message object in message RAM */
 	uint16_t *pData;
 	uint32_t msgCtrl = 0;
 
-	if (pMsgObj == NULL) {
+	if (pMsgObj == NULL)
+	{
 		return;
 	}
-	pData = (uint16_t *) (pMsgObj->data);
+	pData = (uint16_t *)(pMsgObj->data);
 
 	msgCtrl |= CCAN_IF_MCTRL_UMSK | CCAN_IF_MCTRL_RMTEN(remoteFrame) | CCAN_IF_MCTRL_EOB |
-					(pMsgObj->dlc & CCAN_IF_MCTRL_DLC_MSK);
+		(pMsgObj->dlc & CCAN_IF_MCTRL_DLC_MSK);
 
-	if (dir == CCAN_TX_DIR) {
-		if (!remoteFrame) {
+	if (dir == CCAN_TX_DIR)
+	{
+		if (!remoteFrame)
+		{
 			msgCtrl |= CCAN_IF_MCTRL_TXRQ;
 		}
 	}
-	else {
+	else
+	{
 		msgCtrl |= CCAN_IF_MCTRL_RXIE;
 	}
 
 	pCCAN->IF[IFSel].MCTRL = msgCtrl;
-	pCCAN->IF[IFSel].DA1 = *pData++;	/* Lower two bytes of message pointer */
-	pCCAN->IF[IFSel].DA2 = *pData++;	/* Upper two bytes of message pointer */
-	pCCAN->IF[IFSel].DB1 = *pData++;	/* Lower two bytes of message pointer */
-	pCCAN->IF[IFSel].DB2 = *pData;	/* Upper two bytes of message pointer */
+	pCCAN->IF[IFSel].DA1 = *pData++; /* Lower two bytes of message pointer */
+	pCCAN->IF[IFSel].DA2 = *pData++; /* Upper two bytes of message pointer */
+	pCCAN->IF[IFSel].DB1 = *pData++; /* Lower two bytes of message pointer */
+	pCCAN->IF[IFSel].DB2 = *pData; /* Upper two bytes of message pointer */
 
 	/* Configure arbitration */
-	if (!(pMsgObj->id & (0x1 << 30))) {					/* bit 30 is 0, standard frame */
+	if (!(pMsgObj->id & (0x1 << 30)))
+	{ /* bit 30 is 0, standard frame */
 		/* Mxtd: 0, Mdir: 1, Mask is 0x7FF */
 		pCCAN->IF[IFSel].MSK2 = CCAN_IF_MASK2_MDIR(dir) | (~CCAN_MSG_ID_STD_MASK << 2);
 		pCCAN->IF[IFSel].MSK1 = 0x0000;
@@ -410,7 +417,8 @@ void CCAN_SetMsgObject_ReceiveAll_ID(LPC_CCAN_T *pCCAN,
 		pCCAN->IF[IFSel].ARB2 = CCAN_IF_ARB2_MSGVAL | CCAN_IF_ARB2_DIR(dir) | (pMsgObj->id << 2);
 		pCCAN->IF[IFSel].ARB1 = 0x0000;
 	}
-	else {										/* Extended frame */            
+	else
+	{ /* Extended frame */
 		/* Mxtd: 1, Mdir: 1, Mask is 0x1FFFFFFF */
 		pCCAN->IF[IFSel].MSK2 = CCAN_IF_MASK2_MXTD | CCAN_IF_MASK2_MDIR(dir) | (~CCAN_MSG_ID_EXT_MASK >> 16);
 		pCCAN->IF[IFSel].MSK1 = ~CCAN_MSG_ID_EXT_MASK & 0x0000FFFF;
@@ -418,11 +426,11 @@ void CCAN_SetMsgObject_ReceiveAll_ID(LPC_CCAN_T *pCCAN,
 		/* MsgVal: 1, Mtd: 1, Dir: 1, ID = 0x200000 */
 		pCCAN->IF[IFSel].ARB2 = CCAN_IF_ARB2_MSGVAL | CCAN_IF_ARB2_XTD | CCAN_IF_ARB2_DIR(dir) | (pMsgObj->id >> 16);
 		pCCAN->IF[IFSel].ARB1 = pMsgObj->id & 0x0000FFFF;
-	}    
+	}
 	Chip_CCAN_TransferMsgObject(pCCAN, IFSel, CCAN_IF_CMDMSK_WR | CCAN_IF_CMDMSK_TRANSFER_ALL, msgNum);
 }
 
-void CAN_vAddAllMessageID(const can_config_s *pCAN, const uint32_t hCANmsgID)
+void CAN_vAddAllMessageID (const can_config_s *pCAN, const uint32_t hCANmsgID)
 {
 	CCAN_MSG_OBJ_T temp;
 	uint8_t msgNum;
@@ -433,26 +441,27 @@ void CAN_vAddAllMessageID(const can_config_s *pCAN, const uint32_t hCANmsgID)
 		Chip_CCAN_EnableInt(CAN_MAP_REGISTER(pCAN->eCANPort), (CCAN_CTRL_IE | CCAN_CTRL_SIE | CCAN_CTRL_EIE));
 
 		msgNum = getFreeMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort));
-		if(!msgNum)
+		if (!msgNum)
 		{
 			return;
 		}
 		temp.id = hCANmsgID;
 		// Call CCAN_SetMsgObject_ReceiveAll_ID
-		CCAN_SetMsgObject_ReceiveAll_ID(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], CCAN_RX_DIR, false, msgNum, &temp);
+		CCAN_SetMsgObject_ReceiveAll_ID(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], CCAN_RX_DIR,
+			false, msgNum, &temp);
 
 		//Enable Interrupt
 		NVIC_EnableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
 	}
 }
 
-void CAN_vEnableLoopback(can_config_s *pCAN)
+void CAN_vEnableLoopback (can_config_s *pCAN)
 {
 	Chip_CCAN_EnableTestMode(CAN_MAP_REGISTER(pCAN->eCANPort));
 	Chip_CCAN_ConfigTestMode(CAN_MAP_REGISTER(pCAN->eCANPort), CCAN_TEST_LOOPBACK_MODE);
 }
 
-void CAN_vRemoveMessageID(const can_config_s *pCAN, const uint16_t hCANmsgID)
+void CAN_vRemoveMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID)
 {
 	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
 	{
@@ -460,7 +469,7 @@ void CAN_vRemoveMessageID(const can_config_s *pCAN, const uint16_t hCANmsgID)
 	}
 }
 
-uint32_t CAN_vConfigRemoteMessageObj(const can_config_s *pCAN, const canMSGStruct_s CANMessage)
+uint32_t CAN_vConfigRemoteMessageObj (const can_config_s *pCAN, const canMSGStruct_s CANMessage)
 {
 	uint32_t obj_idx;
 
@@ -469,30 +478,33 @@ uint32_t CAN_vConfigRemoteMessageObj(const can_config_s *pCAN, const canMSGStruc
 		obj_idx = getFreeMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort));
 
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_MASK |
-						CCAN_IF_CMDMSK_ARB  |
-						CCAN_IF_CMDMSK_CTRL;
+		CCAN_IF_CMDMSK_ARB |
+		CCAN_IF_CMDMSK_CTRL;
 
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;
 
-		while((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0);
+		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+			;
 
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_WR |
-						CCAN_IF_CMDMSK_MASK  |
-						CCAN_IF_CMDMSK_ARB |
-						CCAN_IF_CMDMSK_CTRL;
+		CCAN_IF_CMDMSK_MASK |
+		CCAN_IF_CMDMSK_ARB |
+		CCAN_IF_CMDMSK_CTRL;
 
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MSK2 &= ~(1U << 14);
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2 &= ~(1U << 13);
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2 |= CCAN_IF_ARB2_MSGVAL;
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL = CCAN_IF_MCTRL_UMSK | CCAN_IF_MCTRL_EOB | CCAN_IF_MCTRL_RXIE;
+		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL = CCAN_IF_MCTRL_UMSK | CCAN_IF_MCTRL_EOB
+			| CCAN_IF_MCTRL_RXIE;
 
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;
-		while((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0);
+		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+			;
 	}
 	return obj_idx;
 }
 
-void CAN_vSendRemoteMessage(const can_config_s *pCAN, const canMSGStruct_s CANMessage)
+void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage)
 {
 	// Configure an object to TX_RTR_RX_DATA and gets the object index
 	uint32_t obj_idx = CAN_vConfigRemoteMessageObj(pCAN, CANMessage);
@@ -501,61 +513,74 @@ void CAN_vSendRemoteMessage(const can_config_s *pCAN, const canMSGStruct_s CANMe
 
 	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
 	{
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_ARB  |                  // Read
-						CCAN_IF_CMDMSK_CTRL |                  // Access arbitration and Access control bits
-						CCAN_IF_CMDMSK_R_NEWDAT;               // Clear NEWDAT bit
+		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_ARB |         // Read
+			CCAN_IF_CMDMSK_CTRL |                  // Access arbitration and Access control bits
+			CCAN_IF_CMDMSK_R_NEWDAT;               // Clear NEWDAT bit
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;                               // Read from message object
+		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;  // Read from message object
 
-		while((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0);     // Wait for read to finish
+		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+			;     // Wait for read to finish
 
-		mctrl = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL;                                  // Store current value of MCTRL register
-		arb1 = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB1;                                    // Store current value of ARB1 register
-		arb2 = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2;                                    // Store current value of ARB2 register
+		mctrl = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL; // Store current value of MCTRL register
+		arb1 = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB1; // Store current value of ARB1 register
+		arb2 = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2; // Store current value of ARB2 register
 
 		// Prepare arb1 and arb2
-		if(CANMessage.id & CAN_ID_IDE_Msk){     // Extended Identifier
+		if (CANMessage.id & CAN_ID_IDE_Msk)
+		{     // Extended Identifier
 			arb1 = CANMessage.id & (0xFFFFU << 0);
 			arb2 = ((CANMessage.id >> 16) & (0x1FFFU << 0)) | CCAN_IF_ARB2_XTD | CCAN_IF_ARB2_MSGVAL;
-		} else {                                // Standard Identifier
-			arb1 = 0U ;
+		}
+		else
+		{                                // Standard Identifier
+			arb1 = 0U;
 			arb2 = ((CANMessage.id << 2) & (0x1FFFU << 0)) | CCAN_IF_ARB2_MSGVAL;
 		}
 
 		// Test here if it's a remote transmission
-		if(CANMessage.id & CAN_ID_RTR_Msk) {
+		if (CANMessage.id & CAN_ID_RTR_Msk)
+		{
 			size = CANMessage.dlc;
 		}
 
-		if(size > 8U) {size = 8U;}
+		if (size > 8U)
+		{
+			size = 8U;
+		}
 
 		mctrl = (mctrl & ~0xFU) | CCAN_IF_MCTRL_TXRQ | size;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_ARB  |                  // Access arbitration
-						CCAN_IF_CMDMSK_CTRL |                  // Access control bits
-						CCAN_IF_CMDMSK_WR;                     // Write
+		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_ARB | // Access arbitration
+			CCAN_IF_CMDMSK_CTRL |                  // Access control bits
+			CCAN_IF_CMDMSK_WR;                     // Write
 
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB1 = arb1;
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2 = arb2;
 		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL = mctrl;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;                               // Write to message object
-		while((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0);     // Wait for write to finish
+		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;   // Write to message object
+		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+			;     // Wait for write to finish
 
-		while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER(pCAN->eCANPort)) >> (obj_idx - 1)) {    // blocking , wait for sending completed
+		while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER(pCAN->eCANPort)) >> (obj_idx - 1))
+		{    // blocking , wait for sending completed
 		}
 	}
 	Chip_CCAN_SetValidMsg(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], obj_idx, false);
 }
 
-void CAN_vSendMessage(const can_config_s *pCAN, const canMSGStruct_s CANMessage)
+void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage)
 {
 	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
 	{
-		if(!(CANMessage.id & CAN_ID_RTR_Msk))
+		if (!(CANMessage.id & CAN_ID_RTR_Msk))
 		{
-			Chip_CCAN_Send(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], false, (CCAN_MSG_OBJ_T *)&CANMessage );
-		} else {
+			Chip_CCAN_Send(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], false,
+				(CCAN_MSG_OBJ_T *)&CANMessage);
+		}
+		else
+		{
 			CAN_vSendRemoteMessage(pCAN, CANMessage);
 		}
 		Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CCAN_STAT_TXOK);

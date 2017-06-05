@@ -1,36 +1,36 @@
 /****************************************************************************
-* Title                 :   gui_core
-* Filename              :   gui_core.c
-* Author                :   Henrique Reis
-* Origin Date           :   19 de abr de 2017
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   gui_core
+ * Filename              :   gui_core.c
+ * Author                :   Henrique Reis
+ * Origin Date           :   19 de abr de 2017
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version       Author          Description
-*  19/04/17   1.0.0     Henrique Reis         gui_core.c created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version       Author          Description
+ *  19/04/17   1.0.0     Henrique Reis         gui_core.c created.
+ *
+ *****************************************************************************/
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include "M2G_app.h"
 #include "gui_core.h"
 #include "debug_tool.h"
@@ -40,20 +40,21 @@
 #include "common_app.h"
 
 /******************************************************************************
-* Module Preprocessor Constants
-*******************************************************************************/
+ * Module Preprocessor Constants
+ *******************************************************************************/
 //!< MACRO to define the size of CONTROL queue
 #define QUEUE_SIZEOFGUI 5
 
 #define THIS_MODULE MODULE_GUI
 
-
 /******************************************************************************
-* Module Variable Definitions
-*******************************************************************************/
+ * Module Variable Definitions
+ *******************************************************************************/
 DECLARE_QUEUE(GuiQueue, QUEUE_SIZEOFGUI);      //!< Declaration of Interface Queue
-CREATE_SIGNATURE(Gui);                             //!< Signature Declarations
-CREATE_SIGNATURE(GuiAcquireg);                             //!< Signature Declarations
+CREATE_SIGNATURE(Gui);//!< Signature Declarations
+CREATE_SIGNATURE(GuiAcquireg);
+CREATE_SIGNATURE(GuiControl);
+
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 
 osFlagsGroupId GUI_sFlags;
@@ -63,158 +64,156 @@ eDataMask eCurrDataMask = DATA_MASK_INSTALLATION;
 extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
 
-
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
+sConfigurationData SisConfigurationData;
 
 /******************************************************************************
-* Module typedef
-*******************************************************************************/
+ * Module typedef
+ *******************************************************************************/
 
 /**
-* Module Threads
-*/
+ * Module Threads
+ */
 #define X(a, b, c, d, e, f) {.thisThread.name = a, .thisThread.stacksize = b, .thisThread.tpriority = c, .thisThread.pthread = d, .thisModule = e, .thisWDTPosition = f},
 Threads_t THREADS_THISTHREAD[] = {
-    GUI_MODULES
-};
+GUI_MODULES
+	};
 #undef X
 
-volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS_THISTHREAD[0])];   //!< Threads Watchdog flag holder
+volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS_THISTHREAD[0])]; //!< Threads Watchdog flag holder
 
 //Thread Control
-WATCHDOG_CREATE(GUIPUB);                                   //!< WDT pointer flag
+WATCHDOG_CREATE(GUIPUB);//!< WDT pointer flag
 uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position in array
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
-void GUI_vUpdateInterfaceTimerCallback(void const *argument);
+ * Function Prototypes
+ *******************************************************************************/
+void GUI_vUpdateInterfaceTimerCallback (void const *argument);
 
 CREATE_TIMER(Gui_UptTimer, GUI_vUpdateInterfaceTimerCallback);
 
 /******************************************************************************
-* Function Definitions
-*******************************************************************************/
-uint8_t * GUI_WDTData(uint8_t * pbNumberOfThreads)
+ * Function Definitions
+ *******************************************************************************/
+uint8_t * GUI_WDTData (uint8_t * pbNumberOfThreads)
 {
-    *pbNumberOfThreads = ((sizeof(WATCHDOG_FLAG_ARRAY) / sizeof(WATCHDOG_FLAG_ARRAY[0]) - 0)); //-1 = remove core thread from list, -0 = keep it
-    return (uint8_t*)WATCHDOG_FLAG_ARRAY;
+	*pbNumberOfThreads = ((sizeof(WATCHDOG_FLAG_ARRAY) / sizeof(WATCHDOG_FLAG_ARRAY[0]) - 0)); //-1 = remove core thread from list, -0 = keep it
+	return (uint8_t*)WATCHDOG_FLAG_ARRAY;
 }
 
-inline void GUI_vDetectThread(thisWDTFlag* flag, uint8_t* bPosition, void* pFunc)
+inline void GUI_vDetectThread (thisWDTFlag* flag, uint8_t* bPosition, void* pFunc)
 {
-    *bPosition = 0;
-    while (THREADS_THREAD(*bPosition) != (os_pthread)pFunc)
-    {
-        (*bPosition)++;
-    }
-    *flag = (uint8_t*)&WATCHDOG_FLAGPOS(THREADS_WDT_POSITION(*bPosition));
+	*bPosition = 0;
+	while (THREADS_THREAD(*bPosition)!= (os_pthread)pFunc)
+	{
+		(*bPosition)++;
+	}
+	*flag = (uint8_t*)&WATCHDOG_FLAGPOS(THREADS_WDT_POSITION(*bPosition));
 }
 
-static void GUI_vCreateThread(const Threads_t sThread )
+static void GUI_vCreateThread (const Threads_t sThread)
 {
-    osThreadId xThreads = osThreadCreate(&sThread.thisThread, (void*)osThreadGetId());
+	osThreadId xThreads = osThreadCreate(&sThread.thisThread, (void*)osThreadGetId());
 
-    ASSERT(xThreads != NULL);
-    if (sThread.thisModule != 0)
-    {
-        osSignalWait(sThread.thisModule, osWaitForever); //wait for broker initialization
-    }
+	ASSERT(xThreads != NULL);
+	if (sThread.thisModule != 0)
+	{
+		osSignalWait(sThread.thisModule, osWaitForever); //wait for broker initialization
+	}
 }
 
-eAPPError_s GUI_eInitGuiPublisher(void)
+eAPPError_s GUI_eInitGuiPublisher (void)
 {
-    //Prepare Default Contract/Message
-    MESSAGE_HEADER(Gui, 1, GUI_DEFAULT_MSGSIZE, MT_ARRAYBYTE); // MT_ARRAYBYTE
-    CONTRACT_HEADER(Gui, 1, THIS_MODULE, TOPIC_GUI);
+	//Prepare Default Contract/Message
+	MESSAGE_HEADER(Gui, 1, GUI_DEFAULT_MSGSIZE, MT_ARRAYBYTE); // MT_ARRAYBYTE
+	CONTRACT_HEADER(Gui, 1, THIS_MODULE, TOPIC_GUI);
 
-    return APP_ERROR_SUCCESS;
+	return APP_ERROR_SUCCESS;
 }
 
-void GUI_vUpdateInterfaceTimerCallback(void const *argument)
+void GUI_vUpdateInterfaceTimerCallback (void const *argument)
 {
 	osFlagSet(GUI_sFlags, GUI_UPDATE_TEST_MODE_INTERFACE);
 }
 
-void GUI_vGuiPublishThread(void const *argument)
+void GUI_vGuiPublishThread (void const *argument)
 {
 	osFlags dFlags, dFlagsSis;
 	PubMessage sGUIPubMessage;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-    SEGGER_SYSVIEW_Print("Gui Publish Thread Created");
+	SEGGER_SYSVIEW_Print("Gui Publish Thread Created");
 #endif
 
-    GUI_vDetectThread(&WATCHDOG(GUIPUB), &bGUIPUBThreadArrayPosition, (void*)GUI_vGuiPublishThread);
-    WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+	GUI_vDetectThread(&WATCHDOG(GUIPUB), &bGUIPUBThreadArrayPosition, (void*)GUI_vGuiPublishThread);
+	WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
-    osThreadId xDiagMainID = (osThreadId) argument;
-    osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGUIPUBThreadArrayPosition));//Task created, inform core
+	osThreadId xDiagMainID = (osThreadId)argument;
+	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGUIPUBThreadArrayPosition)); //Task created, inform core
 
-    GUI_eInitGuiPublisher();
+	GUI_eInitGuiPublisher();
 
-    START_TIMER(Gui_UptTimer, 750);
+	START_TIMER(Gui_UptTimer, 750);
 
-    while(1)
-    {
-        /* Pool the device waiting for */
-        WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-        dFlags = osFlagWait(GUI_sFlags, (GUI_UPDATE_INSTALLATION_INTERFACE | GUI_UPDATE_PLANTER_INTERFACE | GUI_UPDATE_TEST_MODE_INTERFACE |
-    									 GUI_UPDATE_TRIMMING_INTERFACE | GUI_UPDATE_SYSTEM_INTERFACE |
-										 GUI_CHANGE_INSTAL_REPEAT_TEST), true, false, osWaitForever);
-        WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+	while (1)
+	{
+		/* Pool the device waiting for */
+		WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+		dFlags = osFlagWait(GUI_sFlags, GUI_FLGAS_ALL_FLAGS, true, false, osWaitForever);
+		WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
-        dFlagsSis = osFlagGet(UOS_sFlagSis);
+		dFlagsSis = osFlagGet(UOS_sFlagSis);
 
-    	if((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
-    	{
+		if ((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
+		{
 			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
 			sGUIPubMessage.eEvtType = EVENT_UPDATE;
-			sGUIPubMessage.vPayload = (void*) &eSensorStatus;
-			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
+			sGUIPubMessage.vPayload = (void*)&eSensorStatus;
+			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 			PUBLISH(CONTRACT(Gui), 0);
-    	}
+		}
 
-    	if((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
-    	{
+		if ((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
+		{
 
-    	}
+		}
 
-    	if((dFlags & GUI_UPDATE_TEST_MODE_INTERFACE) > 0)
-    	{
-    		if((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
-    		{
-    			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-    			sGUIPubMessage.eEvtType = EVENT_UPDATE;
-    			sGUIPubMessage.vPayload = (void*) &AQR_sAcumulado;
-    			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
-    			PUBLISH(CONTRACT(Gui), 0);
-    		}
-    	}
+		if ((dFlags & GUI_UPDATE_TEST_MODE_INTERFACE) > 0)
+		{
+			if ((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
+			{
+				sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
+				sGUIPubMessage.eEvtType = EVENT_UPDATE;
+				sGUIPubMessage.vPayload = (void*)&AQR_sAcumulado;
+				MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+				PUBLISH(CONTRACT(Gui), 0);
+			}
+		}
 
-    	if((dFlags & GUI_UPDATE_TRIMMING_INTERFACE) > 0)
-    	{
+		if ((dFlags & GUI_UPDATE_TRIMMING_INTERFACE) > 0)
+		{
 
-    	}
+		}
 
-    	if((dFlags & GUI_UPDATE_SYSTEM_INTERFACE) > 0)
-    	{
+		if ((dFlags & GUI_UPDATE_SYSTEM_INTERFACE) > 0)
+		{
 
-    	}
-    	if((dFlags & GUI_CHANGE_INSTAL_REPEAT_TEST) > 0)
-    	{
+		}
+		if ((dFlags & GUI_CHANGE_INSTAL_REPEAT_TEST) > 0)
+		{
 			sGUIPubMessage.dEvent = EVENT_GUI_INSTALLATION_REPEAT_TEST;
 			sGUIPubMessage.eEvtType = EVENT_SET;
 			sGUIPubMessage.vPayload = NULL;
-			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
+			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 			PUBLISH(CONTRACT(Gui), 0);
-    	}
+		}
 
-    }
-    osThreadTerminate(NULL);
+	}
+	osThreadTerminate(NULL);
 }
 
-void GUI_InitSensorStatus(void)
+void GUI_InitSensorStatus (void)
 {
 	uint8_t bConta;
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
@@ -223,50 +222,59 @@ void GUI_InitSensorStatus(void)
 	}
 }
 
-void GUI_UpdatSensorsStatus(CAN_tsLista * pSensorStatus)
+void GUI_UpdatSensorsStatus (CAN_tsLista * pSensorStatus)
 {
 	uint8_t bConta;
+	uint8_t bSensor = 0;
 
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
-		// se o sensor for par, ele é de semente
-		CAN_tsLista *pSensor = &pSensorStatus[bConta * 2];
-		switch (pSensor->eEstado)
+		if (bSensor++ < SisConfigurationData.bNumOfRows)
 		{
-			case Novo:
+			// se o sensor for par, ele é de semente
+			CAN_tsLista *pSensor = &pSensorStatus[bConta * 2];
+
+			switch (pSensor->eEstado)
 			{
-				eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
-				break;
-			}
-			case Verificando:
-			{
-				eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
-				break;
-			}
-			case Conectado:
-			{
-				if ((pSensor->eResultadoAutoTeste == Aprovado) ||
-					(pSensor->eResultadoAutoTeste == Nenhum))
+				case Novo:
 				{
-					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
+					eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+					break;
 				}
-				else
+				case Verificando:
+				{
+					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
+					break;
+				}
+				case Conectado:
+				{
+					if ((pSensor->eResultadoAutoTeste == Aprovado) ||
+						(pSensor->eResultadoAutoTeste == Nenhum))
+					{
+						eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
+					}
+					else
+					{
+						eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+					}
+					break;
+				}
+				case Desconectado:
 				{
 					eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+					break;
 				}
-				break;
-			}
-			case Desconectado:
-			{
-				eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
-				break;
-			}
 
-			default:
-			{
-				eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
-				break;
+				default:
+				{
+					eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+					break;
+				}
 			}
+		}
+		else
+		{
+			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
 		}
 	}
 	osFlagSet(GUI_sFlags, GUI_UPDATE_INSTALLATION_INTERFACE);
@@ -282,29 +290,42 @@ void GUI_vIdentifyEvent (contract_s* contract)
 	{
 		case MODULE_ISOBUS:
 		{
-			if(dFlags == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
+			if (dFlags == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
-				eCurrDataMask = *((eDataMask*) GET_PUBLISHED_PAYLOAD(contract));
+				eCurrDataMask = *((eDataMask*)GET_PUBLISHED_PAYLOAD(contract));
 
 				if (eCurrDataMask == DATA_MASK_TEST_MODE)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
-				} else if (eCurrDataMask == DATA_MASK_PLANTER)
+				}
+				else if (eCurrDataMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 				}
 			}
 
-			if(dFlags == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
+			if (dFlags == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
 
 			}
 
-			if(dFlags == EVENT_ISO_INSTALLATION_REPEAT_TEST)
+			if (dFlags == EVENT_ISO_INSTALLATION_REPEAT_TEST)
 			{
 				osFlagSet(GUI_sFlags, GUI_CHANGE_INSTAL_REPEAT_TEST);
 			}
 
+			break;
+		}
+		case MODULE_CONTROL:
+		{
+			if (dFlags == EVENT_CTL_UPDATE_CONFIG)
+			{
+
+			}
+			if (dFlags == EVENT_CTL_UPDATE_INTERFACE_CFG)
+			{
+
+			}
 			break;
 		}
 		case MODULE_ACQUIREG:
@@ -321,16 +342,16 @@ void GUI_vIdentifyEvent (contract_s* contract)
 	}
 }
 
-eAPPError_s GUI_eInitGuiSubs(void)
+eAPPError_s GUI_eInitGuiSubs (void)
 {
-    /* Prepare the signature - struture that notify the broker about subscribers */
-    SIGNATURE_HEADER(Gui, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
-    ASSERT(SUBSCRIBE(SIGNATURE(Gui), 0) == osOK);
+	/* Prepare the signature - struture that notify the broker about subscribers */
+	SIGNATURE_HEADER(Gui, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(Gui), 0) == osOK);
 
-    SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
-    ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
+	SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
 
-    return APP_ERROR_SUCCESS;
+	return APP_ERROR_SUCCESS;
 }
 
 /* ************************* Main thread ************************************ */
@@ -339,45 +360,48 @@ void GUI_vGuiThread (void const *argument)
 	osStatus status;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-    SEGGER_SYSVIEW_Print("Gui Thread Created");
+	SEGGER_SYSVIEW_Print("Gui Thread Created");
 #endif
 
-    /* Init the module queue - structure that receive data from broker */
-    INITIALIZE_QUEUE(GuiQueue);
+	/* Init the module queue - structure that receive data from broker */
+	INITIALIZE_QUEUE(GuiQueue);
 
-    INITIALIZE_TIMER(Gui_UptTimer, osTimerPeriodic);
+	INITIALIZE_TIMER(Gui_UptTimer, osTimerPeriodic);
 
-    status = osFlagGroupCreate(&GUI_sFlags);
-    ASSERT(status == osOK);
+	status = osFlagGroupCreate(&GUI_sFlags);
+	ASSERT(status == osOK);
 
-    GUI_eInitGuiSubs();
+	GUI_eInitGuiSubs();
 
-    //Create subthreads
-    uint8_t bNumberOfThreads = 0;
-    while(THREADS_THREAD(bNumberOfThreads) != NULL)
-    {
-        GUI_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
-    }
+	//Create subthreads
+	uint8_t bNumberOfThreads = 0;
+	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
+	{
+		GUI_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
+	}
 
-    /* Inform Main thread that initialization was a success */
-    osThreadId xMainFromIsobusID = (osThreadId) argument;
-    osSignalSet(xMainFromIsobusID, MODULE_GUI);
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromIsobusID = (osThreadId)argument;
+	osSignalSet(xMainFromIsobusID, MODULE_GUI);
 
-    GUI_InitSensorStatus();
+	SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
 
-    /* Start the main functions of the application */
-    while (1)
-    {
-        /* Blocks until any message is published on any topic */
-        WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
-        osEvent evt = RECEIVE(GuiQueue, osWaitForever);
-        WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+	GUI_InitSensorStatus();
 
-        if (evt.status == osEventMessage)
-        {
-            GUI_vIdentifyEvent(GET_CONTRACT(evt));
-        }
-    }
-    /* Unreachable */
-    osThreadSuspend(NULL);
+	/* Start the main functions of the application */
+	while (1)
+	{
+		/* Blocks until any message is published on any topic */
+		WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+		osEvent evt = RECEIVE(GuiQueue, osWaitForever);
+		WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
+		if (evt.status == osEventMessage)
+		{
+			GUI_vIdentifyEvent(GET_CONTRACT(evt));
+		}
+	}
+	/* Unreachable */
+	osThreadSuspend(NULL);
 }

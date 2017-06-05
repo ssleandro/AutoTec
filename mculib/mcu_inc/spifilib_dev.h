@@ -35,7 +35,8 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Define for inline functions */
@@ -54,23 +55,24 @@ extern "C" {
 /**
  * @brief Possible error codes that can be returned from functions
  */
-typedef enum {
-	SPIFI_ERR_NONE = 0,							/**< No error */
-	SPIFI_ERR_BUSY,									/**< Device is busy */
-	SPIFI_ERR_GEN,									/**< General error */
-	SPIFI_ERR_NOTSUPPORTED,					/**< Capability not supported */
-	SPIFI_ERR_ALIGNERR,							/**< Attempted to do an operation on an unaligned section of the device */
-	SPIFI_ERR_LOCKED,								/**< Device was locked and a program/erase operation was attempted */
-	SPIFI_ERR_PROGERR,							/**< Error programming device (blocking mode only) */
-	SPIFI_ERR_ERASEERR,							/**< Erase error (blocking mode only) */
-	SPIFI_ERR_NOTBLANK,							/**< Program operation on block that is not blank */
-	SPIFI_ERR_PAGESIZE,							/**< PageProgram write size exceeds page size */
-	SPIFI_ERR_VAL,									/**< Program operation failed validation or readback compare */
-	SPIFI_ERR_RANGE,								/**< Range error, bad block number, address out of range, etc. */
-	SPIFI_ERR_MEMMODE,							/**< Library calls not allowed while in memory mode. */
+typedef enum
+{
+	SPIFI_ERR_NONE = 0, /**< No error */
+	SPIFI_ERR_BUSY, /**< Device is busy */
+	SPIFI_ERR_GEN, /**< General error */
+	SPIFI_ERR_NOTSUPPORTED, /**< Capability not supported */
+	SPIFI_ERR_ALIGNERR, /**< Attempted to do an operation on an unaligned section of the device */
+	SPIFI_ERR_LOCKED, /**< Device was locked and a program/erase operation was attempted */
+	SPIFI_ERR_PROGERR, /**< Error programming device (blocking mode only) */
+	SPIFI_ERR_ERASEERR, /**< Erase error (blocking mode only) */
+	SPIFI_ERR_NOTBLANK, /**< Program operation on block that is not blank */
+	SPIFI_ERR_PAGESIZE, /**< PageProgram write size exceeds page size */
+	SPIFI_ERR_VAL, /**< Program operation failed validation or readback compare */
+	SPIFI_ERR_RANGE, /**< Range error, bad block number, address out of range, etc. */
+	SPIFI_ERR_MEMMODE, /**< Library calls not allowed while in memory mode. */
 	/** @cond INTERNAL */
-	SPIFI_ERR_LASTINDEX							/* Internal use to count number of errors */
-	/** @endcond */
+	SPIFI_ERR_LASTINDEX /* Internal use to count number of errors */
+/** @endcond */
 } SPIFI_ERR_T;
 
 /**
@@ -106,24 +108,25 @@ typedef enum {
 /**
  * @brief Possible info lookup requests
  */
-typedef enum {
-	SPIFI_INFO_BASE_ADDRESS = 0,				/**< Device physical memory address */
-	SPIFI_INFO_DEVSIZE,							/**< Device size in Bytes */
-	SPIFI_INFO_ERASE_BLOCKS,					/**< Number of erase blocks */
-	SPIFI_INFO_ERASE_BLOCKSIZE,					/**< Size of erase blocks */
-	SPIFI_INFO_ERASE_SUBBLOCKS,					/**< Number of erase sub-blocks */
-	SPIFI_INFO_ERASE_SUBBLOCKSIZE,				/**< Size of erase sub-blocks */
-	SPIFI_INFO_PAGESIZE,						/**< Size of a page, page write size limit */
-	SPIFI_INFO_MAXREADSIZE,						/**< Maximum read size, read size limit in bytes */
-	SPIFI_INFO_MAXCLOCK,						/**< Maximum device speed in Hz */
-	SPIFI_INFO_MAX_READ_CLOCK,					/**< Maximum device speed for read cmd in Hz */
-	SPIFI_INFO_MAX_HSREAD_CLOCK,				/**< Maximum device speed for quad / dual read cmd in Hz */
-	SPIFI_INFO_MAX_PROG_CLOCK,					/**< Maximum device speed for program cmd in Hz */
-	SPIFI_INFO_MAX_HSPROG_CLOCK,				/**< Maximum device speed for quad program cmd in Hz */
-	SPIFI_INFO_CAPS,							/**< Device capabilities, OR'ed SPIFI_CAP_* values */
-	SPIFI_INFO_STATUS,							/**< Or'ed SPIFI_STAT_xxx values. Any persistent hardware bits will be cleared  */
-	SPIFI_INFO_STATUS_RETAIN,					/**< Or'ed SPIFI_STAT_xxx values. Any persistent hardware bits will be retained */
-	SPIFI_INFO_OPTIONS,							/**< Device capabilities, Or'ed SPIFI_OPT_* values */
+typedef enum
+{
+	SPIFI_INFO_BASE_ADDRESS = 0, /**< Device physical memory address */
+	SPIFI_INFO_DEVSIZE, /**< Device size in Bytes */
+	SPIFI_INFO_ERASE_BLOCKS, /**< Number of erase blocks */
+	SPIFI_INFO_ERASE_BLOCKSIZE, /**< Size of erase blocks */
+	SPIFI_INFO_ERASE_SUBBLOCKS, /**< Number of erase sub-blocks */
+	SPIFI_INFO_ERASE_SUBBLOCKSIZE, /**< Size of erase sub-blocks */
+	SPIFI_INFO_PAGESIZE, /**< Size of a page, page write size limit */
+	SPIFI_INFO_MAXREADSIZE, /**< Maximum read size, read size limit in bytes */
+	SPIFI_INFO_MAXCLOCK, /**< Maximum device speed in Hz */
+	SPIFI_INFO_MAX_READ_CLOCK, /**< Maximum device speed for read cmd in Hz */
+	SPIFI_INFO_MAX_HSREAD_CLOCK, /**< Maximum device speed for quad / dual read cmd in Hz */
+	SPIFI_INFO_MAX_PROG_CLOCK, /**< Maximum device speed for program cmd in Hz */
+	SPIFI_INFO_MAX_HSPROG_CLOCK, /**< Maximum device speed for quad program cmd in Hz */
+	SPIFI_INFO_CAPS, /**< Device capabilities, OR'ed SPIFI_CAP_* values */
+	SPIFI_INFO_STATUS, /**< Or'ed SPIFI_STAT_xxx values. Any persistent hardware bits will be cleared  */
+	SPIFI_INFO_STATUS_RETAIN, /**< Or'ed SPIFI_STAT_xxx values. Any persistent hardware bits will be retained */
+	SPIFI_INFO_OPTIONS, /**< Device capabilities, Or'ed SPIFI_OPT_* values */
 
 	SPIFI_INFO_LASTINDEX
 } SPIFI_INFO_ID_T;
@@ -140,52 +143,55 @@ typedef enum {
 /**
  * @brief Possible device specific lock / un-lock commands
  */
-typedef enum {
-	SPIFI_PCMD_UNLOCK_DEVICE = 0,			/**< unlock device */
-	SPIFI_PCMD_LOCK_DEVICE,					/**< lock device */
-	SPIFI_PCMD_UNLOCK_BLOCK,				/**< unlock specified block */
-	SPIFI_PCMD_LOCK_BLOCK					/**< lock specified block */
+typedef enum
+{
+	SPIFI_PCMD_UNLOCK_DEVICE = 0, /**< unlock device */
+	SPIFI_PCMD_LOCK_DEVICE, /**< lock device */
+	SPIFI_PCMD_UNLOCK_BLOCK, /**< unlock specified block */
+	SPIFI_PCMD_LOCK_BLOCK /**< lock specified block */
 
 } SPIFI_PCMD_LOCK_UNLOCK_T;
 
 /**
  * @brief Possible device specific sub-block commands
  */
-typedef enum {
-	SPIFI_PCMD_ADDR_TO_SUB_BLOCK = 0,			/**< Convert address to a sub-block */
-	SPIFI_PCMD_SUB_BLOCK_TO_ADDR,				/**< Convert sub-block to address */
-	SPIFI_PCMD_BLOCK_TO_SUB_BLOCK				/**< Convert block to sub-block */
+typedef enum
+{
+	SPIFI_PCMD_ADDR_TO_SUB_BLOCK = 0, /**< Convert address to a sub-block */
+	SPIFI_PCMD_SUB_BLOCK_TO_ADDR, /**< Convert sub-block to address */
+	SPIFI_PCMD_BLOCK_TO_SUB_BLOCK /**< Convert block to sub-block */
 
 } SPIFI_PCMD_SUBBLK_T;
 
 /**
  * @brief Enumeration of device specific functions.
  */
-typedef enum {
-	FX_spifiDeviceDataInitDeinit = 0,			/**< Generic device init / de-init function */
-	FX_spifiDeviceDataInitDeinitS25FL164K,		/**< S25FL164K specific device init / de-init function */
+typedef enum
+{
+	FX_spifiDeviceDataInitDeinit = 0, /**< Generic device init / de-init function */
+	FX_spifiDeviceDataInitDeinitS25FL164K, /**< S25FL164K specific device init / de-init function */
 
-	FX_spifiDeviceDataClearStatusNone,			/**< General do nothing I.e no status bits to clear */
-	FX_spifiDeviceDataClearStatusS25FL032P,		/**< S25FL032P (and similar) clear status bits function */
+	FX_spifiDeviceDataClearStatusNone, /**< General do nothing I.e no status bits to clear */
+	FX_spifiDeviceDataClearStatusS25FL032P, /**< S25FL032P (and similar) clear status bits function */
 
-	FX_spifiDeviceDataGetStatusS25FL032P,		/**< S25FL032P (and similar) get status function */
-	FX_spifiDeviceDataGetStatusS25FL164K,		/**< S25FL164K (and similar) get status function */
-	FX_spifiDeviceDataGetStatusMX25L3235E,		/**< MX25L3235E (and similar) get status function */
-	FX_spifiDeviceDataGetStatusW25Q80BV,		/**< W25Q80BV (and similar) get status function */
+	FX_spifiDeviceDataGetStatusS25FL032P, /**< S25FL032P (and similar) get status function */
+	FX_spifiDeviceDataGetStatusS25FL164K, /**< S25FL164K (and similar) get status function */
+	FX_spifiDeviceDataGetStatusMX25L3235E, /**< MX25L3235E (and similar) get status function */
+	FX_spifiDeviceDataGetStatusW25Q80BV, /**< W25Q80BV (and similar) get status function */
 
-	FX_spifiDeviceDataSetStatusS25FL032P,		/**< S25FL032P (and similar) set status function */
-	FX_spifiDeviceDataSetStatusS25FL164K,		/**< S25FL164K (and similar) set status function */
-	FX_spifiDeviceDataSetStatusMX25L3235E,		/**< MX25L3235E (and similar) set sttus function */
+	FX_spifiDeviceDataSetStatusS25FL032P, /**< S25FL032P (and similar) set status function */
+	FX_spifiDeviceDataSetStatusS25FL164K, /**< S25FL164K (and similar) set status function */
+	FX_spifiDeviceDataSetStatusMX25L3235E, /**< MX25L3235E (and similar) set sttus function */
 
-	FX_spifiDeviceDataSetOptsQuadModeBit9,		/**< Set bit 9 when enabling Quad mode */
-	FX_spifiDeviceDataSetOptsQuadModeBit6,		/**< Set bit 6 when enabling Quad mode */
+	FX_spifiDeviceDataSetOptsQuadModeBit9, /**< Set bit 9 when enabling Quad mode */
+	FX_spifiDeviceDataSetOptsQuadModeBit6, /**< Set bit 6 when enabling Quad mode */
 
-	FX_spifiDeviceInitReadCommand,				/**< General return cmdReg value for read */
-	FX_spifiDevice4BInitReadCommand,			/**< General return cmdReg value for read w/ 4Byte address */
+	FX_spifiDeviceInitReadCommand, /**< General return cmdReg value for read */
+	FX_spifiDevice4BInitReadCommand, /**< General return cmdReg value for read w/ 4Byte address */
 
-	FX_spifiDeviceInitWriteCommand,				/**< General return cmdReg value for write */
-	FX_spifiDevice4BInitWriteCommand,			/**< General return cmdReg value for write w/ 4Byte address */
-	FX_spifiDeviceInitWriteCommandMacronix		/**< Macronix return cmdReg value for write */
+	FX_spifiDeviceInitWriteCommand, /**< General return cmdReg value for write */
+	FX_spifiDevice4BInitWriteCommand, /**< General return cmdReg value for write w/ 4Byte address */
+	FX_spifiDeviceInitWriteCommandMacronix /**< Macronix return cmdReg value for write */
 
 } SPIFI_DEVFX_T;
 
@@ -201,160 +207,169 @@ struct SPIFI_DEVICE_ID;
 /**
  * @brief LPCSPIFILIB family data.
  */
-typedef struct SPIFI_FAM_NODE {
-	const struct SPIFI_FAM_DESC *pDesc;					/**< Pointer to device descriptor */
+typedef struct SPIFI_FAM_NODE
+{
+	const struct SPIFI_FAM_DESC *pDesc; /**< Pointer to device descriptor */
 
-	struct SPIFI_FAM_NODE *pNext;						/**< Reserved list pointer */
+	struct SPIFI_FAM_NODE *pNext; /**< Reserved list pointer */
 
 } SPIFI_FAM_NODE_T;
 
 /**
  * @brief LPCSPIFILIB family descriptor, used to describe devices to non-device specific functions
  */
-typedef struct SPIFI_FAM_DESC {
-	const char              *pFamName;						/**< (required) Pointer to generic family name */
-	struct SPIFI_DEV_NODE   *pDevList;						/**< (required) Pointer to device list */
+typedef struct SPIFI_FAM_DESC
+{
+	const char *pFamName; /**< (required) Pointer to generic family name */
+	struct SPIFI_DEV_NODE *pDevList; /**< (required) Pointer to device list */
 
-	uint32_t                prvContextSize;				/**< Number of bytes needed for driver context allocation */
-	uint32_t                *pDevCount;						/**< (required) Pointer to device count */
-	void (*pPrvDevGetID)(uint32_t baseAddr, struct SPIFI_DEVICE_ID *pID);								/**< (NULL allowed) Pointer to method that queries deviceID */
+	uint32_t prvContextSize; /**< Number of bytes needed for driver context allocation */
+	uint32_t *pDevCount; /**< (required) Pointer to device count */
+	void (*pPrvDevGetID) (uint32_t baseAddr, struct SPIFI_DEVICE_ID *pID); /**< (NULL allowed) Pointer to method that queries deviceID */
 
-	SPIFI_ERR_T (*pPrvDevSetup)(struct SPIFI_HANDLE *pHandle, uint32_t spifiCtrlAddr, uint32_t baseAddr);	/**< (required) Pointer to device specific device initialization */
+	SPIFI_ERR_T (*pPrvDevSetup) (struct SPIFI_HANDLE *pHandle, uint32_t spifiCtrlAddr, uint32_t baseAddr); /**< (required) Pointer to device specific device initialization */
 
 } SPIFI_FAM_DESC_T;
 
 /**
  * @brief Register device data node
  */
-typedef struct SPIFI_DEV_NODE {
-	const struct SPIFI_DEVICE_DATA *pDevData;	/**< (required) Pointer to device specific data */
+typedef struct SPIFI_DEV_NODE
+{
+	const struct SPIFI_DEVICE_DATA *pDevData; /**< (required) Pointer to device specific data */
 
-	struct SPIFI_DEV_NODE *pNext;				/**< Reserved */
+	struct SPIFI_DEV_NODE *pNext; /**< Reserved */
 
 } SPIFI_DEV_NODE_T;
 
-typedef SPIFI_ERR_T (*deviceInitDeInitFx)(const struct SPIFI_HANDLE *, uint32_t);	/**< Fx* to handle init / de-init */
+typedef SPIFI_ERR_T (*deviceInitDeInitFx) (const struct SPIFI_HANDLE *, uint32_t); /**< Fx* to handle init / de-init */
 
-typedef void (*devClearStatusFx)(const struct SPIFI_HANDLE *);						/**< Fx* to clear status */
+typedef void (*devClearStatusFx) (const struct SPIFI_HANDLE *); /**< Fx* to clear status */
 
-typedef uint32_t (*devGetStatusFx)(const struct SPIFI_HANDLE *);					/**< Fx* to get status */
+typedef uint32_t (*devGetStatusFx) (const struct SPIFI_HANDLE *); /**< Fx* to get status */
 
-typedef void (*devSetStatusFx)(const struct SPIFI_HANDLE *, uint32_t);				/**< Fx* to set status */
+typedef void (*devSetStatusFx) (const struct SPIFI_HANDLE *, uint32_t); /**< Fx* to set status */
 
-typedef SPIFI_ERR_T (*devSetOptsFx)(const struct SPIFI_HANDLE *, uint32_t, uint32_t);	/**< Fx* to set options */
+typedef SPIFI_ERR_T (*devSetOptsFx) (const struct SPIFI_HANDLE *, uint32_t, uint32_t); /**< Fx* to set options */
 
-typedef void (*devGetReadCmdFx)(const struct SPIFI_HANDLE *, uint8_t, uint32_t *, uint32_t *);	/**< Fx* to return read commandReg value */
+typedef void (*devGetReadCmdFx) (const struct SPIFI_HANDLE *, uint8_t, uint32_t *, uint32_t *); /**< Fx* to return read commandReg value */
 
-typedef void (*devGetWriteCmdFx)(const struct SPIFI_HANDLE *, uint32_t *);			/**< Fx* to return write commandReg value */
+typedef void (*devGetWriteCmdFx) (const struct SPIFI_HANDLE *, uint32_t *); /**< Fx* to return write commandReg value */
 
 /**
  * @brief Device specific function pointers
  */
-typedef struct SPIFI_FAM_FX {
+typedef struct SPIFI_FAM_FX
+{
 	/* Device init and de-initialization */
 
-	SPIFI_ERR_T (*lockCmd)(const struct SPIFI_HANDLE *, SPIFI_PCMD_LOCK_UNLOCK_T, uint32_t);	/**< (required) Lock / unlock handler */
+	SPIFI_ERR_T (*lockCmd) (const struct SPIFI_HANDLE *, SPIFI_PCMD_LOCK_UNLOCK_T, uint32_t); /**< (required) Lock / unlock handler */
 
-	SPIFI_ERR_T (*eraseAll)(const struct SPIFI_HANDLE *);										/**< (required) Full device erase */
+	SPIFI_ERR_T (*eraseAll) (const struct SPIFI_HANDLE *); /**< (required) Full device erase */
 
-	SPIFI_ERR_T (*eraseBlock)(const struct SPIFI_HANDLE *, uint32_t);							/**< (required) Erase a block by block number */
+	SPIFI_ERR_T (*eraseBlock) (const struct SPIFI_HANDLE *, uint32_t); /**< (required) Erase a block by block number */
 
-	SPIFI_ERR_T (*eraseSubBlock)(const struct SPIFI_HANDLE *, uint32_t);						/**< (required) Erase a sub-block by block number */
+	SPIFI_ERR_T (*eraseSubBlock) (const struct SPIFI_HANDLE *, uint32_t); /**< (required) Erase a sub-block by block number */
 
-	SPIFI_ERR_T (*pageProgram)(const struct SPIFI_HANDLE *, uint32_t, const uint32_t *, uint32_t);	/**< (required) Program up to a page of data at an address */
+	SPIFI_ERR_T (*pageProgram) (const struct SPIFI_HANDLE *, uint32_t, const uint32_t *, uint32_t); /**< (required) Program up to a page of data at an address */
 
-	SPIFI_ERR_T (*read)(const struct SPIFI_HANDLE *, uint32_t, uint32_t *, uint32_t);			/**< (required) Read an address range */
+	SPIFI_ERR_T (*read) (const struct SPIFI_HANDLE *, uint32_t, uint32_t *, uint32_t); /**< (required) Read an address range */
 
-	SPIFI_ERR_T (*reset)(const struct SPIFI_HANDLE *);										/**< (required) Reset SPIFI device */
+	SPIFI_ERR_T (*reset) (const struct SPIFI_HANDLE *); /**< (required) Reset SPIFI device */
 
 	/* Info query functions */
-	uint32_t (*getStatus)(const struct SPIFI_HANDLE *, uint8_t);								/**< (required) Returns device status */
+	uint32_t (*getStatus) (const struct SPIFI_HANDLE *, uint8_t); /**< (required) Returns device status */
 
-	uint32_t (*subBlockCmd)(const struct SPIFI_HANDLE *, SPIFI_PCMD_SUBBLK_T, uint32_t);		/**< (NULL allowed) Performs specified cmd */
+	uint32_t (*subBlockCmd) (const struct SPIFI_HANDLE *, SPIFI_PCMD_SUBBLK_T, uint32_t); /**< (NULL allowed) Performs specified cmd */
 
 	/* Device specific functions */
-	deviceInitDeInitFx devInitDeInit;	/**< run-time assigned Fx* device init de-init */
-	devClearStatusFx devClearStatus;	/**< run-time assigned Fx* to clear status */
-	devGetStatusFx devGetStatus;		/**< run-time assigned Fx* to get status */
-	devSetStatusFx devSetStatus;		/**< run-time assigned Fx* to set status */
-	devSetOptsFx devSetOpts;			/**< run-time assigned Fx* to set quad mode */
-	devGetReadCmdFx devGetReadCmd;		/**< run-time assigned Fx* to return read cmd */
-	devGetWriteCmdFx devGetWriteCmd;	/**< run-time assigned Fx* to return write cmd */
+	deviceInitDeInitFx devInitDeInit; /**< run-time assigned Fx* device init de-init */
+	devClearStatusFx devClearStatus; /**< run-time assigned Fx* to clear status */
+	devGetStatusFx devGetStatus; /**< run-time assigned Fx* to get status */
+	devSetStatusFx devSetStatus; /**< run-time assigned Fx* to set status */
+	devSetOptsFx devSetOpts; /**< run-time assigned Fx* to set quad mode */
+	devGetReadCmdFx devGetReadCmd; /**< run-time assigned Fx* to return read cmd */
+	devGetWriteCmdFx devGetWriteCmd; /**< run-time assigned Fx* to return write cmd */
 } SPIFI_FAM_FX_T;
 
 /**
  * @brief Device identification data
  */
-typedef struct SPIFI_DEVICE_ID {
-	uint8_t mfgId[3];							/**< JEDEC ID data */
-	uint8_t extCount;							/**< Number of extended bytes to check */
-	uint8_t extId[8];							/**< extended data */
+typedef struct SPIFI_DEVICE_ID
+{
+	uint8_t mfgId[3]; /**< JEDEC ID data */
+	uint8_t extCount; /**< Number of extended bytes to check */
+	uint8_t extId[8]; /**< extended data */
 } SPIFI_DEVICE_ID_T;
 
 /**
  * @brief Register device data.
  */
-typedef struct SPIFI_DEVICE_DATA {
-	const char *pDevName;						/**< (required) Device friendly name */
-	SPIFI_DEVICE_ID_T id;						/**< Device id structure */
-	uint32_t caps;								/**< capabilities supported */
-	uint16_t blks;								/**< # of blocks */
-	uint32_t blkSize;							/**< size of block */
-	uint16_t subBlks;							/**< # of sub-blocks */
-	uint16_t subBlkSize;						/**< size of sub-block */
-	uint16_t pageSize;							/**< page size */
-	uint32_t maxReadSize;						/**< max read allowed in one operation */
-	uint8_t maxClkRate;							/**< (in Mhz) maximum clock rate (max common speed) */
-	uint8_t maxReadRate;						/**< (in Mhz) max clock rate for read (driver may utilize fast read) */
-	uint8_t maxHSReadRate;						/**< (in Mhz) max clock rate for quad / dual read */
-	uint8_t maxProgramRate;						/**< (in Mhz) max clock rate for program */
-	uint8_t maxHSProgramRate;					/**< (in Mhz) max clock rate for quad program */
-	uint8_t initDeInitFxId;					/**< init/DeInit fx_id */
-	uint8_t clearStatusFxId;					/**< clearStatus fx_id */
-	uint8_t getStatusFxId;					/**< getStatus fx_id */
-	uint8_t setStatusFxId;					/**< setStatus fx_id */
-	uint8_t setOptionsFxId;					/**< setOptions fx_id */
-	uint8_t getReadCmdFxId;					/**< getReadCommand fx_id */
-	uint8_t getWriteCmdFxId;					/**< getWriteCommand fx_id */
+typedef struct SPIFI_DEVICE_DATA
+{
+	const char *pDevName; /**< (required) Device friendly name */
+	SPIFI_DEVICE_ID_T id; /**< Device id structure */
+	uint32_t caps; /**< capabilities supported */
+	uint16_t blks; /**< # of blocks */
+	uint32_t blkSize; /**< size of block */
+	uint16_t subBlks; /**< # of sub-blocks */
+	uint16_t subBlkSize; /**< size of sub-block */
+	uint16_t pageSize; /**< page size */
+	uint32_t maxReadSize; /**< max read allowed in one operation */
+	uint8_t maxClkRate; /**< (in Mhz) maximum clock rate (max common speed) */
+	uint8_t maxReadRate; /**< (in Mhz) max clock rate for read (driver may utilize fast read) */
+	uint8_t maxHSReadRate; /**< (in Mhz) max clock rate for quad / dual read */
+	uint8_t maxProgramRate; /**< (in Mhz) max clock rate for program */
+	uint8_t maxHSProgramRate; /**< (in Mhz) max clock rate for quad program */
+	uint8_t initDeInitFxId; /**< init/DeInit fx_id */
+	uint8_t clearStatusFxId; /**< clearStatus fx_id */
+	uint8_t getStatusFxId; /**< getStatus fx_id */
+	uint8_t setStatusFxId; /**< setStatus fx_id */
+	uint8_t setOptionsFxId; /**< setOptions fx_id */
+	uint8_t getReadCmdFxId; /**< getReadCommand fx_id */
+	uint8_t getWriteCmdFxId; /**< getWriteCommand fx_id */
 } SPIFI_DEVICE_DATA_T;
 
 /**
  * @brief LPCSPIFILIB device handle, used with all device and info functions
  */
-typedef struct SPIFI_HANDLE {
-	const struct SPIFI_FAM_FX *pFamFx;			/**< (required) Pointer to device specific functions */
+typedef struct SPIFI_HANDLE
+{
+	const struct SPIFI_FAM_FX *pFamFx; /**< (required) Pointer to device specific functions */
 
-	struct SPIFI_INFODATA   *pInfoData;			/**< (required) Pointer to info data area */
+	struct SPIFI_INFODATA *pInfoData; /**< (required) Pointer to info data area */
 
-	void                    *pDevContext;		/**< (NULL allowed) Pointer to device context (used by device functions) */
+	void *pDevContext; /**< (NULL allowed) Pointer to device context (used by device functions) */
 } SPIFI_HANDLE_T;
 
 /**
  * @brief Common data applicable to all devices
  */
-typedef struct SPIFI_INFODATA {
-	uint32_t        spifiCtrlAddr;				/**< SPIFI controller base address */
-	uint32_t        baseAddr;					/**< Physical base address for the device */
-	uint32_t        numBlocks;					/**< Number of blocks on the device */
-	uint32_t        blockSize;					/**< Size of blocks on the device */
-	uint32_t        numSubBlocks;				/**< Number of sub-blocks on the device */
-	uint32_t        subBlockSize;				/**< Size of sub-blocks on the device */
-	uint32_t        pageSize;					/**< Size of a page, usually denotes maximum write size in bytes for a single write operation */
-	uint32_t        maxReadSize;				/**< Maximum read size in bytes for a single read operation */
-	const struct SPIFI_DEVICE_DATA *pDeviceData;	/**< (required) Pointer to device specific data */
+typedef struct SPIFI_INFODATA
+{
+	uint32_t spifiCtrlAddr; /**< SPIFI controller base address */
+	uint32_t baseAddr; /**< Physical base address for the device */
+	uint32_t numBlocks; /**< Number of blocks on the device */
+	uint32_t blockSize; /**< Size of blocks on the device */
+	uint32_t numSubBlocks; /**< Number of sub-blocks on the device */
+	uint32_t subBlockSize; /**< Size of sub-blocks on the device */
+	uint32_t pageSize; /**< Size of a page, usually denotes maximum write size in bytes for a single write operation */
+	uint32_t maxReadSize; /**< Maximum read size in bytes for a single read operation */
+	const struct SPIFI_DEVICE_DATA *pDeviceData; /**< (required) Pointer to device specific data */
 
-	uint32_t        opts;						/**< Device options of values SPIFI_OPT_* */
-	const char      *pDevName;					/**< (required) Pointer to device name */
-	SPIFI_ERR_T     lastErr;					/**< Last error for the driver */
-	const SPIFI_DEVICE_ID_T *pId;				/**< (required) Device id structure (JEDEC ID etc) */
+	uint32_t opts; /**< Device options of values SPIFI_OPT_* */
+	const char *pDevName; /**< (required) Pointer to device name */
+	SPIFI_ERR_T lastErr; /**< Last error for the driver */
+	const SPIFI_DEVICE_ID_T *pId; /**< (required) Device id structure (JEDEC ID etc) */
 } SPIFI_INFODATA_T;
 
 /**
  * @brief Context for enumerating devices
  */
-typedef struct SPIFI_DEV_ENUMERATOR {
-	SPIFI_FAM_NODE_T *pFamily;					/**< pointer to family node  */
-	SPIFI_DEV_NODE_T *pDevice;					/**< pointer to device structure */
+typedef struct SPIFI_DEV_ENUMERATOR
+{
+	SPIFI_FAM_NODE_T *pFamily; /**< pointer to family node  */
+	SPIFI_DEV_NODE_T *pDevice; /**< pointer to device structure */
 } SPIFI_DEV_ENUMERATOR_T;
 
 /**
@@ -374,7 +389,7 @@ typedef struct SPIFI_DEV_ENUMERATOR {
  * This function MUST NOT be called directly and should only be passed to the
  * registration function spifiRegisterFamily()
  */
-SPIFI_FAM_NODE_T *spifi_REG_FAMILY_CommonCommandSet(void);
+SPIFI_FAM_NODE_T *spifi_REG_FAMILY_CommonCommandSet (void);
 
 /**
  * @brief SPIFI_REG_FAMILY_Spansion_2Byte_PStatus Depricated! Do NOT use for new development

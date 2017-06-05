@@ -35,7 +35,8 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Define for inline */
@@ -59,20 +60,22 @@ extern "C" {
  * @brief	SPIFI controller hardware register structure
  */
 
-typedef struct LPC_SPIFI_CHIPHW {
-	volatile    uint32_t CTRL;				/**< SPIFI control register */
-	volatile    uint32_t CMD;					/**< SPIFI command register */
-	volatile    uint32_t ADDR;				/**< SPIFI address register */
-	volatile    uint32_t DATINTM;			/**< SPIFI intermediate data register */
-	volatile    uint32_t CACHELIMIT;	/**< SPIFI cache limit register */
-	union {
-		volatile    uint8_t DAT8;				/**< SPIFI 8 bit data */
-		volatile    uint16_t DAT16;			/**< SPIFI 16 bit data */
-		volatile    uint32_t DAT32;			/**< SPIFI 32 bit data */
+typedef struct LPC_SPIFI_CHIPHW
+{
+	volatile uint32_t CTRL; /**< SPIFI control register */
+	volatile uint32_t CMD; /**< SPIFI command register */
+	volatile uint32_t ADDR; /**< SPIFI address register */
+	volatile uint32_t DATINTM; /**< SPIFI intermediate data register */
+	volatile uint32_t CACHELIMIT; /**< SPIFI cache limit register */
+	union
+	{
+		volatile uint8_t DAT8; /**< SPIFI 8 bit data */
+		volatile uint16_t DAT16; /**< SPIFI 16 bit data */
+		volatile uint32_t DAT32; /**< SPIFI 32 bit data */
 	};
 
-	volatile    uint32_t MEMCMD;			/**< SPIFI memory command register */
-	volatile    uint32_t STAT;				/**< SPIFI status register */
+	volatile uint32_t MEMCMD; /**< SPIFI memory command register */
+	volatile uint32_t STAT; /**< SPIFI status register */
 } LPC_SPIFI_CHIPHW_T;
 
 /** @defgroup LPCSPIFILIB_HW_PRIM LPCSPIFILIB primative API functions
@@ -99,7 +102,7 @@ typedef struct LPC_SPIFI_CHIPHW {
  * @param	ctrl	: Control value to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetCtrl(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t ctrl)
+static INLINE void spifi_HW_SetCtrl (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t ctrl)
 {
 	pSpifi->CTRL = ctrl;
 }
@@ -109,7 +112,7 @@ static INLINE void spifi_HW_SetCtrl(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t ctrl)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	Current CTRL register values
  */
-static INLINE uint32_t spifi_HW_GetCtrl(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE uint32_t spifi_HW_GetCtrl (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	return pSpifi->CTRL;
 }
@@ -128,7 +131,7 @@ static INLINE uint32_t spifi_HW_GetCtrl(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	stat	: Status bits to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetStat(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t stat)
+static INLINE void spifi_HW_SetStat (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t stat)
 {
 	pSpifi->STAT = stat;
 }
@@ -138,7 +141,7 @@ static INLINE void spifi_HW_SetStat(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t stat)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	Current STAT register values
  */
-static INLINE uint32_t spifi_HW_GetStat(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE uint32_t spifi_HW_GetStat (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	return pSpifi->STAT;
 }
@@ -157,24 +160,26 @@ static INLINE uint32_t spifi_HW_GetStat(LPC_SPIFI_CHIPHW_T *pSpifi)
 /**
  * @brief frame form definitions
  */
-typedef enum {
-	SPIFI_FRAMEFORM_OP              = 1,
-	SPIFI_FRAMEFORM_OP_1ADDRESS     = 2,
-	SPIFI_FRAMEFORM_OP_2ADDRESS     = 3,
-	SPIFI_FRAMEFORM_OP_3ADDRESS     = 4,
-	SPIFI_FRAMEFORM_OP_4ADDRESS     = 5,
-	SPIFI_FRAMEFORM_NOOP_3ADDRESS   = 6,
-	SPIFI_FRAMEFORM_NOOP_4ADDRESS   = 7
+typedef enum
+{
+	SPIFI_FRAMEFORM_OP = 1,
+	SPIFI_FRAMEFORM_OP_1ADDRESS = 2,
+	SPIFI_FRAMEFORM_OP_2ADDRESS = 3,
+	SPIFI_FRAMEFORM_OP_3ADDRESS = 4,
+	SPIFI_FRAMEFORM_OP_4ADDRESS = 5,
+	SPIFI_FRAMEFORM_NOOP_3ADDRESS = 6,
+	SPIFI_FRAMEFORM_NOOP_4ADDRESS = 7
 } SPIFI_FRAMEFORM_T;
 
 /**
  * @brief serial type definitions
  */
-typedef enum {
-	SPIFI_FIELDFORM_ALL_SERIAL             = 0,
-	SPIFI_FIELDFORM_SERIAL_OPCODE_ADDRESS  = 1,
-	SPIFI_FIELDFORM_SERIAL_OPCODE          = 2,
-	SPIFI_FIELDFORM_NO_SERIAL              = 3
+typedef enum
+{
+	SPIFI_FIELDFORM_ALL_SERIAL = 0,
+	SPIFI_FIELDFORM_SERIAL_OPCODE_ADDRESS = 1,
+	SPIFI_FIELDFORM_SERIAL_OPCODE = 2,
+	SPIFI_FIELDFORM_NO_SERIAL = 3
 } SPIFI_FIELDFORM_T;
 
 /**
@@ -182,7 +187,7 @@ typedef enum {
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	32-bit value read from the command register
  */
-static INLINE uint32_t spifi_HW_GetCmd(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE uint32_t spifi_HW_GetCmd (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	return pSpifi->CMD;
 }
@@ -193,7 +198,7 @@ static INLINE uint32_t spifi_HW_GetCmd(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	cmd		: Command to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetCmd(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t cmd)
+static INLINE void spifi_HW_SetCmd (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t cmd)
 {
 	pSpifi->CMD = cmd;
 }
@@ -204,7 +209,7 @@ static INLINE void spifi_HW_SetCmd(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t cmd)
  * @param	addr	: address (offset) to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetAddr(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t addr)
+static INLINE void spifi_HW_SetAddr (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t addr)
 {
 	pSpifi->ADDR = addr;
 }
@@ -214,7 +219,7 @@ static INLINE void spifi_HW_SetAddr(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t addr)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	8-bit value read from the data register
  */
-static INLINE uint8_t spifi_HW_GetData8(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE uint8_t spifi_HW_GetData8 (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	return pSpifi->DAT8;
 }
@@ -224,7 +229,7 @@ static INLINE uint8_t spifi_HW_GetData8(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	16-bit value read from the data register
  */
-static INLINE uint16_t spifi_HW_GetData16(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE uint16_t spifi_HW_GetData16 (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	return pSpifi->DAT16;
 }
@@ -234,7 +239,7 @@ static INLINE uint16_t spifi_HW_GetData16(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	32-bit value read from the data register
  */
-static INLINE uint32_t spifi_HW_GetData32(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE uint32_t spifi_HW_GetData32 (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	return pSpifi->DAT32;
 }
@@ -245,7 +250,7 @@ static INLINE uint32_t spifi_HW_GetData32(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	data	: 8-bit data value to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetData8(LPC_SPIFI_CHIPHW_T *pSpifi, uint8_t data)
+static INLINE void spifi_HW_SetData8 (LPC_SPIFI_CHIPHW_T *pSpifi, uint8_t data)
 {
 	pSpifi->DAT8 = data;
 }
@@ -256,7 +261,7 @@ static INLINE void spifi_HW_SetData8(LPC_SPIFI_CHIPHW_T *pSpifi, uint8_t data)
  * @param	data	: 16-bit data value to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetData16(LPC_SPIFI_CHIPHW_T *pSpifi, uint16_t data)
+static INLINE void spifi_HW_SetData16 (LPC_SPIFI_CHIPHW_T *pSpifi, uint16_t data)
 {
 	pSpifi->DAT16 = data;
 }
@@ -267,7 +272,7 @@ static INLINE void spifi_HW_SetData16(LPC_SPIFI_CHIPHW_T *pSpifi, uint16_t data)
  * @param	data	: 32-bit data value to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetData32(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t data)
+static INLINE void spifi_HW_SetData32 (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t data)
 {
 	pSpifi->DAT32 = data;
 }
@@ -276,10 +281,10 @@ static INLINE void spifi_HW_SetData32(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t data)
  * @brief	Write IDATA register
  * @param	pSpifi	: Base address of SPIFI controller
  * @param	mode	: value to write. Used to specify value used for intermediate
-                                    data value when enabled.
+ data value when enabled.
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetIDATA(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t mode)
+static INLINE void spifi_HW_SetIDATA (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t mode)
 {
 	pSpifi->DATINTM = mode;
 }
@@ -290,7 +295,7 @@ static INLINE void spifi_HW_SetIDATA(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t mode)
  * @param	cmd		: Command value to write
  * @return	Nothing
  */
-static INLINE void spifi_HW_SetMEMCMD(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t cmd)
+static INLINE void spifi_HW_SetMEMCMD (LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t cmd)
 {
 	pSpifi->MEMCMD = cmd;
 }
@@ -308,10 +313,12 @@ static INLINE void spifi_HW_SetMEMCMD(LPC_SPIFI_CHIPHW_T *pSpifi, uint32_t cmd)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	Nothing
  */
-static INLINE void spifi_HW_ResetController(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE void spifi_HW_ResetController (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	pSpifi->STAT = SPIFI_STAT_RESET;
-	while ((pSpifi->STAT & SPIFI_STAT_RESET) != 0) {}
+	while ((pSpifi->STAT & SPIFI_STAT_RESET) != 0)
+	{
+	}
 }
 
 /**
@@ -319,9 +326,11 @@ static INLINE void spifi_HW_ResetController(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	Nothing
  */
-static INLINE void spifi_HW_WaitCMD(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE void spifi_HW_WaitCMD (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
-	while ((spifi_HW_GetStat(pSpifi) & SPIFI_STAT_CMD) != 0) {}
+	while ((spifi_HW_GetStat(pSpifi) & SPIFI_STAT_CMD) != 0)
+	{
+	}
 }
 
 /**
@@ -329,9 +338,11 @@ static INLINE void spifi_HW_WaitCMD(LPC_SPIFI_CHIPHW_T *pSpifi)
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	Nothing
  */
-static INLINE void spifi_HW_WaitRESET(LPC_SPIFI_CHIPHW_T *pSpifi)
+static INLINE void spifi_HW_WaitRESET (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
-	while ((spifi_HW_GetStat(pSpifi) & SPIFI_STAT_RESET) != 0) {}
+	while ((spifi_HW_GetStat(pSpifi) & SPIFI_STAT_RESET) != 0)
+	{
+	}
 }
 
 /**

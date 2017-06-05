@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   CBACOMM_config Include File
-* Filename              :   CBACOMM_config.h
-* Author                :   thiago.palmieri
-* Origin Date           :   18 de mar de 2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
-* Target                :   LPC43XX M4
-* Notes                 :   None
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   CBACOMM_config Include File
+ * Filename              :   CBACOMM_config.h
+ * Author                :   thiago.palmieri
+ * Origin Date           :   18 de mar de 2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
+ * Target                :   LPC43XX M4
+ * Notes                 :   None
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version   Author         Description
-*  18 de mar de 2016   1.0.0   thiago.palmieri CBACOMM_config include file Created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version   Author         Description
+ *  18 de mar de 2016   1.0.0   thiago.palmieri CBACOMM_config include file Created.
+ *
+ *****************************************************************************/
 /** @file CBACOMM_config.h
  *  @brief This file provides configuration data for CBACOMM Device.
  *
@@ -35,18 +35,18 @@
 #define COMMON_CBACOMM_CONFIG_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #ifndef UNITY_TEST
 #include "mculib.h"
 #endif
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 //Interface Configuration
 #define CCM_INTERFACE_UART      0                 //!< UART Interface Index
 #define CCM_INTERFACE_CAN       1                 //!< CAN Interface Index
@@ -77,8 +77,8 @@
 #define CCM_CAN_MESSAGE_FINAL       0xBB
 #define CCM_CAN_MESSAGE_HAS_MORE    0xAA
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 /**
  * This private MACRO holds all the mapping between IOCTL commands and functions
  */
@@ -97,43 +97,43 @@
 
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 #if defined (UNITY_TEST)
 /**
  * This enumeration is a list of possible USB ports on the Board
  */
 typedef enum eUSBInterfaces_s
 {
-  USB0,               //!< USB0 Interface
-  USB1,               //!< USB1 Interface
-  USB_INVALID         //!< Invalid USB Interface
-} eUSBInterfaces_s;
+	USB0,               //!< USB0 Interface
+	USB1,//!< USB1 Interface
+	USB_INVALID//!< Invalid USB Interface
+}eUSBInterfaces_s;
 
 /*
-*   @brief  UART peripherals nomenclature
-*/
+ *   @brief  UART peripherals nomenclature
+ */
 typedef enum uart_channel_e
 {
-  UART0 = 0,         /*!< UART 0 peripheral generic nomenclature   */
-  UART1,             /*!< UART 1 peripheral generic nomenclature   */
-  UART2,             /*!< UART 2 peripheral generic nomenclature   */
-  UART3,             /*!< UART 3 peripheral generic nomenclature   */
-  UART_INVALID       /*!< UART 5 peripheral generic nomenclature   */
-} uart_channel_e;
+	UART0 = 0, /*!< UART 0 peripheral generic nomenclature   */
+	UART1, /*!< UART 1 peripheral generic nomenclature   */
+	UART2, /*!< UART 2 peripheral generic nomenclature   */
+	UART3, /*!< UART 3 peripheral generic nomenclature   */
+	UART_INVALID /*!< UART 5 peripheral generic nomenclature   */
+}uart_channel_e;
 
 /*
  * @brief UART standard baudrate values
  * */
 typedef enum uart_baudrate_e
 {
-  UART_B9600    = 9600,
-  UART_B19200   = 19200,
-  UART_B38400   = 38400,
-  UART_B57600   = 57600,
-  UART_B115200  = 115200,
-  UART_B1000000 = 1000000,
-  UART_BINVALID ,
+	UART_B9600 = 9600,
+	UART_B19200 = 19200,
+	UART_B38400 = 38400,
+	UART_B57600 = 57600,
+	UART_B115200 = 115200,
+	UART_B1000000 = 1000000,
+	UART_BINVALID ,
 }uart_baudrate_e;
 
 /**
@@ -141,9 +141,9 @@ typedef enum uart_baudrate_e
  */
 typedef enum canChannel_s
 {
-  CAN0,           //!< CAN 0
-  CAN1,           //!< CAN 1
-  CAN_INVALID     //!< Invalid CAN indicator
+	CAN0,           //!< CAN 0
+	CAN1,//!< CAN 1
+	CAN_INVALID//!< Invalid CAN indicator
 }canChannel_s;
 
 /**
@@ -151,10 +151,10 @@ typedef enum canChannel_s
  */
 typedef enum canBitrate_s
 {
-  CAN_BITRATE_250       = 250000,      //!< 250Kbps
-  CAN_BITRATE_500       = 500000,      //!< 500Kbps
-  CAN_BITRATE_1000      = 1000000,     //!< 1000Kbps
-  CAN_BITRATE_INVALID                  //!< Invalid value
+	CAN_BITRATE_250 = 250000,      //!< 250Kbps
+	CAN_BITRATE_500 = 500000,//!< 500Kbps
+	CAN_BITRATE_1000 = 1000000,//!< 1000Kbps
+	CAN_BITRATE_INVALID//!< Invalid value
 }canBitrate_s;
 
 #endif
@@ -166,7 +166,7 @@ typedef canChannel_s CBACOMMCANInterface_e;       //!< Valid CAN Interfaces
 typedef canBitrate_s CBACOMMCANSpeed_e;           //!< Valid CAN Bitrate
 typedef uart_baudrate_e CBACOMMUARTSpeed_e;       //!< Valid UART Bauds
 
-typedef void (*CCMCallBack)(void *message, uint32_t data);    //!< CBAComm Callback
+typedef void (*CCMCallBack) (void *message, uint32_t data);    //!< CBAComm Callback
 
 /**
  * This Typedef holds all possible IOCTL Requests for CBA Communicator
@@ -174,8 +174,8 @@ typedef void (*CCMCallBack)(void *message, uint32_t data);    //!< CBAComm Callb
 #define X(a, b) a,
 typedef enum IOCTL_CCM_REQUEST_e
 {
-  IOCTL_CBACOMM
-}IOCTL_CCM_REQUEST_e;
+	IOCTL_CBACOMM
+} IOCTL_CCM_REQUEST_e;
 #undef X
 
 //typedef eUSBInterfaces_s CBACOMUSBInterface_e;    //!< Valid USB Interfaces
@@ -185,18 +185,17 @@ typedef enum IOCTL_CCM_REQUEST_e
 //typedef canBitrate_s CBACOMMCANSpeed_e;           //!< Valid CAN Bitrate
 //typedef uart_baudrate_e CBACOMMUARTSpeed_e;       //!< Valid UART Bauds
 
+/******************************************************************************
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
-
-/******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
-
 
 #ifdef __cplusplus
 } // extern "C"
