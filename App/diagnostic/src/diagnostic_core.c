@@ -334,9 +334,11 @@ void DIG_vDiagnosticPublishThread(void const *argument)
   while(1)
     {
   		/* Pool the device waiting for */
-      WATCHDOG_STATE(DIGPUB, WDT_ACTIVE);
+      WATCHDOG_STATE(DIGPUB, WDT_SLEEP);
   		osDelay(100); //Wait
+        WATCHDOG_STATE(DIGPUB, WDT_ACTIVE);
       DIG_eReceivePooling();
+
     }
   osThreadTerminate(NULL);
 }

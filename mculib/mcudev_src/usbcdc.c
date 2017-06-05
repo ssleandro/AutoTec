@@ -278,8 +278,6 @@ static ErrorCode_t EP0_patch(USBD_HANDLE_T hUsb, void *data, uint32_t event)
 
 eMCUError_s USB_eInit(usb_config_s * pUSB)
 {
-	static usb_private_config_s sPrivate;
-
   //Verify if valid ADC/channel
   if ((pUSB->eUSB < USB_INVALID) && (pUSB->vpPrivateData == NULL) && (pUSB->eClass == USB_CLASS_CDC))
     {
@@ -362,7 +360,7 @@ eMCUError_s USB_eInit(usb_config_s * pUSB)
               /* now connect */
               USBD_API->hw->Connect(g_hUsb, 1);
 
-              usb_private_config_s * psPrivate = &sPrivate;
+              usb_private_config_s * psPrivate = malloc(sizeof(usb_private_config_s));
               psPrivate->bStarted = true;
               pUSB->vpPrivateData = psPrivate;
               if (pUSB->fpUSBCallBack)

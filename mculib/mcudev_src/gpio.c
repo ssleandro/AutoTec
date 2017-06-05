@@ -477,7 +477,6 @@ static void GPIO_vEnableInterrupts(gpio_config_s *pGPIO)
 
 eMCUError_s GPIO_eInit(gpio_config_s *pGPIO)
 {
-	static gpio_config_private_s sPrivate;
 	eMCUError_s eErrorCode = GPIO_eCheckFault(pGPIO);
 
 	if (eErrorCode)
@@ -495,7 +494,7 @@ eMCUError_s GPIO_eInit(gpio_config_s *pGPIO)
 	}
 
 	//Create private struct, populate it and then reference it on the public struct
-	gpio_config_private_s *psPrivate = &sPrivate;
+	gpio_config_private_s *psPrivate = malloc(sizeof(gpio_config_private_s));
 	*psPrivate = (gpio_config_private_s)
     				  {
 						.bGPort = sGPIOMap[bPosition].bGPIOPort,

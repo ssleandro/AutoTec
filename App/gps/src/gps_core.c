@@ -51,10 +51,10 @@
 #define EXTINT_TIMEPULSE_PIN 0
 
 #define LED_DEBUG_GREEN_PORT 0x0E       // LED1
-#define LED_DEBUG_GREEN_PIN 0x09
+#define LED_DEBUG_GREEN_PIN  0x08
 
-#define LED_DEBUG_RED_PORT 0x0E         // LED2
-#define LED_DEBUG_RED_PIN 0x09
+#define LED_DEBUG_RED_PORT 0x0E        // LED2
+#define LED_DEBUG_RED_PIN  0x09
 
 /* Tamanho máximo do buffer de transmissão do GPS */
 #define GPS_wTAM_BUF_ANEL     256
@@ -863,8 +863,8 @@ void GPS_vConfigExtInterrupt (void)
     sDebugLed.eDirection = GPIO_OUTPUT;
     sDebugLed.ePull = GPIO_PULLDOWN;
     sDebugLed.fpCallBack = NULL;
-    sDebugLed.bMPort = LED_DEBUG_RED_PORT;
-    sDebugLed.bMPin = LED_DEBUG_RED_PIN;
+    sDebugLed.bMPort = LED_DEBUG_GREEN_PORT;
+    sDebugLed.bMPin = LED_DEBUG_GREEN_PIN;
 
     // Initialize time pulse external interrupt
     GPIO_eInit (&sTimePulseInt);
@@ -919,9 +919,6 @@ void GPS_vGPSTimePulseThread (void const *argument)
                     bContaSegundo = 0;
 
                     osFlagSet (GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
-                    GPIO_vSet (&sDebugLed);
-                    osDelay (1);
-                    GPIO_vClear (&sDebugLed);
                 }
             }
             //Acumula a distância percorrida.
