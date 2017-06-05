@@ -109,6 +109,7 @@ osFlagsGroupId UOS_sFlagFase;
 
 //Flags para indicar o status do sistema:
 osFlagsGroupId UOS_sFlagSis;
+osFlagsGroupId CTL_sFlagSis;
 
 //Timers de sistema a serem utilizados pelas tarefas:
 //UOS_tsTimer             asListaTimers[ UOS_bMAX_TIMERS ];
@@ -161,6 +162,13 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*uint8_t  bNumSensorAdicionais;*/0, //Número de sensores adicionais (0-6)
 
 //------------------------------------------------------------------------------
+//tsCfgIHM
+		/*uint8_t abSenha[4]*/0,
+		/*eSelectedLanguage eLanguage;*/ LANGUAGE_PORTUGUESE,
+		/*eSelectedUnitMeasurement eUnit;*/ UNIT_INTERNATIONAL_SYSTEM,
+
+//------------------------------------------------------------------------------
+
 //tsCfgGPS
 		/*INT32S      lFusoHorario;*/-10800, //Usa fuso horário padrão (Brasília -03:00 )
 		/*INT16U      wDistanciaEntreFixos;*/0,
@@ -176,9 +184,7 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*uint8_t abPIN[16];*/0,
 
 //------------------------------------------------------------------------------
-//tsCfgVeiculo
-		/*uint8_t abCodigo[6];*/0,
-
+		/*uint64_t dVeiculo;*/0x002500A0000000,
 //------------------------------------------------------------------------------
 		/*INT16U wCRC16;*/0
 	};
@@ -262,38 +268,21 @@ void CTL_vControlPublishThread (void const *argument)
 
 	while (1)
 	{
-//        WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-//        flags = osFlagWait(UOS_sFlagSis, (UOS_SIS_FLAG_SEND_FLAG_STATUS | UOS_SIS_FLAG_SIS_OK), true, false, 100);
-//        WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
-//
-//        if(flags != UOS_SIS_FLAG_NENHUM)
-//        {
-//            if((flags & UOS_SIS_FLAG_SEND_FLAG_STATUS) > 0)
-//            {
-//                osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_SEND_FLAG_STATUS);
-//
-//                sControlPubMsg.eEvtType = EVENT_UPDATE;
-//                sControlPubMsg.dEvent = osFlagGet(UOS_sFlagSis);
-//                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
-//                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
-//                PUBLISH(CONTRACT(Control), 0);
-//            }
-//
-//            if((flags & UOS_SIS_FLAG_SIS_OK) > 0)
-//            {
-//                sControlPubMsg.eEvtType = EVENT_SET;
-//                sControlPubMsg.dEvent = UOS_SIS_FLAG_SIS_OK;
-//                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
-//                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
-//                PUBLISH(CONTRACT(Control), 0);
-//            }
-//        }
+        WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
+        flags = osFlagWait(CTL_sFlagSis, CTL_SAVE_CONFIG_DATA, true, false, osWaitForever);
+        WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
-		/* Pool the device waiting for */
-		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-		//      evt = osSignalWait ((UOS_BUZZER_ON | UOS_BUZZER_OFF), 100);
-		osDelay(2000);
-		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
+        if(flags != UOS_SIS_FLAG_NENHUM)
+        {
+            if((flags & CTL_SAVE_CONFIG_DATA) > 0)
+            {
+                sControlPubMsg.eEvtType = EVENT_SET;
+                sControlPubMsg.dEvent = EVENT_CTL_UPDATE_SAVE_CONFIG;
+                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
+                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
+                PUBLISH(CONTRACT(Control), 0);
+            }
+        }
 
 		/*       if(evt.status == osEventSignal)
 		 {
@@ -329,7 +318,8 @@ void CTL_vControlPublishThread (void const *argument)
 
 void CTL_vIdentifyEvent (contract_s* contract)
 {
-	osStatus status;
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
 
 	switch (contract->eOrigin)
 	{
@@ -343,9 +333,9 @@ void CTL_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_FILESYS:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
+			if (ePubEvt == EVENT_FFS_CFG)
 			{
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				if (ePubEvType == EVENT_SET)
 				{
 					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
 						sizeof(UOS_tsConfiguracao));
@@ -356,12 +346,22 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
 				}
 			}
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
+			if (ePubEvt == EVENT_FFS_INTERFACE_CFG)
 			{
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				if (ePubEvType == EVENT_SET)
 				{
 					memcpy(&IHM_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_sConfig));
 				}
+			}
+			break;
+		}
+		case MODULE_GUI:
+		{
+			if (ePubEvt == EVENT_GUI_UPDATE_SYS_CONFIG)
+			{
+				memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
+					sizeof(UOS_tsConfiguracao));
+
 			}
 			break;
 		}
@@ -387,10 +387,13 @@ void CTL_vControlThread (void const *argument)
 	// Copy default configurations to start; because we don't have file system
 	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
 	uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
-	memcpy(UOS_sConfiguracao.sVeiculo.abCodigo, abCodigo, sizeof(UOS_sConfiguracao.sVeiculo.abCodigo));
+	UOS_sConfiguracao.dVeiculo = 0x002500A0000000;
 
 	// Create an flag to indicate the system status...
 	status = osFlagGroupCreate(&UOS_sFlagSis);
+	ASSERT(status == osOK);
+
+	status = osFlagGroupCreate(&CTL_sFlagSis);
 	ASSERT(status == osOK);
 
 	SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);

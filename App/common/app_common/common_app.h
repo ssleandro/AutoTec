@@ -170,6 +170,20 @@
 #define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
 #define GET_PUBLISHED_PAYLOAD(contract) ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->vPayload
 
+
+// Converter Macros
+#define MM2IN(value) 	((value) * 0.0393701)
+#define FIN2DM(value) 	((uint16_t)(value * 0.2541))
+
+#define KMH2MLH(value) 	(value * 0.621371)
+#define MLH2KMH(value) 	(value * 1.60934)
+
+#define SM2SP(value) 	((value) / 3.28084)
+#define SP2SM(value) 	((uint16_t)(value * 3.28084))
+
+#define DM2FM(value) 	(((float)value) / 100)
+#define FM2DM(value) 	((uint16_t)(value * 100))
+
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
@@ -304,12 +318,15 @@ typedef enum event_e
 	EVENT_GUI_INSTALLATION_FINISH,
 	EVENT_GUI_INSTALLATION_REPEAT_TEST,
 	EVENT_GUI_INSTALLATION_ERASE_INSTALLATION,
+	EVENT_GUI_UPDATE_CONFIG,
+	EVENT_GUI_UPDATE_SYS_CONFIG,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
 	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION,
 	EVENT_CTL_UPDATE_CONFIG,        					//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_CTL_UPDATE_INTERFACE_CFG,
+	EVENT_CTL_UPDATE_SAVE_CONFIG,
 } event_e;
 
 typedef struct
@@ -474,6 +491,18 @@ typedef struct
 
 } UOS_tsCfgMonitor;
 
+typedef struct
+{
+	//Senha para operacoes de seguranca:
+	uint8_t abSenha[4];
+
+	//Idioma:
+	eSelectedLanguage eLanguage;
+
+	// Se egit  sistema imperial ou internacional
+	eSelectedUnitMeasurement eUnit;
+} tsCfgIHM;
+
 //Receptor GPS interno:
 typedef struct
 {
@@ -486,22 +515,19 @@ typedef struct
 	uint8_t bSalvaRegistro;      //Indica se gravacao de registros esta ativada
 } tsCfgGPS;
 
-//Identificacao do vei�culo:
-typedef struct
-{
-	uint8_t abCodigo[6];
-} tsCfgVeiculo;
-
 typedef struct
 {
 	//Configuracao Monitor
 	UOS_tsCfgMonitor sMonitor;
 
+	//Configuracao IHM
+	tsCfgIHM sIHM;
+
 	//Receptor GPS interno:
 	tsCfgGPS sGPS;
 
-	//Identificacao do vei�culo:
-	tsCfgVeiculo sVeiculo;
+	//Identificacao do veiculo:
+	uint64_t dVeiculo;
 
 	//CRC16 desta estrutura:
 	uint16_t wCRC16;
@@ -700,6 +726,8 @@ typedef struct
 	uint8_t bContraste;
 	//Brilho do LCD:
 	uint8_t bBrilho;
+
+
 	//Idioma:
 	uint8_t bIdioma;
 

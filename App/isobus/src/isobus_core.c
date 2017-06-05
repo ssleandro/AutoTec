@@ -82,7 +82,7 @@ static sConfigurationDataMask sConfigDataMask =
 		.eUnit = (eSelectedUnitMeasurement*)(&asConfigInputList[1].bSelectedIndex),
 		.dVehicleID = &(asNumVarObjects[0].dValue),
 		.eMonitor = AREA_MONITOR_DISABLED,
-		.fSeedsPerMeter = &(asNumVarObjects[1].fValue),
+		.fSeedRate = &(asNumVarObjects[1].fValue),
 		.bNumOfRows = (uint8_t*)(&asNumVarObjects[2].dValue),
 		.fImplementWidth = &(asNumVarObjects[3].fValue),
 		.fEvaluationDistance = &(asNumVarObjects[4].fValue),
@@ -550,6 +550,11 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				case EVENT_GUI_INSTALLATION_FINISH:
 				{
 					osMessagePut(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_UPDATE_CONFIG:
+				{
+					ISO_vUpdateConfigData((sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract));
 					break;
 				}
 				default:
@@ -1451,7 +1456,7 @@ void ISO_vUpdateConfigurationDataMask (void)
 	*sConfigDataMask.eUnit = UNIT_IMPERIAL_SYSTEM;
 	*sConfigDataMask.dVehicleID = 1234;
 	sConfigDataMask.eMonitor = AREA_MONITOR_DISABLED;
-	*sConfigDataMask.fSeedsPerMeter = GET_UNSIGNED_INT_VALUE(2.5f);
+	*sConfigDataMask.fSeedRate = GET_UNSIGNED_INT_VALUE(2.5f);
 	*sConfigDataMask.bNumOfRows = 2;
 	*sConfigDataMask.fImplementWidth = 50;
 	*sConfigDataMask.fEvaluationDistance = 50;
@@ -1463,7 +1468,7 @@ void ISO_vUpdateConfigurationDataMask (void)
 //	ISO_vUpdateOutputNumberValue(0x9001, *sConfigDataMask.eUnit);
 
 	ISO_vUpdateNumberVariableValue(0x8000, *sConfigDataMask.dVehicleID);
-	ISO_vUpdateNumberVariableValue(0x8001, *sConfigDataMask.fSeedsPerMeter);
+	ISO_vUpdateNumberVariableValue(0x8001, *sConfigDataMask.fSeedRate);
 	ISO_vUpdateNumberVariableValue(0x8002, *sConfigDataMask.bNumOfRows);
 	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.fImplementWidth);
 	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.fEvaluationDistance);
@@ -1504,6 +1509,21 @@ void ISO_vUpdateTrimmingDataMask (void)
 void ISO_vUpdateSystemDataMask (void)
 {
 
+}
+
+void ISO_vUpdateConfigData(sConfigurationData *psCfgData)
+{
+	*sConfigDataMask.eLanguage = psCfgData->eLanguage;
+	*sConfigDataMask.eUnit = psCfgData->eUnit;
+	*sConfigDataMask.dVehicleID = psCfgData->dVehicleID;
+	sConfigDataMask.eMonitor = psCfgData->eMonitorArea;
+	*sConfigDataMask.fSeedRate = psCfgData->fSeedRate;
+	*sConfigDataMask.bNumOfRows = psCfgData->bNumOfRows;
+	*sConfigDataMask.fImplementWidth = psCfgData->fImplementWidth;
+	*sConfigDataMask.fEvaluationDistance = psCfgData->fEvaluationDistance;
+	*sConfigDataMask.bTolerance = psCfgData->bTolerance;
+	*sConfigDataMask.fMaxSpeed = psCfgData->fMaxSpeed;
+	sConfigDataMask.eAlterRows = psCfgData->eAlterRows;
 }
 
 /******************************************************************************

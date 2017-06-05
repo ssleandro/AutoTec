@@ -132,8 +132,6 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	if (bErroCfg == true)
 	{
 		memcpy(&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
-		uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
-		memcpy(FFS_sConfiguracao.sVeiculo.abCodigo, abCodigo, sizeof(FFS_sConfiguracao.sVeiculo.abCodigo));
 
 		osFlagClear(FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_ERROR;

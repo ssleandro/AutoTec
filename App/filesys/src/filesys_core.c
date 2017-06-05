@@ -353,38 +353,30 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 
 void FFS_vIdentifyEvent (contract_s* contract)
 {
-	osStatus status;
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);;
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_CONTROL:
-		case MODULE_GUI:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
+			if (ePubEvt == EVENT_CTL_UPDATE_SAVE_CONFIG)
 			{
-				memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-					sizeof(UOS_tsConfiguracao));
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
+				memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
+					sizeof(UOS_tsConfiguracao));
+
 					eAPPError_s error = FFS_vSaveConfigFile();
 					ASSERT(error == APP_ERROR_SUCCESS);
 				}
 
 			}
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
-			{
-				memcpy(&FFS_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_tsConfig));
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
-				{
-					eAPPError_s error = FFS_vSaveInterfaceCfgFile();
-					ASSERT(error == APP_ERROR_SUCCESS);
-				}
-			}
 			break;
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_STATIC_REG)
+			if (ePubEvt == EVENT_FFS_STATIC_REG)
 			{
 				memcpy(&FFS_sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
 					sizeof(AQR_tsRegEstaticoCRC));

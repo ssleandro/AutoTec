@@ -151,22 +151,6 @@ typedef struct sFillAtributtesObj
 	uint8_t bColor;
 } sFillAttributesObj;
 
-typedef struct sConfigurationDataMask
-{
-	eSelectedLanguage* eLanguage;
-	eSelectedUnitMeasurement* eUnit;
-	uint32_t* dVehicleID;
-	eAreaMonitor eMonitor;
-	float* fSeedsPerMeter;
-	uint8_t* bNumOfRows;
-	float* fImplementWidth;
-	float* fEvaluationDistance;
-	uint8_t* bTolerance;
-	float* fMaxSpeed;
-	eAlternateRows eAlterRows;
-	eAlternatedRowsType eAltType;
-} sConfigurationDataMask;
-
 typedef struct sInstallSensorStatus
 {
 	sFillAttributesObj* pFillAttribute;

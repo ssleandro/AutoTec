@@ -65,7 +65,8 @@ extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
 
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
-sConfigurationData SisConfigurationData;
+sConfigurationData GUIConfigurationData;
+UOS_tsConfiguracao SISConfiguration;
 
 /******************************************************************************
  * Module typedef
@@ -208,9 +209,112 @@ void GUI_vGuiPublishThread (void const *argument)
 			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 			PUBLISH(CONTRACT(Gui), 0);
 		}
+		if ((dFlags & GUI_UPDATE_CONFIG_DATA) > 0)
+		{
+			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_CONFIG;
+			sGUIPubMessage.eEvtType = EVENT_SET;
+			sGUIPubMessage.vPayload = (void*)&GUIConfigurationData;
+			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+			PUBLISH(CONTRACT(Gui), 0);
+		}
+		if ((dFlags & GUI_UPDATE_SYS_CONFIG_DATA) > 0)
+		{
+			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_SYS_CONFIG;
+			sGUIPubMessage.eEvtType = EVENT_SET;
+			sGUIPubMessage.vPayload = (void*)&SISConfiguration;
+			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+			PUBLISH(CONTRACT(Gui), 0);
+		}
 
 	}
 	osThreadTerminate(NULL);
+}
+
+eSelectedLanguage eLanguage;
+eSelectedUnitMeasurement eUnit;
+uint64_t dVehicleID;
+eAreaMonitor eMonitorArea;
+float fSeedRate;
+uint8_t bNumOfRows;
+float fImplementWidth;
+float fEvaluationDistance;
+uint8_t bTolerance;
+
+
+
+void GUI_SetGuiConfiguration(void)
+{
+	GUIConfigurationData.bNumOfRows = SISConfiguration.sMonitor.bNumLinhas;
+	GUIConfigurationData.bTolerance = SISConfiguration.sMonitor.bTolerancia;
+	GUIConfigurationData.dVehicleID = SISConfiguration.dVeiculo;
+	GUIConfigurationData.eAltType = (eAlternatedRowsType)SISConfiguration.sMonitor.eIntercala;
+	GUIConfigurationData.eAlterRows =
+			(SISConfiguration.sMonitor.eIntercala == Sem_Intercalacao) ? ALTERNATE_ROWS_DISABLED : ALTERNATE_ROWS_ENABLED;
+
+	GUIConfigurationData.eMonitorArea = (eAreaMonitor)SISConfiguration.sMonitor.bMonitorArea;
+	GUIConfigurationData.eLanguage = SISConfiguration.sIHM.eLanguage;
+	GUIConfigurationData.eUnit = SISConfiguration.sIHM.eUnit;
+
+	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+	{
+		GUIConfigurationData.fEvaluationDistance = DM2FM(SISConfiguration.sMonitor.wDistLinhas);
+		GUIConfigurationData.fMaxSpeed = SISConfiguration.sMonitor.fLimVel;
+		GUIConfigurationData.fSeedRate = SISConfiguration.sMonitor.wSementesPorMetro;
+		GUIConfigurationData.fImplementWidth = DM2FM(SISConfiguration.sMonitor.wLargImpl);
+	}
+	else
+	{
+		GUIConfigurationData.fEvaluationDistance = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
+		GUIConfigurationData.fMaxSpeed = KMH2MLH(SISConfiguration.sMonitor.fLimVel);
+		GUIConfigurationData.fSeedRate = SM2SP(SISConfiguration.sMonitor.wSementesPorMetro);
+		GUIConfigurationData.fImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
+	}
+	osFlagSet(GUI_sFlags, GUI_UPDATE_CONFIG_DATA);
+}
+
+void GUI_SetSisConfiguration(void)
+{
+	SISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
+	SISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
+	SISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
+	SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+
+	SISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
+	SISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
+	SISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;
+
+	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+	{
+		SISConfiguration.sMonitor.wDistLinhas = FM2DM(GUIConfigurationData.fEvaluationDistance);
+		SISConfiguration.sMonitor.fLimVel = GUIConfigurationData.fMaxSpeed;
+		SISConfiguration.sMonitor.wSementesPorMetro = GUIConfigurationData.fSeedRate;
+		SISConfiguration.sMonitor.wLargImpl = FM2DM(GUIConfigurationData.fImplementWidth);
+	}
+	else
+	{
+		SISConfiguration.sMonitor.wDistLinhas = FIN2DM(GUIConfigurationData.fEvaluationDistance);
+		SISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
+		SISConfiguration.sMonitor.wSementesPorMetro = SP2SM(GUIConfigurationData.fSeedRate);
+		SISConfiguration.sMonitor.wLargImpl = FIN2DM(GUIConfigurationData.fImplementWidth);
+	}
+
+	osFlagSet(GUI_sFlags, GUI_UPDATE_SYS_CONFIG_DATA);
+}
+
+void GUI_UpdateConfiguration(sConfigurationDataMask *CfgDataMask)
+{
+	GUIConfigurationData.eLanguage = *CfgDataMask->eLanguage;
+	GUIConfigurationData.eUnit = *CfgDataMask->eUnit;
+	GUIConfigurationData.dVehicleID = *CfgDataMask->dVehicleID;
+	GUIConfigurationData.eMonitorArea = CfgDataMask->eMonitor;
+	GUIConfigurationData.fSeedRate = *CfgDataMask->fSeedRate;
+	GUIConfigurationData.bNumOfRows = *CfgDataMask->bNumOfRows;
+	GUIConfigurationData.fImplementWidth = *CfgDataMask->fImplementWidth;
+	GUIConfigurationData.fEvaluationDistance = *CfgDataMask->fEvaluationDistance;
+	GUIConfigurationData.bTolerance = *CfgDataMask->bTolerance;
+	GUIConfigurationData.fMaxSpeed = *CfgDataMask->fMaxSpeed;
+	GUIConfigurationData.eAlterRows = CfgDataMask->eAlterRows;
+	GUIConfigurationData.eAltType = CfgDataMask->eAltType;
 }
 
 void GUI_InitSensorStatus (void)
@@ -222,14 +326,14 @@ void GUI_InitSensorStatus (void)
 	}
 }
 
-void GUI_UpdatSensorsStatus (CAN_tsLista * pSensorStatus)
+void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 {
 	uint8_t bConta;
 	uint8_t bSensor = 0;
 
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
-		if (bSensor++ < SisConfigurationData.bNumOfRows)
+		if (bSensor++ < GUIConfigurationData.bNumOfRows)
 		{
 			// se o sensor for par, ele é de semente
 			CAN_tsLista *pSensor = &pSensorStatus[bConta * 2];
@@ -283,14 +387,13 @@ void GUI_UpdatSensorsStatus (CAN_tsLista * pSensorStatus)
 
 void GUI_vIdentifyEvent (contract_s* contract)
 {
-	osFlags dFlags;
-	dFlags = GET_PUBLISHED_EVENT(contract);
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_ISOBUS:
 		{
-			if (dFlags == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
+			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
 				eCurrDataMask = *((eDataMask*)GET_PUBLISHED_PAYLOAD(contract));
 
@@ -304,12 +407,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				}
 			}
 
-			if (dFlags == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
+			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
-
+				GUI_UpdateConfiguration((sConfigurationDataMask *)GET_PUBLISHED_PAYLOAD(contract));
+				GUI_SetSisConfiguration();
 			}
 
-			if (dFlags == EVENT_ISO_INSTALLATION_REPEAT_TEST)
+			if (ePubEvt == EVENT_ISO_INSTALLATION_REPEAT_TEST)
 			{
 				osFlagSet(GUI_sFlags, GUI_CHANGE_INSTAL_REPEAT_TEST);
 			}
@@ -318,11 +422,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_CONTROL:
 		{
-			if (dFlags == EVENT_CTL_UPDATE_CONFIG)
+			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-
+				GUI_SetGuiConfiguration((UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract));
 			}
-			if (dFlags == EVENT_CTL_UPDATE_INTERFACE_CFG)
+			if (ePubEvt == EVENT_CTL_UPDATE_INTERFACE_CFG)
 			{
 
 			}
@@ -330,9 +434,9 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (dFlags == EVENT_AQR_UPDATE_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_UPDATE_INSTALLATION)
 			{
-				GUI_UpdatSensorsStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
+				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 
 			}
 			break;

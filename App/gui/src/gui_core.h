@@ -43,15 +43,17 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define GUI_FLGAS_ALL_FLAGS			  	  0x0000FFFF
-#define GUI_UPDATE_INSTALLATION_INTERFACE 0x00000001
-#define GUI_UPDATE_PLANTER_INTERFACE 	  0x00000002
-#define GUI_UPDATE_TEST_MODE_INTERFACE	  0x00000004
-#define GUI_UPDATE_TRIMMING_INTERFACE	  0x00000008
-#define GUI_UPDATE_SYSTEM_INTERFACE		  0x00000010
-#define GUI_CHANGE_CURRENT_DATA_MASK	  0x00000020
-#define GUI_CHANGE_CURRENT_CONFIGURATION  0x00000040
-#define GUI_CHANGE_INSTAL_REPEAT_TEST     0x00000080
+#define GUI_FLGAS_ALL_FLAGS			  	  	0x00FFFF
+#define GUI_UPDATE_INSTALLATION_INTERFACE 0x000001
+#define GUI_UPDATE_PLANTER_INTERFACE 	  	0x000002
+#define GUI_UPDATE_TEST_MODE_INTERFACE	  	0x000004
+#define GUI_UPDATE_TRIMMING_INTERFACE	  	0x000008
+#define GUI_UPDATE_SYSTEM_INTERFACE		  	0x000010
+#define GUI_CHANGE_CURRENT_DATA_MASK	  	0x000020
+#define GUI_CHANGE_CURRENT_CONFIGURATION  0x000040
+#define GUI_CHANGE_INSTAL_REPEAT_TEST     0x000080
+#define GUI_UPDATE_CONFIG_DATA				0x000100
+#define GUI_UPDATE_SYS_CONFIG_DATA			0x000200
 
 /******************************************************************************
  * Configuration Constants

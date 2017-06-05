@@ -101,9 +101,9 @@ typedef struct sConfigurationData
 {
 	eSelectedLanguage eLanguage;
 	eSelectedUnitMeasurement eUnit;
-	uint32_t dVehicleID;
-	eAreaMonitor eMonitor;
-	float fSeedsPerMeter;
+	uint64_t dVehicleID;
+	eAreaMonitor eMonitorArea;
+	float fSeedRate;
 	uint8_t bNumOfRows;
 	float fImplementWidth;
 	float fEvaluationDistance;
@@ -112,6 +112,22 @@ typedef struct sConfigurationData
 	eAlternateRows eAlterRows;
 	eAlternatedRowsType eAltType;
 } sConfigurationData;
+
+typedef struct sConfigurationDataMask
+{
+	eSelectedLanguage* eLanguage;
+	eSelectedUnitMeasurement* eUnit;
+	uint32_t* dVehicleID;
+	eAreaMonitor eMonitor;
+	float* fSeedRate;
+	uint8_t* bNumOfRows;
+	float* fImplementWidth;
+	float* fEvaluationDistance;
+	uint8_t* bTolerance;
+	float* fMaxSpeed;
+	eAlternateRows eAlterRows;
+	eAlternatedRowsType eAltType;
+} sConfigurationDataMask;
 
 /******************************************************************************
  * Variables
