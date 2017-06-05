@@ -2735,13 +2735,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				psStatus->bSensorDesconectado = false;
 
 				//Desabilita fonte de alimentação dos sensores CAN
-				//DISABLE_PS9;
+				DISABLE_PS9;
 
 				//Aguarda meio segundo
-				//osDelay(500);
+				osDelay(500);
 
 				//Habilita fonte de alimentação dos sensores CAN
-				//ENABLE_PS9;
+				ENABLE_PS9;
 			}
 		}
 

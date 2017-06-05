@@ -150,7 +150,6 @@ void GUI_vGuiPublishThread(void const *argument)
 
     osThreadId xDiagMainID = (osThreadId) argument;
     osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGUIPUBThreadArrayPosition));//Task created, inform core
-//    osThreadSetPriority(NULL, osPriorityLow);
 
     GUI_eInitGuiPublisher();
 
@@ -161,7 +160,8 @@ void GUI_vGuiPublishThread(void const *argument)
         /* Pool the device waiting for */
         WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
         dFlags = osFlagWait(GUI_sFlags, (GUI_UPDATE_INSTALLATION_INTERFACE | GUI_UPDATE_PLANTER_INTERFACE | GUI_UPDATE_TEST_MODE_INTERFACE |
-    									 GUI_UPDATE_TRIMMING_INTERFACE | GUI_UPDATE_SYSTEM_INTERFACE), true, false, osWaitForever);
+    									 GUI_UPDATE_TRIMMING_INTERFACE | GUI_UPDATE_SYSTEM_INTERFACE |
+										 GUI_CHANGE_INSTAL_REPEAT_TEST), true, false, osWaitForever);
         WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
         dFlagsSis = osFlagGet(UOS_sFlagSis);
@@ -201,6 +201,15 @@ void GUI_vGuiPublishThread(void const *argument)
     	{
 
     	}
+    	if((dFlags & GUI_CHANGE_INSTAL_REPEAT_TEST) > 0)
+    	{
+			sGUIPubMessage.dEvent = EVENT_GUI_INSTALLATION_REPEAT_TEST;
+			sGUIPubMessage.eEvtType = EVENT_SET;
+			sGUIPubMessage.vPayload = NULL;
+			MESSAGE_PAYLOAD(Gui) = (void*) &sGUIPubMessage;
+			PUBLISH(CONTRACT(Gui), 0);
+    	}
+
     }
     osThreadTerminate(NULL);
 }
@@ -289,6 +298,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if(dFlags == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
 
+			}
+
+			if(dFlags == EVENT_ISO_INSTALLATION_REPEAT_TEST)
+			{
+				osFlagSet(GUI_sFlags, GUI_CHANGE_INSTAL_REPEAT_TEST);
 			}
 
 			break;
