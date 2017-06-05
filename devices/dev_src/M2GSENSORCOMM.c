@@ -56,7 +56,7 @@
 #define NULL (void*)0
 #endif
 
-#define RECV_SENSORBUFSIZE		256
+#define RECV_SENSORBUFSIZE		32
 
 #ifndef UNITY_TEST
 #define DEFAULT_TIMEOUT		500
@@ -213,20 +213,15 @@ void M2GSEN_vRBSafeInsert(canMSGStruct_s *psData)
 *******************************************************************************/
 static uint32_t M2GSEN_wReadBufferProcedure(canMSGStruct_s *psOutput, uint32_t dBufferSize)
 {
+	uint32_t wReturn;
     /* Wait until ISR callbacks are completed */
     if (M2GSENSORCOMM_Handle.bDeviceStatus == M2GSENSORCOMM_STATUS_BUSY)
     {
         return 0;
     }
-    
-    uint32_t wReturn = 0;
-    
-    /* Loop until the end of ring buffer */
-    while (!RingBuffer_IsEmpty(&rbM2GSENHandle) && (wReturn < dBufferSize))
-    {
-        RingBuffer_Pop(&rbM2GSENHandle, &psOutput[wReturn]);
-        wReturn++;
-    }
+
+    wReturn = RingBuffer_PopMult(&rbM2GSENHandle, psOutput, dBufferSize);
+
     return wReturn;
 }
 
@@ -438,7 +433,7 @@ eDEVError_s M2GSEN_eDisable(uint32_t wRequest, void * vpValue)
 * <hr>
 *
 *******************************************************************************/
-eDEVError_s M2GSEN_eCANAddID(uint32_t wRequest, void * vpValue)
+static eDEVError_s M2GSEN_eCANAddID(uint32_t wRequest, void * vpValue)
 {
     if (vpValue == NULL)
     {
@@ -449,7 +444,7 @@ eDEVError_s M2GSEN_eCANAddID(uint32_t wRequest, void * vpValue)
     return DEV_ERROR_SUCCESS;
 }
 
-eDEVError_s M2GSEN_eCANAddAllID(uint32_t wRequest, void * vpValue)
+static eDEVError_s M2GSEN_eCANAddAllID(uint32_t wRequest, void * vpValue)
 {
     (void)vpValue;
     uint32_t wRecvAllID = 0x00000000 | CAN_ID_IDE_Msk;
@@ -459,7 +454,7 @@ eDEVError_s M2GSEN_eCANAddAllID(uint32_t wRequest, void * vpValue)
     return DEV_ERROR_SUCCESS;
 }
 
-eDEVError_s M2GSEN_eCANChangeSendID(uint32_t wRequest, void * vpValue)
+static eDEVError_s M2GSEN_eCANChangeSendID(uint32_t wRequest, void * vpValue)
 {    
     if (vpValue == NULL)
     {

@@ -211,21 +211,14 @@ void M2GISO_vRBSafeInsert(canMSGStruct_s *psData)
 *******************************************************************************/
 static uint32_t M2GISO_wReadBufferProcedure(canMSGStruct_s *psOutput, uint32_t dBufferSize)
 {
+    uint32_t wReturn;
     /* Wait until ISR callbacks are completed */
     if (M2GISOCOMM_Handle.bDeviceStatus == M2GISOCOMM_STATUS_BUSY)
     {
         return 0;
     }
-    
-    uint32_t wReturn = 0;
-    
-    /* Loop until the end of ring buffer */
-    while (!RingBuffer_IsEmpty(&rbM2GISOHandle) && (wReturn < dBufferSize))
-    {
-        RingBuffer_Pop(&rbM2GISOHandle, &psOutput[wReturn]);
-        wReturn++;
-    }
-    
+
+    wReturn = RingBuffer_PopMult(&rbM2GISOHandle, psOutput, dBufferSize);
     return wReturn;
 }
 

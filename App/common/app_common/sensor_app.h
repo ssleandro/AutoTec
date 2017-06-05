@@ -96,6 +96,11 @@
 /******************************************************************************
 * Macros
 *******************************************************************************/
+// Pin to enable/disable sensor power source
+gpio_config_s sEnablePS9;
+
+#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
+#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
 
 /******************************************************************************
 * Typedefs

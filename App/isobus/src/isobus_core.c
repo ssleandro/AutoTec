@@ -400,12 +400,11 @@ void ISO_vIsobusPublishThread(void const *argument)
 
         if(evt.status == osEventMessage)
         {
-        	ePubEvt = (event_e) evt.value.v;
         	switch (ePubEvt) {
 				case EVENT_ISO_UPDATE_CURRENT_DATA_MASK:
 				{
 		    		sISOPubMessage.dEvent = ePubEvt;
-		    		sISOPubMessage.eEvtType = EVENT_UPDATE;
+
 		    		sISOPubMessage.vPayload = (void*) &eCurrentDataMask;
 		            MESSAGE_PAYLOAD(Isobus) = (void*) &sISOPubMessage;
 		            PUBLISH(CONTRACT(Isobus), 0);
@@ -726,6 +725,11 @@ void ISO_vIsobusDispatcher(ISOBUSMsg* RcvMsg)
 #ifndef UNITY_TEST
 void ISO_vIsobusRecvThread(void const *argument)
 {
+    uint8_t bIterator;
+    uint8_t bRecvMessages = 0;      //!< Lenght (messages) received
+    uint32_t dTicks;
+    ISOBUSMsg asPayload[32];   //!< Buffer to hold the contract and message data
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
     SEGGER_SYSVIEW_Print("Isobus Recv Thread Created");
 #endif
@@ -737,16 +741,14 @@ void ISO_vIsobusRecvThread(void const *argument)
     osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISORCVThreadArrayPosition));//Task created, inform core
     osThreadSetPriority(NULL, osPriorityLow);
 
-    uint8_t bIterator;
-    uint8_t bRecvMessages = 0;      //!< Lenght (messages) received
-    ISOBUSMsg asPayload[32];   //!< Buffer to hold the contract and message data
+    dTicks = osKernelSysTick ();
 
     while(1)
     {
         /* Pool the device waiting for */
         WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
-        osDelay(250); //Wait
-        bRecvMessages = DEV_read(pISOHandle, &asPayload[0].frame, sizeof(asPayload));
+        osDelayUntil(&dTicks, 50);
+        bRecvMessages = DEV_read(pISOHandle, &asPayload[0].frame, ARRAY_SIZE(asPayload));
 
         if(bRecvMessages)
         {
@@ -979,7 +981,8 @@ void ISO_vIsobusBootThread(void const *argument)
                 }
                 case OBJECT_POOL_LOADED:
                 {
-                    START_TIMER(WSMaintenanceTimer, 800);
+                	STOP_TIMER(WSMaintenanceTimer);
+                    START_TIMER(WSMaintenanceTimer, 400);
 
                     // The boot process are completed, so terminate this thread
                     eCurrState = BOOT_COMPLETED;
@@ -1517,8 +1520,6 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
 
     ISO_vInitObjectStruct();
 
-//    ISO_vUpdateInstallationDataMask();
-
     while(1)
     {
     	/* Pool the device waiting for */
@@ -1562,5 +1563,5 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
     osThreadTerminate(NULL);
 }
 #else
-void ISO_vIsobusWriteThread(void const *argument){}
+void ISO_vIsobusUpdateOPThread(void const *argument){}
 #endif

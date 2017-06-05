@@ -121,7 +121,6 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue(CAN_tsIDAuteq* psIDAuteq)
     uint8_t bPosicaoB;
     uint8_t bOffset;
     uint32_t dErr;
-//    canMSGStruct_s* psMessage;
     canMSGStruct_s psMessage;
     CAN_teEstadoSensor eEstado  = Verificando;
     CAN_tsLista* psSensor;
@@ -925,8 +924,6 @@ void SEN_vManagementNetwork(void)
     CAN_teEstadoSensor eEstado;
     uint32_t wLastSig;
 
-    bool bTeste = false;
-
     //Ponteiro de trabalho da aplicação CAN
     psCtrlApl = &CAN_sCtrlMPA.sCtrlApl;
 
@@ -1123,8 +1120,6 @@ void SEN_vManagementNetwork(void)
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
-
-        bTeste = true;
     } //Fim do if ( psCtrlApl->dEventosApl & CAN_APL_FLAG_MSG_RESP_PNP )
 
     //----------------------------------------------------------------------------
@@ -1173,8 +1168,6 @@ void SEN_vManagementNetwork(void)
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
-
-        bTeste = true;
     } //Fim do if ( psCtrlApl->dEventosApl & CAN_APL_FLAG_MSG_RESP_LEITURA_DADOS )
 
     //----------------------------------------------------------------------------
@@ -1282,8 +1275,6 @@ void SEN_vManagementNetwork(void)
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
-
-        bTeste = true;
     } //Fim do if ( psCtrlApl->dEventosApl & CAN_APL_FLAG_MSG_RESP_LEITURA_DADOS )
 
     //----------------------------------------------------------------------------
@@ -1344,8 +1335,6 @@ void SEN_vManagementNetwork(void)
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
-
-        bTeste = true;
     }
 
 
@@ -1408,8 +1397,6 @@ void SEN_vManagementNetwork(void)
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
-
-        bTeste = true;
     }
 
 
@@ -1510,8 +1497,6 @@ void SEN_vManagementNetwork(void)
         //Indica que a aplicação leu a mensagem recebida
         wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
         ASSERT(wLastSig != 0x80000000);
-
-        bTeste = true;
     }
 
     //----------------------------------------------------------------------------
@@ -1588,11 +1573,5 @@ void SEN_vManagementNetwork(void)
         SEN_vVerifyUnconnectedSensors();
 
         osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_SENSOR_NAO_RESPONDEU);
-    }
-
-    if(!bTeste)
-    {
-        wLastSig = osSignalSet(*(psCtrlEnl->psFlagEnl), CAN_APL_FLAG_MENSAGEM_LIDA);
-        ASSERT(wLastSig != 0x80000000);
     }
 }

@@ -532,8 +532,6 @@ void DMA_IRQHandler(void)
 
 eMCUError_s ADC_eInit(adc_config_s * pADC)
 {
-	static adc_private_config_s sPrivate;
-
   //Verify if valid ADC/channel
   if ((pADC->eChannel < ADC_FAULT) && (pADC->vpPrivateData == NULL))
     {
@@ -557,7 +555,7 @@ eMCUError_s ADC_eInit(adc_config_s * pADC)
       Chip_ADC_SetResolution(ADC_MAP_REGISTER(pADC->eChannel), &sADCSetup, pADC->eResolution);
 
       //Create private struct, populate it and then reference it on the public struct
-      adc_private_config_s * psPrivate = &sPrivate;
+      adc_private_config_s * psPrivate = malloc(sizeof(adc_private_config_s));
       if (psPrivate != NULL)
         {
           psPrivate->bStarted = true;
