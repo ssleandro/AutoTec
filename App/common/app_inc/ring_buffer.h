@@ -41,7 +41,8 @@
 /**
  * @brief Ring buffer structure
  */
-typedef struct {
+typedef struct
+{
 	void *data;
 	int count;
 	int itemSz;
@@ -79,14 +80,14 @@ typedef struct {
  * 			least be 2 or greater.
  * @return	Nothing
  */
-int RingBuffer_Init(RINGBUFF_T *RingBuff, void *buffer, int itemSize, int count);
+int RingBuffer_Init (RINGBUFF_T *RingBuff, void *buffer, int itemSize, int count);
 
 /**
  * @brief	Resets the ring buffer to empty
  * @param	RingBuff	: Pointer to ring buffer
  * @return	Nothing
  */
-static inline void RingBuffer_Flush(RINGBUFF_T *RingBuff)
+static inline void RingBuffer_Flush (RINGBUFF_T *RingBuff)
 {
 	RingBuff->head = RingBuff->tail = 0;
 }
@@ -96,7 +97,7 @@ static inline void RingBuffer_Flush(RINGBUFF_T *RingBuff)
  * @param	RingBuff	: Pointer to ring buffer
  * @return	Size of the ring buffer in bytes
  */
-static inline int RingBuffer_GetSize(RINGBUFF_T *RingBuff)
+static inline int RingBuffer_GetSize (RINGBUFF_T *RingBuff)
 {
 	return RingBuff->count;
 }
@@ -106,11 +107,11 @@ static inline int RingBuffer_GetSize(RINGBUFF_T *RingBuff)
  * @param	RingBuff	: Pointer to ring buffer
  * @return	Number of items in the ring buffer
  */
-static inline int RingBuffer_GetCount(RINGBUFF_T *RingBuff)
+static inline int RingBuffer_GetCount (RINGBUFF_T *RingBuff)
 {
-        int tail = RB_VTAIL(RingBuff);
-        int head = RB_VHEAD(RingBuff);
-        return head - tail;  
+	int tail = RB_VTAIL(RingBuff);
+	int head = RB_VHEAD(RingBuff);
+	return head - tail;
 	//return RB_VHEAD(RingBuff) - RB_VTAIL(RingBuff);
 }
 
@@ -119,7 +120,7 @@ static inline int RingBuffer_GetCount(RINGBUFF_T *RingBuff)
  * @param	RingBuff	: Pointer to ring buffer
  * @return	Number of free items in the ring buffer
  */
-static inline int RingBuffer_GetFree(RINGBUFF_T *RingBuff)
+static inline int RingBuffer_GetFree (RINGBUFF_T *RingBuff)
 {
 	return RingBuff->count - RingBuffer_GetCount(RingBuff);
 }
@@ -129,7 +130,7 @@ static inline int RingBuffer_GetFree(RINGBUFF_T *RingBuff)
  * @param	RingBuff	: Pointer to ring buffer
  * @return	1 if the ring buffer is full, otherwise 0
  */
-static inline int RingBuffer_IsFull(RINGBUFF_T *RingBuff)
+static inline int RingBuffer_IsFull (RINGBUFF_T *RingBuff)
 {
 	return (RingBuffer_GetCount(RingBuff) >= RingBuff->count);
 }
@@ -139,11 +140,11 @@ static inline int RingBuffer_IsFull(RINGBUFF_T *RingBuff)
  * @param	RingBuff	: Pointer to ring buffer
  * @return	1 if the ring buffer is empty, otherwise 0
  */
-static inline int RingBuffer_IsEmpty(RINGBUFF_T *RingBuff)
+static inline int RingBuffer_IsEmpty (RINGBUFF_T *RingBuff)
 {
-        int head = RB_VHEAD(RingBuff);
-        int tail = RB_VTAIL(RingBuff);
-        return head == tail;  
+	int head = RB_VHEAD(RingBuff);
+	int tail = RB_VTAIL(RingBuff);
+	return head == tail;
 	//return RB_VHEAD(RingBuff) == RB_VTAIL(RingBuff);
 }
 
@@ -156,7 +157,7 @@ static inline int RingBuffer_IsEmpty(RINGBUFF_T *RingBuff)
  *			RingBuffer_Init() or attempted to insert
  *			when buffer is full)
  */
-int RingBuffer_Insert(RINGBUFF_T *RingBuff, const void *data);
+int RingBuffer_Insert (RINGBUFF_T *RingBuff, const void *data);
 
 /**
  * @brief	Insert an array of items into ring buffer
@@ -168,7 +169,7 @@ int RingBuffer_Insert(RINGBUFF_T *RingBuff, const void *data);
  *			RingBuffer_Init() or attempted to insert
  *			when buffer is full)
  */
-int RingBuffer_InsertMult(RINGBUFF_T *RingBuff, const void *data, int num);
+int RingBuffer_InsertMult (RINGBUFF_T *RingBuff, const void *data, int num);
 
 /**
  * @brief	Pop an item from the ring buffer
@@ -179,7 +180,7 @@ int RingBuffer_InsertMult(RINGBUFF_T *RingBuff, const void *data, int num);
  * 			RingBuffer_Init() or attempted to pop item when
  * 			the buffer is empty)
  */
-int RingBuffer_Pop(RINGBUFF_T *RingBuff, void *data);
+int RingBuffer_Pop (RINGBUFF_T *RingBuff, void *data);
 
 /**
  * @brief	Pop an array of items from the ring buffer
@@ -190,8 +191,7 @@ int RingBuffer_Pop(RINGBUFF_T *RingBuff, void *data);
  * 			0 on error (Buffer not initialized using RingBuffer_Init()
  * 			or attempted to pop when the buffer is empty)
  */
-int RingBuffer_PopMult(RINGBUFF_T *RingBuff, void *data, int num);
-
+int RingBuffer_PopMult (RINGBUFF_T *RingBuff, void *data, int num);
 
 /**
  * @}

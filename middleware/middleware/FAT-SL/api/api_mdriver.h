@@ -43,23 +43,23 @@
 
 #include "../version/ver_mdriver.h"
 #if VER_MDRIVER_MAJOR != 1 || VER_MDRIVER_MINOR != 0
- #error Incompatible MDRIVER version number!
+#error Incompatible MDRIVER version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 typedef struct
 {
-  unsigned short  number_of_cylinders;
-  unsigned short  sector_per_track;
-  unsigned short  number_of_heads;
-  unsigned long   number_of_sectors;
-  unsigned char   media_descriptor;
+	unsigned short number_of_cylinders;
+	unsigned short sector_per_track;
+	unsigned short number_of_heads;
+	unsigned long number_of_sectors;
+	unsigned char media_descriptor;
 
-  unsigned short  bytes_per_sector;
+	unsigned short bytes_per_sector;
 } F_PHY;
 
 /* media descriptor to be set in getphy function */
@@ -72,33 +72,32 @@ typedef struct
 #define F_ST_WRPROTECT        0x00000004
 
 /* Driver definitions */
-typedef struct F_DRIVER  F_DRIVER;
+typedef struct F_DRIVER F_DRIVER;
 
-typedef int           ( *F_WRITESECTOR )( F_DRIVER * driver, void * data, unsigned long sector );
-typedef int           ( *F_READSECTOR )( F_DRIVER * driver, void * data, unsigned long sector );
-typedef int           ( *F_GETPHY )( F_DRIVER * driver, F_PHY * phy );
-typedef long          ( *F_GETSTATUS )( F_DRIVER * driver );
-typedef int          ( *F_RELEASE )( F_DRIVER * driver );
+typedef int (*F_WRITESECTOR) (F_DRIVER * driver, void * data, unsigned long sector);
+typedef int (*F_READSECTOR) (F_DRIVER * driver, void * data, unsigned long sector);
+typedef int (*F_GETPHY) (F_DRIVER * driver, F_PHY * phy);
+typedef long (*F_GETSTATUS) (F_DRIVER * driver);
+typedef int (*F_RELEASE) (F_DRIVER * driver);
 
 typedef struct F_DRIVER
 {
-  unsigned long  user_data;     /* user defined data */
-  void         * user_ptr;      /* user define pointer */
+	unsigned long user_data; /* user defined data */
+	void * user_ptr; /* user define pointer */
 
-  /* driver functions */
-  F_WRITESECTOR          writesector;
-  F_READSECTOR           readsector;
-  F_GETPHY               getphy;
-  F_GETSTATUS            getstatus;
-  F_RELEASE              release;
+	/* driver functions */
+	F_WRITESECTOR writesector;
+	F_READSECTOR readsector;
+	F_GETPHY getphy;
+	F_GETSTATUS getstatus;
+	F_RELEASE release;
 } _F_DRIVER;
 
-typedef F_DRIVER *( *F_DRIVERINIT )( unsigned long driver_param );
+typedef F_DRIVER *(*F_DRIVERINIT) (unsigned long driver_param);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* _API_MDRIVER_H_ */
-
 

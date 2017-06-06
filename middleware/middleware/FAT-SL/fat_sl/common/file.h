@@ -43,11 +43,12 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #define F_FILE_CLOSE 0x00

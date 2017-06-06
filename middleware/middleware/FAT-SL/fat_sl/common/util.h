@@ -45,27 +45,28 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void f_igettimedate ( unsigned short * time, unsigned short * date );
+void f_igettimedate (unsigned short * time, unsigned short * date);
 
-unsigned short _f_getword ( void * );
-unsigned long _f_getlong ( void * );
-char _f_toupper ( char );
-void _f_memset ( void *, unsigned char, int );
-void _f_memcpy ( void *, void *, int );
+unsigned short _f_getword (void *);
+unsigned long _f_getlong (void *);
+char _f_toupper (char);
+void _f_memset (void *, unsigned char, int);
+void _f_memcpy (void *, void *, int);
 
-void _f_setword ( void *, unsigned short );
-void _f_setlong ( void *, unsigned long );
-unsigned char * _setcharzero ( int, unsigned char * );
-unsigned char * _setchar ( const unsigned char *, int, unsigned char * );
-unsigned char * _setword ( unsigned short, unsigned char * );
-unsigned char * _setlong ( unsigned long, unsigned char * );
+void _f_setword (void *, unsigned short);
+void _f_setlong (void *, unsigned long);
+unsigned char * _setcharzero (int, unsigned char *);
+unsigned char * _setchar (const unsigned char *, int, unsigned char *);
+unsigned char * _setword (unsigned short, unsigned char *);
+unsigned char * _setlong (unsigned long, unsigned char *);
 
 #ifdef __cplusplus
 }

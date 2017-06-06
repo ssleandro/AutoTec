@@ -33,7 +33,8 @@
 #define __DAC_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup DAC_18XX_43XX CHIP: LPC18xx/43xx D/A conversion driver
@@ -44,15 +45,16 @@ extern "C" {
 /**
  * @brief DAC register block structure
  */
-typedef struct {			/*!< DAC Structure          */
-	__IO uint32_t  CR;		/*!< DAC register. Holds the conversion data. */
-	__IO uint32_t  CTRL;	/*!< DAC control register.  */
-	__IO uint32_t  CNTVAL;	/*!< DAC counter value register. */
+typedef struct
+{ /*!< DAC Structure          */
+	__IO uint32_t CR; /*!< DAC register. Holds the conversion data. */
+	__IO uint32_t CTRL; /*!< DAC control register.  */
+	__IO uint32_t CNTVAL; /*!< DAC counter value register. */
 } LPC_DAC_T;
 
 /** After the selected settling time after this field is written with a
-   new VALUE, the voltage on the AOUT pin (with respect to VSSA)
-   is VALUE/1024 ? VREF */
+ new VALUE, the voltage on the AOUT pin (with respect to VSSA)
+ is VALUE/1024 ? VREF */
 #define DAC_VALUE(n)        ((uint32_t) ((n & 0x3FF) << 6))
 /** If this bit = 0: The settling time of the DAC is 1 microsecond max,
  * and the maximum current is 700 microAmpere
@@ -75,11 +77,12 @@ typedef struct {			/*!< DAC Structure          */
 /**
  * @brief Current option in DAC configuration option
  */
-typedef enum IP_DAC_CURRENT_OPT {
-	DAC_MAX_UPDATE_RATE_1MHz = 0,	/*!< Shorter settling times and higher power consumption;
-									    allows for a maximum update rate of 1 MHz */
-	DAC_MAX_UPDATE_RATE_400kHz		/*!< Longer settling times and lower power consumption;
-									    allows for a maximum update rate of 400 kHz */
+typedef enum IP_DAC_CURRENT_OPT
+{
+	DAC_MAX_UPDATE_RATE_1MHz = 0, /*!< Shorter settling times and higher power consumption;
+	 allows for a maximum update rate of 1 MHz */
+	DAC_MAX_UPDATE_RATE_400kHz /*!< Longer settling times and lower power consumption;
+	 allows for a maximum update rate of 400 kHz */
 } DAC_CURRENT_OPT_T;
 
 /**
@@ -89,14 +92,14 @@ typedef enum IP_DAC_CURRENT_OPT {
  * @param	pDAC	: pointer to LPC_DAC_T
  * @return	Nothing
  */
-void Chip_DAC_Init(LPC_DAC_T *pDAC);
+void Chip_DAC_Init (LPC_DAC_T *pDAC);
 
 /**
  * @brief	Shutdown DAC
  * @param	pDAC	: pointer to LPC_DAC_T
  * @return	Nothing
  */
-void Chip_DAC_DeInit(LPC_DAC_T *pDAC);
+void Chip_DAC_DeInit (LPC_DAC_T *pDAC);
 
 /**
  * @brief	Update value to DAC buffer
@@ -104,7 +107,7 @@ void Chip_DAC_DeInit(LPC_DAC_T *pDAC);
  * @param	dac_value	: value 10 bit to be converted to output
  * @return	Nothing
  */
-void Chip_DAC_UpdateValue(LPC_DAC_T *pDAC, uint32_t dac_value);
+void Chip_DAC_UpdateValue (LPC_DAC_T *pDAC, uint32_t dac_value);
 
 /**
  * @brief	Set maximum update rate for DAC
@@ -114,7 +117,7 @@ void Chip_DAC_UpdateValue(LPC_DAC_T *pDAC, uint32_t dac_value);
  *              - 1 is 400kHz
  * @return	Nothing
  */
-void Chip_DAC_SetBias(LPC_DAC_T *pDAC, uint32_t bias);
+void Chip_DAC_SetBias (LPC_DAC_T *pDAC, uint32_t bias);
 
 /**
  * @brief	Enables the DMA operation and controls DMA timer
@@ -126,7 +129,7 @@ void Chip_DAC_SetBias(LPC_DAC_T *pDAC, uint32_t bias);
  * @return	Nothing
  * @note	Pass an Or'ed value of the DAC flags to enable those options.
  */
-STATIC INLINE void Chip_DAC_ConfigDAConverterControl(LPC_DAC_T *pDAC, uint32_t dacFlags)
+STATIC INLINE void Chip_DAC_ConfigDAConverterControl (LPC_DAC_T *pDAC, uint32_t dacFlags)
 {
 	uint32_t temp;
 
@@ -140,7 +143,7 @@ STATIC INLINE void Chip_DAC_ConfigDAConverterControl(LPC_DAC_T *pDAC, uint32_t d
  * @param	time_out	: time out to reload for interrupt/DMA counter
  * @return	Nothing
  */
-STATIC INLINE void Chip_DAC_SetDMATimeOut(LPC_DAC_T *pDAC, uint32_t time_out)
+STATIC INLINE void Chip_DAC_SetDMATimeOut (LPC_DAC_T *pDAC, uint32_t time_out)
 {
 	pDAC->CNTVAL = DAC_CCNT_VALUE(time_out);
 }
@@ -150,7 +153,7 @@ STATIC INLINE void Chip_DAC_SetDMATimeOut(LPC_DAC_T *pDAC, uint32_t time_out)
  * @param	pDAC	: pointer to LPC_DAC_T
  * @return	interrupt/DMA time out status, should be SET or RESET
  */
-STATIC INLINE IntStatus Chip_DAC_GetIntStatus(LPC_DAC_T *pDAC)
+STATIC INLINE IntStatus Chip_DAC_GetIntStatus (LPC_DAC_T *pDAC)
 {
 	return (pDAC->CTRL & 0x01) ? SET : RESET;
 }

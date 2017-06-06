@@ -33,7 +33,8 @@
 #define __FMC_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup FMC_18XX_43XX CHIP: LPC18xx/43xx FLASH Memory Controller driver
@@ -44,17 +45,18 @@ extern "C" {
 /**
  * @brief FLASH Memory Controller Unit register block structure
  */
-typedef struct {		/*!< FMC Structure */
-	__I  uint32_t  RESERVED1[8];
-	__IO uint32_t  FMSSTART;
-	__IO uint32_t  FMSSTOP;
-	__I  uint32_t  RESERVED2;
-	__I  uint32_t  FMSW[4];
-	__I  uint32_t  RESERVED3[1001];
-	__I  uint32_t  FMSTAT;
-	__I  uint32_t  RESERVED5;
-	__O  uint32_t  FMSTATCLR;
-	__I  uint32_t  RESERVED4[5];
+typedef struct
+{ /*!< FMC Structure */
+	__I uint32_t RESERVED1[8];
+	__IO uint32_t FMSSTART;
+	__IO uint32_t FMSSTOP;
+	__I uint32_t RESERVED2;
+	__I uint32_t FMSW[4];
+	__I uint32_t RESERVED3[1001];
+	__I uint32_t FMSTAT;
+	__I uint32_t RESERVED5;
+	__O uint32_t FMSTATCLR;
+	__I uint32_t RESERVED4[5];
 } LPC_FMC_T;
 
 /* Flash signature start and busy status bit */
@@ -74,7 +76,7 @@ typedef struct {		/*!< FMC Structure */
  *			signature computation operation is complete and use the
  *			Chip_FMC_GetSignature() function to get the computed signature.
  */
-STATIC INLINE void Chip_FMC_ComputeSignature(uint8_t bank, uint32_t start, uint32_t stop)
+STATIC INLINE void Chip_FMC_ComputeSignature (uint8_t bank, uint32_t start, uint32_t stop)
 {
 	LPC_FMC[bank]->FMSSTART = (start >> 4);
 	LPC_FMC[bank]->FMSTATCLR = FMC_FLASHSIG_STAT;
@@ -92,7 +94,7 @@ STATIC INLINE void Chip_FMC_ComputeSignature(uint8_t bank, uint32_t start, uint3
  *			signature computation operation is complete and the
  *			Chip_FMC_GetSignature() function to get the computed signature.
  */
-STATIC INLINE void Chip_FMC_ComputeSignatureBlocks(uint8_t bank, uint32_t start, uint32_t blocks)
+STATIC INLINE void Chip_FMC_ComputeSignatureBlocks (uint8_t bank, uint32_t start, uint32_t blocks)
 {
 	Chip_FMC_ComputeSignature(bank, start, (start + (blocks * 16)));
 }
@@ -102,7 +104,7 @@ STATIC INLINE void Chip_FMC_ComputeSignatureBlocks(uint8_t bank, uint32_t start,
  * @param	bank	: FLASH bank, A = 0, B = 1
  * @return	Nothing
  */
-STATIC INLINE void Chip_FMC_ClearSignatureBusy(uint8_t bank)
+STATIC INLINE void Chip_FMC_ClearSignatureBusy (uint8_t bank)
 {
 	LPC_FMC[bank]->FMSTATCLR = FMC_FLASHSIG_STAT;
 }
@@ -112,9 +114,9 @@ STATIC INLINE void Chip_FMC_ClearSignatureBusy(uint8_t bank)
  * @param	bank	: FLASH bank, A = 0, B = 1
  * @return	true if the signature computation is running, false if finished
  */
-STATIC INLINE bool Chip_FMC_IsSignatureBusy(uint8_t bank)
+STATIC INLINE bool Chip_FMC_IsSignatureBusy (uint8_t bank)
 {
-	return (bool) ((LPC_FMC[bank]->FMSTAT & FMC_FLASHSIG_STAT) == 0);
+	return (bool)((LPC_FMC[bank]->FMSTAT & FMC_FLASHSIG_STAT) == 0);
 }
 
 /**
@@ -123,7 +125,7 @@ STATIC INLINE bool Chip_FMC_IsSignatureBusy(uint8_t bank)
  * @param	index	: Signature index to get - use 0 to FMSW0, 1 to FMSW1, etc.
  * @return	the generated FLASH signature value
  */
-STATIC INLINE uint32_t Chip_FMC_GetSignature(uint8_t bank, int index)
+STATIC INLINE uint32_t Chip_FMC_GetSignature (uint8_t bank, int index)
 {
 	return LPC_FMC[bank]->FMSW[index];
 }

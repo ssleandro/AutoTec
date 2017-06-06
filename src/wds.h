@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   Watchdog Include File
-* Filename              :   wds.h
-* Author                :   thiago.palmieri
-* Origin Date           :   12 de mai de 2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
-* Target                :   LPC43XX M4
-* Notes                 :   None
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   Watchdog Include File
+ * Filename              :   wds.h
+ * Author                :   thiago.palmieri
+ * Origin Date           :   12 de mai de 2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
+ * Target                :   LPC43XX M4
+ * Notes                 :   None
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version   Author         Description
-*  12 de mai de 2016   1.0.0   thiago.palmieri Watchdog include file Created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version   Author         Description
+ *  12 de mai de 2016   1.0.0   thiago.palmieri Watchdog include file Created.
+ *
+ *****************************************************************************/
 /** @file wds.h
  *  @brief This file provides Watchdog functionality in a multithreaded environment.
  *
@@ -110,172 +110,173 @@
 #define WDS_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include <M2G_app.h>
 #include "devicelib.h"
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 #define EXPIRATION_TIMER 4000
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
 
-/******************************************************************************
-* Function : WDS_eStart(void)
-*//**
-* \b Description:
-*
-* Function used to start the watchdog service.
-*
-* PRE-CONDITION: None
-*
-* POST-CONDITION: Watchdog service started
-*
-* @return     eAPPError
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* WDS_eStart();
-~~~~~~~~~~~~~~~
-*
-* @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-WEAK eAPPError_s WDS_eStart(void);
+	/******************************************************************************
+	 * Function : WDS_eStart(void)
+	 *//**
+	 * \b Description:
+	 *
+	 * Function used to start the watchdog service.
+	 *
+	 * PRE-CONDITION: None
+	 *
+	 * POST-CONDITION: Watchdog service started
+	 *
+	 * @return     eAPPError
+	 *
+	 * \b Example
+	 ~~~~~~~~~~~~~~~{.c}
+	 * WDS_eStart();
+	 ~~~~~~~~~~~~~~~
+	 *
+	 * @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
+	 *
+	 * <br><b> - HISTORY OF CHANGES - </b>
+	 *
+	 * <table align="left" style="width:800px">
+	 * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+	 * <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+	 * </table><br><br>
+	 * <hr>
+	 *
+	 *******************************************************************************/
+	WEAK eAPPError_s WDS_eStart (void);
 
-/******************************************************************************
-* Function : WDS_eAddModule(uint8_t* pbWDTModuleArray, uint8_t bArraySize, uint8_t bArrayPos)
-*//**
-* \b Description:
-*
-* Function used to add a flag array to be monitored. A pointer to the flag array, its size and
-* a position on the internal array reference must be provided.
-*
-* PRE-CONDITION: None
-*
-* POST-CONDITION: Module Watchdog flag array added to the monitoring array
-*
-* @return     eAPPError
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* WDS_eStart();
-* WDS_eAddModule(pbWDTModuleArray, 3, MODULE_ACTUATOR);
-~~~~~~~~~~~~~~~
-*
-* @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-WEAK eAPPError_s WDS_eAddModule(uint8_t* pbWDTModuleArray, uint8_t bArraySize, uint8_t bArrayPos);
+	/******************************************************************************
+	 * Function : WDS_eAddModule(uint8_t* pbWDTModuleArray, uint8_t bArraySize, uint8_t bArrayPos)
+	 *//**
+	 * \b Description:
+	 *
+	 * Function used to add a flag array to be monitored. A pointer to the flag array, its size and
+	 * a position on the internal array reference must be provided.
+	 *
+	 * PRE-CONDITION: None
+	 *
+	 * POST-CONDITION: Module Watchdog flag array added to the monitoring array
+	 *
+	 * @return     eAPPError
+	 *
+	 * \b Example
+	 ~~~~~~~~~~~~~~~{.c}
+	 * WDS_eStart();
+	 * WDS_eAddModule(pbWDTModuleArray, 3, MODULE_ACTUATOR);
+	 ~~~~~~~~~~~~~~~
+	 *
+	 * @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
+	 *
+	 * <br><b> - HISTORY OF CHANGES - </b>
+	 *
+	 * <table align="left" style="width:800px">
+	 * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+	 * <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+	 * </table><br><br>
+	 * <hr>
+	 *
+	 *******************************************************************************/
+	WEAK eAPPError_s WDS_eAddModule (uint8_t* pbWDTModuleArray, uint8_t bArraySize, uint8_t bArrayPos);
 
-/******************************************************************************
-* Function : WDS_eFeed(void)
-*//**
-* \b Description:
-*
-* Function used to feed the dog, thus restarting the watchdog timer.
-*
-* PRE-CONDITION: Watchdog started
-*
-* POST-CONDITION: Watchdog timer restarted
-*
-* @return     eAPPError
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* WDS_eStart();
-* WDS_eAddModule(pbWDTModuleArray, 3, MODULE_ACTUATOR);
-* WDS_eFeed();
-~~~~~~~~~~~~~~~
-*
-* @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-WEAK eAPPError_s WDS_eFeed(void);
+	/******************************************************************************
+	 * Function : WDS_eFeed(void)
+	 *//**
+	 * \b Description:
+	 *
+	 * Function used to feed the dog, thus restarting the watchdog timer.
+	 *
+	 * PRE-CONDITION: Watchdog started
+	 *
+	 * POST-CONDITION: Watchdog timer restarted
+	 *
+	 * @return     eAPPError
+	 *
+	 * \b Example
+	 ~~~~~~~~~~~~~~~{.c}
+	 * WDS_eStart();
+	 * WDS_eAddModule(pbWDTModuleArray, 3, MODULE_ACTUATOR);
+	 * WDS_eFeed();
+	 ~~~~~~~~~~~~~~~
+	 *
+	 * @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
+	 *
+	 * <br><b> - HISTORY OF CHANGES - </b>
+	 *
+	 * <table align="left" style="width:800px">
+	 * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+	 * <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+	 * </table><br><br>
+	 * <hr>
+	 *
+	 *******************************************************************************/
+	WEAK eAPPError_s WDS_eFeed (void);
 
-/******************************************************************************
-* Function : WDS_eTreat(void)
-*//**
-* \b Description:
-*
-* Function used to check registered flags status. If all flags are valid, then
-* the dog is fed, otherwise an endless loop is entered.
-*
-* PRE-CONDITION: Watchdog started
-*
-* POST-CONDITION: Watchdog timer restarted
-*
-* @return     eAPPError
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* WDS_eStart();
-* WDS_eAddModule(pbWDTModuleArray, 3, MODULE_ACTUATOR);
-* WDS_eFeed();
-* while(1)
-* {
-*   osDelay(1000);
-*   WDS_eTreat();
-* }
-~~~~~~~~~~~~~~~
-*
-* @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-WEAK eAPPError_s WDS_eTreat(void);
+	/******************************************************************************
+	 * Function : WDS_eTreat(void)
+	 *//**
+	 * \b Description:
+	 *
+	 * Function used to check registered flags status. If all flags are valid, then
+	 * the dog is fed, otherwise an endless loop is entered.
+	 *
+	 * PRE-CONDITION: Watchdog started
+	 *
+	 * POST-CONDITION: Watchdog timer restarted
+	 *
+	 * @return     eAPPError
+	 *
+	 * \b Example
+	 ~~~~~~~~~~~~~~~{.c}
+	 * WDS_eStart();
+	 * WDS_eAddModule(pbWDTModuleArray, 3, MODULE_ACTUATOR);
+	 * WDS_eFeed();
+	 * while(1)
+	 * {
+	 *   osDelay(1000);
+	 *   WDS_eTreat();
+	 * }
+	 ~~~~~~~~~~~~~~~
+	 *
+	 * @see WDS_eStart, WDS_eAddModule, WDS_eFeed, WDS_eTreat
+	 *
+	 * <br><b> - HISTORY OF CHANGES - </b>
+	 *
+	 * <table align="left" style="width:800px">
+	 * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+	 * <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+	 * </table><br><br>
+	 * <hr>
+	 *
+	 *******************************************************************************/
+	WEAK eAPPError_s WDS_eTreat (void);
 
 #ifdef __cplusplus
 } // extern "C"

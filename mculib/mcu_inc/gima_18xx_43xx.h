@@ -33,7 +33,8 @@
 #define __GIMA_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup GIMA_18XX_43XX CHIP: LPC18xx/43xx GIMA driver
@@ -44,15 +45,16 @@ extern "C" {
 /**
  * @brief Global Input Multiplexer Array (GIMA) register block structure
  */
-typedef struct {						/*!< GIMA Structure */
-	__IO uint32_t  CAP0_IN[4][4];		/*!< Timer x CAP0_y capture input multiplexer (GIMA output ((x*4)+y)) */
-	__IO uint32_t  CTIN_IN[8];			/*!< SCT CTIN_x capture input multiplexer (GIMA output (16+x)) */
-	__IO uint32_t  ADCHS_TRIGGER_IN;	/*!< ADCHS trigger input multiplexer (GIMA output 24) */
-	__IO uint32_t  EVENTROUTER_13_IN;	/*!< Event router input 13 multiplexer (GIMA output 25) */
-	__IO uint32_t  EVENTROUTER_14_IN;	/*!< Event router input 14 multiplexer (GIMA output 26) */
-	__IO uint32_t  EVENTROUTER_16_IN;	/*!< Event router input 16 multiplexer (GIMA output 27) */
-	__IO uint32_t  ADCSTART0_IN;		/*!< ADC start0 input multiplexer (GIMA output 28) */
-	__IO uint32_t  ADCSTART1_IN;		/*!< ADC start1 input multiplexer (GIMA output 29) */
+typedef struct
+{ /*!< GIMA Structure */
+	__IO uint32_t CAP0_IN[4][4]; /*!< Timer x CAP0_y capture input multiplexer (GIMA output ((x*4)+y)) */
+	__IO uint32_t CTIN_IN[8]; /*!< SCT CTIN_x capture input multiplexer (GIMA output (16+x)) */
+	__IO uint32_t ADCHS_TRIGGER_IN; /*!< ADCHS trigger input multiplexer (GIMA output 24) */
+	__IO uint32_t EVENTROUTER_13_IN; /*!< Event router input 13 multiplexer (GIMA output 25) */
+	__IO uint32_t EVENTROUTER_14_IN; /*!< Event router input 14 multiplexer (GIMA output 26) */
+	__IO uint32_t EVENTROUTER_16_IN; /*!< Event router input 16 multiplexer (GIMA output 27) */
+	__IO uint32_t ADCSTART0_IN; /*!< ADC start0 input multiplexer (GIMA output 28) */
+	__IO uint32_t ADCSTART1_IN; /*!< ADC start1 input multiplexer (GIMA output 29) */
 } LPC_GIMA_T;
 
 /**

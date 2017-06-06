@@ -33,7 +33,8 @@
 #define __EMC_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup EMC_18XX_43XX CHIP: LPC18xx/43xx External Memory Controller driver
@@ -46,72 +47,73 @@ extern "C" {
 /**
  * @brief External Memory Controller (EMC) register block structure
  */
-typedef struct {							/*!< EMC Structure          */
-	__IO uint32_t  CONTROL;					/*!< Controls operation of the memory controller. */
-	__I  uint32_t  STATUS;					/*!< Provides EMC status information. */
-	__IO uint32_t  CONFIG;					/*!< Configures operation of the memory controller. */
-	__I  uint32_t  RESERVED0[5];
-	__IO uint32_t  DYNAMICCONTROL;			/*!< Controls dynamic memory operation. */
-	__IO uint32_t  DYNAMICREFRESH;			/*!< Configures dynamic memory refresh operation. */
-	__IO uint32_t  DYNAMICREADCONFIG;		/*!< Configures the dynamic memory read strategy. */
-	__I  uint32_t  RESERVED1;
-	__IO uint32_t  DYNAMICRP;				/*!< Selects the precharge command period. */
-	__IO uint32_t  DYNAMICRAS;				/*!< Selects the active to precharge command period. */
-	__IO uint32_t  DYNAMICSREX;				/*!< Selects the self-refresh exit time. */
-	__IO uint32_t  DYNAMICAPR;				/*!< Selects the last-data-out to active command time. */
-	__IO uint32_t  DYNAMICDAL;				/*!< Selects the data-in to active command time. */
-	__IO uint32_t  DYNAMICWR;				/*!< Selects the write recovery time. */
-	__IO uint32_t  DYNAMICRC;				/*!< Selects the active to active command period. */
-	__IO uint32_t  DYNAMICRFC;				/*!< Selects the auto-refresh period. */
-	__IO uint32_t  DYNAMICXSR;				/*!< Selects the exit self-refresh to active command time. */
-	__IO uint32_t  DYNAMICRRD;				/*!< Selects the active bank A to active bank B latency. */
-	__IO uint32_t  DYNAMICMRD;				/*!< Selects the load mode register to active command time. */
-	__I  uint32_t  RESERVED2[9];
-	__IO uint32_t  STATICEXTENDEDWAIT;		/*!< Selects time for long static memory read and write transfers. */
-	__I  uint32_t  RESERVED3[31];
-	__IO uint32_t  DYNAMICCONFIG0;			/*!< Selects the configuration information for dynamic memory chip select n. */
-	__IO uint32_t  DYNAMICRASCAS0;			/*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
-	__I  uint32_t  RESERVED4[6];
-	__IO uint32_t  DYNAMICCONFIG1;			/*!< Selects the configuration information for dynamic memory chip select n. */
-	__IO uint32_t  DYNAMICRASCAS1;			/*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
-	__I  uint32_t  RESERVED5[6];
-	__IO uint32_t  DYNAMICCONFIG2;			/*!< Selects the configuration information for dynamic memory chip select n. */
-	__IO uint32_t  DYNAMICRASCAS2;			/*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
-	__I  uint32_t  RESERVED6[6];
-	__IO uint32_t  DYNAMICCONFIG3;			/*!< Selects the configuration information for dynamic memory chip select n. */
-	__IO uint32_t  DYNAMICRASCAS3;			/*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
-	__I  uint32_t  RESERVED7[38];
-	__IO uint32_t  STATICCONFIG0;			/*!< Selects the memory configuration for static chip select n. */
-	__IO uint32_t  STATICWAITWEN0;			/*!< Selects the delay from chip select n to write enable. */
-	__IO uint32_t  STATICWAITOEN0;			/*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
-	__IO uint32_t  STATICWAITRD0;			/*!< Selects the delay from chip select n to a read access. */
-	__IO uint32_t  STATICWAITPAG0;			/*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
-	__IO uint32_t  STATICWAITWR0;			/*!< Selects the delay from chip select n to a write access. */
-	__IO uint32_t  STATICWAITTURN0;			/*!< Selects bus turnaround cycles */
-	__I  uint32_t  RESERVED8;
-	__IO uint32_t  STATICCONFIG1;			/*!< Selects the memory configuration for static chip select n. */
-	__IO uint32_t  STATICWAITWEN1;			/*!< Selects the delay from chip select n to write enable. */
-	__IO uint32_t  STATICWAITOEN1;			/*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
-	__IO uint32_t  STATICWAITRD1;			/*!< Selects the delay from chip select n to a read access. */
-	__IO uint32_t  STATICWAITPAG1;			/*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
-	__IO uint32_t  STATICWAITWR1;			/*!< Selects the delay from chip select n to a write access. */
-	__IO uint32_t  STATICWAITTURN1;			/*!< Selects bus turnaround cycles */
-	__I  uint32_t  RESERVED9;
-	__IO uint32_t  STATICCONFIG2;			/*!< Selects the memory configuration for static chip select n. */
-	__IO uint32_t  STATICWAITWEN2;			/*!< Selects the delay from chip select n to write enable. */
-	__IO uint32_t  STATICWAITOEN2;			/*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
-	__IO uint32_t  STATICWAITRD2;			/*!< Selects the delay from chip select n to a read access. */
-	__IO uint32_t  STATICWAITPAG2;			/*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
-	__IO uint32_t  STATICWAITWR2;			/*!< Selects the delay from chip select n to a write access. */
-	__IO uint32_t  STATICWAITTURN2;			/*!< Selects bus turnaround cycles */
-	__I  uint32_t  RESERVED10;
-	__IO uint32_t  STATICCONFIG3;			/*!< Selects the memory configuration for static chip select n. */
-	__IO uint32_t  STATICWAITWEN3;			/*!< Selects the delay from chip select n to write enable. */
-	__IO uint32_t  STATICWAITOEN3;			/*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
-	__IO uint32_t  STATICWAITRD3;			/*!< Selects the delay from chip select n to a read access. */
-	__IO uint32_t  STATICWAITPAG3;			/*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
-	__IO uint32_t  STATICWAITWR3;			/*!< Selects the delay from chip select n to a write access. */
-	__IO uint32_t  STATICWAITTURN3;			/*!< Selects bus turnaround cycles */
+typedef struct
+{ /*!< EMC Structure          */
+	__IO uint32_t CONTROL; /*!< Controls operation of the memory controller. */
+	__I uint32_t STATUS; /*!< Provides EMC status information. */
+	__IO uint32_t CONFIG; /*!< Configures operation of the memory controller. */
+	__I uint32_t RESERVED0[5];
+	__IO uint32_t DYNAMICCONTROL; /*!< Controls dynamic memory operation. */
+	__IO uint32_t DYNAMICREFRESH; /*!< Configures dynamic memory refresh operation. */
+	__IO uint32_t DYNAMICREADCONFIG; /*!< Configures the dynamic memory read strategy. */
+	__I uint32_t RESERVED1;
+	__IO uint32_t DYNAMICRP; /*!< Selects the precharge command period. */
+	__IO uint32_t DYNAMICRAS; /*!< Selects the active to precharge command period. */
+	__IO uint32_t DYNAMICSREX; /*!< Selects the self-refresh exit time. */
+	__IO uint32_t DYNAMICAPR; /*!< Selects the last-data-out to active command time. */
+	__IO uint32_t DYNAMICDAL; /*!< Selects the data-in to active command time. */
+	__IO uint32_t DYNAMICWR; /*!< Selects the write recovery time. */
+	__IO uint32_t DYNAMICRC; /*!< Selects the active to active command period. */
+	__IO uint32_t DYNAMICRFC; /*!< Selects the auto-refresh period. */
+	__IO uint32_t DYNAMICXSR; /*!< Selects the exit self-refresh to active command time. */
+	__IO uint32_t DYNAMICRRD; /*!< Selects the active bank A to active bank B latency. */
+	__IO uint32_t DYNAMICMRD; /*!< Selects the load mode register to active command time. */
+	__I uint32_t RESERVED2[9];
+	__IO uint32_t STATICEXTENDEDWAIT; /*!< Selects time for long static memory read and write transfers. */
+	__I uint32_t RESERVED3[31];
+	__IO uint32_t DYNAMICCONFIG0; /*!< Selects the configuration information for dynamic memory chip select n. */
+	__IO uint32_t DYNAMICRASCAS0; /*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
+	__I uint32_t RESERVED4[6];
+	__IO uint32_t DYNAMICCONFIG1; /*!< Selects the configuration information for dynamic memory chip select n. */
+	__IO uint32_t DYNAMICRASCAS1; /*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
+	__I uint32_t RESERVED5[6];
+	__IO uint32_t DYNAMICCONFIG2; /*!< Selects the configuration information for dynamic memory chip select n. */
+	__IO uint32_t DYNAMICRASCAS2; /*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
+	__I uint32_t RESERVED6[6];
+	__IO uint32_t DYNAMICCONFIG3; /*!< Selects the configuration information for dynamic memory chip select n. */
+	__IO uint32_t DYNAMICRASCAS3; /*!< Selects the RAS and CAS latencies for dynamic memory chip select n. */
+	__I uint32_t RESERVED7[38];
+	__IO uint32_t STATICCONFIG0; /*!< Selects the memory configuration for static chip select n. */
+	__IO uint32_t STATICWAITWEN0; /*!< Selects the delay from chip select n to write enable. */
+	__IO uint32_t STATICWAITOEN0; /*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
+	__IO uint32_t STATICWAITRD0; /*!< Selects the delay from chip select n to a read access. */
+	__IO uint32_t STATICWAITPAG0; /*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
+	__IO uint32_t STATICWAITWR0; /*!< Selects the delay from chip select n to a write access. */
+	__IO uint32_t STATICWAITTURN0; /*!< Selects bus turnaround cycles */
+	__I uint32_t RESERVED8;
+	__IO uint32_t STATICCONFIG1; /*!< Selects the memory configuration for static chip select n. */
+	__IO uint32_t STATICWAITWEN1; /*!< Selects the delay from chip select n to write enable. */
+	__IO uint32_t STATICWAITOEN1; /*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
+	__IO uint32_t STATICWAITRD1; /*!< Selects the delay from chip select n to a read access. */
+	__IO uint32_t STATICWAITPAG1; /*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
+	__IO uint32_t STATICWAITWR1; /*!< Selects the delay from chip select n to a write access. */
+	__IO uint32_t STATICWAITTURN1; /*!< Selects bus turnaround cycles */
+	__I uint32_t RESERVED9;
+	__IO uint32_t STATICCONFIG2; /*!< Selects the memory configuration for static chip select n. */
+	__IO uint32_t STATICWAITWEN2; /*!< Selects the delay from chip select n to write enable. */
+	__IO uint32_t STATICWAITOEN2; /*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
+	__IO uint32_t STATICWAITRD2; /*!< Selects the delay from chip select n to a read access. */
+	__IO uint32_t STATICWAITPAG2; /*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
+	__IO uint32_t STATICWAITWR2; /*!< Selects the delay from chip select n to a write access. */
+	__IO uint32_t STATICWAITTURN2; /*!< Selects bus turnaround cycles */
+	__I uint32_t RESERVED10;
+	__IO uint32_t STATICCONFIG3; /*!< Selects the memory configuration for static chip select n. */
+	__IO uint32_t STATICWAITWEN3; /*!< Selects the delay from chip select n to write enable. */
+	__IO uint32_t STATICWAITOEN3; /*!< Selects the delay from chip select n or address change, whichever is later, to output enable. */
+	__IO uint32_t STATICWAITRD3; /*!< Selects the delay from chip select n to a read access. */
+	__IO uint32_t STATICWAITPAG3; /*!< Selects the delay for asynchronous page mode sequential accesses for chip select n. */
+	__IO uint32_t STATICWAITWR3; /*!< Selects the delay from chip select n to a write access. */
+	__IO uint32_t STATICWAITTURN3; /*!< Selects bus turnaround cycles */
 } LPC_EMC_T;
 
 /**
@@ -239,45 +241,48 @@ typedef struct {							/*!< EMC Structure          */
 /**
  * @brief	EMC Dynamic Device Configuration structure used for IP drivers
  */
-typedef struct {
-	uint32_t    BaseAddr;		/*!< Base Address */
-	uint8_t     RAS;			/*!< RAS value */
-	uint32_t    ModeRegister;	/*!< Mode Register value */
-	uint32_t    DynConfig;		/*!< Dynamic Configuration value */
+typedef struct
+{
+	uint32_t BaseAddr; /*!< Base Address */
+	uint8_t RAS; /*!< RAS value */
+	uint32_t ModeRegister; /*!< Mode Register value */
+	uint32_t DynConfig; /*!< Dynamic Configuration value */
 } IP_EMC_DYN_DEVICE_CONFIG_T;
 
 /**
  * @brief EMC Dynamic Configure Struct
  */
-typedef struct {
-	int32_t RefreshPeriod;				/*!< Refresh period */
-	uint32_t ReadConfig;					/*!< Clock*/
-	int32_t tRP;									/*!< Precharge Command Period */
-	int32_t tRAS;									/*!< Active to Precharge Command Period */
-	int32_t tSREX;								/*!< Self Refresh Exit Time */
-	int32_t tAPR;									/*!< Last Data Out to Active Time */
-	int32_t tDAL;									/*!< Data In to Active Command Time */
-	int32_t tWR;									/*!< Write Recovery Time */
-	int32_t tRC;									/*!< Active to Active Command Period */
-	int32_t tRFC;									/*!< Auto-refresh Period */
-	int32_t tXSR;									/*!< Exit Selt Refresh */
-	int32_t tRRD;									/*!< Active Bank A to Active Bank B Time */
-	int32_t tMRD;									/*!< Load Mode register command to Active Command */
-	IP_EMC_DYN_DEVICE_CONFIG_T DevConfig[4];		/*!< Device Configuration array */
+typedef struct
+{
+	int32_t RefreshPeriod; /*!< Refresh period */
+	uint32_t ReadConfig; /*!< Clock*/
+	int32_t tRP; /*!< Precharge Command Period */
+	int32_t tRAS; /*!< Active to Precharge Command Period */
+	int32_t tSREX; /*!< Self Refresh Exit Time */
+	int32_t tAPR; /*!< Last Data Out to Active Time */
+	int32_t tDAL; /*!< Data In to Active Command Time */
+	int32_t tWR; /*!< Write Recovery Time */
+	int32_t tRC; /*!< Active to Active Command Period */
+	int32_t tRFC; /*!< Auto-refresh Period */
+	int32_t tXSR; /*!< Exit Selt Refresh */
+	int32_t tRRD; /*!< Active Bank A to Active Bank B Time */
+	int32_t tMRD; /*!< Load Mode register command to Active Command */
+	IP_EMC_DYN_DEVICE_CONFIG_T DevConfig[4]; /*!< Device Configuration array */
 } IP_EMC_DYN_CONFIG_T;
 
 /**
  * @brief EMC Static Configure Structure
  */
-typedef struct {
-	uint8_t ChipSelect;		/*!< Chip select */
-	uint32_t Config;		/*!< Configuration value */
-	int32_t WaitWen;		/*!< Write Enable Wait */
-	int32_t WaitOen;		/*!< Output Enable Wait */
-	int32_t WaitRd;			/*!< Read Wait */
-	int32_t WaitPage;		/*!< Page Access Wait */
-	int32_t WaitWr;			/*!< Write Wait */
-	int32_t WaitTurn;		/*!< Turn around wait */
+typedef struct
+{
+	uint8_t ChipSelect; /*!< Chip select */
+	uint32_t Config; /*!< Configuration value */
+	int32_t WaitWen; /*!< Write Enable Wait */
+	int32_t WaitOen; /*!< Output Enable Wait */
+	int32_t WaitRd; /*!< Read Wait */
+	int32_t WaitPage; /*!< Page Access Wait */
+	int32_t WaitWr; /*!< Write Wait */
+	int32_t WaitTurn; /*!< Turn around wait */
 } IP_EMC_STATIC_CONFIG_T;
 
 /**
@@ -285,35 +290,35 @@ typedef struct {
  * @param	Dynamic_Config	: Pointer to dynamic memory setup data
  * @return	None
  */
-void Chip_EMC_Dynamic_Init(IP_EMC_DYN_CONFIG_T *Dynamic_Config);
+void Chip_EMC_Dynamic_Init (IP_EMC_DYN_CONFIG_T *Dynamic_Config);
 
 /**
  * @brief	Static memory setup
  * @param	Static_Config	: Pointer to static memory setup data
  * @return	None
  */
-void Chip_EMC_Static_Init(IP_EMC_STATIC_CONFIG_T *Static_Config);
+void Chip_EMC_Static_Init (IP_EMC_STATIC_CONFIG_T *Static_Config);
 
 /**
  * @brief	Enable Dynamic Memory Controller
  * @param	Enable	: 1 = Enable Dynamic Memory Controller, 0 = Disable
  * @return	None
  */
-void Chip_EMC_Dynamic_Enable(uint8_t Enable);
+void Chip_EMC_Dynamic_Enable (uint8_t Enable);
 
 /**
  * @brief	Mirror CS1 to CS0 and DYCS0
  * @param	Enable	: 1 = Mirror, 0 = Normal Memory Map
  * @return	None
  */
-void Chip_EMC_Mirror(uint8_t Enable);
+void Chip_EMC_Mirror (uint8_t Enable);
 
 /**
  * @brief	Enable EMC
  * @param	Enable	: 1 = Enable, 0 = Disable
  * @return	None
  */
-void Chip_EMC_Enable(uint8_t Enable);
+void Chip_EMC_Enable (uint8_t Enable);
 
 /**
  * @brief	Set EMC LowPower Mode
@@ -322,7 +327,7 @@ void Chip_EMC_Enable(uint8_t Enable);
  * @note	This function should only be called when the memory
  * controller is not busy (bit 0 of the status register is not set).
  */
-void Chip_EMC_LowPowerMode(uint8_t Enable);
+void Chip_EMC_LowPowerMode (uint8_t Enable);
 
 /**
  * @brief	Initialize EMC
@@ -331,14 +336,14 @@ void Chip_EMC_LowPowerMode(uint8_t Enable);
  * @param	EndianMode	: Endian Mode, 0 = Little, 1 = Big
  * @return	None
  */
-void Chip_EMC_Init(uint32_t Enable, uint32_t ClockRatio, uint32_t EndianMode);
+void Chip_EMC_Init (uint32_t Enable, uint32_t ClockRatio, uint32_t EndianMode);
 
 /**
  * @brief	Set Static Memory Extended Wait in Clock
  * @param	Wait16Clks	: Number of '16 clock' delay cycles
  * @return	None
  */
-STATIC INLINE void Chip_EMC_SetStaticExtendedWait(uint32_t Wait16Clks)
+STATIC INLINE void Chip_EMC_SetStaticExtendedWait (uint32_t Wait16Clks)
 {
 	LPC_EMC->STATICEXTENDEDWAIT = Wait16Clks;
 }

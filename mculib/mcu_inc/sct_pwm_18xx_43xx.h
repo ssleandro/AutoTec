@@ -33,7 +33,8 @@
 #define __SCT_PWM_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup SCT_PWM_18XX_43XX CHIP: LPC18XX_43XX State Configurable Timer PWM driver
@@ -53,7 +54,7 @@ extern "C" {
  * @note	Return value of this function will be vaild only
  *          after calling Chip_SCTPWM_SetRate()
  */
-STATIC INLINE uint32_t Chip_SCTPWM_GetTicksPerCycle(LPC_SCT_T *pSCT)
+STATIC INLINE uint32_t Chip_SCTPWM_GetTicksPerCycle (LPC_SCT_T *pSCT)
 {
 	return pSCT->MATCHREL[0].U;
 }
@@ -68,7 +69,7 @@ STATIC INLINE uint32_t Chip_SCTPWM_GetTicksPerCycle(LPC_SCT_T *pSCT)
  *          very high frequency as the calculation might
  *          cause integer overflow
  */
-STATIC INLINE uint32_t Chip_SCTPWM_PercentageToTicks(LPC_SCT_T *pSCT, uint8_t percent)
+STATIC INLINE uint32_t Chip_SCTPWM_PercentageToTicks (LPC_SCT_T *pSCT, uint8_t percent)
 {
 	return (Chip_SCTPWM_GetTicksPerCycle(pSCT) * percent) / 100;
 }
@@ -83,7 +84,7 @@ STATIC INLINE uint32_t Chip_SCTPWM_PercentageToTicks(LPC_SCT_T *pSCT, uint8_t pe
  *          "Number of OUTPUT pins available in the SCT" whichever
  *          is minimum.
  */
-STATIC INLINE uint32_t Chip_SCTPWM_GetDutyCycle(LPC_SCT_T *pSCT, uint8_t index)
+STATIC INLINE uint32_t Chip_SCTPWM_GetDutyCycle (LPC_SCT_T *pSCT, uint8_t index)
 {
 	return pSCT->MATCHREL[index].U;
 }
@@ -100,7 +101,7 @@ STATIC INLINE uint32_t Chip_SCTPWM_GetDutyCycle(LPC_SCT_T *pSCT, uint8_t index)
  *          is minimum. The new duty cycle will be effective only
  *          after completion of current PWM cycle.
  */
-STATIC INLINE void Chip_SCTPWM_SetDutyCycle(LPC_SCT_T *pSCT, uint8_t index, uint32_t ticks)
+STATIC INLINE void Chip_SCTPWM_SetDutyCycle (LPC_SCT_T *pSCT, uint8_t index, uint32_t ticks)
 {
 	Chip_SCT_SetMatchReload(pSCT, (CHIP_SCT_MATCH_REG_T)index, ticks);
 }
@@ -110,7 +111,7 @@ STATIC INLINE void Chip_SCTPWM_SetDutyCycle(LPC_SCT_T *pSCT, uint8_t index, uint
  * @param	pSCT	: The base of SCT peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_SCTPWM_Init(LPC_SCT_T *pSCT)
+STATIC INLINE void Chip_SCTPWM_Init (LPC_SCT_T *pSCT)
 {
 	Chip_SCT_Init(pSCT);
 }
@@ -126,7 +127,7 @@ STATIC INLINE void Chip_SCTPWM_Init(LPC_SCT_T *pSCT)
  * 			Chip_SCTPWM_SetDutyCycle() can be called when the SCT/PWM is
  * 			running to change the DutyCycle.
  */
-STATIC INLINE void Chip_SCTPWM_Start(LPC_SCT_T *pSCT)
+STATIC INLINE void Chip_SCTPWM_Start (LPC_SCT_T *pSCT)
 {
 	Chip_SCT_ClearControl(pSCT, SCT_CTRL_HALT_L | SCT_CTRL_HALT_H);
 }
@@ -136,7 +137,7 @@ STATIC INLINE void Chip_SCTPWM_Start(LPC_SCT_T *pSCT)
  * @param	pSCT	: The base of SCT peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_SCTPWM_Stop(LPC_SCT_T *pSCT)
+STATIC INLINE void Chip_SCTPWM_Stop (LPC_SCT_T *pSCT)
 {
 	/* Stop SCT */
 	Chip_SCT_SetControl(pSCT, SCT_CTRL_HALT_L | SCT_CTRL_HALT_H);
@@ -151,7 +152,7 @@ STATIC INLINE void Chip_SCTPWM_Stop(LPC_SCT_T *pSCT)
  * @param	freq	: Frequency in Hz
  * @return	None
  */
-void Chip_SCTPWM_SetRate(LPC_SCT_T *pSCT, uint32_t freq);
+void Chip_SCTPWM_SetRate (LPC_SCT_T *pSCT, uint32_t freq);
 
 /**
  * @brief	Setup the OUTPUT pin and associate it with an index
@@ -164,7 +165,7 @@ void Chip_SCTPWM_SetRate(LPC_SCT_T *pSCT, uint32_t freq);
  *          "Number of OUTPUT pins available in the SCT" whichever
  *          is minimum.
  */
-void Chip_SCTPWM_SetOutPin(LPC_SCT_T *pSCT, uint8_t index, uint8_t pin);
+void Chip_SCTPWM_SetOutPin (LPC_SCT_T *pSCT, uint8_t index, uint8_t pin);
 
 /**
  * @}

@@ -32,7 +32,8 @@
 #define __SDMMC_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup CHIP_SDMMC_Definitions CHIP: Common SD/MMC definitions
@@ -84,127 +85,131 @@ extern "C" {
 #define SDC_OCR_BUSY                (((uint32_t) 0) << 31)
 
 /* SD/MMC commands - this matrix shows the command, response types, and
-   supported card type for that command.
-   Command                 Number Resp  SD  MMC
-   ----------------------- ------ ----- --- ---
-   Reset (go idle)         CMD0   NA    x   x
-   Send op condition       CMD1   R3        x
-   All send CID            CMD2   R2    x   x
-   Send relative address   CMD3   R1        x
-   Send relative address   CMD3   R6    x
-   Program DSR             CMD4   NA        x
-   Select/deselect card    CMD7   R1b       x
-   Select/deselect card    CMD7   R1    x
-   Send CSD                CMD9   R2    x   x
-   Send CID                CMD10  R2    x   x
-   Read data until stop    CMD11  R1    x   x
-   Stop transmission       CMD12  R1/b  x   x
-   Send status             CMD13  R1    x   x
-   Go inactive state       CMD15  NA    x   x
-   Set block length        CMD16  R1    x   x
-   Read single block       CMD17  R1    x   x
-   Read multiple blocks    CMD18  R1    x   x
-   Write data until stop   CMD20  R1        x
-   Setblock count          CMD23  R1        x
-   Write single block      CMD24  R1    x   x
-   Write multiple blocks   CMD25  R1    x   x
-   Program CID             CMD26  R1        x
-   Program CSD             CMD27  R1    x   x
-   Set write protection    CMD28  R1b   x   x
-   Clear write protection  CMD29  R1b   x   x
-   Send write protection   CMD30  R1    x   x
-   Erase block start       CMD32  R1    x
-   Erase block end         CMD33  R1    x
-   Erase block start       CMD35  R1        x
-   Erase block end         CMD36  R1        x
-   Erase blocks            CMD38  R1b       x
-   Fast IO                 CMD39  R4        x
-   Go IRQ state            CMD40  R5        x
-   Lock/unlock             CMD42  R1b       x
-   Application command     CMD55  R1        x
-   General command         CMD56  R1b       x
+ supported card type for that command.
+ Command                 Number Resp  SD  MMC
+ ----------------------- ------ ----- --- ---
+ Reset (go idle)         CMD0   NA    x   x
+ Send op condition       CMD1   R3        x
+ All send CID            CMD2   R2    x   x
+ Send relative address   CMD3   R1        x
+ Send relative address   CMD3   R6    x
+ Program DSR             CMD4   NA        x
+ Select/deselect card    CMD7   R1b       x
+ Select/deselect card    CMD7   R1    x
+ Send CSD                CMD9   R2    x   x
+ Send CID                CMD10  R2    x   x
+ Read data until stop    CMD11  R1    x   x
+ Stop transmission       CMD12  R1/b  x   x
+ Send status             CMD13  R1    x   x
+ Go inactive state       CMD15  NA    x   x
+ Set block length        CMD16  R1    x   x
+ Read single block       CMD17  R1    x   x
+ Read multiple blocks    CMD18  R1    x   x
+ Write data until stop   CMD20  R1        x
+ Setblock count          CMD23  R1        x
+ Write single block      CMD24  R1    x   x
+ Write multiple blocks   CMD25  R1    x   x
+ Program CID             CMD26  R1        x
+ Program CSD             CMD27  R1    x   x
+ Set write protection    CMD28  R1b   x   x
+ Clear write protection  CMD29  R1b   x   x
+ Send write protection   CMD30  R1    x   x
+ Erase block start       CMD32  R1    x
+ Erase block end         CMD33  R1    x
+ Erase block start       CMD35  R1        x
+ Erase block end         CMD36  R1        x
+ Erase blocks            CMD38  R1b       x
+ Fast IO                 CMD39  R4        x
+ Go IRQ state            CMD40  R5        x
+ Lock/unlock             CMD42  R1b       x
+ Application command     CMD55  R1        x
+ General command         CMD56  R1b       x
 
  *** SD card application commands - these must be preceded with ***
  *** MMC CMD55 application specific command first               ***
-   Set bus width           ACMD6  R1    x
-   Send SD status          ACMD13 R1    x
-   Send number WR blocks   ACMD22 R1    x
-   Set WR block erase cnt  ACMD23 R1    x
-   Send op condition       ACMD41 R3    x
-   Set clear card detect   ACMD42 R1    x
-   Send CSR                ACMD51 R1    x */
+ Set bus width           ACMD6  R1    x
+ Send SD status          ACMD13 R1    x
+ Send number WR blocks   ACMD22 R1    x
+ Set WR block erase cnt  ACMD23 R1    x
+ Send op condition       ACMD41 R3    x
+ Set clear card detect   ACMD42 R1    x
+ Send CSR                ACMD51 R1    x */
 
 /**
  * @brief  SD/MMC application specific commands for SD cards only - these
  * must be preceded by the SDMMC CMD55 to work correctly
  */
-typedef enum {
-	SD_SET_BUS_WIDTH,		/*!< Set the SD bus width */
-	SD_SEND_STATUS,			/*!< Send the SD card status */
-	SD_SEND_WR_BLOCKS,		/*!< Send the number of written clocks */
-	SD_SET_ERASE_COUNT,		/*!< Set the number of blocks to pre-erase */
-	SD_SENDOP_COND,			/*!< Send the OCR register (init) */
-	SD_CLEAR_CARD_DET,		/*!< Set or clear the 50K detect pullup */
-	SD_SEND_SCR,			/*!< Send the SD configuration register */
-	SD_INVALID_APP_CMD		/*!< Invalid SD application command */
+typedef enum
+{
+	SD_SET_BUS_WIDTH, /*!< Set the SD bus width */
+	SD_SEND_STATUS, /*!< Send the SD card status */
+	SD_SEND_WR_BLOCKS, /*!< Send the number of written clocks */
+	SD_SET_ERASE_COUNT, /*!< Set the number of blocks to pre-erase */
+	SD_SENDOP_COND, /*!< Send the OCR register (init) */
+	SD_CLEAR_CARD_DET, /*!< Set or clear the 50K detect pullup */
+	SD_SEND_SCR, /*!< Send the SD configuration register */
+	SD_INVALID_APP_CMD /*!< Invalid SD application command */
 } SD_APP_CMD_T;
 
 /**
  * @brief  Possible SDMMC response types
  */
-typedef enum {
-	SDMMC_RESPONSE_R1,		/*!< Typical status */
-	SDMMC_RESPONSE_R1B,		/*!< Typical status with busy */
-	SDMMC_RESPONSE_R2,		/*!< CID/CSD registers (CMD2 and CMD10) */
-	SDMMC_RESPONSE_R3,		/*!< OCR register (CMD1, ACMD41) */
-	SDMMC_RESPONSE_R4,		/*!< Fast IO response word */
-	SDMMC_RESPONSE_R5,		/*!< Go IRQ state response word */
-	SDMMC_RESPONSE_R6,		/*!< Published RCA response */
-	SDMMC_RESPONSE_NONE		/*!< No response expected */
+typedef enum
+{
+	SDMMC_RESPONSE_R1, /*!< Typical status */
+	SDMMC_RESPONSE_R1B, /*!< Typical status with busy */
+	SDMMC_RESPONSE_R2, /*!< CID/CSD registers (CMD2 and CMD10) */
+	SDMMC_RESPONSE_R3, /*!< OCR register (CMD1, ACMD41) */
+	SDMMC_RESPONSE_R4, /*!< Fast IO response word */
+	SDMMC_RESPONSE_R5, /*!< Go IRQ state response word */
+	SDMMC_RESPONSE_R6, /*!< Published RCA response */
+	SDMMC_RESPONSE_NONE /*!< No response expected */
 } SDMMC_RESPONSE_T;
 
 /**
  * @brief  Possible SDMMC card state types
  */
-typedef enum {
-	SDMMC_IDLE_ST = 0,	/*!< Idle state */
-	SDMMC_READY_ST,		/*!< Ready state */
-	SDMMC_IDENT_ST,		/*!< Identification State */
-	SDMMC_STBY_ST,		/*!< standby state */
-	SDMMC_TRAN_ST,		/*!< transfer state */
-	SDMMC_DATA_ST,		/*!< Sending-data State */
-	SDMMC_RCV_ST,		/*!< Receive-data State */
-	SDMMC_PRG_ST,		/*!< Programming State */
-	SDMMC_DIS_ST		/*!< Disconnect State */
+typedef enum
+{
+	SDMMC_IDLE_ST = 0, /*!< Idle state */
+	SDMMC_READY_ST, /*!< Ready state */
+	SDMMC_IDENT_ST, /*!< Identification State */
+	SDMMC_STBY_ST, /*!< standby state */
+	SDMMC_TRAN_ST, /*!< transfer state */
+	SDMMC_DATA_ST, /*!< Sending-data State */
+	SDMMC_RCV_ST, /*!< Receive-data State */
+	SDMMC_PRG_ST, /*!< Programming State */
+	SDMMC_DIS_ST /*!< Disconnect State */
 } SDMMC_STATE_T;
 
 /* Function prototype for event setup function */
-typedef void (*SDMMC_EVSETUP_FUNC_T)(void *);
+typedef void (*SDMMC_EVSETUP_FUNC_T) (void *);
 
 /* Function prototype for wait for event function */
-typedef uint32_t (*SDMMC_EVWAIT_FUNC_T)(void);
+typedef uint32_t (*SDMMC_EVWAIT_FUNC_T) (void);
 
 /* Function prototype for milliSecond delay function */
-typedef void (*SDMMC_MSDELAY_FUNC_T)(uint32_t);
+typedef void (*SDMMC_MSDELAY_FUNC_T) (uint32_t);
 
 /**
  * @brief SD/MMC Card specific setup data structure
  */
-typedef struct {
-	uint32_t response[4];						/*!< Most recent response */
-	uint32_t cid[4];							/*!< CID of acquired card  */
-	uint32_t csd[4];							/*!< CSD of acquired card */
-	uint32_t ext_csd[512 / 4];					/*!< Ext CSD */
-	uint32_t card_type;							/*!< Card Type */
-	uint16_t rca;								/*!< Relative address assigned to card */
-	uint32_t speed;								/*!< Speed */
-	uint32_t block_len;							/*!< Card sector size */
-	uint64_t device_size;						/*!< Device Size */
-	uint32_t blocknr;							/*!< Block Number */
-	uint32_t clk_rate;							/*! Clock rate */
-	SDMMC_EVSETUP_FUNC_T evsetup_cb;			/*!< Function to setup event information */
-	SDMMC_EVWAIT_FUNC_T waitfunc_cb;			/*!< Function to wait for event */
-	SDMMC_MSDELAY_FUNC_T msdelay_func;			/*!< Function to sleep in ms */
+typedef struct
+{
+	uint32_t response[4]; /*!< Most recent response */
+	uint32_t cid[4]; /*!< CID of acquired card  */
+	uint32_t csd[4]; /*!< CSD of acquired card */
+	uint32_t ext_csd[512 / 4]; /*!< Ext CSD */
+	uint32_t card_type; /*!< Card Type */
+	uint16_t rca; /*!< Relative address assigned to card */
+	uint32_t speed; /*!< Speed */
+	uint32_t block_len; /*!< Card sector size */
+	uint64_t device_size; /*!< Device Size */
+	uint32_t blocknr; /*!< Block Number */
+	uint32_t clk_rate; /*! Clock rate */
+	SDMMC_EVSETUP_FUNC_T evsetup_cb; /*!< Function to setup event information */
+	SDMMC_EVWAIT_FUNC_T waitfunc_cb; /*!< Function to wait for event */
+	SDMMC_MSDELAY_FUNC_T msdelay_func; /*!< Function to sleep in ms */
 } SDMMC_CARD_T;
 
 /**

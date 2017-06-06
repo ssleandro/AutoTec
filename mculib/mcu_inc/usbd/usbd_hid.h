@@ -1,26 +1,26 @@
 /***********************************************************************
-* $Id: mw_usbd_hid.h.rca 1.2 Tue Nov  1 11:45:07 2011 nlv09221 Experimental $
-*
-* Project: USB device ROM Stack
-*
-* Description:
-*     HID Definitions.
-*
-***********************************************************************
-*   Copyright(C) 2011, NXP Semiconductor
-*   All rights reserved.
-*
-* Software that is described herein is for illustrative purposes only
-* which provides customers with programming information regarding the
-* products. This software is supplied "AS IS" without any warranties.
-* NXP Semiconductors assumes no responsibility or liability for the
-* use of the software, conveys no license or title under any patent,
-* copyright, or mask work right to the product. NXP Semiconductors
-* reserves the right to make changes in the software without
-* notification. NXP Semiconductors also make no representation or
-* warranty that such application will be suitable for the specified
-* use without further testing or modification.
-**********************************************************************/
+ * $Id: mw_usbd_hid.h.rca 1.2 Tue Nov  1 11:45:07 2011 nlv09221 Experimental $
+ *
+ * Project: USB device ROM Stack
+ *
+ * Description:
+ *     HID Definitions.
+ *
+ ***********************************************************************
+ *   Copyright(C) 2011, NXP Semiconductor
+ *   All rights reserved.
+ *
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ **********************************************************************/
 #ifndef __HID_H__
 #define __HID_H__
 
@@ -33,7 +33,6 @@
  *  \addtogroup USBD_HID 
  *  @{
  */
-
 
 /** HID Subclass Codes  
  * @{ 
@@ -55,8 +54,6 @@
 #define HID_PROTOCOL_MOUSE              0x02
 /** @} */
 
-
-
 /** Descriptor Types  
  * @{ 
  */
@@ -68,25 +65,26 @@
 #define HID_PHYSICAL_DESCRIPTOR_TYPE    0x23
 /** @} */
 
-
 /** \brief HID class-specific HID Descriptor.
  *
  *  Type define for the HID class-specific HID descriptor, to describe the HID device's specifications. Refer to the HID
  *  specification for details on the structure elements.
  *
  */
-PRE_PACK struct POST_PACK _HID_DESCRIPTOR {
-  uint8_t  bLength;	/**< Size of the descriptor, in bytes. */
-  uint8_t  bDescriptorType;	/**< Type of HID descriptor. */
-  uint16_t bcdHID; /**< BCD encoded version that the HID descriptor and device complies to. */
-  uint8_t  bCountryCode; /**< Country code of the localized device, or zero if universal. */
-  uint8_t  bNumDescriptors; /**< Total number of HID report descriptors for the interface. */
-  
-  PRE_PACK struct POST_PACK _HID_DESCRIPTOR_LIST {
-    uint8_t  bDescriptorType; /**< Type of HID report. */
-    uint16_t wDescriptorLength; /**< Length of the associated HID report descriptor, in bytes. */
-  } DescriptorList[1]; /**< Array of one or more descriptors */
-} ;
+PRE_PACK struct POST_PACK _HID_DESCRIPTOR
+{
+	uint8_t bLength; /**< Size of the descriptor, in bytes. */
+	uint8_t bDescriptorType; /**< Type of HID descriptor. */
+	uint16_t bcdHID; /**< BCD encoded version that the HID descriptor and device complies to. */
+	uint8_t bCountryCode; /**< Country code of the localized device, or zero if universal. */
+	uint8_t bNumDescriptors; /**< Total number of HID report descriptors for the interface. */
+
+	PRE_PACK struct POST_PACK _HID_DESCRIPTOR_LIST
+	{
+		uint8_t bDescriptorType; /**< Type of HID report. */
+		uint16_t wDescriptorLength; /**< Length of the associated HID report descriptor, in bytes. */
+	} DescriptorList[1]; /**< Array of one or more descriptors */
+};
 /** HID class-specific HID Descriptor. */
 typedef struct _HID_DESCRIPTOR HID_DESCRIPTOR;
 
@@ -111,7 +109,6 @@ typedef struct _HID_DESCRIPTOR HID_DESCRIPTOR;
 #define HID_REPORT_FEATURE              0x03
 /** @} */
 
-
 /** Usage Pages  
  * @{ 
  */
@@ -132,7 +129,6 @@ typedef struct _HID_DESCRIPTOR HID_DESCRIPTOR;
 #define HID_USAGE_PAGE_UNICODE          0x10
 #define HID_USAGE_PAGE_ALPHANUMERIC     0x14
 /** @} */
-
 
 /** Generic Desktop Page (0x01)  
  * @{ 
@@ -355,7 +351,6 @@ typedef struct _HID_DESCRIPTOR HID_DESCRIPTOR;
 /* ... */
 
 /* and others ... */
-
 
 /** HID Report Item Macros  
  * @{ 

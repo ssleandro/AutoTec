@@ -3,7 +3,7 @@
 
 //#include "cmsis.h"
 /* Here is a good place to include header files that are required across
-your application. */
+ your application. */
 
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
@@ -55,26 +55,24 @@ your application. */
 #define configTIMER_QUEUE_LENGTH                10
 #define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
 
-
 // Cortex-M specific definitions.
 #ifdef __NVIC_PRIO_BITS
-  //__BVIC_PRIO_BITS will be specified when CMSIS is being used.
- #define configPRIO_BITS         __NVIC_PRIO_BITS
+//__BVIC_PRIO_BITS will be specified when CMSIS is being used.
+#define configPRIO_BITS         __NVIC_PRIO_BITS
 #else
- #define configPRIO_BITS         3		 //8 priority levels
+#define configPRIO_BITS         3		 //8 priority levels
 #endif
-
 
 //#define configPRIO_BITS         5		/* 32 priority levels */
 
 /* The lowest interrupt priority that can be used in a call to a "set priority"
-function. */
+ function. */
 #define configLIBRARY_LOWEST_INTERRUPT_PRIORITY   ((1 << configPRIO_BITS) - 1)
 
 /* The highest interrupt priority that can be used by any interrupt service
-routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
-INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
-PRIORITY THAN THIS! (higher priorities are lower numeric values. */
+ routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
+ INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
+ PRIORITY THAN THIS! (higher priorities are lower numeric values. */
 #define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY 1
 
 /* Interrupt nesting behaviour configuration. */
@@ -82,15 +80,15 @@ PRIORITY THAN THIS! (higher priorities are lower numeric values. */
 
 /* Priority 5, or 160 as only the top three bits are implemented. */
 /* !!!! configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero !!!!
-See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
+ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    ( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 #define configMAX_API_CALL_INTERRUPT_PRIORITY   ( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 
 /* Priorities passed to NVIC_SetPriority() do not require shifting as the
-function does the shifting itself.  Note these priorities need to be equal to
-or lower than configMAX_SYSCALL_INTERRUPT_PRIORITY - therefore the numeric
-value needs to be equal to or greater than 5 (on the Cortex-M3 the lower the
-numeric value the higher the interrupt priority). */
+ function does the shifting itself.  Note these priorities need to be equal to
+ or lower than configMAX_SYSCALL_INTERRUPT_PRIORITY - therefore the numeric
+ value needs to be equal to or greater than 5 (on the Cortex-M3 the lower the
+ numeric value the higher the interrupt priority). */
 
 /* Define to trap errors during development. */
 //extern void onAssert__(char const *file, unsigned line);

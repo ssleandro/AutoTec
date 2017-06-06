@@ -44,24 +44,24 @@
 #include "api_mdriver.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 enum
 {
-  MDRIVER_SPAN_NO_ERROR,
-  MDRIVER_SPAN_ERR_SECTOR = 201,
-  MDRIVER_SPAN_ERR_FORMAT
+	MDRIVER_SPAN_NO_ERROR,
+	MDRIVER_SPAN_ERR_SECTOR = 201,
+	MDRIVER_SPAN_ERR_FORMAT
 };
 
-F_DRIVER * initfunc_span ( unsigned long driver_param );
-int span_format( void );
-int span_init( void );
+F_DRIVER * initfunc_span (unsigned long driver_param);
+int span_format (void);
+int span_init (void);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* _API_MDRIVER_SPAN_H_ */
 

@@ -33,7 +33,8 @@
 #define __GPIOGROUP_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup GPIOGP_18XX_43XX CHIP: LPC18xx/43xx GPIO group driver
@@ -44,12 +45,13 @@ extern "C" {
 /**
  * @brief GPIO grouped interrupt register block structure
  */
-typedef struct {					/*!< GPIO_GROUP_INTn Structure */
-	__IO uint32_t  CTRL;			/*!< GPIO grouped interrupt control register */
-	__I  uint32_t  RESERVED0[7];
-	__IO uint32_t  PORT_POL[8];		/*!< GPIO grouped interrupt port polarity register */
-	__IO uint32_t  PORT_ENA[8];		/*!< GPIO grouped interrupt port m enable register */
-	uint32_t       RESERVED1[1000];
+typedef struct
+{ /*!< GPIO_GROUP_INTn Structure */
+	__IO uint32_t CTRL; /*!< GPIO grouped interrupt control register */
+	__I uint32_t RESERVED0[7];
+	__IO uint32_t PORT_POL[8]; /*!< GPIO grouped interrupt port polarity register */
+	__IO uint32_t PORT_ENA[8]; /*!< GPIO grouped interrupt port m enable register */
+	uint32_t RESERVED1[1000];
 } LPC_GPIOGROUPINT_T;
 
 /**
@@ -65,7 +67,7 @@ typedef struct {					/*!< GPIO_GROUP_INTn Structure */
  * @param	group		: GPIO group number
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_ClearIntStatus(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
+STATIC INLINE void Chip_GPIOGP_ClearIntStatus (LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
 {
 	uint32_t temp;
 
@@ -79,9 +81,9 @@ STATIC INLINE void Chip_GPIOGP_ClearIntStatus(LPC_GPIOGROUPINT_T *pGPIOGPINT, ui
  * @param	group		: GPIO group number
  * @return	true if the group interrupt is pending, otherwise false.
  */
-STATIC INLINE bool Chip_GPIOGP_GetIntStatus(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
+STATIC INLINE bool Chip_GPIOGP_GetIntStatus (LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
 {
-	return (bool) ((pGPIOGPINT[group].CTRL & GPIOGR_INT) != 0);
+	return (bool)((pGPIOGPINT[group].CTRL & GPIOGR_INT) != 0);
 }
 
 /**
@@ -90,7 +92,7 @@ STATIC INLINE bool Chip_GPIOGP_GetIntStatus(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint
  * @param	group		: GPIO group number
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_SelectOrMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
+STATIC INLINE void Chip_GPIOGP_SelectOrMode (LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
 {
 	pGPIOGPINT[group].CTRL &= ~GPIOGR_COMB;
 }
@@ -101,7 +103,7 @@ STATIC INLINE void Chip_GPIOGP_SelectOrMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint
  * @param	group		: GPIO group number
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_SelectAndMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
+STATIC INLINE void Chip_GPIOGP_SelectAndMode (LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
 {
 	pGPIOGPINT[group].CTRL |= GPIOGR_COMB;
 }
@@ -112,7 +114,7 @@ STATIC INLINE void Chip_GPIOGP_SelectAndMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, uin
  * @param	group		: GPIO group number
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_SelectEdgeMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
+STATIC INLINE void Chip_GPIOGP_SelectEdgeMode (LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
 {
 	pGPIOGPINT[group].CTRL &= ~GPIOGR_TRIG;
 }
@@ -123,7 +125,7 @@ STATIC INLINE void Chip_GPIOGP_SelectEdgeMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, ui
  * @param	group		: GPIO group number
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_SelectLevelMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
+STATIC INLINE void Chip_GPIOGP_SelectLevelMode (LPC_GPIOGROUPINT_T *pGPIOGPINT, uint8_t group)
 {
 	pGPIOGPINT[group].CTRL |= GPIOGR_TRIG;
 }
@@ -136,10 +138,10 @@ STATIC INLINE void Chip_GPIOGP_SelectLevelMode(LPC_GPIOGROUPINT_T *pGPIOGPINT, u
  * @param	pinMask		: Or'ed value of pins to select for low level (bit 0 = pin 0, 1 = pin1, etc.)
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_SelectLowLevel(LPC_GPIOGROUPINT_T *pGPIOGPINT,
-											  uint8_t group,
-											  uint8_t port,
-											  uint32_t pinMask)
+STATIC INLINE void Chip_GPIOGP_SelectLowLevel (LPC_GPIOGROUPINT_T *pGPIOGPINT,
+	uint8_t group,
+	uint8_t port,
+	uint32_t pinMask)
 {
 	pGPIOGPINT[group].PORT_POL[port] &= ~pinMask;
 }
@@ -152,10 +154,10 @@ STATIC INLINE void Chip_GPIOGP_SelectLowLevel(LPC_GPIOGROUPINT_T *pGPIOGPINT,
  * @param	pinMask		: Or'ed value of pins to select for high level (bit 0 = pin 0, 1 = pin1, etc.)
  * @return	None
  */
-STATIC INLINE void Chip_GPIOGP_SelectHighLevel(LPC_GPIOGROUPINT_T *pGPIOGPINT,
-											   uint8_t group,
-											   uint8_t port,
-											   uint32_t pinMask)
+STATIC INLINE void Chip_GPIOGP_SelectHighLevel (LPC_GPIOGROUPINT_T *pGPIOGPINT,
+	uint8_t group,
+	uint8_t port,
+	uint32_t pinMask)
 {
 	pGPIOGPINT[group].PORT_POL[port] |= pinMask;
 }
@@ -169,10 +171,10 @@ STATIC INLINE void Chip_GPIOGP_SelectHighLevel(LPC_GPIOGROUPINT_T *pGPIOGPINT,
  * @return	None
  * @note	Disabled pins do not contrinute to the group interrupt.
  */
-STATIC INLINE void Chip_GPIOGP_DisableGroupPins(LPC_GPIOGROUPINT_T *pGPIOGPINT,
-												uint8_t group,
-												uint8_t port,
-												uint32_t pinMask)
+STATIC INLINE void Chip_GPIOGP_DisableGroupPins (LPC_GPIOGROUPINT_T *pGPIOGPINT,
+	uint8_t group,
+	uint8_t port,
+	uint32_t pinMask)
 {
 	pGPIOGPINT[group].PORT_ENA[port] &= ~pinMask;
 }
@@ -186,10 +188,10 @@ STATIC INLINE void Chip_GPIOGP_DisableGroupPins(LPC_GPIOGROUPINT_T *pGPIOGPINT,
  * @return	None
  * @note	Enabled pins contribute to the group interrupt.
  */
-STATIC INLINE void Chip_GPIOGP_EnableGroupPins(LPC_GPIOGROUPINT_T *pGPIOGPINT,
-											   uint8_t group,
-											   uint8_t port,
-											   uint32_t pinMask)
+STATIC INLINE void Chip_GPIOGP_EnableGroupPins (LPC_GPIOGROUPINT_T *pGPIOGPINT,
+	uint8_t group,
+	uint8_t port,
+	uint32_t pinMask)
 {
 	pGPIOGPINT[group].PORT_ENA[port] |= pinMask;
 }

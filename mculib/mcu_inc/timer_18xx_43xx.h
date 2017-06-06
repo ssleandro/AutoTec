@@ -33,7 +33,8 @@
 #define __TIMER_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup TIMER_18XX_43XX CHIP: LPC18xx/43xx 16/32-bit Timer driver
@@ -44,19 +45,20 @@ extern "C" {
 /**
  * @brief 32-bit Standard timer register block structure
  */
-typedef struct {					/*!< TIMERn Structure       */
-	__IO uint32_t IR;				/*!< Interrupt Register. The IR can be written to clear interrupts. The IR can be read to identify which of eight possible interrupt sources are pending. */
-	__IO uint32_t TCR;				/*!< Timer Control Register. The TCR is used to control the Timer Counter functions. The Timer Counter can be disabled or reset through the TCR. */
-	__IO uint32_t TC;				/*!< Timer Counter. The 32 bit TC is incremented every PR+1 cycles of PCLK. The TC is controlled through the TCR. */
-	__IO uint32_t PR;				/*!< Prescale Register. The Prescale Counter (below) is equal to this value, the next clock increments the TC and clears the PC. */
-	__IO uint32_t PC;				/*!< Prescale Counter. The 32 bit PC is a counter which is incremented to the value stored in PR. When the value in PR is reached, the TC is incremented and the PC is cleared. The PC is observable and controllable through the bus interface. */
-	__IO uint32_t MCR;				/*!< Match Control Register. The MCR is used to control if an interrupt is generated and if the TC is reset when a Match occurs. */
-	__IO uint32_t MR[4];			/*!< Match Register. MR can be enabled through the MCR to reset the TC, stop both the TC and PC, and/or generate an interrupt every time MR matches the TC. */
-	__IO uint32_t CCR;				/*!< Capture Control Register. The CCR controls which edges of the capture inputs are used to load the Capture Registers and whether or not an interrupt is generated when a capture takes place. */
-	__IO uint32_t CR[4];			/*!< Capture Register. CR is loaded with the value of TC when there is an event on the CAPn.0 input. */
-	__IO uint32_t EMR;				/*!< External Match Register. The EMR controls the external match pins MATn.0-3 (MAT0.0-3 and MAT1.0-3 respectively). */
-	__I  uint32_t RESERVED0[12];
-	__IO uint32_t CTCR;				/*!< Count Control Register. The CTCR selects between Timer and Counter mode, and in Counter mode selects the signal and edge(s) for counting. */
+typedef struct
+{ /*!< TIMERn Structure       */
+	__IO uint32_t IR; /*!< Interrupt Register. The IR can be written to clear interrupts. The IR can be read to identify which of eight possible interrupt sources are pending. */
+	__IO uint32_t TCR; /*!< Timer Control Register. The TCR is used to control the Timer Counter functions. The Timer Counter can be disabled or reset through the TCR. */
+	__IO uint32_t TC; /*!< Timer Counter. The 32 bit TC is incremented every PR+1 cycles of PCLK. The TC is controlled through the TCR. */
+	__IO uint32_t PR; /*!< Prescale Register. The Prescale Counter (below) is equal to this value, the next clock increments the TC and clears the PC. */
+	__IO uint32_t PC; /*!< Prescale Counter. The 32 bit PC is a counter which is incremented to the value stored in PR. When the value in PR is reached, the TC is incremented and the PC is cleared. The PC is observable and controllable through the bus interface. */
+	__IO uint32_t MCR; /*!< Match Control Register. The MCR is used to control if an interrupt is generated and if the TC is reset when a Match occurs. */
+	__IO uint32_t MR[4]; /*!< Match Register. MR can be enabled through the MCR to reset the TC, stop both the TC and PC, and/or generate an interrupt every time MR matches the TC. */
+	__IO uint32_t CCR; /*!< Capture Control Register. The CCR controls which edges of the capture inputs are used to load the Capture Registers and whether or not an interrupt is generated when a capture takes place. */
+	__IO uint32_t CR[4]; /*!< Capture Register. CR is loaded with the value of TC when there is an event on the CAPn.0 input. */
+	__IO uint32_t EMR; /*!< External Match Register. The EMR controls the external match pins MATn.0-3 (MAT0.0-3 and MAT1.0-3 respectively). */
+	__I uint32_t RESERVED0[12];
+	__IO uint32_t CTCR; /*!< Count Control Register. The CTCR selects between Timer and Counter mode, and in Counter mode selects the signal and edge(s) for counting. */
 } LPC_TIMER_T;
 
 /** Macro to clear interrupt pending */
@@ -91,14 +93,14 @@ typedef struct {					/*!< TIMERn Structure       */
  * @param	pTMR	: Pointer to timer IP register address
  * @return	Nothing
  */
-void Chip_TIMER_Init(LPC_TIMER_T *pTMR);
+void Chip_TIMER_Init (LPC_TIMER_T *pTMR);
 
 /**
  * @brief	Shutdown a timer
  * @param	pTMR	: Pointer to timer IP register address
  * @return	Nothing
  */
-void Chip_TIMER_DeInit(LPC_TIMER_T *pTMR);
+void Chip_TIMER_DeInit (LPC_TIMER_T *pTMR);
 
 /**
  * @brief	Determine if a match interrupt is pending
@@ -108,9 +110,9 @@ void Chip_TIMER_DeInit(LPC_TIMER_T *pTMR);
  * @note	Determine if the match interrupt for the passed timer and match
  * counter is pending.
  */
-STATIC INLINE bool Chip_TIMER_MatchPending(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE bool Chip_TIMER_MatchPending (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
-	return (bool) ((pTMR->IR & TIMER_MATCH_INT(matchnum)) != 0);
+	return (bool)((pTMR->IR & TIMER_MATCH_INT(matchnum)) != 0);
 }
 
 /**
@@ -121,9 +123,9 @@ STATIC INLINE bool Chip_TIMER_MatchPending(LPC_TIMER_T *pTMR, int8_t matchnum)
  * @note	Determine if the capture interrupt for the passed capture pin is
  * pending.
  */
-STATIC INLINE bool Chip_TIMER_CapturePending(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE bool Chip_TIMER_CapturePending (LPC_TIMER_T *pTMR, int8_t capnum)
 {
-	return (bool) ((pTMR->IR & TIMER_CAP_INT(capnum)) != 0);
+	return (bool)((pTMR->IR & TIMER_CAP_INT(capnum)) != 0);
 }
 
 /**
@@ -133,7 +135,7 @@ STATIC INLINE bool Chip_TIMER_CapturePending(LPC_TIMER_T *pTMR, int8_t capnum)
  * @return	Nothing
  * @note	Clears a pending timer match interrupt.
  */
-STATIC INLINE void Chip_TIMER_ClearMatch(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_ClearMatch (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->IR = TIMER_IR_CLR(matchnum);
 }
@@ -145,7 +147,7 @@ STATIC INLINE void Chip_TIMER_ClearMatch(LPC_TIMER_T *pTMR, int8_t matchnum)
  * @return	Nothing
  * @note	Clears a pending timer capture interrupt.
  */
-STATIC INLINE void Chip_TIMER_ClearCapture(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_ClearCapture (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->IR = (0x10 << capnum);
 }
@@ -156,7 +158,7 @@ STATIC INLINE void Chip_TIMER_ClearCapture(LPC_TIMER_T *pTMR, int8_t capnum)
  * @return	Nothing
  * @note	Enables the timer to start counting.
  */
-STATIC INLINE void Chip_TIMER_Enable(LPC_TIMER_T *pTMR)
+STATIC INLINE void Chip_TIMER_Enable (LPC_TIMER_T *pTMR)
 {
 	pTMR->TCR |= TIMER_ENABLE;
 }
@@ -167,7 +169,7 @@ STATIC INLINE void Chip_TIMER_Enable(LPC_TIMER_T *pTMR)
  * @return	Nothing
  * @note	Disables the timer to stop counting.
  */
-STATIC INLINE void Chip_TIMER_Disable(LPC_TIMER_T *pTMR)
+STATIC INLINE void Chip_TIMER_Disable (LPC_TIMER_T *pTMR)
 {
 	pTMR->TCR &= ~TIMER_ENABLE;
 }
@@ -178,7 +180,7 @@ STATIC INLINE void Chip_TIMER_Disable(LPC_TIMER_T *pTMR)
  * @return	Current timer terminal count value
  * @note	Returns the current timer terminal count.
  */
-STATIC INLINE uint32_t Chip_TIMER_ReadCount(LPC_TIMER_T *pTMR)
+STATIC INLINE uint32_t Chip_TIMER_ReadCount (LPC_TIMER_T *pTMR)
 {
 	return pTMR->TC;
 }
@@ -189,7 +191,7 @@ STATIC INLINE uint32_t Chip_TIMER_ReadCount(LPC_TIMER_T *pTMR)
  * @return	Current timer prescale count value
  * @note	Returns the current prescale count.
  */
-STATIC INLINE uint32_t Chip_TIMER_ReadPrescale(LPC_TIMER_T *pTMR)
+STATIC INLINE uint32_t Chip_TIMER_ReadPrescale (LPC_TIMER_T *pTMR)
 {
 	return pTMR->PC;
 }
@@ -201,7 +203,7 @@ STATIC INLINE uint32_t Chip_TIMER_ReadPrescale(LPC_TIMER_T *pTMR)
  * @return	Nothing
  * @note	Sets the prescale count value.
  */
-STATIC INLINE void Chip_TIMER_PrescaleSet(LPC_TIMER_T *pTMR, uint32_t prescale)
+STATIC INLINE void Chip_TIMER_PrescaleSet (LPC_TIMER_T *pTMR, uint32_t prescale)
 {
 	pTMR->PR = prescale;
 }
@@ -214,7 +216,7 @@ STATIC INLINE void Chip_TIMER_PrescaleSet(LPC_TIMER_T *pTMR, uint32_t prescale)
  * @return	Nothing
  * @note	Sets one of the timer match values.
  */
-STATIC INLINE void Chip_TIMER_SetMatch(LPC_TIMER_T *pTMR, int8_t matchnum, uint32_t matchval)
+STATIC INLINE void Chip_TIMER_SetMatch (LPC_TIMER_T *pTMR, int8_t matchnum, uint32_t matchval)
 {
 	pTMR->MR[matchnum] = matchval;
 }
@@ -226,7 +228,7 @@ STATIC INLINE void Chip_TIMER_SetMatch(LPC_TIMER_T *pTMR, int8_t matchnum, uint3
  * @return	The selected capture register value
  * @note	Returns the selected capture register value.
  */
-STATIC INLINE uint32_t Chip_TIMER_ReadCapture(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE uint32_t Chip_TIMER_ReadCapture (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	return pTMR->CR[capnum];
 }
@@ -236,7 +238,7 @@ STATIC INLINE uint32_t Chip_TIMER_ReadCapture(LPC_TIMER_T *pTMR, int8_t capnum)
  * @param	pTMR	: Pointer to timer IP register address
  * @return	Nothing
  */
-void Chip_TIMER_Reset(LPC_TIMER_T *pTMR);
+void Chip_TIMER_Reset (LPC_TIMER_T *pTMR);
 
 /**
  * @brief	Enables a match interrupt that fires when the terminal count
@@ -245,7 +247,7 @@ void Chip_TIMER_Reset(LPC_TIMER_T *pTMR);
  * @param	matchnum	: Match timer, 0 to 3
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_MatchEnableInt(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_MatchEnableInt (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->MCR |= TIMER_INT_ON_MATCH(matchnum);
 }
@@ -256,7 +258,7 @@ STATIC INLINE void Chip_TIMER_MatchEnableInt(LPC_TIMER_T *pTMR, int8_t matchnum)
  * @param	matchnum	: Match timer, 0 to 3
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_MatchDisableInt(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_MatchDisableInt (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->MCR &= ~TIMER_INT_ON_MATCH(matchnum);
 }
@@ -267,7 +269,7 @@ STATIC INLINE void Chip_TIMER_MatchDisableInt(LPC_TIMER_T *pTMR, int8_t matchnum
  * @param	matchnum	: Match timer, 0 to 3
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_ResetOnMatchEnable(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_ResetOnMatchEnable (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->MCR |= TIMER_RESET_ON_MATCH(matchnum);
 }
@@ -278,7 +280,7 @@ STATIC INLINE void Chip_TIMER_ResetOnMatchEnable(LPC_TIMER_T *pTMR, int8_t match
  * @param	matchnum	: Match timer, 0 to 3
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_ResetOnMatchDisable(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_ResetOnMatchDisable (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->MCR &= ~TIMER_RESET_ON_MATCH(matchnum);
 }
@@ -290,7 +292,7 @@ STATIC INLINE void Chip_TIMER_ResetOnMatchDisable(LPC_TIMER_T *pTMR, int8_t matc
  * @param	matchnum	: Match timer, 0 to 3
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_StopOnMatchEnable(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_StopOnMatchEnable (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->MCR |= TIMER_STOP_ON_MATCH(matchnum);
 }
@@ -302,7 +304,7 @@ STATIC INLINE void Chip_TIMER_StopOnMatchEnable(LPC_TIMER_T *pTMR, int8_t matchn
  * @param	matchnum	: Match timer, 0 to 3
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_StopOnMatchDisable(LPC_TIMER_T *pTMR, int8_t matchnum)
+STATIC INLINE void Chip_TIMER_StopOnMatchDisable (LPC_TIMER_T *pTMR, int8_t matchnum)
 {
 	pTMR->MCR &= ~TIMER_STOP_ON_MATCH(matchnum);
 }
@@ -315,7 +317,7 @@ STATIC INLINE void Chip_TIMER_StopOnMatchDisable(LPC_TIMER_T *pTMR, int8_t match
  * @param	capnum	: Capture signal/register to use
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_CaptureRisingEdgeEnable (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->CCR |= TIMER_CAP_RISING(capnum);
 }
@@ -328,7 +330,7 @@ STATIC INLINE void Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER_T *pTMR, int8_t 
  * @param	capnum	: Capture signal/register to use
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_CaptureRisingEdgeDisable(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_CaptureRisingEdgeDisable (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->CCR &= ~TIMER_CAP_RISING(capnum);
 }
@@ -341,7 +343,7 @@ STATIC INLINE void Chip_TIMER_CaptureRisingEdgeDisable(LPC_TIMER_T *pTMR, int8_t
  * @param	capnum	: Capture signal/register to use
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_CaptureFallingEdgeEnable (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->CCR |= TIMER_CAP_FALLING(capnum);
 }
@@ -354,7 +356,7 @@ STATIC INLINE void Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER_T *pTMR, int8_t
  * @param	capnum	: Capture signal/register to use
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_CaptureFallingEdgeDisable(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_CaptureFallingEdgeDisable (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->CCR &= ~TIMER_CAP_FALLING(capnum);
 }
@@ -367,7 +369,7 @@ STATIC INLINE void Chip_TIMER_CaptureFallingEdgeDisable(LPC_TIMER_T *pTMR, int8_
  * @param	capnum	: Capture signal/register to use
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_CaptureEnableInt(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_CaptureEnableInt (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->CCR |= TIMER_INT_ON_CAP(capnum);
 }
@@ -378,7 +380,7 @@ STATIC INLINE void Chip_TIMER_CaptureEnableInt(LPC_TIMER_T *pTMR, int8_t capnum)
  * @param	capnum	: Capture signal/register to use
  * @return	Nothing
  */
-STATIC INLINE void Chip_TIMER_CaptureDisableInt(LPC_TIMER_T *pTMR, int8_t capnum)
+STATIC INLINE void Chip_TIMER_CaptureDisableInt (LPC_TIMER_T *pTMR, int8_t capnum)
 {
 	pTMR->CCR &= ~TIMER_INT_ON_CAP(capnum);
 }
@@ -386,11 +388,12 @@ STATIC INLINE void Chip_TIMER_CaptureDisableInt(LPC_TIMER_T *pTMR, int8_t capnum
 /**
  * @brief Standard timer initial match pin state and change state
  */
-typedef enum IP_TIMER_PIN_MATCH_STATE {
-	TIMER_EXTMATCH_DO_NOTHING = 0,	/*!< Timer match state does nothing on match pin */
-	TIMER_EXTMATCH_CLEAR      = 1,	/*!< Timer match state sets match pin low */
-	TIMER_EXTMATCH_SET        = 2,	/*!< Timer match state sets match pin high */
-	TIMER_EXTMATCH_TOGGLE     = 3	/*!< Timer match state toggles match pin */
+typedef enum IP_TIMER_PIN_MATCH_STATE
+{
+	TIMER_EXTMATCH_DO_NOTHING = 0, /*!< Timer match state does nothing on match pin */
+	TIMER_EXTMATCH_CLEAR = 1, /*!< Timer match state sets match pin low */
+	TIMER_EXTMATCH_SET = 2, /*!< Timer match state sets match pin high */
+	TIMER_EXTMATCH_TOGGLE = 3 /*!< Timer match state toggles match pin */
 } TIMER_PIN_MATCH_STATE_T;
 
 /**
@@ -405,17 +408,18 @@ typedef enum IP_TIMER_PIN_MATCH_STATE {
  * @note	For the pin selected with matchnum, sets the function of the pin that occurs on
  * a terminal count match for the match count.
  */
-void Chip_TIMER_ExtMatchControlSet(LPC_TIMER_T *pTMR, int8_t initial_state,
-												 TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum);
+void Chip_TIMER_ExtMatchControlSet (LPC_TIMER_T *pTMR, int8_t initial_state,
+	TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum);
 
 /**
  * @brief Standard timer clock and edge for count source
  */
-typedef enum IP_TIMER_CAP_SRC_STATE {
-	TIMER_CAPSRC_RISING_PCLK  = 0,	/*!< Timer ticks on PCLK rising edge */
-	TIMER_CAPSRC_RISING_CAPN  = 1,	/*!< Timer ticks on CAPn.x rising edge */
-	TIMER_CAPSRC_FALLING_CAPN = 2,	/*!< Timer ticks on CAPn.x falling edge */
-	TIMER_CAPSRC_BOTH_CAPN    = 3	/*!< Timer ticks on CAPn.x both edges */
+typedef enum IP_TIMER_CAP_SRC_STATE
+{
+	TIMER_CAPSRC_RISING_PCLK = 0, /*!< Timer ticks on PCLK rising edge */
+	TIMER_CAPSRC_RISING_CAPN = 1, /*!< Timer ticks on CAPn.x rising edge */
+	TIMER_CAPSRC_FALLING_CAPN = 2, /*!< Timer ticks on CAPn.x falling edge */
+	TIMER_CAPSRC_BOTH_CAPN = 3 /*!< Timer ticks on CAPn.x both edges */
 } TIMER_CAP_SRC_STATE_T;
 
 /**
@@ -427,11 +431,11 @@ typedef enum IP_TIMER_CAP_SRC_STATE {
  * @return	Nothing
  * @note	If CapSrc selected a CAPn pin, select the specific CAPn pin with the capnum value.
  */
-STATIC INLINE void Chip_TIMER_TIMER_SetCountClockSrc(LPC_TIMER_T *pTMR,
-													 TIMER_CAP_SRC_STATE_T capSrc,
-													 int8_t capnum)
+STATIC INLINE void Chip_TIMER_TIMER_SetCountClockSrc (LPC_TIMER_T *pTMR,
+	TIMER_CAP_SRC_STATE_T capSrc,
+	int8_t capnum)
 {
-	pTMR->CTCR = (uint32_t) capSrc | ((uint32_t) capnum) << 2;
+	pTMR->CTCR = (uint32_t)capSrc | ((uint32_t)capnum) << 2;
 }
 
 /**

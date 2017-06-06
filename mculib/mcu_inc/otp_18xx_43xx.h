@@ -33,7 +33,8 @@
 #define __OTP_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup OTP_18XX_43XX CHIP: LPC18xx/43xx OTP Controller driver
@@ -44,39 +45,41 @@ extern "C" {
 /**
  * @brief	OTP Register block
  */
-typedef struct {
-	__IO uint32_t OTP0_0;				/*!< (@ 0x40045000) OTP content */
-	__IO uint32_t OTP0_1;				/*!< (@ 0x40045004) OTP content */
-	__IO uint32_t OTP0_2;				/*!< (@ 0x40045008) OTP content */
-	__IO uint32_t OTP0_3;				/*!< (@ 0x4004500C) OTP content */
-	__IO uint32_t OTP1_0;				/*!< (@ 0x40045010) OTP content */
-	__IO uint32_t OTP1_1;				/*!< (@ 0x40045014) OTP content */
-	__IO uint32_t OTP1_2;				/*!< (@ 0x40045018) OTP content */
-	__IO uint32_t OTP1_3;				/*!< (@ 0x4004501C) OTP content */
-	__IO uint32_t OTP2_0;				/*!< (@ 0x40045020) OTP content */
-	__IO uint32_t OTP2_1;				/*!< (@ 0x40045024) OTP content */
-	__IO uint32_t OTP2_2;				/*!< (@ 0x40045028) OTP content */
-	__IO uint32_t OTP2_3;				/*!< (@ 0x4004502C) OTP content */
-	__IO uint32_t OTP3_0;				/*!< (@ 0x40045030) OTP content */
-	__IO uint32_t OTP3_1;				/*!< (@ 0x40045034) OTP content */
-	__IO uint32_t OTP3_2;				/*!< (@ 0x40045038) OTP content */
-	__IO uint32_t OTP3_3;				/*!< (@ 0x4004503C) OTP content */
+typedef struct
+{
+	__IO uint32_t OTP0_0; /*!< (@ 0x40045000) OTP content */
+	__IO uint32_t OTP0_1; /*!< (@ 0x40045004) OTP content */
+	__IO uint32_t OTP0_2; /*!< (@ 0x40045008) OTP content */
+	__IO uint32_t OTP0_3; /*!< (@ 0x4004500C) OTP content */
+	__IO uint32_t OTP1_0; /*!< (@ 0x40045010) OTP content */
+	__IO uint32_t OTP1_1; /*!< (@ 0x40045014) OTP content */
+	__IO uint32_t OTP1_2; /*!< (@ 0x40045018) OTP content */
+	__IO uint32_t OTP1_3; /*!< (@ 0x4004501C) OTP content */
+	__IO uint32_t OTP2_0; /*!< (@ 0x40045020) OTP content */
+	__IO uint32_t OTP2_1; /*!< (@ 0x40045024) OTP content */
+	__IO uint32_t OTP2_2; /*!< (@ 0x40045028) OTP content */
+	__IO uint32_t OTP2_3; /*!< (@ 0x4004502C) OTP content */
+	__IO uint32_t OTP3_0; /*!< (@ 0x40045030) OTP content */
+	__IO uint32_t OTP3_1; /*!< (@ 0x40045034) OTP content */
+	__IO uint32_t OTP3_2; /*!< (@ 0x40045038) OTP content */
+	__IO uint32_t OTP3_3; /*!< (@ 0x4004503C) OTP content */
 } LPC_OTP_T;
 
 /**
  * @brief	OTP Boot Source selection used in Chip driver
  */
-typedef enum CHIP_OTP_BOOT_SRC {
-	CHIP_OTP_BOOTSRC_PINS,		/*!< Boot source - External pins */
-	CHIP_OTP_BOOTSRC_UART0,		/*!< Boot source - UART0 */
-	CHIP_OTP_BOOTSRC_SPIFI,		/*!< Boot source - EMC 8-bit memory */
-	CHIP_OTP_BOOTSRC_EMC8,		/*!< Boot source - EMC 16-bit memory */
-	CHIP_OTP_BOOTSRC_EMC16,		/*!< Boot source - EMC 32-bit memory */
-	CHIP_OTP_BOOTSRC_EMC32,		/*!< Boot source - EMC 32-bit memory */
-	CHIP_OTP_BOOTSRC_USB0,		/*!< Boot source - DFU USB0 boot */
-	CHIP_OTP_BOOTSRC_USB1,		/*!< Boot source - DFU USB1 boot */
-	CHIP_OTP_BOOTSRC_SPI,		/*!< Boot source - SPI boot */
-	CHIP_OTP_BOOTSRC_UART3		/*!< Boot source - UART3 */
+typedef enum CHIP_OTP_BOOT_SRC
+{
+	CHIP_OTP_BOOTSRC_PINS, /*!< Boot source - External pins */
+	CHIP_OTP_BOOTSRC_UART0, /*!< Boot source - UART0 */
+	CHIP_OTP_BOOTSRC_SPIFI, /*!< Boot source - EMC 8-bit memory */
+	CHIP_OTP_BOOTSRC_EMC8, /*!< Boot source - EMC 16-bit memory */
+	CHIP_OTP_BOOTSRC_EMC16, /*!< Boot source - EMC 32-bit memory */
+	CHIP_OTP_BOOTSRC_EMC32, /*!< Boot source - EMC 32-bit memory */
+	CHIP_OTP_BOOTSRC_USB0, /*!< Boot source - DFU USB0 boot */
+	CHIP_OTP_BOOTSRC_USB1, /*!< Boot source - DFU USB1 boot */
+	CHIP_OTP_BOOTSRC_SPI, /*!< Boot source - SPI boot */
+	CHIP_OTP_BOOTSRC_UART3 /*!< Boot source - UART3 */
 } CHIP_OTP_BOOT_SRC_T;
 
 /**
@@ -85,20 +88,20 @@ typedef enum CHIP_OTP_BOOT_SRC {
  * This function will initialise all the OTP driver function pointers
  * and call the ROM OTP Initialisation function.
  */
-uint32_t Chip_OTP_Init(void);
+uint32_t Chip_OTP_Init (void);
 
 /**
  * @brief	Program boot source in OTP Controller
  * @param	BootSrc	: Boot Source enum value
  * @return	Status
  */
-uint32_t Chip_OTP_ProgBootSrc(CHIP_OTP_BOOT_SRC_T BootSrc);
+uint32_t Chip_OTP_ProgBootSrc (CHIP_OTP_BOOT_SRC_T BootSrc);
 
 /**
  * @brief	Program the JTAG bit in OTP Controller
  * @return	Status
  */
-uint32_t Chip_OTP_ProgJTAGDis(void);
+uint32_t Chip_OTP_ProgJTAGDis (void);
 
 /**
  * @brief	Program USB ID in OTP Controller
@@ -106,7 +109,7 @@ uint32_t Chip_OTP_ProgJTAGDis(void);
  * @param	VendorID	: USB Vendor ID
  * @return	Status
  */
-uint32_t Chip_OTP_ProgUSBID(uint32_t ProductID, uint32_t VendorID);
+uint32_t Chip_OTP_ProgUSBID (uint32_t ProductID, uint32_t VendorID);
 
 /**
  * @brief	Program OTP GP Word memory
@@ -116,7 +119,7 @@ uint32_t Chip_OTP_ProgUSBID(uint32_t ProductID, uint32_t VendorID);
  * @return	Status
  * This function available in devices which are not AES capable
  */
-uint32_t Chip_OTP_ProgGPWord(uint32_t WordNum, uint32_t Data, uint32_t Mask);
+uint32_t Chip_OTP_ProgGPWord (uint32_t WordNum, uint32_t Data, uint32_t Mask);
 
 /**
  * @brief	Program AES Key
@@ -125,13 +128,13 @@ uint32_t Chip_OTP_ProgGPWord(uint32_t WordNum, uint32_t Data, uint32_t Mask);
  * @return	Status
  * This function available in devices which are AES capable
  */
-uint32_t Chip_OTP_ProgKey(uint32_t KeyNum, uint8_t *key);
+uint32_t Chip_OTP_ProgKey (uint32_t KeyNum, uint8_t *key);
 
 /**
  * @brief	Generate Random Number using HW Random Number Generator
  * @return	Random Number value
  */
-uint32_t Chip_OTP_GenRand(void);
+uint32_t Chip_OTP_GenRand (void);
 
 /**
  * @}

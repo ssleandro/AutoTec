@@ -45,29 +45,29 @@
 
 #include "../../version/ver_psp_rtc.h"
 #if VER_PSP_RTC_MAJOR != 1
- #error "VER_PSP_RTC_MAJOR invalid"
+#error "VER_PSP_RTC_MAJOR invalid"
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 typedef struct
 {
-  uint8_t   sec;
-  uint8_t   min;
-  uint8_t   hour;
-  uint8_t   day;
-  uint8_t   month;
-  uint16_t  year;
+	uint8_t sec;
+	uint8_t min;
+	uint8_t hour;
+	uint8_t day;
+	uint8_t month;
+	uint16_t year;
 } t_psp_timedate;
 
-void psp_getcurrenttimedate ( t_psp_timedate * p_timedate );
+void psp_getcurrenttimedate (t_psp_timedate * p_timedate);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* _PSP_RTC_H */
 

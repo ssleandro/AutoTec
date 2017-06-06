@@ -43,26 +43,22 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
-
 /*
-** Maximum size for seek test.
-** Options: 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
-*/
+ ** Maximum size for seek test.
+ ** Options: 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
+ */
 #define F_MAX_SEEK_TEST 16384
 
-
 /*
-** Defines media type for testing.
-** Options: F_FAT12_MEDIA, F_FAT16_MEDIA, F_FAT32_MEDIA
-*/
+ ** Defines media type for testing.
+ ** Options: F_FAT12_MEDIA, F_FAT16_MEDIA, F_FAT32_MEDIA
+ */
 #define F_FAT_TYPE      F_FAT16_MEDIA
 
-
-void f_dotest ( unsigned char );
+void f_dotest (unsigned char);
 
 #endif /* ifndef _CONFIG_STHIN_TEST_H */
-
 

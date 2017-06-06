@@ -53,44 +53,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *---------------------------------------------------------------------------*/
 
- /**
-  ******************************************************************************
-  * @file    cmsis_os.h
-  * @author  MCD Application Team
-  * @date    27-March-2015
-  * @brief   Header of cmsis_os.c
-  *          A new set of APIs are added in addition to existing ones, these APIs
-  *          are specific to FreeRTOS.
-  ******************************************************************************
-  * @attention
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
+/**
+ ******************************************************************************
+ * @file    cmsis_os.h
+ * @author  MCD Application Team
+ * @date    27-March-2015
+ * @brief   Header of cmsis_os.c
+ *          A new set of APIs are added in addition to existing ones, these APIs
+ *          are specific to FreeRTOS.
+ ******************************************************************************
+ * @attention
+ *
+ * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ *
+ *        http://www.st.com/software_license_agreement_liberty_v2
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************
+ */
 
- #if   defined ( __CC_ARM )
-  #define __ASM            __asm                                      /*!< asm keyword for ARM Compiler          */
-  #define __INLINE         __inline                                   /*!< inline keyword for ARM Compiler       */
-  #define __STATIC_INLINE  static __inline
+#if   defined ( __CC_ARM )
+#define __ASM            __asm                                      /*!< asm keyword for ARM Compiler          */
+#define __INLINE         __inline                                   /*!< inline keyword for ARM Compiler       */
+#define __STATIC_INLINE  static __inline
 #elif defined ( __ICCARM__ )
-  #define __ASM            __asm                                      /*!< asm keyword for IAR Compiler          */
-  #define __INLINE         inline                                     /*!< inline keyword for IAR Compiler. Only available in High optimization mode! */
-  #define __STATIC_INLINE  static inline
+#define __ASM            __asm                                      /*!< asm keyword for IAR Compiler          */
+#define __INLINE         inline                                     /*!< inline keyword for IAR Compiler. Only available in High optimization mode! */
+#define __STATIC_INLINE  static inline
 #elif defined ( __GNUC__ )
-  #define __ASM            __asm                                      /*!< asm keyword for GNU Compiler          */
-  #define __INLINE         inline                                     /*!< inline keyword for GNU Compiler       */
-  #define __STATIC_INLINE  static inline
+#define __ASM            __asm                                      /*!< asm keyword for GNU Compiler          */
+#define __INLINE         inline                                     /*!< inline keyword for GNU Compiler       */
+#define __STATIC_INLINE  static inline
 #endif
 
 #include <stdint.h>
@@ -105,58 +105,58 @@
 #include "event_groups.h"
 
 /**
-\page cmsis_os_h Header File Template: cmsis_os.h
-The file \b cmsis_os.h is a template header file for a CMSIS-RTOS compliant Real-Time Operating System (RTOS).
-Each RTOS that is compliant with CMSIS-RTOS shall provide a specific \b cmsis_os.h header file that represents
-its implementation.
-The file cmsis_os.h contains:
+ \page cmsis_os_h Header File Template: cmsis_os.h
+ The file \b cmsis_os.h is a template header file for a CMSIS-RTOS compliant Real-Time Operating System (RTOS).
+ Each RTOS that is compliant with CMSIS-RTOS shall provide a specific \b cmsis_os.h header file that represents
+ its implementation.
+ The file cmsis_os.h contains:
  - CMSIS-RTOS API function definitions
  - struct definitions for parameters and return types
  - status and priority values used by CMSIS-RTOS API functions
  - macros for defining threads and other kernel objects
-<b>Name conventions and header file modifications</b>
-All definitions are prefixed with \b os to give an unique name space for CMSIS-RTOS functions.
-Definitions that are prefixed \b os_ are not used in the application code but local to this header file.
-All definitions and functions that belong to a module are grouped and have a common prefix, i.e. \b osThread.
-Definitions that are marked with <b>CAN BE CHANGED</b> can be adapted towards the needs of the actual CMSIS-RTOS implementation.
-These definitions can be specific to the underlying RTOS kernel.
-Definitions that are marked with <b>MUST REMAIN UNCHANGED</b> cannot be altered. Otherwise the CMSIS-RTOS implementation is no longer
-compliant to the standard. Note that some functions are optional and need not to be provided by every CMSIS-RTOS implementation.
-<b>Function calls from interrupt service routines</b>
-The following CMSIS-RTOS functions can be called from threads and interrupt service routines (ISR):
-  - \ref osSignalSet
-  - \ref osSemaphoreRelease
-  - \ref osPoolAlloc, \ref osPoolCAlloc, \ref osPoolFree
-  - \ref osMessagePut, \ref osMessageGet
-  - \ref osMailAlloc, \ref osMailCAlloc, \ref osMailGet, \ref osMailPut, \ref osMailFree
-Functions that cannot be called from an ISR are verifying the interrupt status and return in case that they are called
-from an ISR context the status code \b osErrorISR. In some implementations this condition might be caught using the HARD FAULT vector.
-Some CMSIS-RTOS implementations support CMSIS-RTOS function calls from multiple ISR at the same time.
-If this is impossible, the CMSIS-RTOS rejects calls by nested ISR functions with the status code \b osErrorISRRecursive.
-<b>Define and reference object definitions</b>
-With <b>\#define osObjectsExternal</b> objects are defined as external symbols. This allows to create a consistent header file
-that is used throughout a project as shown below:
-<i>Header File</i>
-\code
-#include <cmsis_os.h>                                         // CMSIS RTOS header file
-// Thread definition
-extern void thread_sample (void const *argument);             // function prototype
-osThreadDef (thread_sample, osPriorityBelowNormal, 1, 100);
-// Pool definition
-osPoolDef(MyPool, 10, long);
-\endcode
-This header file defines all objects when included in a C/C++ source file. When <b>\#define osObjectsExternal</b> is
-present before the header file, the objects are defined as external symbols. A single consistent header file can therefore be
-used throughout the whole project.
-<i>Example</i>
-\code
-#include "osObjects.h"     // Definition of the CMSIS-RTOS objects
-\endcode
-\code
-#define osObjectExternal   // Objects will be defined as external symbols
-#include "osObjects.h"     // Reference to the CMSIS-RTOS objects
-\endcode
-*/
+ <b>Name conventions and header file modifications</b>
+ All definitions are prefixed with \b os to give an unique name space for CMSIS-RTOS functions.
+ Definitions that are prefixed \b os_ are not used in the application code but local to this header file.
+ All definitions and functions that belong to a module are grouped and have a common prefix, i.e. \b osThread.
+ Definitions that are marked with <b>CAN BE CHANGED</b> can be adapted towards the needs of the actual CMSIS-RTOS implementation.
+ These definitions can be specific to the underlying RTOS kernel.
+ Definitions that are marked with <b>MUST REMAIN UNCHANGED</b> cannot be altered. Otherwise the CMSIS-RTOS implementation is no longer
+ compliant to the standard. Note that some functions are optional and need not to be provided by every CMSIS-RTOS implementation.
+ <b>Function calls from interrupt service routines</b>
+ The following CMSIS-RTOS functions can be called from threads and interrupt service routines (ISR):
+ - \ref osSignalSet
+ - \ref osSemaphoreRelease
+ - \ref osPoolAlloc, \ref osPoolCAlloc, \ref osPoolFree
+ - \ref osMessagePut, \ref osMessageGet
+ - \ref osMailAlloc, \ref osMailCAlloc, \ref osMailGet, \ref osMailPut, \ref osMailFree
+ Functions that cannot be called from an ISR are verifying the interrupt status and return in case that they are called
+ from an ISR context the status code \b osErrorISR. In some implementations this condition might be caught using the HARD FAULT vector.
+ Some CMSIS-RTOS implementations support CMSIS-RTOS function calls from multiple ISR at the same time.
+ If this is impossible, the CMSIS-RTOS rejects calls by nested ISR functions with the status code \b osErrorISRRecursive.
+ <b>Define and reference object definitions</b>
+ With <b>\#define osObjectsExternal</b> objects are defined as external symbols. This allows to create a consistent header file
+ that is used throughout a project as shown below:
+ <i>Header File</i>
+ \code
+ #include <cmsis_os.h>                                         // CMSIS RTOS header file
+ // Thread definition
+ extern void thread_sample (void const *argument);             // function prototype
+ osThreadDef (thread_sample, osPriorityBelowNormal, 1, 100);
+ // Pool definition
+ osPoolDef(MyPool, 10, long);
+ \endcode
+ This header file defines all objects when included in a C/C++ source file. When <b>\#define osObjectsExternal</b> is
+ present before the header file, the objects are defined as external symbols. A single consistent header file can therefore be
+ used throughout the whole project.
+ <i>Example</i>
+ \code
+ #include "osObjects.h"     // Definition of the CMSIS-RTOS objects
+ \endcode
+ \code
+ #define osObjectExternal   // Objects will be defined as external symbols
+ #include "osObjects.h"     // Reference to the CMSIS-RTOS objects
+ \endcode
+ */
 
 #ifndef _CMSIS_OS_H
 #define _CMSIS_OS_H
@@ -185,20 +185,20 @@ extern "C"
 {
 #endif
 
-
 // ==== Enumeration, structures, defines ====
 
 /// Priority used for thread control.
 /// \note MUST REMAIN UNCHANGED: \b osPriority shall be consistent in every CMSIS-RTOS.
-typedef enum  {
-  osPriorityIdle          = -3,          ///< priority: idle (lowest)
-  osPriorityLow           = -2,          ///< priority: low
-  osPriorityBelowNormal   = -1,          ///< priority: below normal
-  osPriorityNormal        =  0,          ///< priority: normal (default)
-  osPriorityAboveNormal   = +1,          ///< priority: above normal
-  osPriorityHigh          = +2,          ///< priority: high
-  osPriorityRealtime      = +3,          ///< priority: realtime (highest)
-  osPriorityError         =  0x84        ///< system cannot determine priority or thread has illegal priority
+typedef enum
+{
+	osPriorityIdle = -3,          ///< priority: idle (lowest)
+	osPriorityLow = -2,          ///< priority: low
+	osPriorityBelowNormal = -1,          ///< priority: below normal
+	osPriorityNormal = 0,          ///< priority: normal (default)
+	osPriorityAboveNormal = +1,          ///< priority: above normal
+	osPriorityHigh = +2,          ///< priority: high
+	osPriorityRealtime = +3,          ///< priority: realtime (highest)
+	osPriorityError = 0x84        ///< system cannot determine priority or thread has illegal priority
 } osPriority;
 
 /// Timeout value.
@@ -207,41 +207,44 @@ typedef enum  {
 
 /// Status code values returned by CMSIS-RTOS functions.
 /// \note MUST REMAIN UNCHANGED: \b osStatus shall be consistent in every CMSIS-RTOS.
-typedef enum  {
-  osOK                    =     0,       ///< function completed; no error or event occurred.
-  osEventSignal           =  0x08,       ///< function completed; signal event occurred.
-  osEventMessage          =  0x10,       ///< function completed; message event occurred.
-  osEventMail             =  0x20,       ///< function completed; mail event occurred.
-  osEventTimeout          =  0x40,       ///< function completed; timeout occurred.
-  osErrorParameter        =  0x80,       ///< parameter error: a mandatory parameter was missing or specified an incorrect object.
-  osErrorResource         =  0x81,       ///< resource not available: a specified resource was not available.
-  osErrorTimeoutResource  =  0xC1,       ///< resource not available within given time: a specified resource was not available within the timeout period.
-  osErrorISR              =  0x82,       ///< not allowed in ISR context: the function cannot be called from interrupt service routines.
-  osErrorISRRecursive     =  0x83,       ///< function called multiple times from ISR with same object.
-  osErrorPriority         =  0x84,       ///< system cannot determine priority or thread has illegal priority.
-  osErrorNoMemory         =  0x85,       ///< system is out of memory: it was impossible to allocate or reserve memory for the operation.
-  osErrorValue            =  0x86,       ///< value of a parameter is out of range.
-  osErrorOS               =  0xFF,       ///< unspecified RTOS error: run-time error but no other error message fits.
-  os_status_reserved      =  0x7FFFFFFF  ///< prevent from enum down-size compiler optimization.
+typedef enum
+{
+	osOK = 0,       ///< function completed; no error or event occurred.
+	osEventSignal = 0x08,       ///< function completed; signal event occurred.
+	osEventMessage = 0x10,       ///< function completed; message event occurred.
+	osEventMail = 0x20,       ///< function completed; mail event occurred.
+	osEventTimeout = 0x40,       ///< function completed; timeout occurred.
+	osErrorParameter = 0x80,    ///< parameter error: a mandatory parameter was missing or specified an incorrect object.
+	osErrorResource = 0x81,       ///< resource not available: a specified resource was not available.
+	osErrorTimeoutResource = 0xC1, ///< resource not available within given time: a specified resource was not available within the timeout period.
+	osErrorISR = 0x82,    ///< not allowed in ISR context: the function cannot be called from interrupt service routines.
+	osErrorISRRecursive = 0x83,       ///< function called multiple times from ISR with same object.
+	osErrorPriority = 0x84,       ///< system cannot determine priority or thread has illegal priority.
+	osErrorNoMemory = 0x85, ///< system is out of memory: it was impossible to allocate or reserve memory for the operation.
+	osErrorValue = 0x86,       ///< value of a parameter is out of range.
+	osErrorOS = 0xFF,       ///< unspecified RTOS error: run-time error but no other error message fits.
+	os_status_reserved = 0x7FFFFFFF  ///< prevent from enum down-size compiler optimization.
 } osStatus;
 
 #if ( INCLUDE_eTaskGetState == 1 )
 /* Thread state returned by osThreadGetState */
-typedef enum {
-  osThreadRunning   = 0x0,        /* A thread is querying the state of itself, so must be running. */
-  osThreadReady     = 0x1 ,             /* The thread being queried is in a read or pending ready list. */
-  osThreadBlocked   = 0x2,            /* The thread being queried is in the Blocked state. */
-  osThreadSuspended = 0x3,        /* The thread being queried is in the Suspended state, or is in the Blocked state with an infinite time out. */
-  osThreadDeleted   = 0x4,              /* The thread being queried has been deleted, but its TCB has not yet been freed. */
-  osThreadError     = 0x7FFFFFFF
-} osThreadState;
+typedef enum
+{
+	osThreadRunning = 0x0, /* A thread is querying the state of itself, so must be running. */
+	osThreadReady = 0x1 , /* The thread being queried is in a read or pending ready list. */
+	osThreadBlocked = 0x2, /* The thread being queried is in the Blocked state. */
+	osThreadSuspended = 0x3, /* The thread being queried is in the Suspended state, or is in the Blocked state with an infinite time out. */
+	osThreadDeleted = 0x4, /* The thread being queried has been deleted, but its TCB has not yet been freed. */
+	osThreadError = 0x7FFFFFFF
+}osThreadState;
 #endif /* INCLUDE_eTaskGetState */
 
 /// Timer type value for the timer definition.
 /// \note MUST REMAIN UNCHANGED: \b os_timer_type shall be consistent in every CMSIS-RTOS.
-typedef enum  {
-  osTimerOnce             =     0,       ///< one-shot timer
-  osTimerPeriodic         =     1        ///< repeating timer
+typedef enum
+{
+	osTimerOnce = 0,       ///< one-shot timer
+	osTimerPeriodic = 1        ///< repeating timer
 } os_timer_type;
 
 /// Entry point of a thread.
@@ -289,72 +292,81 @@ typedef EventBits_t osFlags;
 
 /// Thread Definition structure contains startup information of a thread.
 /// \note CAN BE CHANGED: \b os_thread_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_thread_def  {
-  char                   *name;        ///< Thread name
-  os_pthread             pthread;      ///< start address of thread function
-  osPriority             tpriority;    ///< initial thread priority
-  uint32_t               instances;    ///< maximum number of instances of that thread function
-  uint32_t               stacksize;    ///< stack size requirements in bytes; 0 is default stack size
+typedef struct os_thread_def
+{
+	char *name;        ///< Thread name
+	os_pthread pthread;      ///< start address of thread function
+	osPriority tpriority;    ///< initial thread priority
+	uint32_t instances;    ///< maximum number of instances of that thread function
+	uint32_t stacksize;    ///< stack size requirements in bytes; 0 is default stack size
 } osThreadDef_t;
 
 /// Timer Definition structure contains timer parameters.
 /// \note CAN BE CHANGED: \b os_timer_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_timer_def  {
-  os_ptimer                 ptimer;    ///< start address of a timer function
+typedef struct os_timer_def
+{
+	os_ptimer ptimer;    ///< start address of a timer function
 } osTimerDef_t;
 
 /// Mutex Definition structure contains setup information for a mutex.
 /// \note CAN BE CHANGED: \b os_mutex_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_mutex_def  {
-  uint32_t                   dummy;    ///< dummy value.
+typedef struct os_mutex_def
+{
+	uint32_t dummy;    ///< dummy value.
 } osMutexDef_t;
 
 /// Semaphore Definition structure contains setup information for a semaphore.
 /// \note CAN BE CHANGED: \b os_semaphore_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_semaphore_def  {
-  uint32_t                   dummy;    ///< dummy value.
+typedef struct os_semaphore_def
+{
+	uint32_t dummy;    ///< dummy value.
 } osSemaphoreDef_t;
 
 /// Definition structure for memory block allocation.
 /// \note CAN BE CHANGED: \b os_pool_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_pool_def  {
-  uint32_t                 pool_sz;    ///< number of items (elements) in the pool
-  uint32_t                 item_sz;    ///< size of an item
-  void                       *pool;    ///< pointer to memory for pool
+typedef struct os_pool_def
+{
+	uint32_t pool_sz;    ///< number of items (elements) in the pool
+	uint32_t item_sz;    ///< size of an item
+	void *pool;    ///< pointer to memory for pool
 } osPoolDef_t;
 
 /// Definition structure for message queue.
 /// \note CAN BE CHANGED: \b os_messageQ_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_messageQ_def  {
-  uint32_t                queue_sz;    ///< number of elements in the queue
-  uint32_t                 item_sz;    ///< size of an item
-  //void                       *pool;    ///< memory array for messages
+typedef struct os_messageQ_def
+{
+	uint32_t queue_sz;    ///< number of elements in the queue
+	uint32_t item_sz;    ///< size of an item
+//void                       *pool;    ///< memory array for messages
 } osMessageQDef_t;
 
 /// Definition structure for mail queue.
 /// \note CAN BE CHANGED: \b os_mailQ_def is implementation specific in every CMSIS-RTOS.
-typedef struct os_mailQ_def  {
-  uint32_t                queue_sz;    ///< number of elements in the queue
-  uint32_t                 item_sz;    ///< size of an item
-  struct os_mailQ_cb **cb;
+typedef struct os_mailQ_def
+{
+	uint32_t queue_sz;    ///< number of elements in the queue
+	uint32_t item_sz;    ///< size of an item
+	struct os_mailQ_cb **cb;
 } osMailQDef_t;
 
 /// Event structure contains detailed information about an event.
 /// \note MUST REMAIN UNCHANGED: \b os_event shall be consistent in every CMSIS-RTOS.
 ///       However the struct may be extended at the end.
-typedef struct  {
-  osStatus                 status;     ///< status code: event or error information
-  union  {
-    uint32_t                    v;     ///< message as 32-bit value
-    void                       *p;     ///< message or mail as void pointer
-    int32_t               signals;     ///< signal flags
-  } value;                             ///< event value
-  union  {
-    osMailQId             mail_id;     ///< mail id obtained by \ref osMailCreate
-    osMessageQId       message_id;     ///< message id obtained by \ref osMessageCreate
-  } def;                               ///< event definition
+typedef struct
+{
+	osStatus status;     ///< status code: event or error information
+	union
+	{
+		uint32_t v;     ///< message as 32-bit value
+		void *p;     ///< message or mail as void pointer
+		int32_t signals;     ///< signal flags
+	} value;                             ///< event value
+	union
+	{
+		osMailQId mail_id;     ///< mail id obtained by \ref osMailCreate
+		osMessageQId message_id;     ///< message id obtained by \ref osMessageCreate
+	} def;                               ///< event definition
 } osEvent;
-
 
 //  ==== Kernel Control Functions ====
 
@@ -371,7 +383,7 @@ osStatus osKernelStart (void);
 /// Check if the RTOS kernel is already started.
 /// \note MUST REMAIN UNCHANGED: \b osKernelRunning shall be consistent in every CMSIS-RTOS.
 /// \return 0 RTOS is not started, 1 RTOS is started.
-int32_t osKernelRunning(void);
+int32_t osKernelRunning (void);
 
 #if (defined (osFeature_SysTick)  &&  (osFeature_SysTick != 0))     // System Timer available
 
@@ -452,7 +464,6 @@ osStatus osThreadSetPriority (osThreadId thread_id, osPriority priority);
 /// \note MUST REMAIN UNCHANGED: \b osThreadGetPriority shall be consistent in every CMSIS-RTOS.
 osPriority osThreadGetPriority (osThreadId thread_id);
 
-
 //  ==== Generic Wait Functions ====
 
 /// Wait for Timeout (Time Delay).
@@ -469,7 +480,6 @@ osStatus osDelay (uint32_t millisec);
 osEvent osWait (uint32_t millisec);
 
 #endif  // Generic Wait available
-
 
 //  ==== Timer Management Functions ====
 /// Define a Timer object.
@@ -520,7 +530,6 @@ osStatus osTimerStop (osTimerId timer_id);
 /// \note MUST REMAIN UNCHANGED: \b osTimerDelete shall be consistent in every CMSIS-RTOS.
 osStatus osTimerDelete (osTimerId timer_id);
 
-
 //  ==== Signal Management ====
 
 /// Set the specified Signal Flags of an active thread.
@@ -543,7 +552,6 @@ int32_t osSignalClear (osThreadId thread_id, int32_t signals);
 /// \return event flag information or error code.
 /// \note MUST REMAIN UNCHANGED: \b osSignalWait shall be consistent in every CMSIS-RTOS.
 osEvent osSignalWait (int32_t signals, uint32_t millisec);
-
 
 //  ==== Mutex Management ====
 
@@ -590,7 +598,6 @@ osStatus osMutexRelease (osMutexId mutex_id);
 /// \return status code that indicates the execution status of the function.
 /// \note MUST REMAIN UNCHANGED: \b osMutexDelete shall be consistent in every CMSIS-RTOS.
 osStatus osMutexDelete (osMutexId mutex_id);
-
 
 //  ==== Semaphore Management Functions ====
 
@@ -642,7 +649,6 @@ osStatus osSemaphoreRelease (osSemaphoreId semaphore_id);
 osStatus osSemaphoreDelete (osSemaphoreId semaphore_id);
 
 #endif     // Semaphore available
-
 
 //  ==== Memory Pool Management Functions ====
 
@@ -697,7 +703,6 @@ osStatus osPoolFree (osPoolId pool_id, void *block);
 
 #endif   // Memory Pool Management available
 
-
 //  ==== Message Queue Management Functions ====
 
 #if (defined (osFeature_MessageQ)  &&  (osFeature_MessageQ != 0))     // Message Queues available
@@ -751,7 +756,6 @@ osEvent osMessageGet (osMessageQId queue_id, uint32_t millisec);
 osEvent osMessageGetValue (osMessageQId queue_id, void* buffer, uint32_t millisec);
 
 #endif     // Message Queues available
-
 
 //  ==== Mail Queue Management Functions ====
 
@@ -827,138 +831,139 @@ osStatus osMailFree (osMailQId queue_id, void *mail);
 
 /*************************** Additional specific APIs to Free RTOS ************/
 /**
-* @brief  Handles the tick increment
-* @param  none.
-* @retval none.
-*/
-void osSystickHandler(void);
+ * @brief  Handles the tick increment
+ * @param  none.
+ * @retval none.
+ */
+void osSystickHandler (void);
 
 #if ( INCLUDE_eTaskGetState == 1 )
 /**
-* @brief  Obtain the state of any thread.
-* @param   thread_id   thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
-* @retval  the stae of the thread, states are encoded by the osThreadState enumerated type.
-*/
+ * @brief  Obtain the state of any thread.
+ * @param   thread_id   thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
+ * @retval  the stae of the thread, states are encoded by the osThreadState enumerated type.
+ */
 osThreadState osThreadGetState(osThreadId thread_id);
 #endif /* INCLUDE_eTaskGetState */
 
 #if ( INCLUDE_eTaskGetState == 1 )
 /**
-* @brief Check if a thread is already suspended or not.
-* @param thread_id thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
-* @retval status code that indicates the execution status of the function.
-*/
+ * @brief Check if a thread is already suspended or not.
+ * @param thread_id thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
+ * @retval status code that indicates the execution status of the function.
+ */
 
 osStatus osThreadIsSuspended(osThreadId thread_id);
 
 #endif /* INCLUDE_eTaskGetState */
 
 /**
-* @brief  Suspend execution of a thread.
-* @param   thread_id   thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Suspend execution of a thread.
+ * @param   thread_id   thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osThreadSuspend (osThreadId thread_id);
 
 /**
-* @brief  Resume execution of a suspended thread.
-* @param   thread_id   thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Resume execution of a suspended thread.
+ * @param   thread_id   thread ID obtained by \ref osThreadCreate or \ref osThreadGetId.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osThreadResume (osThreadId thread_id);
 
 /**
-* @brief  Suspend execution of a all active threads.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Suspend execution of a all active threads.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osThreadSuspendAll (void);
 
 /**
-* @brief  Resume execution of a all suspended threads.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Resume execution of a all suspended threads.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osThreadResumeAll (void);
 
 /**
-* @brief  Delay a task until a specified time
-* @param   PreviousWakeTime   Pointer to a variable that holds the time at which the
-*          task was last unblocked. PreviousWakeTime must be initialised with the current time
-*          prior to its first use (PreviousWakeTime = osKernelSysTick() )
-* @param   millisec    time delay value
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Delay a task until a specified time
+ * @param   PreviousWakeTime   Pointer to a variable that holds the time at which the
+ *          task was last unblocked. PreviousWakeTime must be initialised with the current time
+ *          prior to its first use (PreviousWakeTime = osKernelSysTick() )
+ * @param   millisec    time delay value
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osDelayUntil (uint32_t *PreviousWakeTime, uint32_t millisec);
 
 /**
-* @brief   Lists all the current threads, along with their current state
-*          and stack usage high water mark.
-* @param   buffer   A buffer into which the above mentioned details
-*          will be written
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief   Lists all the current threads, along with their current state
+ *          and stack usage high water mark.
+ * @param   buffer   A buffer into which the above mentioned details
+ *          will be written
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osThreadList (uint8_t *buffer);
 
 /**
-* @brief  Receive an item from a queue without removing the item from the queue.
-* @param  queue_id  message queue ID obtained with \ref osMessageCreate.
-* @param  millisec  timeout value or 0 in case of no time-out.
-* @retval event information that includes status code.
-*/
+ * @brief  Receive an item from a queue without removing the item from the queue.
+ * @param  queue_id  message queue ID obtained with \ref osMessageCreate.
+ * @param  millisec  timeout value or 0 in case of no time-out.
+ * @retval event information that includes status code.
+ */
 osEvent osMessagePeek (osMessageQId queue_id, uint32_t millisec);
 
 /**
-* @brief  Create and Initialize a Recursive Mutex
-* @param  mutex_def     mutex definition referenced with \ref osMutex.
-* @retval  mutex ID for reference by other functions or NULL in case of error..
-*/
+ * @brief  Create and Initialize a Recursive Mutex
+ * @param  mutex_def     mutex definition referenced with \ref osMutex.
+ * @retval  mutex ID for reference by other functions or NULL in case of error..
+ */
 osMutexId osRecursiveMutexCreate (const osMutexDef_t *mutex_def);
 
 /**
-* @brief  Release a Recursive Mutex
-* @param   mutex_id      mutex ID obtained by \ref osRecursiveMutexCreate.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Release a Recursive Mutex
+ * @param   mutex_id      mutex ID obtained by \ref osRecursiveMutexCreate.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osRecursiveMutexRelease (osMutexId mutex_id);
 
 /**
-* @brief  Release a Recursive Mutex
-* @param   mutex_id    mutex ID obtained by \ref osRecursiveMutexCreate.
-* @param millisec      timeout value or 0 in case of no time-out.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Release a Recursive Mutex
+ * @param   mutex_id    mutex ID obtained by \ref osRecursiveMutexCreate.
+ * @param millisec      timeout value or 0 in case of no time-out.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osRecursiveMutexWait (osMutexId mutex_id, uint32_t millisec);
 
 /**
-* @brief  Suspend execution of a all active threads.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Suspend execution of a all active threads.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osEnterCritical (void);
 
 /**
-* @brief  Suspend execution of a all active threads.
-* @retval  status code that indicates the execution status of the function.
-*/
+ * @brief  Suspend execution of a all active threads.
+ * @retval  status code that indicates the execution status of the function.
+ */
 osStatus osExitCritical (void);
 
 /**
-* @brief  Verify Free Thread Stack.
-* @retval  Number of Bytes unused from Stack.
-*/
-uint32_t osCheckFreeStack(osThreadId thread_id);
+ * @brief  Verify Free Thread Stack.
+ * @retval  Number of Bytes unused from Stack.
+ */
+uint32_t osCheckFreeStack (osThreadId thread_id);
 
 //  ==== Flags Group Management Functions ====
 
-osStatus osFlagGroupCreate(osFlagsGroupId* flags_id);
+osStatus osFlagGroupCreate (osFlagsGroupId* flags_id);
 
-osFlags osFlagWait(const osFlagsGroupId flags_id, const osFlags flagsToWaitFor, const uint32_t consomeFlags, const uint32_t waitForAllFlags, uint32_t millisec);
+osFlags osFlagWait (const osFlagsGroupId flags_id, const osFlags flagsToWaitFor, const uint32_t consomeFlags,
+	const uint32_t waitForAllFlags, uint32_t millisec);
 
-osStatus osFlagSet(const osFlagsGroupId flags_id, const osFlags flagsToSet);
+osStatus osFlagSet (const osFlagsGroupId flags_id, const osFlags flagsToSet);
 
-osStatus osFlagClear(const osFlagsGroupId flags_id, const osFlags flagsToClear);
+osStatus osFlagClear (const osFlagsGroupId flags_id, const osFlags flagsToClear);
 
-osFlags osFlagGet(const osFlagsGroupId flags_id);
+osFlags osFlagGet (const osFlagsGroupId flags_id);
 
-void osFlagDelete(const osFlagsGroupId flags_id);
+void osFlagDelete (const osFlagsGroupId flags_id);
 
 #ifdef  __cplusplus
 }

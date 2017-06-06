@@ -1,33 +1,33 @@
 /****************************************************************************
-* Title                 :   BOARD CONFIG FILE
-* Filename              :   board.h
-* Author                :   Thiago Palmieri
-* Origin Date           :   10/02/2016
-* Version               :   1.0.1
-* Compiler              :   GCC 5.2 2015q4
-* Target                :   LPC43XX M4
-* Notes                 :   None
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   BOARD CONFIG FILE
+ * Filename              :   board.h
+ * Author                :   Thiago Palmieri
+ * Origin Date           :   10/02/2016
+ * Version               :   1.0.1
+ * Compiler              :   GCC 5.2 2015q4
+ * Target                :   LPC43XX M4
+ * Notes                 :   None
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*     Date     Version         Author                Description
-*  10/02/2016   1.0.0      Thiago Palmieri       BOARD CONFIG Created.
-*  25/02/2016   1.0.1      Joao Paulo Martins    SDRAM and LCD feature
-*
-*****************************************************************************/
+ *
+ *     Date     Version         Author                Description
+ *  10/02/2016   1.0.0      Thiago Palmieri       BOARD CONFIG Created.
+ *  25/02/2016   1.0.1      Joao Paulo Martins    SDRAM and LCD feature
+ *
+ *****************************************************************************/
 /** @file board.h
  *  @brief This module provides a Board configuration for the HAL layer
  */
@@ -36,8 +36,8 @@
 #define CONFIG_BOARD_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include <inttypes.h>
 #include "chip.h"
 #include "chip_lpc43xx.h"
@@ -46,8 +46,8 @@
 #include "mcuerror.h"
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 //**************************** CAN ****************************
 #define CAN_MAX_BITRATE 1000000
 
@@ -58,19 +58,19 @@
 #define USB_MAX_CHANNELS 2
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 #define SDRAM_ADDR_BASE   0x28000000 // !< Base address for external SDRAM
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 #ifndef ASM
-  #if defined(__IAR_SYSTEMS_ICC__)
-    #define ASM asm
-  #elif defined (__GNUC__)
-    #define ASM __asm
-  #endif
+#if defined(__IAR_SYSTEMS_ICC__)
+#define ASM asm
+#elif defined (__GNUC__)
+#define ASM __asm
+#endif
 #endif
 
 /* Board Timer Specification --------------------------------------------- */
@@ -79,7 +79,6 @@
 #define BRD_Timer_IRQn        TIMER1_IRQn
 #define BRD_Timer_RST         RGU_TIMER1_RST
 #define BRD_Timer_Clk         CLK_MX_TIMER1
-
 
 //**************************** CAN PIN MAPPING ****************************
 /**
@@ -388,7 +387,6 @@
   X(4,  6, SCU_MODE_FUNC2) \
   X(7,  6, SCU_MODE_FUNC3)
 
-
 /* ************************ SDRAM PIN MAPPING ******************************* */
 /**
  * EMC PIN MAPPING PROTOG
@@ -536,12 +534,10 @@
 #error "Pinmux to EMC dynamic controller not defined."
 #endif
 
-
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 //**************************** UART ****************************
-
 /**
  * This enum defines which UART is connected into the board and what position
  * to use as reference configuration from the UART_PIN_MAPPING MACRO
@@ -549,36 +545,36 @@
 typedef enum eUARTs
 {
 #if defined (TEST_BOARD)
-  UART0b = 3,
-  UART1b = 8,
-  UART2b = 17,
-  UART3b = 13,
-  UART4b = 17,
+	UART0b = 3,
+	UART1b = 8,
+	UART2b = 17,
+	UART3b = 13,
+	UART4b = 17,
 #elif defined (TDA3500_PROTO1)
-  UART0b = 3,
-  UART1b = 8,
-  UART2b = 17,
-  UART3b = 13,
-  UART4b = 17,
+	UART0b = 3,
+	UART1b = 8,
+	UART2b = 17,
+	UART3b = 13,
+	UART4b = 17,
 #elif defined (M2G_PROTOB)
-  UART0b = 3,
-  UART1b = 6,
-  UART2b = 12,
-  UART3b = 13,
-  UART4b = 17,
+	UART0b = 3,
+	UART1b = 6,
+	UART2b = 12,
+	UART3b = 13,
+	UART4b = 17,
 #elif defined (EA_LPC4357)
 #define USART3_TXD
-  UART0b = 3,
-  UART1b = 8,
-  UART2b = 12,
+UART0b = 3,
+UART1b = 8,
+UART2b = 12,
 #if defined (USART3_TXD)
-  UART3b = 15,
+UART3b = 15,
 #elif defined (USART3_RXD)
-  UART3b = 13,
+UART3b = 13,
 #else
-  UART3b = 17,
+UART3b = 17,
 #endif
-  UART4b = 17,
+UART4b = 17,
 #endif
 } eUARTs;
 
@@ -591,17 +587,17 @@ typedef enum eUARTs
 typedef enum eCANs  //See CAN_PIN_MAPPING
 {
 #if defined (TEST_BOARD)
-  CAN0b = 0,              //!< CAN0 position on the CAN_PIN_MAPPING
-  CAN1b = 4,              //!< CAN1 position on the CAN_PIN_MAPPING
+CAN0b = 0,              //!< CAN0 position on the CAN_PIN_MAPPING
+CAN1b = 4,//!< CAN1 position on the CAN_PIN_MAPPING
 #elif defined (TDA3500_PROTO1)
-  CAN0b = 1,              //!< CAN0 position on the CAN_PIN_MAPPING
-  CAN1b = 3,              //!< CAN1 position on the CAN_PIN_MAPPING
+CAN0b = 1,              //!< CAN0 position on the CAN_PIN_MAPPING
+CAN1b = 3,//!< CAN1 position on the CAN_PIN_MAPPING
 #elif defined (M2G_PROTOB)
-  CAN0b = 1,              //!< CAN0 position on the CAN_PIN_MAPPING
-  CAN1b = 4,              //!< CAN1 position on the CAN_PIN_MAPPING
+CAN0b = 1,              //!< CAN0 position on the CAN_PIN_MAPPING
+CAN1b = 4,              //!< CAN1 position on the CAN_PIN_MAPPING
 #elif defined (EA_LPC4357)
-  CAN0b = 1,              //!< CAN0 position on the CAN_PIN_MAPPING
-  CAN1b = 3,              //!< CAN1 position on the CAN_PIN_MAPPING
+CAN0b = 1,              //!< CAN0 position on the CAN_PIN_MAPPING
+CAN1b = 3,//!< CAN1 position on the CAN_PIN_MAPPING
 #endif
 } eCANs;
 
@@ -610,12 +606,12 @@ typedef enum eCANs  //See CAN_PIN_MAPPING
  */
 typedef struct CANConverter_s
 {
-  LPC_CCAN_T *pCAN;      //!< CAN pointer to Memory structure
-  uint8_t bCANPort;      //!< Chip Port
-  uint8_t bCANPinTD;       //!< Chip TD Pin
-  uint8_t bCANPinRD;       //!< Chip RD Pin
-  uint8_t bModeFunc;     //!< CAN Pin Function
-  IRQn_Type CANIntIRQ;   //!< CAN Interrupt IRQ
+LPC_CCAN_T *pCAN;      //!< CAN pointer to Memory structure
+uint8_t bCANPort;      //!< Chip Port
+uint8_t bCANPinTD;       //!< Chip TD Pin
+uint8_t bCANPinRD;       //!< Chip RD Pin
+uint8_t bModeFunc;     //!< CAN Pin Function
+IRQn_Type CANIntIRQ;   //!< CAN Interrupt IRQ
 } CANConverter_s;
 
 //**************************** PWM ****************************
@@ -627,21 +623,21 @@ typedef struct CANConverter_s
 typedef enum ePWMs
 {
 #if defined (TEST_BOARD)
-  PWM0b = 8,      // Adjusted to schematics
-  PWM1b = 10,     // Adjusted to schematics
-  PWM2b = 6,      // Adjusted to schematics
+PWM0b = 8,      // Adjusted to schematics
+PWM1b = 10,// Adjusted to schematics
+PWM2b = 6,// Adjusted to schematics
 #elif defined (TDA)
-  PWM0b = 2,    // Adjusted to schematics
-  PWM1b = 11,   // Adjusted to schematics
-  PWM2b = 7,    // Adjusted to schematics
+PWM0b = 2,    // Adjusted to schematics
+PWM1b = 11,// Adjusted to schematics
+PWM2b = 7,// Adjusted to schematics
 #elif defined (M2G_PROTOB)
-  PWM0b = 8,    // Adjusted to schematics
-  PWM1b = 10,   // Adjusted to schematics
-  PWM2b = 7,    // Adjusted to schematics
+PWM0b = 8,    // Adjusted to schematics
+PWM1b = 10,   // Adjusted to schematics
+PWM2b = 7,    // Adjusted to schematics
 #elif defined (EA_LPC4357)
-  PWM0b = 2,    // Adjusted to schematics
-  PWM1b = 11,   // Adjusted to schematics
-  PWM2b = 7,    // Adjusted to schematics
+PWM0b = 2,    // Adjusted to schematics
+PWM1b = 11,// Adjusted to schematics
+PWM2b = 7,// Adjusted to schematics
 #endif
 } ePWMs;
 /**
@@ -649,9 +645,9 @@ typedef enum ePWMs
  */
 typedef struct PWMConverter_s
 {
-  uint8_t bPWMPort;     //!< PWM port
-  uint8_t bPWMPin;      //!< PWM Pin
-  uint8_t bModeFunc;    //!< PWM Pin Function
+uint8_t bPWMPort;     //!< PWM port
+uint8_t bPWMPin;      //!< PWM Pin
+uint8_t bModeFunc;    //!< PWM Pin Function
 } PWMConverter_s;
 
 //**************************** SPIFI ****************************
@@ -660,14 +656,14 @@ typedef struct PWMConverter_s
  */
 typedef struct SPIFIConverter_s
 {
-  uint8_t bSPIFIPort;     //!< SPIFI port
-  uint8_t bSPIFICLK;      //!< SPIFI Clock
-  uint8_t bSPIFID3;       //!< SPIFI D3
-  uint8_t bSPIFID2;       //!< SPIFI D2
-  uint8_t bSPIFID1;       //!< SPIFI D1
-  uint8_t bSPIFID0;       //!< SPIFI D0
-  uint8_t bSPIFICS;       //!< SPIFI CS
-  uint32_t bSPIFIAddress; //!< SPIFI Register Address
+uint8_t bSPIFIPort;     //!< SPIFI port
+uint8_t bSPIFICLK;      //!< SPIFI Clock
+uint8_t bSPIFID3;       //!< SPIFI D3
+uint8_t bSPIFID2;       //!< SPIFI D2
+uint8_t bSPIFID1;       //!< SPIFI D1
+uint8_t bSPIFID0;       //!< SPIFI D0
+uint8_t bSPIFICS;       //!< SPIFI CS
+uint32_t bSPIFIAddress; //!< SPIFI Register Address
 } SPIFIConverter_s;
 
 //**************************** GPIO ****************************
@@ -676,11 +672,11 @@ typedef struct SPIFIConverter_s
  */
 typedef struct gpioConverter_s
 {
-  uint8_t bMainPort;  //!< Chip Port
-  uint8_t bMainPin;   //!< Chip Pin
-  uint8_t bGPIOPort;  //!< GPIO Port
-  uint8_t bGPIOPin;   //!< GPIO Pin
-  uint8_t bModeFunc;  //!< GPIO Pin Function
+uint8_t bMainPort;  //!< Chip Port
+uint8_t bMainPin;   //!< Chip Pin
+uint8_t bGPIOPort;  //!< GPIO Port
+uint8_t bGPIOPin;   //!< GPIO Pin
+uint8_t bModeFunc;  //!< GPIO Pin Function
 } gpioConverter_s;
 
 //**************************** ADC ****************************
@@ -690,14 +686,14 @@ typedef struct gpioConverter_s
  */
 typedef enum eChannels
 {
-  ADC_CHANNEL0  = 0,  //!< ADC Channel 0
-  ADC_CHANNEL1  = 1,  //!< ADC Channel 1
-  ADC_CHANNEL2  = 2,  //!< ADC Channel 2
-  ADC_CHANNEL3  = 3,  //!< ADC Channel 3
-  ADC_CHANNEL4  = 4,  //!< ADC Channel 4
-  ADC_CHANNEL5  = 5,  //!< ADC Channel 5
-  ADC_CHANNEL6  = 6,  //!< ADC Channel 6
-  ADC_CHANNEL7  = 7   //!< ADC Channel 7
+ADC_CHANNEL0 = 0,  //!< ADC Channel 0
+ADC_CHANNEL1 = 1,  //!< ADC Channel 1
+ADC_CHANNEL2 = 2,  //!< ADC Channel 2
+ADC_CHANNEL3 = 3,  //!< ADC Channel 3
+ADC_CHANNEL4 = 4,  //!< ADC Channel 4
+ADC_CHANNEL5 = 5,  //!< ADC Channel 5
+ADC_CHANNEL6 = 6,  //!< ADC Channel 6
+ADC_CHANNEL7 = 7   //!< ADC Channel 7
 } eChannels;
 
 /**
@@ -706,7 +702,6 @@ typedef enum eChannels
  * of ADC_PIN_MAPPING
  */
 //uint8_t bUsedADC[ADC_MAX_CHANNELS];
-
 /**
  * This enum defines which ADC/Channel is connected into the board and what position
  * to use as reference configuration from the ADC_PIN_MAPPING MACRO
@@ -714,17 +709,17 @@ typedef enum eChannels
 typedef enum eADCs  //See ADC_PIN_MAPPING
 {
 #if defined (TEST_BOARD)
-  ADC0b = 1,              //!< ADC0 position on the ADC_PIN_MAPPING
-  ADC1b = 14,              //!< ADC1 position on the ADC_PIN_MAPPING
+ADC0b = 1,              //!< ADC0 position on the ADC_PIN_MAPPING
+ADC1b = 14,//!< ADC1 position on the ADC_PIN_MAPPING
 #elif defined (TDA3500_PROTO1)
-  ADC0b = 1,                //!< ADC0 position on the ADC_PIN_MAPPING
-  ADC1b = 11,               //!< ADC1 position on the ADC_PIN_MAPPING
+ADC0b = 1,                //!< ADC0 position on the ADC_PIN_MAPPING
+ADC1b = 11,//!< ADC1 position on the ADC_PIN_MAPPING
 #elif defined (M2G_PROTOB)
-  ADC0b = 1,                //!< ADC0 position on the ADC_PIN_MAPPING
-  ADC1b = 11,               //!< ADC1 position on the ADC_PIN_MAPPING
+ADC0b = 1,                //!< ADC0 position on the ADC_PIN_MAPPING
+ADC1b = 11,               //!< ADC1 position on the ADC_PIN_MAPPING
 #elif defined (EA_LPC4357)
-  ADC0b = 1,                //!< ADC0 position on the ADC_PIN_MAPPING
-  ADC1b = 11,               //!< ADC1 position on the ADC_PIN_MAPPING
+ADC0b = 1,                //!< ADC0 position on the ADC_PIN_MAPPING
+ADC1b = 11,//!< ADC1 position on the ADC_PIN_MAPPING
 #endif
 } eADCs;
 
@@ -733,13 +728,13 @@ typedef enum eADCs  //See ADC_PIN_MAPPING
  */
 typedef struct ADCConverter_s
 {
-  LPC_ADC_T *pADC;      //!< ADC pointer to Memory structure
-  uint8_t bADCChannel;  //!< ADC channel
-  uint8_t bADCPort;     //!< Chip Port
-  uint8_t bADCPin;      //!< Chip Pin
-  uint8_t bModeFunc;    //!< ADC Pin Function
-  IRQn_Type ADCIntIRQ;  //!< ADC Interrupt IRQ
-  uint32_t wGPDMA;      //!< ADC GPDMA Connection
+LPC_ADC_T *pADC;      //!< ADC pointer to Memory structure
+uint8_t bADCChannel;  //!< ADC channel
+uint8_t bADCPort;     //!< Chip Port
+uint8_t bADCPin;      //!< Chip Pin
+uint8_t bModeFunc;    //!< ADC Pin Function
+IRQn_Type ADCIntIRQ;  //!< ADC Interrupt IRQ
+uint32_t wGPDMA;      //!< ADC GPDMA Connection
 } ADCConverter_s;
 
 //**************************** SPIFI ****************************
@@ -750,7 +745,7 @@ typedef struct ADCConverter_s
  */
 typedef enum eSPIFIs  //See SPIFI_PIN_MAPPING
 {
-  SPIFI0b = 0,              //!< SPIFI position on the SPIFI_PIN_MAPPING
+SPIFI0b = 0,              //!< SPIFI position on the SPIFI_PIN_MAPPING
 } eSPIFIs;
 //**************************** USB ****************************
 
@@ -760,8 +755,8 @@ typedef enum eSPIFIs  //See SPIFI_PIN_MAPPING
  */
 typedef enum eUSBs  //See USB_PIN_MAPPING
 {
-  USB0b = 0,              //!< USB0 position on the USB_PIN_MAPPING
-  USB1b = 1,              //!< USB1 position on the USB_PIN_MAPPING
+USB0b = 0,              //!< USB0 position on the USB_PIN_MAPPING
+USB1b = 1,              //!< USB1 position on the USB_PIN_MAPPING
 } eUSBs;
 
 /**
@@ -769,10 +764,10 @@ typedef enum eUSBs  //See USB_PIN_MAPPING
  */
 typedef struct USBConverter_s
 {
-  uint32_t wLPCUSBBase;           //!< USB Memory Base Address
-  LPC_USBHS_T * pUSB;             //!< USB pointer to Memory structure
-  IRQn_Type eLPCUSBIRQ;           //!< USB Interrupt IRQ
-  void (*USBInitPinClk)(void);    //!< USB Init function pointer
+uint32_t wLPCUSBBase;           //!< USB Memory Base Address
+LPC_USBHS_T * pUSB;             //!< USB pointer to Memory structure
+IRQn_Type eLPCUSBIRQ;           //!< USB Interrupt IRQ
+void (*USBInitPinClk) (void);    //!< USB Init function pointer
 } USBConverter_s;
 
 //**************************** UART ****************************
@@ -782,21 +777,18 @@ typedef struct USBConverter_s
  */
 typedef struct uartConverter_s
 {
-  LPC_USART_T *pRegister; //!< UART Register Base
-  uint8_t     bPort;      //!< Chip Port
-  uint8_t     bTxPin;     //!< TX Pin
-  uint8_t     bRxPin;     //!< RX Pin
-  uint16_t    iModeFunc;  //!< PinMux Mask
-  int         iIRQn;      //!< IRQn
+LPC_USART_T *pRegister; //!< UART Register Base
+uint8_t bPort;      //!< Chip Port
+uint8_t bTxPin;     //!< TX Pin
+uint8_t bRxPin;     //!< RX Pin
+uint16_t iModeFunc;  //!< PinMux Mask
+int iIRQn;      //!< IRQn
 } uartConverter_s;
 
-
-
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 //uint32_t SystemCoreClock; //!< System Clock Frequency (Core Clock)
-
 extern CANConverter_s sCANMap[];    //!< PIN MUX mapping array for CAN
 extern PWMConverter_s sPWMMap[];    //!< PIN MUX mapping array for PWM
 extern SPIFIConverter_s sSPIFIMap[];    //!< PIN MUX mapping array for SPIFI
@@ -811,500 +803,499 @@ extern uint32_t bGPIOMapSize; //!<  Size of map struct for GPIO
 extern uint32_t bADCMapSize;  //!<  Size of map struct for ADC
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
 
 /******************************************************************************
-* Function : BRD_vWait_ms (uint32_t val);
-*//**
-* \b Description:
-*
-* This is a public function used to block the execution of the firmware for
-* a specific time in milliseconds. This is done using a peripheral timer.
-*
-* PRE-CONDITION: Timer peripheral avaliable;
-*
-* POST-CONDITION: none
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* //Defines that selects the timer to be used at the function
-* #define BRD_Timer_IRQHandler  TIMER1_IRQHandler
-* #define BRD_Timer             LPC_TIMER1
-* #define BRD_Timer_IRQn        TIMER1_IRQn
-* #define BRD_Timer_RST         RGU_TIMER1_RST
-* #define BRD_Timer_Clk         CLK_MX_TIMER1
-*
-* BRD_vWait_ms(100); //block execution during 100 ms
-*
-~~~~~~~~~~~~~~~
-*
-* @see
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
+ * Function : BRD_vWait_ms (uint32_t val);
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to block the execution of the firmware for
+ * a specific time in milliseconds. This is done using a peripheral timer.
+ *
+ * PRE-CONDITION: Timer peripheral avaliable;
+ *
+ * POST-CONDITION: none
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * //Defines that selects the timer to be used at the function
+ * #define BRD_Timer_IRQHandler  TIMER1_IRQHandler
+ * #define BRD_Timer             LPC_TIMER1
+ * #define BRD_Timer_IRQn        TIMER1_IRQn
+ * #define BRD_Timer_RST         RGU_TIMER1_RST
+ * #define BRD_Timer_Clk         CLK_MX_TIMER1
+ *
+ * BRD_vWait_ms(100); //block execution during 100 ms
+ *
+ ~~~~~~~~~~~~~~~
+ *
+ * @see
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
 void BRD_vWait_ms (uint32_t ms);
 
 /******************************************************************************
-* Function : BRD_vWait_us (uint32_t dMicroSecs)
-*//**
-* \b Description:
-*
-* This is a public function used to block the execution of the firmware for
-* a specific time in microseconds. This is done using a NOP instructions.
-*
-* ATTENTION: Need to review implementation when clock changes.
-*
-* PRE-CONDITION: Timer peripheral avaliable;
-*
-* POST-CONDITION: none
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* BRD_vWait_us(500); //block execution during 500 us
-~~~~~~~~~~~~~~~
-*
-* @see
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
+ * Function : BRD_vWait_us (uint32_t dMicroSecs)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to block the execution of the firmware for
+ * a specific time in microseconds. This is done using a NOP instructions.
+ *
+ * ATTENTION: Need to review implementation when clock changes.
+ *
+ * PRE-CONDITION: Timer peripheral avaliable;
+ *
+ * POST-CONDITION: none
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * BRD_vWait_us(500); //block execution during 500 us
+ ~~~~~~~~~~~~~~~
+ *
+ * @see
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
 void BRD_vWait_us (uint32_t us);
 
 /******************************************************************************
-* Function : SystemInit(void)
-*//**
-* \b Description:
-*
-* This is a public function used to configure a board vector list.
-* This function must be called just after BRD_vSystemCoreClockUpdate().
-* This function calls BRD_vSetupClocking to setup initial clocking.
-*
-* PRE-CONDITION: None
-*
-* POST-CONDITION: Vector array mapped
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void SystemInit(void);
+ * Function : SystemInit(void)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to configure a board vector list.
+ * This function must be called just after BRD_vSystemCoreClockUpdate().
+ * This function calls BRD_vSetupClocking to setup initial clocking.
+ *
+ * PRE-CONDITION: None
+ *
+ * POST-CONDITION: Vector array mapped
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void SystemInit (void);
 
 /******************************************************************************
-* Function : BRD_vSystemCoreClockUpdate(void)
-*//**
-* \b Description:
-*
-* This is a public function used update SystemCoreClock variable with the
-* clock value currently being used by the MCU.
-*
-* PRE-CONDITION: None
-*
-* POST-CONDITION: SystemCoreClock updated with system clock value
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   PRINTF("The system clock is %l", SystemCoreClock);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_vSystemCoreClockUpdate(void);
+ * Function : BRD_vSystemCoreClockUpdate(void)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used update SystemCoreClock variable with the
+ * clock value currently being used by the MCU.
+ *
+ * PRE-CONDITION: None
+ *
+ * POST-CONDITION: SystemCoreClock updated with system clock value
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   PRINTF("The system clock is %l", SystemCoreClock);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_vSystemCoreClockUpdate (void);
 
 /******************************************************************************
-* Function : BRD_vSetupClocking(void)
-*//**
-* \b Description:
-*
-* This is a public function used to setup all clocks needed by the system.
-* This function is called from the BRD_BoardConfig.
-*
-* PRE-CONDITION: None
-*
-* POST-CONDITION: System clocks started
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   PRINTF("The system clock is %l", SystemCoreClock);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_vSetupClocking(void);
+ * Function : BRD_vSetupClocking(void)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to setup all clocks needed by the system.
+ * This function is called from the BRD_BoardConfig.
+ *
+ * PRE-CONDITION: None
+ *
+ * POST-CONDITION: System clocks started
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   PRINTF("The system clock is %l", SystemCoreClock);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_vSetupClocking (void);
 
-void BRD_SetupMuxing(void);
+void BRD_SetupMuxing (void);
 
-void BRD_SystemInit(void);
-
-/******************************************************************************
-* Function : BRD_UARTConfig(void)
-*//**
-* \b Description:
-*
-* This is a public function used to initialize and pinmux UART interfaces.
-*
-* PRE-CONDITION: A valid PIN MUX UART array defined
-*
-* POST-CONDITION: UART initialized
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_UARTConfig();
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, UART_PIN_MAPPING, UARTConverter_s
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_UARTConfig(uint8_t UART_Channel);
+void BRD_SystemInit (void);
 
 /******************************************************************************
-* Function : BRD_SPIFIConfig(void)
-*//**
-* \b Description:
-*
-* This is a public function used to initialize and pinmux a given SPIFI interfaces.
-*
-* PRE-CONDITION: A Valid SPIFI channel
-*
-* POST-CONDITION: SPIFI PINMUX executed
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_SPIFIConfig(SPIFI0);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, SPIFI_PIN_MAPPING, SPIFIConverter_s
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 11/04/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_SPIFIConfig(void);
+ * Function : BRD_UARTConfig(void)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to initialize and pinmux UART interfaces.
+ *
+ * PRE-CONDITION: A valid PIN MUX UART array defined
+ *
+ * POST-CONDITION: UART initialized
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_UARTConfig();
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, UART_PIN_MAPPING, UARTConverter_s
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_UARTConfig (uint8_t UART_Channel);
 
 /******************************************************************************
-* Function : BRD_PWMConfig(uint8_t PWMChannel)
-*//**
-* \b Description:
-*
-* This is a public function used to initialize and pinmux a given PWM interfaces.
-*
-* PRE-CONDITION: A Valid PWM channel, and a valid PIN MUX PWM array defined
-*
-* POST-CONDITION: PWM Channel initialized
-*
-* @return     The base clock rate used by PWM interface
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_PWMConfig(PWM0);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, PWM_PIN_MAPPING, PWMConverter_s
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-uint32_t BRD_PWMConfig(uint8_t PWMChannel);
+ * Function : BRD_SPIFIConfig(void)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to initialize and pinmux a given SPIFI interfaces.
+ *
+ * PRE-CONDITION: A Valid SPIFI channel
+ *
+ * POST-CONDITION: SPIFI PINMUX executed
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_SPIFIConfig(SPIFI0);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, SPIFI_PIN_MAPPING, SPIFIConverter_s
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 11/04/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_SPIFIConfig (void);
 
 /******************************************************************************
-* Function : BRD_CANConfig(uint8_t CANChannel)
-*//**
-* \b Description:
-*
-* This is a public function used to initialize and pinmux a given CAN port.
-*
-* PRE-CONDITION: A Valid CAN port, and a valid PIN MUX CAN array defined
-*
-* POST-CONDITION: CAN port initialized
-*
-* @return     CAN clock rate
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_CANConfig(CAN0);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, CAN_PIN_MAPPING, CANConverter_s
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-uint32_t BRD_CANConfig(uint8_t CANChannel);
+ * Function : BRD_PWMConfig(uint8_t PWMChannel)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to initialize and pinmux a given PWM interfaces.
+ *
+ * PRE-CONDITION: A Valid PWM channel, and a valid PIN MUX PWM array defined
+ *
+ * POST-CONDITION: PWM Channel initialized
+ *
+ * @return     The base clock rate used by PWM interface
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_PWMConfig(PWM0);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, PWM_PIN_MAPPING, PWMConverter_s
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+uint32_t BRD_PWMConfig (uint8_t PWMChannel);
 
 /******************************************************************************
-* Function : BRD_ADCConfig(uint8_t ADCChannel)
-*//**
-* \b Description:
-*
-* This is a public function used to initialize and pinmux a given ADC port.
-*
-* PRE-CONDITION: A Valid ADC port, and a valid PIN MUX ADC array defined
-*
-* POST-CONDITION: ADC port initialized
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_ADCConfig(ADC0);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, ADC_PIN_MAPPING, ADCConverter_s
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_ADCConfig(uint8_t ADCChannel);
+ * Function : BRD_CANConfig(uint8_t CANChannel)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to initialize and pinmux a given CAN port.
+ *
+ * PRE-CONDITION: A Valid CAN port, and a valid PIN MUX CAN array defined
+ *
+ * POST-CONDITION: CAN port initialized
+ *
+ * @return     CAN clock rate
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_CANConfig(CAN0);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, CAN_PIN_MAPPING, CANConverter_s
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+uint32_t BRD_CANConfig (uint8_t CANChannel);
 
 /******************************************************************************
-* Function : BRD_GPIOConfig(uint8_t GPIOChannel, uint8_t bPull)
-*//**
-* \b Description:
-*
-* This is a public function used to initialize and pinmux a given GPIO port.
-*
-* PRE-CONDITION: A Valid GPIO port and pull, and a valid PIN MUX GPIO array defined
-*
-* POST-CONDITION: GPIO port initialized
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_GPIOConfig(GPIO0, GPIO_PULL_UP);
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, GPIO_PIN_MAPPING, GPIOConverter_s
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_GPIOConfig(uint8_t GPIOChannel, uint8_t bPull);
+ * Function : BRD_ADCConfig(uint8_t ADCChannel)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to initialize and pinmux a given ADC port.
+ *
+ * PRE-CONDITION: A Valid ADC port, and a valid PIN MUX ADC array defined
+ *
+ * POST-CONDITION: ADC port initialized
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_ADCConfig(ADC0);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, ADC_PIN_MAPPING, ADCConverter_s
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_ADCConfig (uint8_t ADCChannel);
 
 /******************************************************************************
-* Function : void BRD_LCDConfig(void);
-*//**
-* \b Description:
-*
-* This is a public function to initialize the hardware and pinmux of
-* the LCD controller peripheral. This function also enables an external RAM,
-* configuring the pinmux and parameters for proper operation.
-*
-* PRE-CONDITION: A LCD connected to the board via LCD controller interface, an
-* external RAM connected to the processor.
-*
-* POST-CONDITION: LCD pinmux configured. External Memory pinmux configured and running.
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* int main(void)
-* {
-*   BRD_vSystemCoreClockUpdate();
-*   BRD_BoardConfig();
-*   BRD_LCDConfig();
-* }
-~~~~~~~~~~~~~~~
-*
-* @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, LCD_PIN_MAPPING, EMC_SDRAM_PIN_MAPPING
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_LCDConfig(void);
-
+ * Function : BRD_GPIOConfig(uint8_t GPIOChannel, uint8_t bPull)
+ *//**
+ * \b Description:
+ *
+ * This is a public function used to initialize and pinmux a given GPIO port.
+ *
+ * PRE-CONDITION: A Valid GPIO port and pull, and a valid PIN MUX GPIO array defined
+ *
+ * POST-CONDITION: GPIO port initialized
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_GPIOConfig(GPIO0, GPIO_PULL_UP);
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, GPIO_PIN_MAPPING, GPIOConverter_s
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_GPIOConfig (uint8_t GPIOChannel, uint8_t bPull);
 
 /******************************************************************************
-* Function : BRD_ExtMemoryConfig(void)
-*//**
-* \b Description:
-*
-* This function initializes the pins connected to an external SDRAM memory and
-* enables the device for operation.
-*
-* PRE-CONDITION: An array of PINMUX_GRP_T elements, one for each of SDRAM controller pins.
-*
-* POST-CONDITION: An external SDRAM device enabled and operational, acessible by the system
-* with base address 0x28000000.
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* PINMUX_GRP_T sSDRAMMap[] = {.pingrp = 1, .pinnum = 0, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)}, \
+ * Function : void BRD_LCDConfig(void);
+ *//**
+ * \b Description:
+ *
+ * This is a public function to initialize the hardware and pinmux of
+ * the LCD controller peripheral. This function also enables an external RAM,
+ * configuring the pinmux and parameters for proper operation.
+ *
+ * PRE-CONDITION: A LCD connected to the board via LCD controller interface, an
+ * external RAM connected to the processor.
+ *
+ * POST-CONDITION: LCD pinmux configured. External Memory pinmux configured and running.
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * int main(void)
+ * {
+ *   BRD_vSystemCoreClockUpdate();
+ *   BRD_BoardConfig();
+ *   BRD_LCDConfig();
+ * }
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRD_vSystemCoreClockUpdate, BRD_vSetupClocking, BRD_BoardConfig, LCD_PIN_MAPPING, EMC_SDRAM_PIN_MAPPING
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_LCDConfig (void);
+
+/******************************************************************************
+ * Function : BRD_ExtMemoryConfig(void)
+ *//**
+ * \b Description:
+ *
+ * This function initializes the pins connected to an external SDRAM memory and
+ * enables the device for operation.
+ *
+ * PRE-CONDITION: An array of PINMUX_GRP_T elements, one for each of SDRAM controller pins.
+ *
+ * POST-CONDITION: An external SDRAM device enabled and operational, acessible by the system
+ * with base address 0x28000000.
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * PINMUX_GRP_T sSDRAMMap[] = {.pingrp = 1, .pinnum = 0, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)}, \
   {.pingrp = 1, .pinnum = 1, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)}, \
   {.pingrp = 1, .pinnum = 2, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)}, \
   {.pingrp = 1, .pinnum = 3, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)}, \
   {.pingrp = 1, .pinnum = 4, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)}, \
   {.pingrp = 1, .pinnum = 5, .modefunc = (SCU_PINIO_FAST | SCU_MODE_FUNC2 | SCU_MODE_PULLUP)};
 
-  pvt_BRD_SDRAMConfig();
-*
-*
-*
-~~~~~~~~~~~~~~~
-*
-* @see PINMUX_GRP_T, EMC_SDRAM_PIN_MAPPING, pvt_BRD_dNano2Clock
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-void BRD_ExtMemoryConfig(void);
-
+ pvt_BRD_SDRAMConfig();
+ *
+ *
+ *
+ ~~~~~~~~~~~~~~~
+ *
+ * @see PINMUX_GRP_T, EMC_SDRAM_PIN_MAPPING, pvt_BRD_dNano2Clock
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 18/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+void BRD_ExtMemoryConfig (void);
 
 #ifdef __cplusplus
 } // extern "C"

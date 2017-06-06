@@ -33,7 +33,8 @@
 #define __RGU_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup RGU_18XX_43XX CHIP: LPC18xx/43xx Reset Generator Unit (RGU) driver
@@ -44,7 +45,8 @@ extern "C" {
 /**
  * @brief RGU reset enumerations
  */
-typedef enum CHIP_RGU_RST {
+typedef enum CHIP_RGU_RST
+{
 	RGU_CORE_RST,
 	RGU_PERIPH_RST,
 	RGU_MASTER_RST,
@@ -100,15 +102,16 @@ typedef enum CHIP_RGU_RST {
 /**
  * @brief RGU register structure
  */
-typedef struct {							/*!< RGU Structure          */
-	__I  uint32_t  RESERVED0[64];
-	__O  uint32_t  RESET_CTRL[2];			/*!< Reset control register 0,1 */
-	__I  uint32_t  RESERVED1[2];
-	__IO uint32_t  RESET_STATUS[4];			/*!< Reset status register 0 to 3 */
-	__I  uint32_t  RESERVED2[12];
-	__I  uint32_t  RESET_ACTIVE_STATUS[2];	/*!< Reset active status register 0, 1 */
-	__I  uint32_t  RESERVED3[170];
-	__IO uint32_t  RESET_EXT_STAT[RGU_LAST_RST + 1];/*!< Reset external status registers */
+typedef struct
+{ /*!< RGU Structure          */
+	__I uint32_t RESERVED0[64];
+	__O uint32_t RESET_CTRL[2]; /*!< Reset control register 0,1 */
+	__I uint32_t RESERVED1[2];
+	__IO uint32_t RESET_STATUS[4]; /*!< Reset status register 0 to 3 */
+	__I uint32_t RESERVED2[12];
+	__I uint32_t RESET_ACTIVE_STATUS[2]; /*!< Reset active status register 0, 1 */
+	__I uint32_t RESERVED3[170];
+	__IO uint32_t RESET_EXT_STAT[RGU_LAST_RST + 1];/*!< Reset external status registers */
 } LPC_RGU_T;
 
 /**
@@ -116,7 +119,7 @@ typedef struct {							/*!< RGU Structure          */
  * @param	ResetNumber	: Peripheral reset number to trigger
  * @return	Nothing
  */
-STATIC INLINE void Chip_RGU_TriggerReset(CHIP_RGU_RST_T ResetNumber)
+STATIC INLINE void Chip_RGU_TriggerReset (CHIP_RGU_RST_T ResetNumber)
 {
 	LPC_RGU->RESET_CTRL[ResetNumber >> 5] = 1 << (ResetNumber & 31);
 	/* Reset will auto clear after 1 clock cycle */
@@ -127,7 +130,7 @@ STATIC INLINE void Chip_RGU_TriggerReset(CHIP_RGU_RST_T ResetNumber)
  * @param	ResetNumber	: Peripheral reset number to trigger
  * @return	true if the periperal is still being reset
  */
-STATIC INLINE bool Chip_RGU_InReset(CHIP_RGU_RST_T ResetNumber)
+STATIC INLINE bool Chip_RGU_InReset (CHIP_RGU_RST_T ResetNumber)
 {
 	return !(LPC_RGU->RESET_ACTIVE_STATUS[ResetNumber >> 5] & (1 << (ResetNumber & 31)));
 }
@@ -142,7 +145,7 @@ STATIC INLINE bool Chip_RGU_InReset(CHIP_RGU_RST_T ResetNumber)
  * this function to clear the reset bit. This function clears all reset bits in
  * a reset register.
  */
-STATIC INLINE void Chip_RGU_ClearReset(CHIP_RGU_RST_T ResetNumber)
+STATIC INLINE void Chip_RGU_ClearReset (CHIP_RGU_RST_T ResetNumber)
 {
 	LPC_RGU->RESET_CTRL[ResetNumber >> 5] = 0;
 }

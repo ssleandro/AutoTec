@@ -1,8 +1,8 @@
 /****************************************************************************
- * Title                 :   control_config
- * Filename              :   control_config.h
+ * Title                 :   isobus_tools
+ * Filename              :   isobus_tools.h
  * Author                :   Henrique Reis
- * Origin Date           :   18 de abr de 2017
+ * Origin Date           :   06/06/2017
  * Version               :   1.0.0
  * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
@@ -24,45 +24,53 @@
 /*************** INTERFACE CHANGE LIST **************************************
  *
  *    Date    Version       Author          Description
- *  18/04/17   1.0.0     Henrique Reis         control_config.h created.
+ * 06/06/2017  1.0.0     Henrique Reis      isobus_tools.h created.
  *
  *****************************************************************************/
-#ifndef CONTROL_CONFIG_CONTROL_CONFIG_H_
-#define CONTROL_CONFIG_CONTROL_CONFIG_H_
+#ifndef APP_ISOBUS_SRC_ISOBUS_TOOLS_H_
+#define APP_ISOBUS_SRC_ISOBUS_TOOLS_H_
 
 /******************************************************************************
- * Includes
- *******************************************************************************/
+* Includes
+*******************************************************************************/
+#include "isobus_core.h"
+#include "iso11783.h"
 
 /******************************************************************************
- * Preprocessor Constants
- *******************************************************************************/
+* Preprocessor Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Configuration Constants
- *******************************************************************************/
-//Main loop wait
-#define CONTROL_QUEUE_WAIT   0           //!< No timeout - wait forever
-#define CONTROL_DEFAULT_MSGSIZE  3       //!< Default output format - 16 bytes
+* Configuration Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Macros
- *******************************************************************************/
+* Macros
+*******************************************************************************/
 
 /******************************************************************************
- * Variables
- *******************************************************************************/
+* Typedefs
+*******************************************************************************/
 
 /******************************************************************************
- * Function Prototypes
- *******************************************************************************/
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+* Variables
+*******************************************************************************/
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+/******************************************************************************
+* Public Variables
+*******************************************************************************/
 
-#endif /* CONTROL_CONFIG_CONTROL_CONFIG_H_ */
+/******************************************************************************
+* Function Prototypes
+*******************************************************************************/
+void ISO_vUpdateConfigurationDataMask (void);
+void ISO_vUpdateInstallationDataMask (void);
+void ISO_vUpdatePlanterDataMask (void);
+void ISO_vUpdateTestModeDataMask (void);
+void ISO_vUpdateTrimmingDataMask (void);
+void ISO_vUpdateSystemDataMask (void);
+void ISO_vChangeActiveMask(eIsobusMask eNewMask);
+
+void ISO_vIsobusUpdateVTStatus (ISOBUSMsg*);
+
+#endif /* APP_ISOBUS_SRC_ISOBUS_TOOLS_H_ */

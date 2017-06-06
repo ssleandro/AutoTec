@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   IN APPLICATION PROGRAMMING API
-* Filename              :   iap.c
-* Author                :   Joao Paulo Martins
-* Origin Date           :   05/05/2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.2 2015q4
-* Target                :   LPC43XX M4
-* Notes                 :   None
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   IN APPLICATION PROGRAMMING API
+ * Filename              :   iap.c
+ * Author                :   Joao Paulo Martins
+ * Origin Date           :   05/05/2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.2 2015q4
+ * Target                :   LPC43XX M4
+ * Notes                 :   None
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version        Author         		Description
-*  05/05/16   1.0.0    Joao Paulo Martins	File created
-*
-*****************************************************************************/
+ *
+ *    Date    Version        Author         		Description
+ *  05/05/16   1.0.0    Joao Paulo Martins	File created
+ *
+ *****************************************************************************/
 /** @file api.c
  *  @brief This module provides the functionality of write and erase sectors
  *  and pages of the on-chip flash memory.
@@ -34,16 +34,16 @@
  */
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 
 #include "iap.h"
 #include "board.h"
 #include "chip.h"
 
 /******************************************************************************
-* Module Preprocessor Constants
-*******************************************************************************/
+ * Module Preprocessor Constants
+ *******************************************************************************/
 #define ONCHIP_NUM_SECTORS 15
 #define ONCHIP_SECTOR_A			0
 #define ONCHIP_SECTOR_B			1
@@ -51,8 +51,8 @@
 #define INVALID_VALUE			0xFFFFFFFF
 
 /******************************************************************************
-* Module Preprocessor Macros
-*******************************************************************************/
+ * Module Preprocessor Macros
+ *******************************************************************************/
 /* ************************ IAP ERROR CODES ******************************* */
 /**
  * This private MACRO holds all the mapping between particular MCU IAP error codes
@@ -98,137 +98,136 @@
 	X(14, SECTOR_A14_START, SECTOR_A14_END, SECTOR_B14_START, SECTOR_B14_END)		\
 
 /******************************************************************************
-* Module Typedefs
-*******************************************************************************/
+ * Module Typedefs
+ *******************************************************************************/
 
 /******************************************************************************
-* Module Variable Definitions
-*******************************************************************************/
+ * Module Variable Definitions
+ *******************************************************************************/
 /* ************************* IAP COMMANDS ****************************/
 //#define X(IAP_CODE, MCU_CODE) [IAP_CODE] = MCU_CODE,
 #define X(IAP_CODE, MCU_CODE) MCU_CODE,
 const eMCUError_s eaIAP_ReturnCode[] = {
-		IAP_ERROR_CODES_MAPPING
+IAP_ERROR_CODES_MAPPING
 };
 #undef X
 
 #define X(IND, AS, AE, BS, BE) [IND] = AS,
 const uint32_t wSectorA_StartAddr[] = {
-		LPC4357_SECTORS
-};
+LPC4357_SECTORS
+	};
 #undef X
 
 #define X(IND, AS, AE, BS, BE) [IND] = BS,
 const uint32_t wSectorB_StartAddr[] = {
-		LPC4357_SECTORS
-};
+LPC4357_SECTORS
+	};
 #undef X
 
 #define X(IND, AS, AE, BS, BE) [IND] = AE,
 const uint32_t wSectorA_EndAddr[] = {
-		LPC4357_SECTORS
-};
+LPC4357_SECTORS
+	};
 #undef X
 
 #define X(IND, AS, AE, BS, BE) [IND] = BE,
 const uint32_t wSectorB_EndAddr[] = {
-		LPC4357_SECTORS
-};
+LPC4357_SECTORS
+	};
 #undef X
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Definitions
-*******************************************************************************/
+ * Function Definitions
+ *******************************************************************************/
 
 /* Prepares the IAP mechanism */
-eMCUError_s IAP_eInit(void)
+eMCUError_s IAP_eInit (void)
 {
-  uint8_t bIAPCode = Chip_IAP_init();
+	uint8_t bIAPCode = Chip_IAP_init();
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Prepare sector for write/erase operations - this must be executed before these ops */
-eMCUError_s IAP_ePrepareForReadWrite(uint32_t wStrSector, uint32_t wEndSector, uint8_t bFlashBank)
+eMCUError_s IAP_ePrepareForReadWrite (uint32_t wStrSector, uint32_t wEndSector, uint8_t bFlashBank)
 {
 	uint8_t bIAPCode = Chip_IAP_PreSectorForReadWrite(wStrSector, wEndSector, bFlashBank);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Copy RAM to flash - effectively write memory */
-eMCUError_s IAP_eCopyRamToFlash(uint32_t wDstAdd, uint32_t *wpSrcAdd, uint32_t wByteswrt)
+eMCUError_s IAP_eCopyRamToFlash (uint32_t wDstAdd, uint32_t *wpSrcAdd, uint32_t wByteswrt)
 {
 	uint8_t bIAPCode = Chip_IAP_CopyRamToFlash(wDstAdd, wpSrcAdd, wByteswrt);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Erase sector */
-eMCUError_s IAP_eEraseSector(uint32_t wStrSector, uint32_t wEndSector, uint8_t bFlashBank)
+eMCUError_s IAP_eEraseSector (uint32_t wStrSector, uint32_t wEndSector, uint8_t bFlashBank)
 {
 	uint8_t bIAPCode = Chip_IAP_EraseSector(wStrSector, wEndSector, bFlashBank);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Blank check sector */
-eMCUError_s IAP_eBlankCheckSector(uint32_t wStrSector, uint32_t wEndSector, uint8_t bFlashBank)
+eMCUError_s IAP_eBlankCheckSector (uint32_t wStrSector, uint32_t wEndSector, uint8_t bFlashBank)
 {
 	uint8_t bIAPCode = Chip_IAP_BlankCheckSector(wStrSector, wEndSector, bFlashBank);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Read part identification number */
-uint32_t IAP_wReadPID()
+uint32_t IAP_wReadPID ()
 {
 	return Chip_IAP_ReadPID();
 }
 
 /* Read boot code version number */
-uint32_t IAP_wReadBootCode()
+uint32_t IAP_wReadBootCode ()
 {
 	return Chip_IAP_ReadBootCode();
 }
 
 /* IAP compare memory areas, RAM or flash */
-eMCUError_s IAP_eCompare(uint32_t dstAdd, uint32_t srcAdd, uint32_t bytescmp)
+eMCUError_s IAP_eCompare (uint32_t dstAdd, uint32_t srcAdd, uint32_t bytescmp)
 {
 	uint8_t bIAPCode = Chip_IAP_Compare(dstAdd, srcAdd, bytescmp);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Re invoke ISP */
-eMCUError_s IAP_eReinvokeISP()
+eMCUError_s IAP_eReinvokeISP ()
 {
 	uint8_t bIAPCode = Chip_IAP_ReinvokeISP();
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Read the unique ID */
-uint32_t IAP_wReadUID()
+uint32_t IAP_wReadUID ()
 {
 	return Chip_IAP_ReadUID();
 }
 
 /* Erase page */
-eMCUError_s IAP_eErasePage(uint32_t strPage, uint32_t endPage)
+eMCUError_s IAP_eErasePage (uint32_t strPage, uint32_t endPage)
 {
 	uint8_t bIAPCode = Chip_IAP_ErasePage(strPage, endPage);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
 /* Set active boot flash bank */
-eMCUError_s IAP_eSetBootFlashBank(uint8_t bankNum)
+eMCUError_s IAP_eSetBootFlashBank (uint8_t bankNum)
 {
 	uint8_t bIAPCode = Chip_IAP_SetBootFlashBank(bankNum);
 	return eaIAP_ReturnCode[bIAPCode];
 }
 
-
 /* TODO: evaluate the return of INVALID_VALUE when addr is not valid */
 
-uint32_t IAP_wGetMemoryBank(uint32_t wAbsoluteAddrm)
+uint32_t IAP_wGetMemoryBank (uint32_t wAbsoluteAddrm)
 {
 	/* Checks the bank of the requested address */
 	if ((wAbsoluteAddrm >= SECTOR_A0_START) && (wAbsoluteAddrm <= SECTOR_A14_END))
@@ -246,7 +245,7 @@ uint32_t IAP_wGetMemoryBank(uint32_t wAbsoluteAddrm)
 	}
 }
 
-uint32_t IAP_wGetSectorNum(uint32_t wAbsoluteAddrm)
+uint32_t IAP_wGetSectorNum (uint32_t wAbsoluteAddrm)
 {
 	uint32_t bSector = INVALID_VALUE;
 	uint8_t bFlashBank = IAP_wGetMemoryBank(wAbsoluteAddrm);
@@ -261,8 +260,8 @@ uint32_t IAP_wGetSectorNum(uint32_t wAbsoluteAddrm)
 		for (bSector = 0; bSector < ONCHIP_NUM_SECTORS; bSector++)
 		{
 			/* Check the index of the sector */
-			if ((wAbsoluteAddrm >= wSectorA_StartAddr[bSector]) && \
-					(wAbsoluteAddrm <= wSectorA_EndAddr[bSector]))
+			if ((wAbsoluteAddrm >= wSectorA_StartAddr[bSector]) &&
+				(wAbsoluteAddrm <= wSectorA_EndAddr[bSector]))
 			{
 				break;
 			}
@@ -274,8 +273,8 @@ uint32_t IAP_wGetSectorNum(uint32_t wAbsoluteAddrm)
 		for (bSector = 0; bSector < ONCHIP_NUM_SECTORS; bSector++)
 		{
 			/* Check the index of the sector */
-			if ((wAbsoluteAddrm >= wSectorB_StartAddr[bSector]) && \
-					(wAbsoluteAddrm <= wSectorB_EndAddr[bSector]))
+			if ((wAbsoluteAddrm >= wSectorB_StartAddr[bSector]) &&
+				(wAbsoluteAddrm <= wSectorB_EndAddr[bSector]))
 			{
 				break;
 			}

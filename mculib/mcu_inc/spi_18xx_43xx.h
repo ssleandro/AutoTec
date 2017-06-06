@@ -33,7 +33,8 @@
 #define __SPI_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup SPI_43XX CHIP: LPC43xx SPI driver
@@ -46,13 +47,14 @@ extern "C" {
 /**
  * @brief SPI register block structure
  */
-typedef struct {					/*!< SPI Structure          */
-	__IO uint32_t  CR;				/*!< SPI Control Register. This register controls the operation of the SPI. */
-	__I  uint32_t  SR;				/*!< SPI Status Register. This register shows the status of the SPI. */
-	__IO uint32_t  DR;				/*!< SPI Data Register. This bi-directional register provides the transmit and receive data for the SPI. Transmit data is provided to the SPI0 by writing to this register. Data received by the SPI0 can be read from this register. */
-	__IO uint32_t  CCR;				/*!< SPI Clock Counter Register. This register controls the frequency of a master's SCK0. */
-	__I  uint32_t  RESERVED0[3];
-	__IO uint32_t  INT;				/*!< SPI Interrupt Flag. This register contains the interrupt flag for the SPI interface. */
+typedef struct
+{ /*!< SPI Structure          */
+	__IO uint32_t CR; /*!< SPI Control Register. This register controls the operation of the SPI. */
+	__I uint32_t SR; /*!< SPI Status Register. This register shows the status of the SPI. */
+	__IO uint32_t DR; /*!< SPI Data Register. This bi-directional register provides the transmit and receive data for the SPI. Transmit data is provided to the SPI0 by writing to this register. Data received by the SPI0 can be read from this register. */
+	__IO uint32_t CCR; /*!< SPI Clock Counter Register. This register controls the frequency of a master's SCK0. */
+	__I uint32_t RESERVED0[3];
+	__IO uint32_t INT; /*!< SPI Interrupt Flag. This register contains the interrupt flag for the SPI interface. */
 } LPC_SPI_T;
 
 /*
@@ -119,74 +121,80 @@ typedef struct {					/*!< SPI Structure          */
 #define SPI_DR_DATA(n)        ((uint32_t) ((n) & 0xFFFF))
 
 /** @brief SPI Mode*/
-typedef enum {
-	SPI_MODE_MASTER = SPI_CR_MASTER_EN,			/* Master Mode */
-	SPI_MODE_SLAVE = SPI_CR_SLAVE_EN,			/* Slave Mode */
+typedef enum
+{
+	SPI_MODE_MASTER = SPI_CR_MASTER_EN, /* Master Mode */
+	SPI_MODE_SLAVE = SPI_CR_SLAVE_EN, /* Slave Mode */
 } SPI_MODE_T;
 
 /** @brief SPI Clock Mode*/
-typedef enum {
-	SPI_CLOCK_CPHA0_CPOL0 = SPI_CR_CPOL_LO | SPI_CR_CPHA_FIRST,		/**< CPHA = 0, CPOL = 0 */
-	SPI_CLOCK_CPHA0_CPOL1 = SPI_CR_CPOL_HI | SPI_CR_CPHA_FIRST,		/**< CPHA = 0, CPOL = 1 */
-	SPI_CLOCK_CPHA1_CPOL0 = SPI_CR_CPOL_LO | SPI_CR_CPHA_SECOND,	/**< CPHA = 1, CPOL = 0 */
-	SPI_CLOCK_CPHA1_CPOL1 = SPI_CR_CPOL_HI | SPI_CR_CPHA_SECOND,	/**< CPHA = 1, CPOL = 1 */
+typedef enum
+{
+	SPI_CLOCK_CPHA0_CPOL0 = SPI_CR_CPOL_LO | SPI_CR_CPHA_FIRST, /**< CPHA = 0, CPOL = 0 */
+	SPI_CLOCK_CPHA0_CPOL1 = SPI_CR_CPOL_HI | SPI_CR_CPHA_FIRST, /**< CPHA = 0, CPOL = 1 */
+	SPI_CLOCK_CPHA1_CPOL0 = SPI_CR_CPOL_LO | SPI_CR_CPHA_SECOND, /**< CPHA = 1, CPOL = 0 */
+	SPI_CLOCK_CPHA1_CPOL1 = SPI_CR_CPOL_HI | SPI_CR_CPHA_SECOND, /**< CPHA = 1, CPOL = 1 */
 	SPI_CLOCK_MODE0 = SPI_CLOCK_CPHA0_CPOL0,/**< alias */
 	SPI_CLOCK_MODE1 = SPI_CLOCK_CPHA1_CPOL0,/**< alias */
 	SPI_CLOCK_MODE2 = SPI_CLOCK_CPHA0_CPOL1,/**< alias */
-	SPI_CLOCK_MODE3 = SPI_CLOCK_CPHA1_CPOL1,/**< alias */
+	SPI_CLOCK_MODE3 = SPI_CLOCK_CPHA1_CPOL1, /**< alias */
 } SPI_CLOCK_MODE_T;
 
 /** @brief SPI Data Order Mode*/
-typedef enum {
-	SPI_DATA_MSB_FIRST = SPI_CR_MSB_FIRST_EN,			/* Standard Order */
-	SPI_DATA_LSB_FIRST = SPI_CR_LSB_FIRST_EN,			/* Reverse Order */
+typedef enum
+{
+	SPI_DATA_MSB_FIRST = SPI_CR_MSB_FIRST_EN, /* Standard Order */
+	SPI_DATA_LSB_FIRST = SPI_CR_LSB_FIRST_EN, /* Reverse Order */
 } SPI_DATA_ORDER_T;
 
 /*
  * @brief Number of bits per frame
  */
-typedef enum {
-	SPI_BITS_8 = SPI_CR_BITS(8),		/**< 8 bits/frame */
-	SPI_BITS_9 = SPI_CR_BITS(9),		/**< 9 bits/frame */
-	SPI_BITS_10 = SPI_CR_BITS(10),		/**< 10 bits/frame */
-	SPI_BITS_11 = SPI_CR_BITS(11),		/**< 11 bits/frame */
-	SPI_BITS_12 = SPI_CR_BITS(12),		/**< 12 bits/frame */
-	SPI_BITS_13 = SPI_CR_BITS(13),		/**< 13 bits/frame */
-	SPI_BITS_14 = SPI_CR_BITS(14),		/**< 14 bits/frame */
-	SPI_BITS_15 = SPI_CR_BITS(15),		/**< 15 bits/frame */
-	SPI_BITS_16 = SPI_CR_BITS(16),		/**< 16 bits/frame */
+typedef enum
+{
+	SPI_BITS_8 = SPI_CR_BITS(8), /**< 8 bits/frame */
+	SPI_BITS_9 = SPI_CR_BITS(9), /**< 9 bits/frame */
+	SPI_BITS_10 = SPI_CR_BITS(10), /**< 10 bits/frame */
+	SPI_BITS_11 = SPI_CR_BITS(11), /**< 11 bits/frame */
+	SPI_BITS_12 = SPI_CR_BITS(12), /**< 12 bits/frame */
+	SPI_BITS_13 = SPI_CR_BITS(13), /**< 13 bits/frame */
+	SPI_BITS_14 = SPI_CR_BITS(14), /**< 14 bits/frame */
+	SPI_BITS_15 = SPI_CR_BITS(15), /**< 15 bits/frame */
+	SPI_BITS_16 = SPI_CR_BITS(16), /**< 16 bits/frame */
 } SPI_BITS_T;
 
 /** SPI callback function type*/
-typedef void (*SPI_CALLBACK_T)(void);
+typedef void (*SPI_CALLBACK_T) (void);
 /*
  * @brief SPI config format
  */
-typedef struct {
-	SPI_BITS_T bits;						/*!< bits/frame */
-	SPI_CLOCK_MODE_T clockMode;	/*!< Format config: clock phase/polarity */
-	SPI_DATA_ORDER_T dataOrder;	/*!< Data order (MSB first/LSB first) */
+typedef struct
+{
+	SPI_BITS_T bits; /*!< bits/frame */
+	SPI_CLOCK_MODE_T clockMode; /*!< Format config: clock phase/polarity */
+	SPI_DATA_ORDER_T dataOrder; /*!< Data order (MSB first/LSB first) */
 } SPI_CONFIG_FORMAT_T;
 
 /*
  * @brief SPI data setup structure
  */
-typedef struct {
-	uint8_t      *pTxData;					/*!< Pointer to transmit data */
-	uint8_t      *pRxData;					/*!< Pointer to receive data */
-	uint32_t  cnt;							/*!< Transfer counter */
-	uint32_t  length;						/*!< Length of transfer data */
-	SPI_CALLBACK_T    fnBefFrame;				/*!< Function to call before sending frame */
-	SPI_CALLBACK_T    fnAftFrame;				/*!< Function to call after sending frame */
-	SPI_CALLBACK_T    fnBefTransfer;			/*!< Function to call before starting a transfer */
-	SPI_CALLBACK_T    fnAftTransfer;			/*!< Function to call after a transfer complete */
+typedef struct
+{
+	uint8_t *pTxData; /*!< Pointer to transmit data */
+	uint8_t *pRxData; /*!< Pointer to receive data */
+	uint32_t cnt; /*!< Transfer counter */
+	uint32_t length; /*!< Length of transfer data */
+	SPI_CALLBACK_T fnBefFrame; /*!< Function to call before sending frame */
+	SPI_CALLBACK_T fnAftFrame; /*!< Function to call after sending frame */
+	SPI_CALLBACK_T fnBefTransfer; /*!< Function to call before starting a transfer */
+	SPI_CALLBACK_T fnAftTransfer; /*!< Function to call after a transfer complete */
 } SPI_DATA_SETUP_T;
 
 /**
  * @brief	Get the current status of SPI controller
  * @return	SPI controller status (Or-ed value of SPI_SR_*)
  */
-STATIC INLINE uint32_t Chip_SPI_GetStatus(LPC_SPI_T *pSPI)
+STATIC INLINE uint32_t Chip_SPI_GetStatus (LPC_SPI_T *pSPI)
 {
 	return pSPI->SR;
 }
@@ -197,7 +205,7 @@ STATIC INLINE uint32_t Chip_SPI_GetStatus(LPC_SPI_T *pSPI)
  * @param	data	: Transmit Data
  * @return	Nothing
  */
-STATIC INLINE void Chip_SPI_SendFrame(LPC_SPI_T *pSPI, uint16_t data)
+STATIC INLINE void Chip_SPI_SendFrame (LPC_SPI_T *pSPI, uint16_t data)
 {
 	pSPI->DR = SPI_DR_DATA(data);
 }
@@ -207,7 +215,7 @@ STATIC INLINE void Chip_SPI_SendFrame(LPC_SPI_T *pSPI, uint16_t data)
  * @param	pSPI	: The base of SPI peripheral on the chip
  * @return	receive data
  */
-STATIC INLINE uint16_t Chip_SPI_ReceiveFrame(LPC_SPI_T *pSPI)
+STATIC INLINE uint16_t Chip_SPI_ReceiveFrame (LPC_SPI_T *pSPI)
 {
 	return SPI_DR_DATA(pSPI->DR);
 }
@@ -220,7 +228,7 @@ STATIC INLINE uint16_t Chip_SPI_ReceiveFrame(LPC_SPI_T *pSPI)
  * @note	The counter must be an even number greater than or equal to 8. <br>
  *		The SPI SCK rate = PCLK_SPI / counter.
  */
-STATIC INLINE void Chip_SPI_SetClockCounter(LPC_SPI_T *pSPI, uint32_t counter)
+STATIC INLINE void Chip_SPI_SetClockCounter (LPC_SPI_T *pSPI, uint32_t counter)
 {
 	pSPI->CCR = counter;
 }
@@ -231,7 +239,7 @@ STATIC INLINE void Chip_SPI_SetClockCounter(LPC_SPI_T *pSPI, uint32_t counter)
  * @param	format			: Pointer to Frame format structure
  * @return	Nothing
  */
-STATIC INLINE void Chip_SPI_SetFormat(LPC_SPI_T *pSPI, SPI_CONFIG_FORMAT_T *format)
+STATIC INLINE void Chip_SPI_SetFormat (LPC_SPI_T *pSPI, SPI_CONFIG_FORMAT_T *format)
 {
 	pSPI->CR = (pSPI->CR & (~0xF1C)) | SPI_CR_BIT_EN | format->bits | format->clockMode | format->dataOrder;
 }
@@ -241,9 +249,9 @@ STATIC INLINE void Chip_SPI_SetFormat(LPC_SPI_T *pSPI, SPI_CONFIG_FORMAT_T *form
  * @param	pSPI	: The base of SPI peripheral on the chip
  * @return	 the number of bits transferred in each frame
  */
-STATIC INLINE SPI_BITS_T Chip_SPI_GetDataSize(LPC_SPI_T *pSPI)
+STATIC INLINE SPI_BITS_T Chip_SPI_GetDataSize (LPC_SPI_T *pSPI)
 {
-	return (pSPI->CR & SPI_CR_BIT_EN) ? ((SPI_BITS_T) (pSPI->CR & SPI_CR_BITS_MASK)) : SPI_BITS_8;
+	return (pSPI->CR & SPI_CR_BIT_EN) ? ((SPI_BITS_T)(pSPI->CR & SPI_CR_BITS_MASK)) : SPI_BITS_8;
 }
 
 /**
@@ -251,9 +259,9 @@ STATIC INLINE SPI_BITS_T Chip_SPI_GetDataSize(LPC_SPI_T *pSPI)
  * @param	pSPI	: The base of SPI peripheral on the chip
  * @return	CPHA & CPOL setting
  */
-STATIC INLINE SPI_CLOCK_MODE_T Chip_SPI_GetClockMode(LPC_SPI_T *pSPI)
+STATIC INLINE SPI_CLOCK_MODE_T Chip_SPI_GetClockMode (LPC_SPI_T *pSPI)
 {
-	return (SPI_CLOCK_MODE_T) (pSPI->CR & (3 << 3));
+	return (SPI_CLOCK_MODE_T)(pSPI->CR & (3 << 3));
 }
 
 /**
@@ -261,9 +269,9 @@ STATIC INLINE SPI_CLOCK_MODE_T Chip_SPI_GetClockMode(LPC_SPI_T *pSPI)
  * @param	pSPI	: The base of SPI peripheral on the chip
  * @return	 Operating mode
  */
-STATIC INLINE SPI_MODE_T Chip_SPI_GetMode(LPC_SPI_T *pSPI)
+STATIC INLINE SPI_MODE_T Chip_SPI_GetMode (LPC_SPI_T *pSPI)
 {
-	return (SPI_MODE_T) (pSPI->CR & (1 << 5));
+	return (SPI_MODE_T)(pSPI->CR & (1 << 5));
 }
 
 /**
@@ -272,7 +280,7 @@ STATIC INLINE SPI_MODE_T Chip_SPI_GetMode(LPC_SPI_T *pSPI)
  * @param	mode		: master mode/slave mode
  * @return	Nothing
  */
-STATIC INLINE void Chip_SPI_SetMode(LPC_SPI_T *pSPI, SPI_MODE_T mode)
+STATIC INLINE void Chip_SPI_SetMode (LPC_SPI_T *pSPI, SPI_MODE_T mode)
 {
 	pSPI->CR = (pSPI->CR & (~(1 << 5))) | mode;
 }
@@ -283,14 +291,14 @@ STATIC INLINE void Chip_SPI_SetMode(LPC_SPI_T *pSPI, SPI_MODE_T mode)
  * @param	bitRate		: The SPI bit rate
  * @return	Nothing
  */
-void Chip_SPI_SetBitRate(LPC_SPI_T *pSPI, uint32_t bitRate);
+void Chip_SPI_SetBitRate (LPC_SPI_T *pSPI, uint32_t bitRate);
 
 /**
  * @brief   Enable SPI interrupt
  * @param	pSPI			: The base SPI peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_SPI_Int_Enable(LPC_SPI_T *pSPI)
+STATIC INLINE void Chip_SPI_Int_Enable (LPC_SPI_T *pSPI)
 {
 	pSPI->CR |= SPI_CR_INT_EN;
 }
@@ -300,7 +308,7 @@ STATIC INLINE void Chip_SPI_Int_Enable(LPC_SPI_T *pSPI)
  * @param	pSPI			: The base SPI peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_SPI_Int_Disable(LPC_SPI_T *pSPI)
+STATIC INLINE void Chip_SPI_Int_Disable (LPC_SPI_T *pSPI)
 {
 	pSPI->CR &= ~SPI_CR_INT_EN;
 }
@@ -310,7 +318,7 @@ STATIC INLINE void Chip_SPI_Int_Disable(LPC_SPI_T *pSPI)
  * @param	pSPI	: The base of SPI peripheral on the chip
  * @return	SPI interrupt Status (Or-ed bit value of SPI_INT_*)
  */
-STATIC INLINE uint32_t Chip_SPI_Int_GetStatus(LPC_SPI_T *pSPI)
+STATIC INLINE uint32_t Chip_SPI_Int_GetStatus (LPC_SPI_T *pSPI)
 {
 	return pSPI->INT;
 }
@@ -321,7 +329,7 @@ STATIC INLINE uint32_t Chip_SPI_Int_GetStatus(LPC_SPI_T *pSPI)
  * @param	mask	: SPI interrupt mask (Or-ed bit value of SPI_INT_*)
  * @return	Nothing
  */
-STATIC INLINE void Chip_SPI_Int_ClearStatus(LPC_SPI_T *pSPI, uint32_t mask)
+STATIC INLINE void Chip_SPI_Int_ClearStatus (LPC_SPI_T *pSPI, uint32_t mask)
 {
 	pSPI->INT = mask;
 }
@@ -331,7 +339,7 @@ STATIC INLINE void Chip_SPI_Int_ClearStatus(LPC_SPI_T *pSPI, uint32_t mask)
  * @param	pSPI			: The base SPI peripheral on the chip
  * @return	Nothing
  */
-void Chip_SPI_Init(LPC_SPI_T *pSPI);
+void Chip_SPI_Init (LPC_SPI_T *pSPI);
 
 /**
  * @brief	Deinitialise the SPI
@@ -339,15 +347,14 @@ void Chip_SPI_Init(LPC_SPI_T *pSPI);
  * @return	Nothing
  * @note	The SPI controller is disabled
  */
-void Chip_SPI_DeInit(LPC_SPI_T *pSPI);
+void Chip_SPI_DeInit (LPC_SPI_T *pSPI);
 
 /**
  * @brief   Clean all data in RX FIFO of SPI
  * @param	pSPI			: The base SPI peripheral on the chip
  * @return	Nothing
  */
-void Chip_SPI_Int_FlushData(LPC_SPI_T *pSPI);
-
+void Chip_SPI_Int_FlushData (LPC_SPI_T *pSPI);
 
 /**
  * @brief   SPI Interrupt Read/Write with 8-bit frame width
@@ -356,7 +363,7 @@ void Chip_SPI_Int_FlushData(LPC_SPI_T *pSPI);
  *                          information about transmit/receive data	configuration
  * @return	SUCCESS or ERROR
  */
-Status Chip_SPI_Int_RWFrames8Bits(LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *xf_setup);
+Status Chip_SPI_Int_RWFrames8Bits (LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *xf_setup);
 
 /**
  * @brief   SPI Interrupt Read/Write with 16-bit frame width
@@ -365,7 +372,7 @@ Status Chip_SPI_Int_RWFrames8Bits(LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *xf_setup);
  *                          information about transmit/receive data	configuration
  * @return	SUCCESS or ERROR
  */
-Status Chip_SPI_Int_RWFrames16Bits(LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *xf_setup);
+Status Chip_SPI_Int_RWFrames16Bits (LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *xf_setup);
 
 /**
  * @brief   SPI Polling Read/Write in blocking mode
@@ -378,7 +385,7 @@ Status Chip_SPI_Int_RWFrames16Bits(LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *xf_setup);
  * a reading phase is generated to read any data available in RX_FIFO. All needed information is prepared
  * through xf_setup param.
  */
-uint32_t Chip_SPI_RWFrames_Blocking(LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *pXfSetup);
+uint32_t Chip_SPI_RWFrames_Blocking (LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *pXfSetup);
 
 /**
  * @brief   SPI Polling Write in blocking mode
@@ -390,7 +397,7 @@ uint32_t Chip_SPI_RWFrames_Blocking(LPC_SPI_T *pSPI, SPI_DATA_SETUP_T *pXfSetup)
  * This function can be used in both master and slave mode. First, a writing operation will send
  * the needed data. After that, a dummy reading operation is generated to clear data buffer
  */
-uint32_t Chip_SPI_WriteFrames_Blocking(LPC_SPI_T *pSPI, uint8_t *buffer, uint32_t buffer_len);
+uint32_t Chip_SPI_WriteFrames_Blocking (LPC_SPI_T *pSPI, uint8_t *buffer, uint32_t buffer_len);
 
 /**
  * @brief   SPI Polling Read in blocking mode
@@ -402,8 +409,7 @@ uint32_t Chip_SPI_WriteFrames_Blocking(LPC_SPI_T *pSPI, uint8_t *buffer, uint32_
  * This function can be used in both master and slave mode. First, a dummy writing operation is generated
  * to clear data buffer. After that, a reading operation will receive the needed data
  */
-uint32_t Chip_SPI_ReadFrames_Blocking(LPC_SPI_T *pSPI, uint8_t *buffer, uint32_t buffer_len);
-
+uint32_t Chip_SPI_ReadFrames_Blocking (LPC_SPI_T *pSPI, uint8_t *buffer, uint32_t buffer_len);
 
 #endif
 

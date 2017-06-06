@@ -31,90 +31,91 @@
 #define APP_COMMON_APP_COMMON_ACQUIREG_APP_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
-typedef struct {
+typedef struct
+{
 
-  //uint8_t  abAdubo[32];      //Adubo por linha
-  uint32_t dSomaSem;         //Sementes em todas as Linhas
-  uint32_t dDistancia;       //Distância Percorrida  em centimetros
-  uint32_t dSegundos;        //Tempo em segundos
-  float   fArea;            //Area
-  uint32_t adSementes[36];   //Sementes por linha
+	//uint8_t  abAdubo[32];      //Adubo por linha
+	uint32_t dSomaSem;         //Sementes em todas as Linhas
+	uint32_t dDistancia;       //Distância Percorrida  em centimetros
+	uint32_t dSegundos;        //Tempo em segundos
+	float fArea;            //Area
+	uint32_t adSementes[36];   //Sementes por linha
 
 } tsLinhas;
 
-typedef struct {
+typedef struct
+{
 
-  uint32_t dDistancia;      //Distância Percorrida  em centimetros - após config
-  uint32_t dSomaSem;       //Soma de sementes parcial de todas as linhas
+	uint32_t dDistancia;      //Distância Percorrida  em centimetros - após config
+	uint32_t dSomaSem;       //Soma de sementes parcial de todas as linhas
 
 } tsDistanciaTrab;
 
+typedef struct
+{
 
-typedef struct {
-
-  uint32_t    dTEV;          //Tempo total em excesso de velocidade (em trabalho)
-  uint32_t    dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
-  float      fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
+	uint32_t dTEV;          //Tempo total em excesso de velocidade (em trabalho)
+	uint32_t dMTEV;         //Máximo intervalo de Tempo em Excesso de Velocidade
+	float fVelMax;       //Velocidade Máxima Atingida em excesso de velocidade
 
 } tsVelocidade;
 
-typedef struct {
+typedef struct
+{
 
-  tsLinhas  sTrabTotal;     //Acumula valores trabalhando (Total)
-  tsLinhas  sTrabTotalDir;  //Acumula valores trabalhando em Arremate do lado direito
-  tsLinhas  sTrabTotalEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
+	tsLinhas sTrabTotal;     //Acumula valores trabalhando (Total)
+	tsLinhas sTrabTotalDir;  //Acumula valores trabalhando em Arremate do lado direito
+	tsLinhas sTrabTotalEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
 
-  tsLinhas  sTrabParcial;  //Acumula valores trabalhando (Parcial)
-  tsLinhas  sTrabParcDir;  //Acumula valores trabalhando em Arremate do lado direito
-  tsLinhas  sTrabParcEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
+	tsLinhas sTrabParcial;  //Acumula valores trabalhando (Parcial)
+	tsLinhas sTrabParcDir;  //Acumula valores trabalhando em Arremate do lado direito
+	tsLinhas sTrabParcEsq;  //Acumula valores trabalhando em Arremate do lado esquerdo
 
-  tsLinhas  sManobra;      //Acumula valores manobra (não trabalhando)
+	tsLinhas sManobra;      //Acumula valores manobra (não trabalhando)
 
-  tsLinhas  sTotalReg;     //Acumula valores totais para Registro(trabalhando + manobra)
+	tsLinhas sTotalReg;     //Acumula valores totais para Registro(trabalhando + manobra)
 
-  tsLinhas  sAvalia;       //Acumula valores em Avaliação (cálculo da média)
+	tsLinhas sAvalia;       //Acumula valores em Avaliação (cálculo da média)
 
-  tsDistanciaTrab  sDistTrabTotal;     //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabTotalEsq;  //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabTotalDir;  //Distância parcial - o qual zera após a configuração
+	tsDistanciaTrab sDistTrabTotal;     //Distância parcial - o qual zera após a configuração
+	tsDistanciaTrab sDistTrabTotalEsq;  //Distância parcial - o qual zera após a configuração
+	tsDistanciaTrab sDistTrabTotalDir;  //Distância parcial - o qual zera após a configuração
 
-  tsDistanciaTrab  sDistTrabParcial;     //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabParcialEsq;  //Distância parcial - o qual zera após a configuração
-  tsDistanciaTrab  sDistTrabParcialDir;  //Distância parcial - o qual zera após a configuração
-
+	tsDistanciaTrab sDistTrabParcial;     //Distância parcial - o qual zera após a configuração
+	tsDistanciaTrab sDistTrabParcialEsq;  //Distância parcial - o qual zera após a configuração
+	tsDistanciaTrab sDistTrabParcialDir;  //Distância parcial - o qual zera após a configuração
 
 } tsAcumulados;
 
+/******************************************************************************
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Public Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Public Variables
-*******************************************************************************/
-
-/******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 
 #endif /* APP_COMMON_APP_COMMON_ACQUIREG_APP_H_ */

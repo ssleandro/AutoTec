@@ -35,7 +35,8 @@
 #include "spifilib_dev.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup LPCSPIFILIB_API LPCSPIFILIB common API functions
@@ -56,7 +57,7 @@ extern "C" {
  * @return	SPIFI library version in format MMmm where MM is major number
  * and mm is minor number.
  */
-uint16_t spifiGetLibVersion(void);
+uint16_t spifiGetLibVersion (void);
 
 /**
  * @brief	Initialize the SPIFILIB driver
@@ -70,7 +71,7 @@ uint16_t spifiGetLibVersion(void);
  * If not booting from SPIFI FLASH, the SPIFI FLASH pin muxing and SPIFI controller
  * clock need to be enabled prior to this call.
  */
-SPIFI_ERR_T spifiInit(uint32_t spifiCtrlAddr, uint8_t reset);
+SPIFI_ERR_T spifiInit (uint32_t spifiCtrlAddr, uint8_t reset);
 
 /**
  * @brief	Register a SPIFILIB family driver
@@ -79,20 +80,20 @@ SPIFI_ERR_T spifiInit(uint32_t spifiCtrlAddr, uint8_t reset);
  * @note	This function should be called prior to calling spifiGetHandleMemSize() or
  * spifiInitDevice().
  */
-SPIFI_FAM_NODE_T *spifiRegisterFamily(SPIFI_FAM_NODE_T *(*regFx)(void));
+SPIFI_FAM_NODE_T *spifiRegisterFamily (SPIFI_FAM_NODE_T *(*regFx) (void));
 
 /**
  * @brief	Converts a SPIFILIB error code into a meaningful string
  * @param	errCode	: Error code to get string pointer to
  * @return	Pointer to string for the passed error code
  */
-const char *spifiReturnErrString(SPIFI_ERR_T errCode);
+const char *spifiReturnErrString (SPIFI_ERR_T errCode);
 
 /**
  * @brief	Return the number of registered device families in this driver
  * @return	number of registered device families in this driver
  */
-uint32_t spifiGetSuppFamilyCount(void);
+uint32_t spifiGetSuppFamilyCount (void);
 
 /**
  * @brief	Return the driver device family name for a specific index
@@ -102,7 +103,7 @@ uint32_t spifiGetSuppFamilyCount(void);
  * @note	Can be used with the spifiGetSuppFamilyCount() to get a list of
  * device families the library is configured for.
  */
-const char *spifiGetSuppFamilyName(uint32_t index);
+const char *spifiGetSuppFamilyName (uint32_t index);
 
 /**
  * @brief	Detect and return memory needed for device handle at passed address
@@ -111,7 +112,7 @@ const char *spifiGetSuppFamilyName(uint32_t index);
  * If no supported device is detected 0 will be returned.
  * @note Selects the first matching device in the library.
  */
-uint32_t spifiGetHandleMemSize(uint32_t spifiCtrlAddr);
+uint32_t spifiGetHandleMemSize (uint32_t spifiCtrlAddr);
 
 /**
  * @brief	Initialize driver and hardware for a specific device
@@ -121,7 +122,7 @@ uint32_t spifiGetHandleMemSize(uint32_t spifiCtrlAddr);
  * @param	baseAddr	: Base address of device
  * @return	Returns a pointer to a device handle if successful, or NULL on an error.
  */
-SPIFI_HANDLE_T *spifiInitDevice(void *pMem, uint32_t sizePMem, uint32_t spifiCtrlAddr, uint32_t baseAddr);
+SPIFI_HANDLE_T *spifiInitDevice (void *pMem, uint32_t sizePMem, uint32_t spifiCtrlAddr, uint32_t baseAddr);
 
 /**
  * @brief	Set or unset driver options
@@ -133,7 +134,7 @@ SPIFI_HANDLE_T *spifiInitDevice(void *pMem, uint32_t sizePMem, uint32_t spifiCtr
  * @note	Only options that are supported in the capabilities of the driver can be
  * set or unset.
  */
-SPIFI_ERR_T spifiDevSetOpts(SPIFI_HANDLE_T *pHandle, uint32_t options, uint8_t set);
+SPIFI_ERR_T spifiDevSetOpts (SPIFI_HANDLE_T *pHandle, uint32_t options, uint8_t set);
 
 /**
  * @}
@@ -151,14 +152,14 @@ SPIFI_ERR_T spifiDevSetOpts(SPIFI_HANDLE_T *pHandle, uint32_t options, uint8_t s
  * @return	A SPIFI_ERR_T error code (SPIFI_ERR_NONE for no errors)
  * @note	This function MUST be called prior to spifiGetHandleMemSize() or spifiInitDevice()
  */
-SPIFI_ERR_T spifiDevRegister(const SPIFI_FAM_NODE_T *pFamily, SPIFI_DEV_NODE_T *pDevData);
+SPIFI_ERR_T spifiDevRegister (const SPIFI_FAM_NODE_T *pFamily, SPIFI_DEV_NODE_T *pDevData);
 
 /**
  * @brief	Returns the number of supported devices within a family
  * @param	pFamily	: Pointer to a SPIFI_DEV_FAMILY_T family handle
  * @return	The number of registered devices.
  */
-static INLINE uint32_t spifiDevGetCount(const SPIFI_FAM_NODE_T *pFamily)
+static INLINE uint32_t spifiDevGetCount (const SPIFI_FAM_NODE_T *pFamily)
 {
 	return *(pFamily->pDesc->pDevCount);
 }
@@ -169,21 +170,21 @@ static INLINE uint32_t spifiDevGetCount(const SPIFI_FAM_NODE_T *pFamily)
  * @param   reset       : 0 enumerates next device, 1 resets list to beginning and returns first device
  * @return	A friendly string representing the device, NULL when list has been exhausted.
  */
-const char *spifiDevEnumerateName(SPIFI_DEV_ENUMERATOR_T *pContext, uint8_t reset);
+const char *spifiDevEnumerateName (SPIFI_DEV_ENUMERATOR_T *pContext, uint8_t reset);
 
 /**
  * @brief	Initialize a detected LPCSPIFILIB device
  * @param	pHandle	: Pointer to a LPCSPIFILIB device handle
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-SPIFI_ERR_T spifiDevInit(const SPIFI_HANDLE_T *pHandle);
+SPIFI_ERR_T spifiDevInit (const SPIFI_HANDLE_T *pHandle);
 
 /**
  * @brief	De-initialize a detected LPCSPIFILIB device
  * @param	pHandle	: Pointer to a LPCSPIFILIB device handle
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-SPIFI_ERR_T spifiDevDeInit(const SPIFI_HANDLE_T *pHandle);
+SPIFI_ERR_T spifiDevDeInit (const SPIFI_HANDLE_T *pHandle);
 
 /**
  * @brief	Sets or clears memory mode
@@ -194,21 +195,21 @@ SPIFI_ERR_T spifiDevDeInit(const SPIFI_HANDLE_T *pHandle);
  * place code and memory mapped data. Memory mode must be disabled
  * for most operations.
  */
-SPIFI_ERR_T spifiDevSetMemMode(const SPIFI_HANDLE_T *pHandle, uint8_t enMMode);
+SPIFI_ERR_T spifiDevSetMemMode (const SPIFI_HANDLE_T *pHandle, uint8_t enMMode);
 
 /**
  * @brief	Return status of memory mode
  * @param	pSpifi	: Base address of SPIFI controller
  * @return	state of memory mode (false = off, true = on)
  */
-uint8_t spifiDevGetMemoryMode(const SPIFI_HANDLE_T *pSpifi);
+uint8_t spifiDevGetMemoryMode (const SPIFI_HANDLE_T *pSpifi);
 
 /**
  * @brief	Full LPCSPIFILIB device unlock
  * @param	pHandle	: Pointer to a LPCSPIFILIB device handle
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-static INLINE SPIFI_ERR_T spifiDevUnlockDevice(const SPIFI_HANDLE_T *pHandle)
+static INLINE SPIFI_ERR_T spifiDevUnlockDevice (const SPIFI_HANDLE_T *pHandle)
 {
 	return pHandle->pFamFx->lockCmd(pHandle, SPIFI_PCMD_UNLOCK_DEVICE, 0);
 }
@@ -218,7 +219,7 @@ static INLINE SPIFI_ERR_T spifiDevUnlockDevice(const SPIFI_HANDLE_T *pHandle)
  * @param	pHandle	: Pointer to a LPCSPIFILIB device handle
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-static INLINE SPIFI_ERR_T spifiDevLockDevice(const SPIFI_HANDLE_T *pHandle)
+static INLINE SPIFI_ERR_T spifiDevLockDevice (const SPIFI_HANDLE_T *pHandle)
 {
 	return pHandle->pFamFx->lockCmd(pHandle, SPIFI_PCMD_LOCK_DEVICE, 0);
 }
@@ -229,7 +230,7 @@ static INLINE SPIFI_ERR_T spifiDevLockDevice(const SPIFI_HANDLE_T *pHandle)
  * @param	block	: Block number to unlock
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-static INLINE SPIFI_ERR_T spifiDevUnlockBlock(const SPIFI_HANDLE_T *pHandle, uint32_t block)
+static INLINE SPIFI_ERR_T spifiDevUnlockBlock (const SPIFI_HANDLE_T *pHandle, uint32_t block)
 {
 	return pHandle->pFamFx->lockCmd(pHandle, SPIFI_PCMD_UNLOCK_BLOCK, block);
 }
@@ -240,7 +241,7 @@ static INLINE SPIFI_ERR_T spifiDevUnlockBlock(const SPIFI_HANDLE_T *pHandle, uin
  * @param	block	: Block number to lock
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-static INLINE SPIFI_ERR_T spifiDevLockBlock(const SPIFI_HANDLE_T *pHandle, uint32_t block)
+static INLINE SPIFI_ERR_T spifiDevLockBlock (const SPIFI_HANDLE_T *pHandle, uint32_t block)
 {
 	return pHandle->pFamFx->lockCmd(pHandle, SPIFI_PCMD_LOCK_BLOCK, block);
 }
@@ -250,7 +251,7 @@ static INLINE SPIFI_ERR_T spifiDevLockBlock(const SPIFI_HANDLE_T *pHandle, uint3
  * @param	pHandle	: Pointer to a LPCSPIFILIB device handle
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-static INLINE SPIFI_ERR_T spifiDevEraseAll(const SPIFI_HANDLE_T *pHandle)
+static INLINE SPIFI_ERR_T spifiDevEraseAll (const SPIFI_HANDLE_T *pHandle)
 {
 	return pHandle->pFamFx->eraseAll(pHandle);
 }
@@ -261,7 +262,7 @@ static INLINE SPIFI_ERR_T spifiDevEraseAll(const SPIFI_HANDLE_T *pHandle)
  * @param	blknum	: Sub-block number to erase
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  */
-static INLINE SPIFI_ERR_T spifiDevEraseSubBlock(const SPIFI_HANDLE_T *pHandle, uint32_t blknum)
+static INLINE SPIFI_ERR_T spifiDevEraseSubBlock (const SPIFI_HANDLE_T *pHandle, uint32_t blknum)
 {
 	return pHandle->pFamFx->eraseSubBlock(pHandle, blknum);
 }
@@ -275,10 +276,10 @@ static INLINE SPIFI_ERR_T spifiDevEraseSubBlock(const SPIFI_HANDLE_T *pHandle, u
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  * @note	Only use this function to program data up to the page size.
  */
-static INLINE SPIFI_ERR_T spifiDevPageProgram(const SPIFI_HANDLE_T *pHandle,
-											  uint32_t addr,
-											  uint32_t *writeBuff,
-											  uint32_t bytes)
+static INLINE SPIFI_ERR_T spifiDevPageProgram (const SPIFI_HANDLE_T *pHandle,
+	uint32_t addr,
+	uint32_t *writeBuff,
+	uint32_t bytes)
 {
 	return pHandle->pFamFx->pageProgram(pHandle, addr, writeBuff, bytes);
 }
@@ -292,7 +293,8 @@ static INLINE SPIFI_ERR_T spifiDevPageProgram(const SPIFI_HANDLE_T *pHandle,
  * @return	A SPIFI_NO_* error code (SPIFI_ERR_NONE is no errors)
  * @note	Maximum read size is limited to the max single read size
  */
-static INLINE SPIFI_ERR_T spifiDevRead(const SPIFI_HANDLE_T *pHandle, uint32_t addr, uint32_t *readBuff, uint32_t bytes)
+static INLINE SPIFI_ERR_T spifiDevRead (const SPIFI_HANDLE_T *pHandle, uint32_t addr, uint32_t *readBuff,
+	uint32_t bytes)
 {
 	return pHandle->pFamFx->read(pHandle, addr, readBuff, bytes);
 }
@@ -303,7 +305,7 @@ static INLINE SPIFI_ERR_T spifiDevRead(const SPIFI_HANDLE_T *pHandle, uint32_t a
  * @return	Nothing
  * @note	Will set the device into read mode
  */
-static INLINE void spifiDevReset(const SPIFI_HANDLE_T *pHandle)
+static INLINE void spifiDevReset (const SPIFI_HANDLE_T *pHandle)
 {
 	pHandle->pFamFx->reset(pHandle);
 }
@@ -313,7 +315,7 @@ static INLINE void spifiDevReset(const SPIFI_HANDLE_T *pHandle)
  * @param	pHandle	: Pointer to a LPCSPIFILIB device handle
  * @return	a string pointer to the generic device family name
  */
-static INLINE const char *spifiDevGetDeviceName(const SPIFI_HANDLE_T *pHandle)
+static INLINE const char *spifiDevGetDeviceName (const SPIFI_HANDLE_T *pHandle)
 {
 	return pHandle->pInfoData->pDevName;
 }
@@ -326,7 +328,7 @@ static INLINE const char *spifiDevGetDeviceName(const SPIFI_HANDLE_T *pHandle)
  * @param	infoId	: Info to get about the device
  * @return	Return value varies per selected function
  */
-uint32_t spifiDevGetInfo(const SPIFI_HANDLE_T *pHandle, SPIFI_INFO_ID_T infoId);
+uint32_t spifiDevGetInfo (const SPIFI_HANDLE_T *pHandle, SPIFI_INFO_ID_T infoId);
 
 /**
  * @}
@@ -342,7 +344,7 @@ uint32_t spifiDevGetInfo(const SPIFI_HANDLE_T *pHandle, SPIFI_INFO_ID_T infoId);
  * @param	blockNum	: Block number fo get starting address for
  * @return	The starting address for the block, or 0xFFFFFFFF if the block number if invalid
  */
-uint32_t spifiGetAddrFromBlock(const SPIFI_HANDLE_T *pHandle, uint32_t blockNum);
+uint32_t spifiGetAddrFromBlock (const SPIFI_HANDLE_T *pHandle, uint32_t blockNum);
 
 /**
  * @brief	Returns the starting address of a sub-block number
@@ -350,7 +352,7 @@ uint32_t spifiGetAddrFromBlock(const SPIFI_HANDLE_T *pHandle, uint32_t blockNum)
  * @param	subBlockNum	: Sub-block number fo get starting address for
  * @return	The starting address for the sub-block, or 0xFFFFFFFF if the block number if invalid
  */
-uint32_t spifiGetAddrFromSubBlock(const SPIFI_HANDLE_T *pHandle, uint32_t subBlockNum);
+uint32_t spifiGetAddrFromSubBlock (const SPIFI_HANDLE_T *pHandle, uint32_t subBlockNum);
 
 /**
  * @brief	Returns the block number the passed address is located in
@@ -358,7 +360,7 @@ uint32_t spifiGetAddrFromSubBlock(const SPIFI_HANDLE_T *pHandle, uint32_t subBlo
  * @param	addr	: Address to get block number for
  * @return	The block number the passed address is in, 0xFFFFFFFF is the address is invalid
  */
-uint32_t spifiGetBlockFromAddr(const SPIFI_HANDLE_T *pHandle, uint32_t addr);
+uint32_t spifiGetBlockFromAddr (const SPIFI_HANDLE_T *pHandle, uint32_t addr);
 
 /**
  * @brief	Returns the sub-block number the passed address is located in
@@ -366,7 +368,7 @@ uint32_t spifiGetBlockFromAddr(const SPIFI_HANDLE_T *pHandle, uint32_t addr);
  * @param	addr	: Address to get sub-block number for
  * @return	The sub-block number the passed address is in, 0xFFFFFFFF is the address is invalid
  */
-uint32_t spifiGetSubBlockFromAddr(const SPIFI_HANDLE_T *pHandle, uint32_t addr);
+uint32_t spifiGetSubBlockFromAddr (const SPIFI_HANDLE_T *pHandle, uint32_t addr);
 
 /**
  * @brief	Returns the first sub-block for a block
@@ -374,7 +376,7 @@ uint32_t spifiGetSubBlockFromAddr(const SPIFI_HANDLE_T *pHandle, uint32_t addr);
  * @param	blockNum	: Block number to get first sub-block for
  * @return	The first sub-block number in passed block, 0xFFFFFFFF if the block number if invalid
  */
-uint32_t spifiGetSubBlockFromBlock(const SPIFI_HANDLE_T *pHandle, uint32_t blockNum);
+uint32_t spifiGetSubBlockFromBlock (const SPIFI_HANDLE_T *pHandle, uint32_t blockNum);
 
 /**
  * @brief	Program the device with the passed buffer
@@ -385,7 +387,7 @@ uint32_t spifiGetSubBlockFromBlock(const SPIFI_HANDLE_T *pHandle, uint32_t block
  * @return	A SPIFI_ERR_xxx error code (SPIFI_ERR_NONE is no errors)
  * @note	This function has no size limit. This function only works in blocking mode.
  */
-SPIFI_ERR_T spifiProgram(const SPIFI_HANDLE_T *pHandle, uint32_t addr, const uint32_t *writeBuff, uint32_t bytes);
+SPIFI_ERR_T spifiProgram (const SPIFI_HANDLE_T *pHandle, uint32_t addr, const uint32_t *writeBuff, uint32_t bytes);
 
 /**
  * @brief	Read the device into the passed buffer
@@ -398,7 +400,7 @@ SPIFI_ERR_T spifiProgram(const SPIFI_HANDLE_T *pHandle, uint32_t addr, const uin
  * mode and accessed directly via memory mapped reads without using this function. This
  * function only works in blocking mode.
  */
-SPIFI_ERR_T spifiRead(const SPIFI_HANDLE_T *pHandle, uint32_t addr, uint32_t *readBuff, uint32_t bytes);
+SPIFI_ERR_T spifiRead (const SPIFI_HANDLE_T *pHandle, uint32_t addr, uint32_t *readBuff, uint32_t bytes);
 
 /**
  * @brief	Erase multiple blocks
@@ -409,7 +411,7 @@ SPIFI_ERR_T spifiRead(const SPIFI_HANDLE_T *pHandle, uint32_t addr, uint32_t *re
  * @note	If any of the specified params are invalid, the operation is aborted
  * before any sectors are erased. This function only works in blocking mode.
  */
-SPIFI_ERR_T spifiErase(const SPIFI_HANDLE_T *pHandle, uint32_t firstBlock, uint32_t numBlocks);
+SPIFI_ERR_T spifiErase (const SPIFI_HANDLE_T *pHandle, uint32_t firstBlock, uint32_t numBlocks);
 
 /**
  * @brief	Erase multiple blocks by address range
@@ -421,7 +423,7 @@ SPIFI_ERR_T spifiErase(const SPIFI_HANDLE_T *pHandle, uint32_t firstBlock, uint3
  * range if and only if the address range is valid.
  * This function only works in blocking mode.
  */
-SPIFI_ERR_T spifiEraseByAddr(const SPIFI_HANDLE_T *pHandle, uint32_t firstAddr, uint32_t lastAddr);
+SPIFI_ERR_T spifiEraseByAddr (const SPIFI_HANDLE_T *pHandle, uint32_t firstAddr, uint32_t lastAddr);
 
 /**
  * @}

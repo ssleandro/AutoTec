@@ -33,7 +33,8 @@
 #define __MCPWM_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup MCPWM_18XX_43XX CHIP: LPC18xx/43xx Motor Control PWM driver
@@ -44,29 +45,30 @@ extern "C" {
 /**
  * @brief Motor Control PWM register block structure
  */
-typedef struct {					/*!< MCPWM Structure        */
-	__I  uint32_t  CON;				/*!< PWM Control read address */
-	__O  uint32_t  CON_SET;			/*!< PWM Control set address */
-	__O  uint32_t  CON_CLR;			/*!< PWM Control clear address */
-	__I  uint32_t  CAPCON;			/*!< Capture Control read address */
-	__O  uint32_t  CAPCON_SET;		/*!< Capture Control set address */
-	__O  uint32_t  CAPCON_CLR;		/*!< Event Control clear address */
-	__IO uint32_t TC[3];			/*!< Timer Counter register */
-	__IO uint32_t LIM[3];			/*!< Limit register         */
-	__IO uint32_t MAT[3];			/*!< Match register         */
-	__IO uint32_t  DT;				/*!< Dead time register     */
-	__IO uint32_t  CCP;				/*!< Communication Pattern register */
-	__I  uint32_t CAP[3];			/*!< Capture register       */
-	__I  uint32_t  INTEN;			/*!< Interrupt Enable read address */
-	__O  uint32_t  INTEN_SET;		/*!< Interrupt Enable set address */
-	__O  uint32_t  INTEN_CLR;		/*!< Interrupt Enable clear address */
-	__I  uint32_t  CNTCON;			/*!< Count Control read address */
-	__O  uint32_t  CNTCON_SET;		/*!< Count Control set address */
-	__O  uint32_t  CNTCON_CLR;		/*!< Count Control clear address */
-	__I  uint32_t  INTF;			/*!< Interrupt flags read address */
-	__O  uint32_t  INTF_SET;		/*!< Interrupt flags set address */
-	__O  uint32_t  INTF_CLR;		/*!< Interrupt flags clear address */
-	__O  uint32_t  CAP_CLR;			/*!< Capture clear address  */
+typedef struct
+{ /*!< MCPWM Structure        */
+	__I uint32_t CON; /*!< PWM Control read address */
+	__O uint32_t CON_SET; /*!< PWM Control set address */
+	__O uint32_t CON_CLR; /*!< PWM Control clear address */
+	__I uint32_t CAPCON; /*!< Capture Control read address */
+	__O uint32_t CAPCON_SET; /*!< Capture Control set address */
+	__O uint32_t CAPCON_CLR; /*!< Event Control clear address */
+	__IO uint32_t TC[3]; /*!< Timer Counter register */
+	__IO uint32_t LIM[3]; /*!< Limit register         */
+	__IO uint32_t MAT[3]; /*!< Match register         */
+	__IO uint32_t DT; /*!< Dead time register     */
+	__IO uint32_t CCP; /*!< Communication Pattern register */
+	__I uint32_t CAP[3]; /*!< Capture register       */
+	__I uint32_t INTEN; /*!< Interrupt Enable read address */
+	__O uint32_t INTEN_SET; /*!< Interrupt Enable set address */
+	__O uint32_t INTEN_CLR; /*!< Interrupt Enable clear address */
+	__I uint32_t CNTCON; /*!< Count Control read address */
+	__O uint32_t CNTCON_SET; /*!< Count Control set address */
+	__O uint32_t CNTCON_CLR; /*!< Count Control clear address */
+	__I uint32_t INTF; /*!< Interrupt flags read address */
+	__O uint32_t INTF_SET; /*!< Interrupt flags set address */
+	__O uint32_t INTF_CLR; /*!< Interrupt flags clear address */
+	__O uint32_t CAP_CLR; /*!< Capture clear address  */
 } LPC_MCPWM_T;
 
 /**

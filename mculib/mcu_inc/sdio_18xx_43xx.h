@@ -33,7 +33,8 @@
 #define __SDIO_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup SDIO_18XX_43XX CHIP: LPC18xx/43xx SDIO Card driver
@@ -44,18 +45,18 @@ extern "C" {
 /** @brief	SDIO Driver events */
 enum SDIO_EVENT
 {
-	SDIO_START_COMMAND,  /**! SDIO driver is about to start a command transfer */
-	SDIO_START_DATA,     /**! SDIO driver is about to start a data transfer */
-	SDIO_WAIT_DELAY,     /**! SDIO driver needs to wait for given milli seconds */
-	SDIO_WAIT_COMMAND,   /**! SDIO driver is waiting for a command to complete */
-	SDIO_WAIT_DATA,      /**! SDIO driver is waiting for data transfer to complete */
+	SDIO_START_COMMAND, /**! SDIO driver is about to start a command transfer */
+	SDIO_START_DATA, /**! SDIO driver is about to start a data transfer */
+	SDIO_WAIT_DELAY, /**! SDIO driver needs to wait for given milli seconds */
+	SDIO_WAIT_COMMAND, /**! SDIO driver is waiting for a command to complete */
+	SDIO_WAIT_DATA, /**! SDIO driver is waiting for data transfer to complete */
 
-	SDIO_CARD_DETECT,    /**! SDIO driver has detected a card */
-	SDIO_CMD_ERR,        /**! Error in command transfer */
-	SDIO_CMD_DONE,       /**! Command transfer successful */
-	SDIO_DATA_ERR,       /**! Data transfer error */
-	SDIO_DATA_DONE,      /**! Data transfer successful */
-	SDIO_CARD_INT,       /**! SDIO Card interrupt (from a function) */
+	SDIO_CARD_DETECT, /**! SDIO driver has detected a card */
+	SDIO_CMD_ERR, /**! Error in command transfer */
+	SDIO_CMD_DONE, /**! Command transfer successful */
+	SDIO_DATA_ERR, /**! Data transfer error */
+	SDIO_DATA_DONE, /**! Data transfer successful */
+	SDIO_CARD_INT, /**! SDIO Card interrupt (from a function) */
 };
 
 /** @brief	SDIO Command Responses */
@@ -129,7 +130,7 @@ enum SDIO_EVENT
  * @param	freq		: Initial frequency to use during the enumeration
  * @return	0 on Success; > 0 on response error [like CRC error] < 0 on BUS error
  */
-int SDIO_Card_Init(LPC_SDMMC_T *pSDMMC, uint32_t freq);
+int SDIO_Card_Init (LPC_SDMMC_T *pSDMMC, uint32_t freq);
 
 /**
  * @brief	Write 8-Bit register from SDIO register space
@@ -141,7 +142,7 @@ int SDIO_Card_Init(LPC_SDMMC_T *pSDMMC, uint32_t freq);
  * @note SDIO_Setup_Callback() function must be called to setup the call backs before
  * calling  this API.
  */
-int SDIO_Write_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t data);
+int SDIO_Write_Direct (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t data);
 
 /**
  * @brief	Write 8-Bit register from SDIO register space and read the register back
@@ -152,7 +153,7 @@ int SDIO_Write_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_
  * @return	0 on Success; > 0 on response error [like CRC error] < 0 on BUS error
  * @note	@a data must have the value to be written stored in it when the function is called
  */
-int SDIO_WriteRead_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data);
+int SDIO_WriteRead_Direct (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data);
 
 /**
  * @brief	Read an 8-Bit register from SDIO register space
@@ -162,7 +163,7 @@ int SDIO_WriteRead_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uin
  * @param	data		: Pointer to memory where the 8-bit data be stored
  * @return	0 on Success; > 0 on response error [like CRC error] < 0 on BUS error
  */
-int SDIO_Read_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data);
+int SDIO_Read_Direct (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data);
 
 /**
  * @brief	Setup SDIO wait and wakeup callbacks
@@ -173,16 +174,16 @@ int SDIO_Read_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t
  * @note	@a wake_evt and @a wait_evt should always be non-null function pointers
  * This function must be called before calling SDIO_Card_Init() function
  */
-void SDIO_Setup_Callback(LPC_SDMMC_T *pSDMMC,
-	void (*wake_evt)(LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg),
-	uint32_t (*wait_evt)(LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg));
+void SDIO_Setup_Callback (LPC_SDMMC_T *pSDMMC,
+	void (*wake_evt) (LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg),
+	uint32_t (*wait_evt) (LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg));
 
 /**
  * @brief	SDIO Event handler [Should be called from SDIO interrupt handler]
  * @param	pSDMMC		: SDMMC peripheral selected
  * @return	Nothing
  */
-void SDIO_Handler(LPC_SDMMC_T *pSDMMC);
+void SDIO_Handler (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Sends a command to the SDIO Card [Example CMD52]
@@ -191,7 +192,7 @@ void SDIO_Handler(LPC_SDMMC_T *pSDMMC);
  * @param	arg			: Argument for the command
  * @return	0 on Success; Non-Zero on failure
  */
-uint32_t SDIO_Send_Command(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg);
+uint32_t SDIO_Send_Command (LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg);
 
 /**
  * @brief	Gets the block size of a given function
@@ -203,7 +204,7 @@ uint32_t SDIO_Send_Command(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg);
  * SDIO_Card_SetBlockSize(), or given @a func is not valid or the
  * card does not support block data transfers.
  */
-uint32_t SDIO_Card_GetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func);
+uint32_t SDIO_Card_GetBlockSize (LPC_SDMMC_T *pSDMMC, uint32_t func);
 
 /**
  * @brief	Sets the block size of a given function
@@ -216,7 +217,7 @@ uint32_t SDIO_Card_GetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func);
  * SDIO_Card_GetBlockSize() returns 0 for a valid function then the card
  * does not support block transfers.
  */
-int SDIO_Card_SetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t blkSize);
+int SDIO_Card_SetBlockSize (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t blkSize);
 
 /**
  * @brief	Writes stream or block of data to the SDIO card [Using CMD53]
@@ -231,7 +232,7 @@ int SDIO_Card_SetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t blkSize)
  * the number of bytes transferd will be @a size * "block size" [See SDIO_Card_GetBlockSize() and
  * SDIO_Card_SetBlockSize() for more information]
  */
-int SDIO_Card_WriteData(LPC_SDMMC_T *pSDMMC, uint32_t func,
+int SDIO_Card_WriteData (LPC_SDMMC_T *pSDMMC, uint32_t func,
 	uint32_t dest_addr, const uint8_t *src_addr,
 	uint32_t size, uint32_t flags);
 
@@ -248,7 +249,7 @@ int SDIO_Card_WriteData(LPC_SDMMC_T *pSDMMC, uint32_t func,
  * the number of bytes transferd will be @a size * "block size" [See SDIO_Card_GetBlockSize() and
  * SDIO_Card_SetBlockSize() for more information]
  */
-int SDIO_Card_ReadData(LPC_SDMMC_T *pSDMMC, uint32_t func,
+int SDIO_Card_ReadData (LPC_SDMMC_T *pSDMMC, uint32_t func,
 	uint8_t *dest_addr, uint32_t src_addr,
 	uint32_t size, uint32_t flags);
 
@@ -258,7 +259,7 @@ int SDIO_Card_ReadData(LPC_SDMMC_T *pSDMMC, uint32_t func,
  * @param	func		: function number [0 to 7] [0 = CIA function]
  * @return	0 - on success; Non zero on failure
  */
-int SDIO_Card_DisableInt(LPC_SDMMC_T *pSDMMC, uint32_t func);
+int SDIO_Card_DisableInt (LPC_SDMMC_T *pSDMMC, uint32_t func);
 
 /**
  * @brief	Enable SDIO interrupt for a given function
@@ -266,7 +267,7 @@ int SDIO_Card_DisableInt(LPC_SDMMC_T *pSDMMC, uint32_t func);
  * @param	func		: function number [0 to 7] [0 = CIA function]
  * @return	0 - on success; Non zero on failure
  */
-int SDIO_Card_EnableInt(LPC_SDMMC_T *pSDMMC, uint32_t func);
+int SDIO_Card_EnableInt (LPC_SDMMC_T *pSDMMC, uint32_t func);
 
 /**
  * @}

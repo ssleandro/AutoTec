@@ -43,19 +43,20 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-unsigned char _f_checknamewc ( const char *, const char * );
-unsigned char _f_checkname ( char *, char * );
+unsigned char _f_checknamewc (const char *, const char *);
+unsigned char _f_checkname (char *, char *);
 
-unsigned char _f_setnameext ( char *, char *, char * );
-unsigned char _f_setfsname ( const char *, F_NAME * );
-int _f_createfullname ( char * buffer, int buffersize, char * path, char * filename, char * fileext );
+unsigned char _f_setnameext (char *, char *, char *);
+unsigned char _f_setfsname (const char *, F_NAME *);
+int _f_createfullname (char * buffer, int buffersize, char * path, char * filename, char * fileext);
 
 #ifdef __cplusplus
 }

@@ -33,7 +33,8 @@
 #define __ENET_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup ENET_18XX_43XX CHIP: LPC18xx/43xx Ethernet driver
@@ -44,55 +45,56 @@ extern "C" {
 /**
  * @brief 10/100 MII & RMII Ethernet with timestamping register block structure
  */
-typedef struct {							/*!< ETHERNET Structure */
-	__IO uint32_t  MAC_CONFIG;				/*!< MAC configuration register */
-	__IO uint32_t  MAC_FRAME_FILTER;		/*!< MAC frame filter */
-	__IO uint32_t  MAC_HASHTABLE_HIGH;		/*!< Hash table high register */
-	__IO uint32_t  MAC_HASHTABLE_LOW;		/*!< Hash table low register */
-	__IO uint32_t  MAC_MII_ADDR;			/*!< MII address register */
-	__IO uint32_t  MAC_MII_DATA;			/*!< MII data register */
-	__IO uint32_t  MAC_FLOW_CTRL;			/*!< Flow control register */
-	__IO uint32_t  MAC_VLAN_TAG;			/*!< VLAN tag register */
-	__I  uint32_t  RESERVED0;
-	__I  uint32_t  MAC_DEBUG;				/*!< Debug register */
-	__IO uint32_t  MAC_RWAKE_FRFLT;			/*!< Remote wake-up frame filter */
-	__IO uint32_t  MAC_PMT_CTRL_STAT;		/*!< PMT control and status */
-	__I  uint32_t  RESERVED1[2];
-	__I  uint32_t  MAC_INTR;				/*!< Interrupt status register */
-	__IO uint32_t  MAC_INTR_MASK;			/*!< Interrupt mask register */
-	__IO uint32_t  MAC_ADDR0_HIGH;			/*!< MAC address 0 high register */
-	__IO uint32_t  MAC_ADDR0_LOW;			/*!< MAC address 0 low register */
-	__I  uint32_t  RESERVED2[430];
-	__IO uint32_t  MAC_TIMESTP_CTRL;		/*!< Time stamp control register */
-	__IO uint32_t  SUBSECOND_INCR;			/*!< Sub-second increment register */
-	__I  uint32_t  SECONDS;					/*!< System time seconds register */
-	__I  uint32_t  NANOSECONDS;				/*!< System time nanoseconds register */
-	__IO uint32_t  SECONDSUPDATE;			/*!< System time seconds update register */
-	__IO uint32_t  NANOSECONDSUPDATE;		/*!< System time nanoseconds update register */
-	__IO uint32_t  ADDEND;					/*!< Time stamp addend register */
-	__IO uint32_t  TARGETSECONDS;			/*!< Target time seconds register */
-	__IO uint32_t  TARGETNANOSECONDS;		/*!< Target time nanoseconds register */
-	__IO uint32_t  HIGHWORD;				/*!< System time higher word seconds register */
-	__I  uint32_t  TIMESTAMPSTAT;			/*!< Time stamp status register */
-	__IO uint32_t  PPSCTRL;					/*!< PPS control register */
-	__I  uint32_t  AUXNANOSECONDS;			/*!< Auxiliary time stamp nanoseconds register */
-	__I  uint32_t  AUXSECONDS;				/*!< Auxiliary time stamp seconds register */
-	__I  uint32_t  RESERVED3[562];
-	__IO uint32_t  DMA_BUS_MODE;			/*!< Bus Mode Register      */
-	__IO uint32_t  DMA_TRANS_POLL_DEMAND;	/*!< Transmit poll demand register */
-	__IO uint32_t  DMA_REC_POLL_DEMAND;		/*!< Receive poll demand register */
-	__IO uint32_t  DMA_REC_DES_ADDR;		/*!< Receive descriptor list address register */
-	__IO uint32_t  DMA_TRANS_DES_ADDR;		/*!< Transmit descriptor list address register */
-	__IO uint32_t  DMA_STAT;				/*!< Status register */
-	__IO uint32_t  DMA_OP_MODE;				/*!< Operation mode register */
-	__IO uint32_t  DMA_INT_EN;				/*!< Interrupt enable register */
-	__I  uint32_t  DMA_MFRM_BUFOF;			/*!< Missed frame and buffer overflow register */
-	__IO uint32_t  DMA_REC_INT_WDT;			/*!< Receive interrupt watchdog timer register */
-	__I  uint32_t  RESERVED4[8];
-	__I  uint32_t  DMA_CURHOST_TRANS_DES;	/*!< Current host transmit descriptor register */
-	__I  uint32_t  DMA_CURHOST_REC_DES;		/*!< Current host receive descriptor register */
-	__I  uint32_t  DMA_CURHOST_TRANS_BUF;	/*!< Current host transmit buffer address register */
-	__I  uint32_t  DMA_CURHOST_REC_BUF;		/*!< Current host receive buffer address register */
+typedef struct
+{ /*!< ETHERNET Structure */
+	__IO uint32_t MAC_CONFIG; /*!< MAC configuration register */
+	__IO uint32_t MAC_FRAME_FILTER; /*!< MAC frame filter */
+	__IO uint32_t MAC_HASHTABLE_HIGH; /*!< Hash table high register */
+	__IO uint32_t MAC_HASHTABLE_LOW; /*!< Hash table low register */
+	__IO uint32_t MAC_MII_ADDR; /*!< MII address register */
+	__IO uint32_t MAC_MII_DATA; /*!< MII data register */
+	__IO uint32_t MAC_FLOW_CTRL; /*!< Flow control register */
+	__IO uint32_t MAC_VLAN_TAG; /*!< VLAN tag register */
+	__I uint32_t RESERVED0;
+	__I uint32_t MAC_DEBUG; /*!< Debug register */
+	__IO uint32_t MAC_RWAKE_FRFLT; /*!< Remote wake-up frame filter */
+	__IO uint32_t MAC_PMT_CTRL_STAT; /*!< PMT control and status */
+	__I uint32_t RESERVED1[2];
+	__I uint32_t MAC_INTR; /*!< Interrupt status register */
+	__IO uint32_t MAC_INTR_MASK; /*!< Interrupt mask register */
+	__IO uint32_t MAC_ADDR0_HIGH; /*!< MAC address 0 high register */
+	__IO uint32_t MAC_ADDR0_LOW; /*!< MAC address 0 low register */
+	__I uint32_t RESERVED2[430];
+	__IO uint32_t MAC_TIMESTP_CTRL; /*!< Time stamp control register */
+	__IO uint32_t SUBSECOND_INCR; /*!< Sub-second increment register */
+	__I uint32_t SECONDS; /*!< System time seconds register */
+	__I uint32_t NANOSECONDS; /*!< System time nanoseconds register */
+	__IO uint32_t SECONDSUPDATE; /*!< System time seconds update register */
+	__IO uint32_t NANOSECONDSUPDATE; /*!< System time nanoseconds update register */
+	__IO uint32_t ADDEND; /*!< Time stamp addend register */
+	__IO uint32_t TARGETSECONDS; /*!< Target time seconds register */
+	__IO uint32_t TARGETNANOSECONDS; /*!< Target time nanoseconds register */
+	__IO uint32_t HIGHWORD; /*!< System time higher word seconds register */
+	__I uint32_t TIMESTAMPSTAT; /*!< Time stamp status register */
+	__IO uint32_t PPSCTRL; /*!< PPS control register */
+	__I uint32_t AUXNANOSECONDS; /*!< Auxiliary time stamp nanoseconds register */
+	__I uint32_t AUXSECONDS; /*!< Auxiliary time stamp seconds register */
+	__I uint32_t RESERVED3[562];
+	__IO uint32_t DMA_BUS_MODE; /*!< Bus Mode Register      */
+	__IO uint32_t DMA_TRANS_POLL_DEMAND; /*!< Transmit poll demand register */
+	__IO uint32_t DMA_REC_POLL_DEMAND; /*!< Receive poll demand register */
+	__IO uint32_t DMA_REC_DES_ADDR; /*!< Receive descriptor list address register */
+	__IO uint32_t DMA_TRANS_DES_ADDR; /*!< Transmit descriptor list address register */
+	__IO uint32_t DMA_STAT; /*!< Status register */
+	__IO uint32_t DMA_OP_MODE; /*!< Operation mode register */
+	__IO uint32_t DMA_INT_EN; /*!< Interrupt enable register */
+	__I uint32_t DMA_MFRM_BUFOF; /*!< Missed frame and buffer overflow register */
+	__IO uint32_t DMA_REC_INT_WDT; /*!< Receive interrupt watchdog timer register */
+	__I uint32_t RESERVED4[8];
+	__I uint32_t DMA_CURHOST_TRANS_DES; /*!< Current host transmit descriptor register */
+	__I uint32_t DMA_CURHOST_REC_DES; /*!< Current host receive descriptor register */
+	__I uint32_t DMA_CURHOST_TRANS_BUF; /*!< Current host transmit buffer address register */
+	__I uint32_t DMA_CURHOST_REC_BUF; /*!< Current host receive buffer address register */
 } LPC_ENET_T;
 
 /*
@@ -403,49 +405,53 @@ typedef struct {							/*!< ETHERNET Structure */
 /**
  * @brief Structure of a transmit descriptor (without timestamp)
  */
-typedef struct {
-	__IO uint32_t CTRLSTAT;		/*!< TDES control and status word */
-	__IO uint32_t BSIZE;		/*!< Buffer 1/2 byte counts */
-	__IO uint32_t B1ADD;		/*!< Buffer 1 address */
-	__IO uint32_t B2ADD;		/*!< Buffer 2 or next descriptor address */
+typedef struct
+{
+	__IO uint32_t CTRLSTAT; /*!< TDES control and status word */
+	__IO uint32_t BSIZE; /*!< Buffer 1/2 byte counts */
+	__IO uint32_t B1ADD; /*!< Buffer 1 address */
+	__IO uint32_t B2ADD; /*!< Buffer 2 or next descriptor address */
 } ENET_TXDESC_T;
 
 /**
  * @brief Structure of a enhanced transmit descriptor (with timestamp)
  */
-typedef struct {
-	__IO uint32_t CTRLSTAT;		/*!< TDES control and status word */
-	__IO uint32_t BSIZE;		/*!< Buffer 1/2 byte counts */
-	__IO uint32_t B1ADD;		/*!< Buffer 1 address */
-	__IO uint32_t B2ADD;		/*!< Buffer 2 or next descriptor address */
-	__IO uint32_t TDES4;		/*!< Reserved */
-	__IO uint32_t TDES5;		/*!< Reserved */
-	__IO uint32_t TTSL;			/*!< Timestamp value low */
-	__IO uint32_t TTSH;			/*!< Timestamp value high */
+typedef struct
+{
+	__IO uint32_t CTRLSTAT; /*!< TDES control and status word */
+	__IO uint32_t BSIZE; /*!< Buffer 1/2 byte counts */
+	__IO uint32_t B1ADD; /*!< Buffer 1 address */
+	__IO uint32_t B2ADD; /*!< Buffer 2 or next descriptor address */
+	__IO uint32_t TDES4; /*!< Reserved */
+	__IO uint32_t TDES5; /*!< Reserved */
+	__IO uint32_t TTSL; /*!< Timestamp value low */
+	__IO uint32_t TTSH; /*!< Timestamp value high */
 } ENET_ENHTXDESC_T;
 
 /**
  * @brief Structure of a receive descriptor (without timestamp)
  */
-typedef struct {
-	__IO uint32_t STATUS;		/*!< RDES status word */
-	__IO uint32_t CTRL;			/*!< Buffer 1/2 byte counts and control */
-	__IO uint32_t B1ADD;		/*!< Buffer 1 address */
-	__IO uint32_t B2ADD;		/*!< Buffer 2 or next descriptor address */
+typedef struct
+{
+	__IO uint32_t STATUS; /*!< RDES status word */
+	__IO uint32_t CTRL; /*!< Buffer 1/2 byte counts and control */
+	__IO uint32_t B1ADD; /*!< Buffer 1 address */
+	__IO uint32_t B2ADD; /*!< Buffer 2 or next descriptor address */
 } ENET_RXDESC_T;
 
 /**
  * @brief Structure of a enhanced receive descriptor (with timestamp)
  */
-typedef struct {
-	__IO uint32_t STATUS;		/*!< RDES status word */
-	__IO uint32_t CTRL;			/*!< Buffer 1/2 byte counts */
-	__IO uint32_t B1ADD;		/*!< Buffer 1 address */
-	__IO uint32_t B2ADD;		/*!< Buffer 2 or next descriptor address */
-	__IO uint32_t EXTSTAT;		/*!< Extended Status */
-	__IO uint32_t RDES5;		/*!< Reserved */
-	__IO uint32_t RTSL;			/*!< Timestamp value low */
-	__IO uint32_t RTSH;			/*!< Timestamp value high */
+typedef struct
+{
+	__IO uint32_t STATUS; /*!< RDES status word */
+	__IO uint32_t CTRL; /*!< Buffer 1/2 byte counts */
+	__IO uint32_t B1ADD; /*!< Buffer 1 address */
+	__IO uint32_t B2ADD; /*!< Buffer 2 or next descriptor address */
+	__IO uint32_t EXTSTAT; /*!< Extended Status */
+	__IO uint32_t RDES5; /*!< Reserved */
+	__IO uint32_t RTSL; /*!< Timestamp value low */
+	__IO uint32_t RTSH; /*!< Timestamp value high */
 } ENET_ENHRXDESC_T;
 
 /**
@@ -455,11 +461,11 @@ typedef struct {
  * @note	Resets the ethernet interface. This should be called prior to
  * Chip_ENET_Init with a small delay after this call.
  */
-STATIC INLINE void Chip_ENET_Reset(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_Reset (LPC_ENET_T *pENET)
 {
 	/* This should be called prior to IP_ENET_Init. The MAC controller may
-	   not be ready for a call to init right away so a small delay should
-	   occur after this call. */
+	 not be ready for a call to init right away so a small delay should
+	 occur after this call. */
 	pENET->DMA_BUS_MODE |= DMA_BM_SWR;
 }
 
@@ -469,14 +475,14 @@ STATIC INLINE void Chip_ENET_Reset(LPC_ENET_T *pENET)
  * @param	macAddr	: Pointer to the 6 bytes used for the MAC address
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_SetADDR(LPC_ENET_T *pENET, const uint8_t *macAddr)
+STATIC INLINE void Chip_ENET_SetADDR (LPC_ENET_T *pENET, const uint8_t *macAddr)
 {
 	/* Save MAC address */
-	pENET->MAC_ADDR0_LOW = ((uint32_t) macAddr[3] << 24) |
-						   ((uint32_t) macAddr[2] << 16) | ((uint32_t) macAddr[1] << 8) |
-						   ((uint32_t) macAddr[0]);
-	pENET->MAC_ADDR0_HIGH = ((uint32_t) macAddr[5] << 8) |
-							((uint32_t) macAddr[4]);
+	pENET->MAC_ADDR0_LOW = ((uint32_t)macAddr[3] << 24) |
+		((uint32_t)macAddr[2] << 16) | ((uint32_t)macAddr[1] << 8) |
+		((uint32_t)macAddr[0]);
+	pENET->MAC_ADDR0_HIGH = ((uint32_t)macAddr[5] << 8) |
+		((uint32_t)macAddr[4]);
 }
 
 /**
@@ -486,7 +492,7 @@ STATIC INLINE void Chip_ENET_SetADDR(LPC_ENET_T *pENET, const uint8_t *macAddr)
  * @param	addr	: PHY address, used with MII read and write
  * @return	Nothing
  */
-void Chip_ENET_SetupMII(LPC_ENET_T *pENET, uint32_t div, uint8_t addr);
+void Chip_ENET_SetupMII (LPC_ENET_T *pENET, uint32_t div, uint8_t addr);
 
 /**
  * @brief	Starts a PHY write via the MII
@@ -497,7 +503,7 @@ void Chip_ENET_SetupMII(LPC_ENET_T *pENET, uint32_t div, uint8_t addr);
  * @note	Start a PHY write operation. Does not block, requires calling
  * IP_ENET_IsMIIBusy to determine when write is complete.
  */
-void Chip_ENET_StartMIIWrite(LPC_ENET_T *pENET, uint8_t reg, uint16_t data);
+void Chip_ENET_StartMIIWrite (LPC_ENET_T *pENET, uint8_t reg, uint16_t data);
 
 /**
  * @brief	Starts a PHY read via the MII
@@ -508,14 +514,14 @@ void Chip_ENET_StartMIIWrite(LPC_ENET_T *pENET, uint8_t reg, uint16_t data);
  * IP_ENET_IsMIIBusy to determine when read is complete and calling
  * IP_ENET_ReadMIIData to get the data.
  */
-void Chip_ENET_StartMIIRead(LPC_ENET_T *pENET, uint8_t reg);
+void Chip_ENET_StartMIIRead (LPC_ENET_T *pENET, uint8_t reg);
 
 /**
  * @brief	Returns MII link (PHY) busy status
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Returns true if busy, otherwise false
  */
-STATIC INLINE bool Chip_ENET_IsMIIBusy(LPC_ENET_T *pENET)
+STATIC INLINE bool Chip_ENET_IsMIIBusy (LPC_ENET_T *pENET)
 {
 	return (pENET->MAC_MII_ADDR & MAC_MIIA_GB) ? true : false;
 }
@@ -525,7 +531,7 @@ STATIC INLINE bool Chip_ENET_IsMIIBusy(LPC_ENET_T *pENET)
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Read value from PHY
  */
-STATIC INLINE uint16_t Chip_ENET_ReadMIIData(LPC_ENET_T *pENET)
+STATIC INLINE uint16_t Chip_ENET_ReadMIIData (LPC_ENET_T *pENET)
 {
 	return pENET->MAC_MII_DATA;
 }
@@ -535,7 +541,7 @@ STATIC INLINE uint16_t Chip_ENET_ReadMIIData(LPC_ENET_T *pENET)
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_TXEnable(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_TXEnable (LPC_ENET_T *pENET)
 {
 	pENET->MAC_CONFIG |= MAC_CFG_TE;
 	pENET->DMA_OP_MODE |= DMA_OM_ST;
@@ -546,7 +552,7 @@ STATIC INLINE void Chip_ENET_TXEnable(LPC_ENET_T *pENET)
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_TXDisable(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_TXDisable (LPC_ENET_T *pENET)
 {
 	pENET->MAC_CONFIG &= ~MAC_CFG_TE;
 }
@@ -556,7 +562,7 @@ STATIC INLINE void Chip_ENET_TXDisable(LPC_ENET_T *pENET)
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_RXEnable(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_RXEnable (LPC_ENET_T *pENET)
 {
 	pENET->MAC_CONFIG |= MAC_CFG_RE;
 	pENET->DMA_OP_MODE |= DMA_OM_SR;
@@ -567,7 +573,7 @@ STATIC INLINE void Chip_ENET_RXEnable(LPC_ENET_T *pENET)
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_RXDisable(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_RXDisable (LPC_ENET_T *pENET)
 {
 	pENET->MAC_CONFIG &= ~MAC_CFG_RE;
 }
@@ -580,7 +586,7 @@ STATIC INLINE void Chip_ENET_RXDisable(LPC_ENET_T *pENET)
  * RMII PHY, and must be called before calling any Ethernet
  * functions.
  */
-STATIC INLINE void Chip_ENET_RMIIEnable(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_RMIIEnable (LPC_ENET_T *pENET)
 {
 	LPC_CREG->CREG6 |= 0x4;
 }
@@ -593,7 +599,7 @@ STATIC INLINE void Chip_ENET_RMIIEnable(LPC_ENET_T *pENET)
  * MII PHY, and must be called before calling any Ethernet
  * functions.
  */
-STATIC INLINE void Chip_ENET_MIIEnable(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_MIIEnable (LPC_ENET_T *pENET)
 {
 	LPC_CREG->CREG6 &= ~0x7;
 }
@@ -604,7 +610,7 @@ STATIC INLINE void Chip_ENET_MIIEnable(LPC_ENET_T *pENET)
  * @param	full	: true to selected full duplex, false for half
  * @return	Nothing
  */
-void Chip_ENET_SetDuplex(LPC_ENET_T *pENET, bool full);
+void Chip_ENET_SetDuplex (LPC_ENET_T *pENET, bool full);
 
 /**
  * @brief	Sets speed for the interface
@@ -612,7 +618,7 @@ void Chip_ENET_SetDuplex(LPC_ENET_T *pENET, bool full);
  * @param	speed100	: true to select 100Mbps mode, false for 10Mbps
  * @return	Nothing
  */
-void Chip_ENET_SetSpeed(LPC_ENET_T *pENET, bool speed100);
+void Chip_ENET_SetSpeed (LPC_ENET_T *pENET, bool speed100);
 
 /**
  * @brief	Configures the initial ethernet descriptors
@@ -621,12 +627,12 @@ void Chip_ENET_SetSpeed(LPC_ENET_T *pENET, bool speed100);
  * @param	pRXDescs	: Pointer to RX descriptor list
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_InitDescriptors(LPC_ENET_T *pENET,
-											 ENET_ENHTXDESC_T *pTXDescs, ENET_ENHRXDESC_T *pRXDescs)
+STATIC INLINE void Chip_ENET_InitDescriptors (LPC_ENET_T *pENET,
+	ENET_ENHTXDESC_T *pTXDescs, ENET_ENHRXDESC_T *pRXDescs)
 {
 	/* Setup descriptor list base addresses */
-	pENET->DMA_TRANS_DES_ADDR = (uint32_t) pTXDescs;
-	pENET->DMA_REC_DES_ADDR = (uint32_t) pRXDescs;
+	pENET->DMA_TRANS_DES_ADDR = (uint32_t)pTXDescs;
+	pENET->DMA_REC_DES_ADDR = (uint32_t)pRXDescs;
 }
 
 /**
@@ -634,7 +640,7 @@ STATIC INLINE void Chip_ENET_InitDescriptors(LPC_ENET_T *pENET,
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_RXStart(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_RXStart (LPC_ENET_T *pENET)
 {
 	/* Start receive polling */
 	pENET->DMA_REC_POLL_DEMAND = 1;
@@ -645,7 +651,7 @@ STATIC INLINE void Chip_ENET_RXStart(LPC_ENET_T *pENET)
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_ENET_TXStart(LPC_ENET_T *pENET)
+STATIC INLINE void Chip_ENET_TXStart (LPC_ENET_T *pENET)
 {
 	/* Start transmit polling */
 	pENET->DMA_TRANS_POLL_DEMAND = 1;
@@ -660,14 +666,14 @@ STATIC INLINE void Chip_ENET_TXStart(LPC_ENET_T *pENET)
  * state. This is enough to place the interface in a usable state, but
  * may require more setup outside this function.
  */
-void Chip_ENET_Init(LPC_ENET_T *pENET, uint32_t phyAddr);
+void Chip_ENET_Init (LPC_ENET_T *pENET, uint32_t phyAddr);
 
 /**
  * @brief	De-initialize the ethernet interface
  * @param	pENET	: The base of ENET peripheral on the chip
  * @return	Nothing
  */
-void Chip_ENET_DeInit(LPC_ENET_T *pENET);
+void Chip_ENET_DeInit (LPC_ENET_T *pENET);
 
 /**
  * @}

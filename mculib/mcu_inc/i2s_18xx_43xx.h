@@ -33,7 +33,8 @@
 #define __I2S_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup I2S_18XX_43XX CHIP: LPC18xx/43xx I2S driver
@@ -44,29 +45,31 @@ extern "C" {
 /**
  * @brief I2S DMA request channel define
  */
-typedef enum {
-	I2S_DMA_REQUEST_CHANNEL_1,	/*!< DMA request channel 1 */
-	I2S_DMA_REQUEST_CHANNEL_2,	/*!< DMA request channel 2 */
-	I2S_DMA_REQUEST_CHANNEL_NUM,/*!< The number of DMA request channels */
+typedef enum
+{
+	I2S_DMA_REQUEST_CHANNEL_1, /*!< DMA request channel 1 */
+	I2S_DMA_REQUEST_CHANNEL_2, /*!< DMA request channel 2 */
+	I2S_DMA_REQUEST_CHANNEL_NUM, /*!< The number of DMA request channels */
 } I2S_DMA_CHANNEL_T;
 
 /**
  * @brief I2S register block structure
  */
-typedef struct {				/*!< I2S Structure */
-	__IO uint32_t DAO;			/*!< I2S Digital Audio Output Register. Contains control bits for the I2S transmit channel */
-	__IO uint32_t DAI;			/*!< I2S Digital Audio Input Register. Contains control bits for the I2S receive channel */
-	__O uint32_t TXFIFO;		/*!< I2S Transmit FIFO. Access register for the 8 x 32-bit transmitter FIFO */
-	__I uint32_t RXFIFO;		/*!< I2S Receive FIFO. Access register for the 8 x 32-bit receiver FIFO */
-	__I uint32_t STATE;			/*!< I2S Status Feedback Register. Contains status information about the I2S interface */
-	__IO uint32_t DMA[I2S_DMA_REQUEST_CHANNEL_NUM];	/*!< I2S DMA Configuration Registers. Contains control information for DMA request channels */
-	__IO uint32_t IRQ;			/*!< I2S Interrupt Request Control Register. Contains bits that control how the I2S interrupt request is generated */
-	__IO uint32_t TXRATE;		/*!< I2S Transmit MCLK divider. This register determines the I2S TX MCLK rate by specifying the value to divide PCLK by in order to produce MCLK */
-	__IO uint32_t RXRATE;		/*!< I2S Receive MCLK divider. This register determines the I2S RX MCLK rate by specifying the value to divide PCLK by in order to produce MCLK */
-	__IO uint32_t TXBITRATE;	/*!< I2S Transmit bit rate divider. This register determines the I2S transmit bit rate by specifying the value to divide TX_MCLK by in order to produce the transmit bit clock */
-	__IO uint32_t RXBITRATE;	/*!< I2S Receive bit rate divider. This register determines the I2S receive bit rate by specifying the value to divide RX_MCLK by in order to produce the receive bit clock */
-	__IO uint32_t TXMODE;		/*!< I2S Transmit mode control */
-	__IO uint32_t RXMODE;		/*!< I2S Receive mode control */
+typedef struct
+{ /*!< I2S Structure */
+	__IO uint32_t DAO; /*!< I2S Digital Audio Output Register. Contains control bits for the I2S transmit channel */
+	__IO uint32_t DAI; /*!< I2S Digital Audio Input Register. Contains control bits for the I2S receive channel */
+	__O uint32_t TXFIFO; /*!< I2S Transmit FIFO. Access register for the 8 x 32-bit transmitter FIFO */
+	__I uint32_t RXFIFO; /*!< I2S Receive FIFO. Access register for the 8 x 32-bit receiver FIFO */
+	__I uint32_t STATE; /*!< I2S Status Feedback Register. Contains status information about the I2S interface */
+	__IO uint32_t DMA[I2S_DMA_REQUEST_CHANNEL_NUM]; /*!< I2S DMA Configuration Registers. Contains control information for DMA request channels */
+	__IO uint32_t IRQ; /*!< I2S Interrupt Request Control Register. Contains bits that control how the I2S interrupt request is generated */
+	__IO uint32_t TXRATE; /*!< I2S Transmit MCLK divider. This register determines the I2S TX MCLK rate by specifying the value to divide PCLK by in order to produce MCLK */
+	__IO uint32_t RXRATE; /*!< I2S Receive MCLK divider. This register determines the I2S RX MCLK rate by specifying the value to divide PCLK by in order to produce MCLK */
+	__IO uint32_t TXBITRATE; /*!< I2S Transmit bit rate divider. This register determines the I2S transmit bit rate by specifying the value to divide TX_MCLK by in order to produce the transmit bit clock */
+	__IO uint32_t RXBITRATE; /*!< I2S Receive bit rate divider. This register determines the I2S receive bit rate by specifying the value to divide RX_MCLK by in order to produce the receive bit clock */
+	__IO uint32_t TXMODE; /*!< I2S Transmit mode control */
+	__IO uint32_t RXMODE; /*!< I2S Receive mode control */
 } LPC_I2S_T;
 
 /*
@@ -213,10 +216,11 @@ typedef struct {				/*!< I2S Structure */
 /**
  * @brief I2S Audio Format Structure
  */
-typedef struct {
-	uint32_t SampleRate;	/*!< Sample Rate */
-	uint8_t ChannelNumber;	/*!< Channel Number - 1 is mono, 2 is stereo */
-	uint8_t WordWidth;		/*!< Word Width - 8, 16 or 32 bits */
+typedef struct
+{
+	uint32_t SampleRate; /*!< Sample Rate */
+	uint8_t ChannelNumber; /*!< Channel Number - 1 is mono, 2 is stereo */
+	uint8_t WordWidth; /*!< Word Width - 8, 16 or 32 bits */
 } I2S_AUDIO_FORMAT_T;
 
 /**
@@ -224,7 +228,7 @@ typedef struct {
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Nothing
  */
-void Chip_I2S_Init(LPC_I2S_T *pI2S);
+void Chip_I2S_Init (LPC_I2S_T *pI2S);
 
 /**
  * @brief	Shutdown I2S
@@ -232,7 +236,7 @@ void Chip_I2S_Init(LPC_I2S_T *pI2S);
  * @return	Nothing
  * @note	Reset all relative registers (DMA, transmit/receive control, interrupt) to default value
  */
-void Chip_I2S_DeInit(LPC_I2S_T *pI2S);
+void Chip_I2S_DeInit (LPC_I2S_T *pI2S);
 
 /**
  * @brief	Send a 32-bit data to TXFIFO for transmition
@@ -241,7 +245,7 @@ void Chip_I2S_DeInit(LPC_I2S_T *pI2S);
  * @return	Nothing
  * @note	The function writes to TXFIFO without checking any condition.
  */
-STATIC INLINE void Chip_I2S_Send(LPC_I2S_T *pI2S, uint32_t data)
+STATIC INLINE void Chip_I2S_Send (LPC_I2S_T *pI2S, uint32_t data)
 {
 	pI2S->TXFIFO = data;
 }
@@ -252,7 +256,7 @@ STATIC INLINE void Chip_I2S_Send(LPC_I2S_T *pI2S, uint32_t data)
  * @return	Data received in RXFIFO
  * @note	The function reads from RXFIFO without checking any condition.
  */
-STATIC INLINE uint32_t Chip_I2S_Receive(LPC_I2S_T *pI2S)
+STATIC INLINE uint32_t Chip_I2S_Receive (LPC_I2S_T *pI2S)
 {
 	return pI2S->RXFIFO;
 }
@@ -262,7 +266,7 @@ STATIC INLINE uint32_t Chip_I2S_Receive(LPC_I2S_T *pI2S)
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_I2S_TxStart(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_TxStart (LPC_I2S_T *pI2S)
 {
 	pI2S->DAO &= ~(I2S_DAO_RESET | I2S_DAO_STOP | I2S_DAO_MUTE);
 }
@@ -272,7 +276,7 @@ STATIC INLINE void Chip_I2S_TxStart(LPC_I2S_T *pI2S)
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_I2S_RxStart(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_RxStart (LPC_I2S_T *pI2S)
 {
 	pI2S->DAI &= ~(I2S_DAI_RESET | I2S_DAI_STOP);
 }
@@ -282,7 +286,7 @@ STATIC INLINE void Chip_I2S_RxStart(LPC_I2S_T *pI2S)
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_I2S_TxPause(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_TxPause (LPC_I2S_T *pI2S)
 {
 	pI2S->DAO |= I2S_DAO_STOP;
 }
@@ -292,7 +296,7 @@ STATIC INLINE void Chip_I2S_TxPause(LPC_I2S_T *pI2S)
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_I2S_RxPause(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_RxPause (LPC_I2S_T *pI2S)
 {
 	pI2S->DAI |= I2S_DAI_STOP;
 }
@@ -303,7 +307,7 @@ STATIC INLINE void Chip_I2S_RxPause(LPC_I2S_T *pI2S)
  * @return	Nothing
  * @note	The data output from I2S transmit channel is always zeroes
  */
-STATIC INLINE void Chip_I2S_EnableMute(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_EnableMute (LPC_I2S_T *pI2S)
 {
 	pI2S->DAO |= I2S_DAO_MUTE;
 }
@@ -313,7 +317,7 @@ STATIC INLINE void Chip_I2S_EnableMute(LPC_I2S_T *pI2S)
  * @param	pI2S		: The base of I2S peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_I2S_DisableMute(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_DisableMute (LPC_I2S_T *pI2S)
 {
 	pI2S->DAO &= ~I2S_DAO_MUTE;
 }
@@ -324,7 +328,7 @@ STATIC INLINE void Chip_I2S_DisableMute(LPC_I2S_T *pI2S)
  * @return	Nothing
  * @note	Pause, resets the transmit channel and FIFO asynchronously
  */
-STATIC INLINE void Chip_I2S_TxStop(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_TxStop (LPC_I2S_T *pI2S)
 {
 	pI2S->DAO &= ~I2S_DAO_MUTE;
 	pI2S->DAO |= I2S_DAO_STOP | I2S_DAO_RESET;
@@ -336,7 +340,7 @@ STATIC INLINE void Chip_I2S_TxStop(LPC_I2S_T *pI2S)
  * @return	Nothing
  * @note	Pause, resets the transmit channel and FIFO asynchronously
  */
-STATIC INLINE void Chip_I2S_RxStop(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_RxStop (LPC_I2S_T *pI2S)
 {
 	pI2S->DAI |= I2S_DAI_STOP | I2S_DAI_RESET;
 }
@@ -349,7 +353,7 @@ STATIC INLINE void Chip_I2S_RxStop(LPC_I2S_T *pI2S)
  * Must be called after each Chip_I2S_TxModeConfig call if
  * slave mode is needed.
  */
-STATIC INLINE void Chip_I2S_RxSlave(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_RxSlave (LPC_I2S_T *pI2S)
 {
 	pI2S->DAI |= I2S_SLAVE_MODE;
 }
@@ -362,7 +366,7 @@ STATIC INLINE void Chip_I2S_RxSlave(LPC_I2S_T *pI2S)
  * Must be called after each Chip_I2S_TxModeConfig call if
  * slave mode is needed.
  */
-STATIC INLINE void Chip_I2S_TxSlave(LPC_I2S_T *pI2S)
+STATIC INLINE void Chip_I2S_TxSlave (LPC_I2S_T *pI2S)
 {
 	pI2S->DAO |= I2S_SLAVE_MODE;
 }
@@ -379,10 +383,10 @@ STATIC INLINE void Chip_I2S_TxSlave(LPC_I2S_T *pI2S)
  * including variations that share the clock and/or WS between the transmitter and
  * receiver. It also allows using I2S with fewer pins, typically four.
  */
-STATIC INLINE void Chip_I2S_TxModeConfig(LPC_I2S_T *pI2S,
-										 uint32_t clksel,
-										 uint32_t fpin,
-										 uint32_t mcena)
+STATIC INLINE void Chip_I2S_TxModeConfig (LPC_I2S_T *pI2S,
+	uint32_t clksel,
+	uint32_t fpin,
+	uint32_t mcena)
 {
 	pI2S->TXMODE = clksel | fpin | mcena;
 }
@@ -399,10 +403,10 @@ STATIC INLINE void Chip_I2S_TxModeConfig(LPC_I2S_T *pI2S,
  * including variations that share the clock and/or WS between the transmitter and
  * receiver. It also allows using I2S with fewer pins, typically four.
  */
-STATIC INLINE void Chip_I2S_RxModeConfig(LPC_I2S_T *pI2S,
-										 uint32_t clksel,
-										 uint32_t fpin,
-										 uint32_t mcena)
+STATIC INLINE void Chip_I2S_RxModeConfig (LPC_I2S_T *pI2S,
+	uint32_t clksel,
+	uint32_t fpin,
+	uint32_t mcena)
 {
 	pI2S->RXMODE = clksel | fpin | mcena;
 }
@@ -412,7 +416,7 @@ STATIC INLINE void Chip_I2S_RxModeConfig(LPC_I2S_T *pI2S,
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Current level of the Transmit FIFO
  */
-STATIC INLINE uint8_t Chip_I2S_GetTxLevel(LPC_I2S_T *pI2S)
+STATIC INLINE uint8_t Chip_I2S_GetTxLevel (LPC_I2S_T *pI2S)
 {
 	return (pI2S->STATE >> 16) & 0xF;
 }
@@ -422,7 +426,7 @@ STATIC INLINE uint8_t Chip_I2S_GetTxLevel(LPC_I2S_T *pI2S)
  * @param	pI2S	: The base of I2S peripheral on the chip
  * @return	Current level of the Receive FIFO
  */
-STATIC INLINE uint8_t Chip_I2S_GetRxLevel(LPC_I2S_T *pI2S)
+STATIC INLINE uint8_t Chip_I2S_GetRxLevel (LPC_I2S_T *pI2S)
 {
 	return (pI2S->STATE >> 8) & 0xF;
 }
@@ -435,7 +439,7 @@ STATIC INLINE uint8_t Chip_I2S_GetRxLevel(LPC_I2S_T *pI2S)
  * @note	The value depends on the audio sample rate desired and the data size and format(stereo/mono) used.
  * For example, a 48 kHz sample rate for 16-bit stereo data requires a bit rate of 48 000 x 16 x 2 = 1.536 MHz. So the mclk_divider should be MCLK/1.536 MHz
  */
-STATIC INLINE void Chip_I2S_SetTxBitRate(LPC_I2S_T *pI2S, uint32_t div)
+STATIC INLINE void Chip_I2S_SetTxBitRate (LPC_I2S_T *pI2S, uint32_t div)
 {
 	pI2S->TXBITRATE = div;
 }
@@ -448,7 +452,7 @@ STATIC INLINE void Chip_I2S_SetTxBitRate(LPC_I2S_T *pI2S, uint32_t div)
  * @note	The value depends on the audio sample rate desired and the data size and format(stereo/mono) used.
  * For example, a 48 kHz sample rate for 16-bit stereo data requires a bit rate of 48 000 x 16 x 2 = 1.536 MHz. So the mclk_divider should be MCLK/1.536 MHz
  */
-STATIC INLINE void Chip_I2S_SetRxBitRate(LPC_I2S_T *pI2S, uint32_t div)
+STATIC INLINE void Chip_I2S_SetRxBitRate (LPC_I2S_T *pI2S, uint32_t div)
 {
 	pI2S->RXBITRATE = div;
 }
@@ -467,7 +471,7 @@ STATIC INLINE void Chip_I2S_SetRxBitRate(LPC_I2S_T *pI2S, uint32_t div)
  * Note: If the value of X or Y is 0, then no clock is generated. Also, the value of Y must be
  * greater than or equal to X.
  */
-STATIC INLINE void Chip_I2S_SetTxXYDivider(LPC_I2S_T *pI2S, uint8_t xDiv, uint8_t yDiv)
+STATIC INLINE void Chip_I2S_SetTxXYDivider (LPC_I2S_T *pI2S, uint8_t xDiv, uint8_t yDiv)
 {
 	pI2S->TXRATE = yDiv | (xDiv << 8);
 }
@@ -486,7 +490,7 @@ STATIC INLINE void Chip_I2S_SetTxXYDivider(LPC_I2S_T *pI2S, uint8_t xDiv, uint8_
  * Note: If the value of X or Y is 0, then no clock is generated. Also, the value of Y must be
  * greater than or equal to X.
  */
-STATIC INLINE void Chip_I2S_SetRxXYDivider(LPC_I2S_T *pI2S, uint8_t xDiv, uint8_t yDiv)
+STATIC INLINE void Chip_I2S_SetRxXYDivider (LPC_I2S_T *pI2S, uint8_t xDiv, uint8_t yDiv)
 {
 	pI2S->RXRATE = yDiv | (xDiv << 8);
 }
@@ -497,7 +501,7 @@ STATIC INLINE void Chip_I2S_SetRxXYDivider(LPC_I2S_T *pI2S, uint8_t xDiv, uint8_
  * @param	format	: Audio Format
  * @return	SUCCESS or ERROR
  */
-Status Chip_I2S_TxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format);
+Status Chip_I2S_TxConfig (LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format);
 
 /**
  * @brief   Configure I2S for Audio Format input
@@ -505,7 +509,7 @@ Status Chip_I2S_TxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format);
  * @param	format	: Audio Format
  * @return	SUCCESS or ERROR
  */
-Status Chip_I2S_RxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format);
+Status Chip_I2S_RxConfig (LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format);
 
 /**
  * @brief   Enable/Disable Interrupt with a specific FIFO depth
@@ -514,7 +518,7 @@ Status Chip_I2S_RxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format);
  * @param	depth		: FIFO level creating an irq request
  * @return	Nothing
  */
-void Chip_I2S_Int_TxCmd(LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth);
+void Chip_I2S_Int_TxCmd (LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth);
 
 /**
  * @brief   Enable/Disable Interrupt with a specific FIFO depth
@@ -523,7 +527,7 @@ void Chip_I2S_Int_TxCmd(LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth
  * @param	depth		: FIFO level creating an irq request
  * @return	Nothing
  */
-void Chip_I2S_Int_RxCmd(LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth);
+void Chip_I2S_Int_RxCmd (LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth);
 
 /**
  * @brief   Enable/Disable DMA with a specific FIFO depth
@@ -535,7 +539,7 @@ void Chip_I2S_Int_RxCmd(LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth
  * @param	depth		: FIFO level creating an irq request
  * @return	Nothing
  */
-void Chip_I2S_DMA_TxCmd(LPC_I2S_T *pI2S, I2S_DMA_CHANNEL_T dmaNum, FunctionalState newState, uint8_t depth);
+void Chip_I2S_DMA_TxCmd (LPC_I2S_T *pI2S, I2S_DMA_CHANNEL_T dmaNum, FunctionalState newState, uint8_t depth);
 
 /**
  * @brief   Enable/Disable DMA with a specific FIFO depth
@@ -547,7 +551,7 @@ void Chip_I2S_DMA_TxCmd(LPC_I2S_T *pI2S, I2S_DMA_CHANNEL_T dmaNum, FunctionalSta
  * @param	depth		: FIFO level creating an irq request
  * @return	Nothing
  */
-void Chip_I2S_DMA_RxCmd(LPC_I2S_T *pI2S, I2S_DMA_CHANNEL_T dmaNum, FunctionalState newState, uint8_t depth);
+void Chip_I2S_DMA_RxCmd (LPC_I2S_T *pI2S, I2S_DMA_CHANNEL_T dmaNum, FunctionalState newState, uint8_t depth);
 
 /**
  * @}

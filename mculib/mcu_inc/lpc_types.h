@@ -47,7 +47,11 @@
 /**
  * @brief Boolean Type definition
  */
-typedef enum {FALSE = 0, TRUE = !FALSE} Bool;
+typedef enum
+{
+	FALSE = 0,
+	TRUE = !FALSE
+} Bool;
 
 /**
  * @brief Boolean Type definition
@@ -59,33 +63,46 @@ typedef enum {FALSE = 0, TRUE = !FALSE} Bool;
 /**
  * @brief Flag Status and Interrupt Flag Status type definition
  */
-typedef enum {RESET = 0, SET = !RESET} FlagStatus, IntStatus, SetState;
+typedef enum
+{
+	RESET = 0,
+	SET = !RESET
+} FlagStatus, IntStatus, SetState;
 #define PARAM_SETSTATE(State) ((State == RESET) || (State == SET))
 
 /**
  * @brief Functional State Definition
  */
-typedef enum {DISABLE = 0, ENABLE = !DISABLE} FunctionalState;
+typedef enum
+{
+	DISABLE = 0,
+	ENABLE = !DISABLE
+} FunctionalState;
 #define PARAM_FUNCTIONALSTATE(State) ((State == DISABLE) || (State == ENABLE))
 
 /**
  * @ Status type definition
  */
-typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
+typedef enum
+{
+	ERROR = 0,
+	SUCCESS = !ERROR
+} Status;
 
 /**
  * Read/Write transfer type mode (Block or non-block)
  */
-typedef enum {
-	NONE_BLOCKING = 0,		/**< None Blocking type */
-	BLOCKING,				/**< Blocking type */
+typedef enum
+{
+	NONE_BLOCKING = 0, /**< None Blocking type */
+	BLOCKING, /**< Blocking type */
 } TRANSFER_BLOCK_T;
 
 /** Pointer to Function returning Void (any number of parameters) */
-typedef void (*PFV)();
+typedef void (*PFV) ();
 
 /** Pointer to Function returning int32_t (any number of parameters) */
-typedef int32_t (*PFI)();
+typedef int32_t (*PFI) ();
 
 /**
  * @}

@@ -31,12 +31,12 @@
 #define APP_COMMON_APP_COMMON_SENSOR_APP_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 // Listagem de dispositivos utilizados na rede CAN
 #define CAN_APL_SENSOR_SEMENTE                    0x00 //Sensor de semente
@@ -90,12 +90,12 @@
 #define CAN_bTAMANHO_LISTA                    (CAN_bNUM_SENSORES_SEMENTE_E_ADUBO + CAN_bNUM_SENSORES_DIGITAIS)
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 // Pin to enable/disable sensor power source
 gpio_config_s sEnablePS9;
 
@@ -103,79 +103,87 @@ gpio_config_s sEnablePS9;
 #define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
-typedef enum {
-  Novo,
-  Conectado,
-  Desconectado,
-  Verificando,
+ * Typedefs
+ *******************************************************************************/
+typedef enum
+{
+	Novo,
+	Conectado,
+	Desconectado,
+	Verificando,
 } CAN_teEstadoSensor;
 
-typedef enum {
-  Nenhum,
-  Reprovado,
-  Aprovado
+typedef enum
+{
+	Nenhum,
+	Reprovado,
+	Aprovado
 } CAN_teAutoTeste;
 
-typedef struct {
-    bool               bNovo;
-    uint8_t            bTipoSensor;
-    uint8_t            abEnderecoFisico[ 6 ];
-    CAN_teAutoTeste    eResultadoAutoTeste;
+typedef struct
+{
+	bool bNovo;
+	uint8_t bTipoSensor;
+	uint8_t abEnderecoFisico[6];
+	CAN_teAutoTeste eResultadoAutoTeste;
 } CAN_tsNovoSensor;
 
 // Estrutura de Versao de SW do Sensor
-typedef struct {
-    uint16_t            wVer;                   //Numero da versao.
-    uint16_t            wRev;                   //Numero da revisao.
-    uint16_t            wBuild;                 //Numero do build.
-}CAN_tsVersaoSensor;
+typedef struct
+{
+	uint16_t wVer;                   //Numero da versao.
+	uint16_t wRev;                   //Numero da revisao.
+	uint16_t wBuild;                 //Numero do build.
+} CAN_tsVersaoSensor;
 
 // Lista de sensores na rede CAN
-typedef struct {
-    CAN_teEstadoSensor    eEstado;
-    uint8_t               abEnderecoFisico[ 6 ];
-    uint8_t               abUltimaLeitura[2];
-    CAN_teAutoTeste       eResultadoAutoTeste;
-    CAN_tsVersaoSensor    CAN_sVersaoSensor;
+typedef struct
+{
+	CAN_teEstadoSensor eEstado;
+	uint8_t abEnderecoFisico[6];
+	uint8_t abUltimaLeitura[2];
+	CAN_teAutoTeste eResultadoAutoTeste;
+	CAN_tsVersaoSensor CAN_sVersaoSensor;
 } CAN_tsLista;
 
 // Estrutura de controle da lista de sensores na rede CAN
-typedef struct {
-    CAN_tsNovoSensor      sNovoSensor;
-    CAN_tsLista           asLista[ CAN_bTAMANHO_LISTA ];
+typedef struct
+{
+	CAN_tsNovoSensor sNovoSensor;
+	CAN_tsLista asLista[CAN_bTAMANHO_LISTA];
 } CAN_tsCtrlListaSens;
 
 // Estrutura de parametros de sensores
-typedef struct {
-    uint16_t wMinimo;       //Tempo minimo em us para contagem de uma semente
-    uint16_t wMaximo;       //Tempo maximo em us para contagem de uma semente
-    uint16_t wMaximoDuplo;  //Tempo maximo em us para contagem de duas sementes
-}CAN_tsParametrosSensor;
+typedef struct
+{
+	uint16_t wMinimo;       //Tempo minimo em us para contagem de uma semente
+	uint16_t wMaximo;       //Tempo maximo em us para contagem de uma semente
+	uint16_t wMaximoDuplo;  //Tempo maximo em us para contagem de duas sementes
+} CAN_tsParametrosSensor;
 
 //Estrutura de parametros de sensores
-typedef struct {
-    uint8_t bMinimo;
-    uint8_t bDuplo;
-    uint8_t bMaximo;
-    uint8_t bFreqAmostra;
-    uint8_t bNAmostra;
-    uint8_t bPasso;
-    uint8_t bDivPicoOffsetMinimo;       // LSN = DivPico     / MSN = OffsetMin      (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
-    uint8_t bOffsetDuploOffsetTriplo;   // LSN = OffsetDuplo / MSN = OffsetTriplo   (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
-}CAN_tsParametrosExtended;
+typedef struct
+{
+	uint8_t bMinimo;
+	uint8_t bDuplo;
+	uint8_t bMaximo;
+	uint8_t bFreqAmostra;
+	uint8_t bNAmostra;
+	uint8_t bPasso;
+	uint8_t bDivPicoOffsetMinimo; // LSN = DivPico     / MSN = OffsetMin      (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
+	uint8_t bOffsetDuploOffsetTriplo; // LSN = OffsetDuplo / MSN = OffsetTriplo   (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
+} CAN_tsParametrosExtended;
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Public Variables
-*******************************************************************************/
+ * Public Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 
 #endif /* APP_COMMON_APP_COMMON_SENSOR_APP_H_ */

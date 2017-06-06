@@ -33,7 +33,8 @@
 #define __IAP_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup IAP_18XX_43XX CHIP: LPC18xx/43xx Flash IAP driver
@@ -80,11 +81,9 @@ extern "C" {
 #define IAP_CRP_ENABLED             19	/*!< Code read protection enabled */
 
 /* IAP_ENTRY API function type */
-typedef void (*IAP_ENTRY_T)(unsigned int[5], unsigned int[4]);
+typedef void (*IAP_ENTRY_T) (unsigned int[5], unsigned int[4]);
 
-
-uint8_t Chip_IAP_init(void);
-
+uint8_t Chip_IAP_init (void);
 
 /**
  * @brief	Prepare sector for write operation
@@ -96,7 +95,7 @@ uint8_t Chip_IAP_init(void);
  *			or "Erase Sector" command.
  *			The end sector must be greater than or equal to start sector number
  */
-uint8_t Chip_IAP_PreSectorForReadWrite(uint32_t strSector, uint32_t endSector, uint8_t bankNum);
+uint8_t Chip_IAP_PreSectorForReadWrite (uint32_t strSector, uint32_t endSector, uint8_t bankNum);
 
 /**
  * @brief	Copy RAM to flash
@@ -107,7 +106,7 @@ uint8_t Chip_IAP_PreSectorForReadWrite(uint32_t strSector, uint32_t endSector, u
  * @note	The addresses should be a 256 byte boundary and the number of bytes
  *			should be 256 | 512 | 1024 | 4096
  */
-uint8_t Chip_IAP_CopyRamToFlash(uint32_t dstAdd, uint32_t *srcAdd, uint32_t byteswrt);
+uint8_t Chip_IAP_CopyRamToFlash (uint32_t dstAdd, uint32_t *srcAdd, uint32_t byteswrt);
 
 /**
  * @brief	Erase sector
@@ -117,7 +116,7 @@ uint8_t Chip_IAP_CopyRamToFlash(uint32_t dstAdd, uint32_t *srcAdd, uint32_t byte
  * @return	Status code to indicate the command is executed successfully or not
  * @note	The end sector must be greater than or equal to start sector number
  */
-uint8_t Chip_IAP_EraseSector(uint32_t strSector, uint32_t endSector, uint8_t bankNum);
+uint8_t Chip_IAP_EraseSector (uint32_t strSector, uint32_t endSector, uint8_t bankNum);
 
 /**
  * @brief Blank check a sector or multiples sector of on-chip flash memory
@@ -131,19 +130,19 @@ uint8_t Chip_IAP_EraseSector(uint32_t strSector, uint32_t endSector, uint8_t ban
 // Result0:Offset of the first non blank word location if the Status Code is
 // SECTOR_NOT_BLANK.
 // Result1:Contents of non blank word location.
-uint8_t Chip_IAP_BlankCheckSector(uint32_t strSector, uint32_t endSector, uint8_t bankNum);
+uint8_t Chip_IAP_BlankCheckSector (uint32_t strSector, uint32_t endSector, uint8_t bankNum);
 
 /**
  * @brief	Read part identification number
  * @return	Part identification number
  */
-uint32_t Chip_IAP_ReadPID(void);
+uint32_t Chip_IAP_ReadPID (void);
 
 /**
  * @brief	Read boot code version number
  * @return	Boot code version number
  */
-uint32_t Chip_IAP_ReadBootCode(void);
+uint32_t Chip_IAP_ReadBootCode (void);
 
 /**
  * @brief	Compare the memory contents at two locations
@@ -154,19 +153,19 @@ uint32_t Chip_IAP_ReadBootCode(void);
  * @note	The addresses should be a word boundary and number of bytes should be
  *			a multiply of 4
  */
-uint8_t Chip_IAP_Compare(uint32_t dstAdd, uint32_t srcAdd, uint32_t bytescmp);
+uint8_t Chip_IAP_Compare (uint32_t dstAdd, uint32_t srcAdd, uint32_t bytescmp);
 
 /**
  * @brief	IAP reinvoke ISP to invoke the bootloader in ISP mode
  * @return	none
  */
-uint8_t Chip_IAP_ReinvokeISP(void);
+uint8_t Chip_IAP_ReinvokeISP (void);
 
 /**
  * @brief	Read the unique ID
  * @return	Status code to indicate the command is executed successfully or not
  */
-uint32_t Chip_IAP_ReadUID(void);
+uint32_t Chip_IAP_ReadUID (void);
 
 /**
  * @brief	Erase a page or multiple papers of on-chip flash memory
@@ -180,7 +179,7 @@ uint32_t Chip_IAP_ReadUID(void);
 // Result1:The second 32-bit word.
 // Result2:The third 32-bit word.
 // Result3:The fourth 32-bit word.
-uint8_t Chip_IAP_ErasePage(uint32_t strPage, uint32_t endPage);
+uint8_t Chip_IAP_ErasePage (uint32_t strPage, uint32_t endPage);
 
 /**
  * @brief	Set active boot flash bank
@@ -189,7 +188,7 @@ uint8_t Chip_IAP_ErasePage(uint32_t strPage, uint32_t endPage);
  * @note	Enable booting from the indicated flash unit by inserting a valid
  *					signature and invalidating the other flash unit
  */
-uint8_t Chip_IAP_SetBootFlashBank(uint8_t bankNum);
+uint8_t Chip_IAP_SetBootFlashBank (uint8_t bankNum);
 
 /**
  * @}

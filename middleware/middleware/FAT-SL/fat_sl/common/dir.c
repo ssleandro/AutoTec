@@ -50,9 +50,8 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
-
 
 /****************************************************************************
  *
@@ -75,162 +74,161 @@
  * 1 - if file was found
  *
  ***************************************************************************/
-unsigned char _f_findfilewc ( char * name, char * ext, F_POS * pos, F_DIRENTRY * * pde, unsigned char wc )
+unsigned char _f_findfilewc (char * name, char * ext, F_POS * pos, F_DIRENTRY * * pde, unsigned char wc)
 {
-  while ( pos->cluster < F_CLUSTER_RESERVED )
-  {
-    for ( ; pos->sector < pos->sectorend ; pos->sector++ )
-    {
-      F_DIRENTRY * de = (F_DIRENTRY *)( gl_sector + sizeof( F_DIRENTRY ) * pos->pos );
+	while (pos->cluster < F_CLUSTER_RESERVED)
+	{
+		for (; pos->sector < pos->sectorend; pos->sector++)
+		{
+			F_DIRENTRY * de = (F_DIRENTRY *)(gl_sector + sizeof(F_DIRENTRY) * pos->pos);
 
-      if ( _f_readglsector( pos->sector ) )
-      {
-        return 0;                                         /*not found*/
-      }
+			if (_f_readglsector(pos->sector))
+			{
+				return 0; /*not found*/
+			}
 
-      for ( ; pos->pos < F_SECTOR_SIZE / sizeof( F_DIRENTRY ) ; de++, pos->pos++ )
-      {
-        unsigned char  b, ok;
+			for (; pos->pos < F_SECTOR_SIZE / sizeof(F_DIRENTRY); de++, pos->pos++)
+			{
+				unsigned char b, ok;
 
-        if ( !de->name[0] )
-        {
-          return 0;                                                /*empty*/
-        }
+				if (!de->name[0])
+				{
+					return 0; /*empty*/
+				}
 
-        if ( (unsigned char)( de->name[0] ) == 0xe5 )
-        {
-          continue;                                                 /*deleted*/
-        }
+				if ((unsigned char)(de->name[0]) == 0xe5)
+				{
+					continue; /*deleted*/
+				}
 
-        if ( de->attr & F_ATTR_VOLUME )
-        {
-          continue;
-        }
+				if (de->attr & F_ATTR_VOLUME)
+				{
+					continue;
+				}
 
-        if ( wc )
-        {
-          for ( b = 0, ok = 1 ; b < sizeof( de->name ) ; b++ )
-          {
-            if ( name[b] == '*' )
-            {
-              break;
-            }
+				if (wc)
+				{
+					for (b = 0, ok = 1; b < sizeof(de->name); b++)
+					{
+						if (name[b] == '*')
+						{
+							break;
+						}
 
-            if ( name[b] != '?' )
-            {
-              if ( de->name[b] != name[b] )
-              {
-                ok = 0;
-                break;
-              }
-            }
-          }
+						if (name[b] != '?')
+						{
+							if (de->name[b] != name[b])
+							{
+								ok = 0;
+								break;
+							}
+						}
+					}
 
-          if ( ok )
-          {
-            for ( b = 0, ok = 1 ; b < sizeof( de->ext ) ; b++ )
-            {
-              if ( ext[b] == '*' )
-              {
-                if ( pde )
-                {
-                  *pde = de;
-                }
+					if (ok)
+					{
+						for (b = 0, ok = 1; b < sizeof(de->ext); b++)
+						{
+							if (ext[b] == '*')
+							{
+								if (pde)
+								{
+									*pde = de;
+								}
 
-                return 1;
-              }
+								return 1;
+							}
 
-              if ( ext[b] != '?' )
-              {
-                if ( de->ext[b] != ext[b] )
-                {
-                  ok = 0;
-                  break;
-                }
-              }
-            }
+							if (ext[b] != '?')
+							{
+								if (de->ext[b] != ext[b])
+								{
+									ok = 0;
+									break;
+								}
+							}
+						}
 
-            if ( ok )
-            {
-              if ( pde )
-              {
-                *pde = de;
-              }
+						if (ok)
+						{
+							if (pde)
+							{
+								*pde = de;
+							}
 
-              return 1;
-            }
-          }
-        }
-        else
-        {
-          for ( b = 0, ok = 1 ; b < sizeof( de->name ) ; b++ )
-          {
-            if ( de->name[b] != name[b] )
-            {
-              ok = 0;
-              break;
-            }
-          }
+							return 1;
+						}
+					}
+				}
+				else
+				{
+					for (b = 0, ok = 1; b < sizeof(de->name); b++)
+					{
+						if (de->name[b] != name[b])
+						{
+							ok = 0;
+							break;
+						}
+					}
 
-          if ( ok )
-          {
-            for ( b = 0, ok = 1 ; b < sizeof( de->ext ) ; b++ )
-            {
-              if ( de->ext[b] != ext[b] )
-              {
-                ok = 0;
-                break;
-              }
-            }
+					if (ok)
+					{
+						for (b = 0, ok = 1; b < sizeof(de->ext); b++)
+						{
+							if (de->ext[b] != ext[b])
+							{
+								ok = 0;
+								break;
+							}
+						}
 
-            if ( ok )
-            {
-              if ( pde )
-              {
-                *pde = de;
-              }
+						if (ok)
+						{
+							if (pde)
+							{
+								*pde = de;
+							}
 
-              return 1;
-            }
-          }
-        }
-      }
+							return 1;
+						}
+					}
+				}
+			}
 
-      pos->pos = 0;
-    }
+			pos->pos = 0;
+		}
 
-    if ( !pos->cluster )
-    {
-      if ( gl_volume.mediatype == F_FAT32_MEDIA )
-      {
-        pos->cluster = gl_volume.bootrecord.rootcluster;
-      }
-      else
-      {
-        return 0;
-      }
-    }
+		if (!pos->cluster)
+		{
+			if (gl_volume.mediatype == F_FAT32_MEDIA)
+			{
+				pos->cluster = gl_volume.bootrecord.rootcluster;
+			}
+			else
+			{
+				return 0;
+			}
+		}
 
-    {
-      unsigned long  nextcluster;
-      gl_volume.fatsector = (unsigned long)-1;
-      if ( _f_getclustervalue( pos->cluster, &nextcluster ) )
-      {
-        return 0;                                                          /*not found*/
-      }
+		{
+			unsigned long nextcluster;
+			gl_volume.fatsector = (unsigned long)-1;
+			if (_f_getclustervalue(pos->cluster, &nextcluster))
+			{
+				return 0; /*not found*/
+			}
 
-      if ( nextcluster >= F_CLUSTER_RESERVED )
-      {
-        return 0;                                            /*eof*/
-      }
+			if (nextcluster >= F_CLUSTER_RESERVED)
+			{
+				return 0; /*eof*/
+			}
 
-      _f_clustertopos( nextcluster, pos );
-    }
-  } /* _f_findfilewc */
+			_f_clustertopos(nextcluster, pos);
+		}
+	} /* _f_findfilewc */
 
-  return 0;
+	return 0;
 }
-
 
 /****************************************************************************
  *
@@ -245,47 +243,43 @@ unsigned char _f_findfilewc ( char * name, char * ext, F_POS * pos, F_DIRENTRY *
  * ext - extension of the file
  *
  ***************************************************************************/
-static void _f_getfilename ( char * dest, char * name, char * ext )
+static void _f_getfilename (char * dest, char * name, char * ext)
 {
-  unsigned char  a, len;
+	unsigned char a, len;
 
-  for ( len = a = F_MAXNAME ; a ; a--, len-- )
-  {
-    if ( name[a - 1] != ' ' )
-    {
-      break;
-    }
-  }
+	for (len = a = F_MAXNAME; a; a--, len--)
+	{
+		if (name[a - 1] != ' ')
+		{
+			break;
+		}
+	}
 
-  for ( a = 0 ; a < len ; a++ )
-  {
-    *dest++ = *name++;
-  }
+	for (a = 0; a < len; a++)
+	{
+		*dest++ = *name++;
+	}
 
+	for (len = a = F_MAXEXT; a; a--, len--)
+	{
+		if (ext[a - 1] != ' ')
+		{
+			break;
+		}
+	}
 
-  for ( len = a = F_MAXEXT ; a ; a--, len-- )
-  {
-    if ( ext[a - 1] != ' ' )
-    {
-      break;
-    }
-  }
+	if (len)
+	{
+		*dest++ = '.';
+	}
 
-  if ( len )
-  {
-    *dest++ = '.';
-  }
+	for (a = 0; a < len; a++)
+	{
+		*dest++ = *ext++;
+	}
 
-  for ( a = 0 ; a < len ; a++ )
-  {
-    *dest++ = *ext++;
-  }
-
-  *dest = 0; /*terminateit*/
+	*dest = 0; /*terminateit*/
 } /* _f_getfilename */
-
-
-
 
 /****************************************************************************
  *
@@ -302,21 +296,20 @@ static void _f_getfilename ( char * dest, char * name, char * ext )
  * directory entry cluster value
  *
  ***************************************************************************/
-unsigned long _f_getdecluster ( F_DIRENTRY * de )
+unsigned long _f_getdecluster (F_DIRENTRY * de)
 {
-  unsigned long  cluster;
+	unsigned long cluster;
 
-  if ( gl_volume.mediatype == F_FAT32_MEDIA )
-  {
-    cluster = _f_getword( &de->clusterhi );
-    cluster <<= 16;
-    cluster |= _f_getword( &de->clusterlo );
-    return cluster;
-  }
+	if (gl_volume.mediatype == F_FAT32_MEDIA)
+	{
+		cluster = _f_getword(&de->clusterhi);
+		cluster <<= 16;
+		cluster |= _f_getword(&de->clusterlo);
+		return cluster;
+	}
 
-  return _f_getword( &de->clusterlo );
+	return _f_getword(&de->clusterlo);
 }
-
 
 /****************************************************************************
  *
@@ -330,19 +323,18 @@ unsigned long _f_getdecluster ( F_DIRENTRY * de )
  * cluster - value of the start cluster
  *
  ***************************************************************************/
-void _f_setdecluster ( F_DIRENTRY * de, unsigned long cluster )
+void _f_setdecluster (F_DIRENTRY * de, unsigned long cluster)
 {
-  _f_setword( &de->clusterlo, (unsigned short)( cluster & 0xffff ) );
-  if ( gl_volume.mediatype == F_FAT32_MEDIA )
-  {
-    _f_setword( &de->clusterhi, (unsigned short)( cluster >> 16 ) );
-  }
-  else
-  {
-    _f_setword( &de->clusterhi, (unsigned short)0 );
-  }
+	_f_setword(&de->clusterlo, (unsigned short)(cluster & 0xffff));
+	if (gl_volume.mediatype == F_FAT32_MEDIA)
+	{
+		_f_setword(&de->clusterhi, (unsigned short)(cluster >> 16));
+	}
+	else
+	{
+		_f_setword(&de->clusterhi, (unsigned short)0);
+	}
 }
-
 
 /****************************************************************************
  *
@@ -362,137 +354,135 @@ void _f_setdecluster ( F_DIRENTRY * de, unsigned long cluster )
  * 1 - if path was found
  *
  ***************************************************************************/
-unsigned char _f_findpath ( F_NAME * fsname, F_POS * pos )
+unsigned char _f_findpath (F_NAME * fsname, F_POS * pos)
 {
-  char       * path = fsname->path;
-  char       * mpath = path;
-  F_DIRENTRY * de;
+	char * path = fsname->path;
+	char * mpath = path;
+	F_DIRENTRY * de;
 
-  _f_clustertopos( 0, pos );
+	_f_clustertopos(0, pos);
 
-  for ( ; *path ; )
-  {
-    char           name[F_MAXNAME];
-    char           ext[F_MAXEXT];
+	for (; *path;)
+	{
+		char name[F_MAXNAME];
+		char ext[F_MAXEXT];
 
-    unsigned char  len = _f_setnameext( path, name, ext );
+		unsigned char len = _f_setnameext(path, name, ext);
 
-    if ( ( pos->cluster == 0 ) && ( len == 1 ) && ( name[0] == '.' ) )
-    {
-      _f_clustertopos( 0, pos );
-    }
-    else
-    {
-      if ( !_f_findfilewc( name, ext, pos, &de, 0 ) )
-      {
-        return 0;
-      }
+		if ((pos->cluster == 0) && (len == 1) && (name[0] == '.'))
+		{
+			_f_clustertopos(0, pos);
+		}
+		else
+		{
+			if (!_f_findfilewc(name, ext, pos, &de, 0))
+			{
+				return 0;
+			}
 
-      if ( !( de->attr & F_ATTR_DIR ) )
-      {
-        return 0;
-      }
+			if (!(de->attr & F_ATTR_DIR))
+			{
+				return 0;
+			}
 
-      _f_clustertopos( _f_getdecluster( de ), pos );
-    }
+			_f_clustertopos(_f_getdecluster(de), pos);
+		}
 
+		if (name[0] == '.')
+		{
+			if (len == 1)
+			{
+				path += len;
 
-    if ( name[0] == '.' )
-    {
-      if ( len == 1 )
-      {
-        path += len;
+				if (!(*path))
+				{
+					if (mpath != fsname->path)
+					{
+						mpath--; /*if we are now at the top*/
+					}
 
-        if ( !( *path ) )
-        {
-          if ( mpath != fsname->path )
-          {
-            mpath--;                                  /*if we are now at the top*/
-          }
+					break;
+				}
 
-          break;
-        }
+				path++;
+				continue;
+			}
 
-        path++;
-        continue;
-      }
+			if (name[1] != '.')
+			{
+				return 0; /*invalid name*/
+			}
 
-      if ( name[1] != '.' )
-      {
-        return 0;                       /*invalid name*/
-      }
+			if (len != 2)
+			{
+				return 0; /*invalid name !*/
+			}
 
-      if ( len != 2 )
-      {
-        return 0;                 /*invalid name !*/
-      }
+			path += len;
 
-      path += len;
+			if (mpath == fsname->path)
+			{
+				return 0; /*we are in the top*/
+			}
 
-      if ( mpath == fsname->path )
-      {
-        return 0;                              /*we are in the top*/
-      }
+			mpath--; /*no on separator*/
+			for (;;)
+			{
+				if (mpath == fsname->path)
+				{
+					break; /*we are now at the top*/
+				}
 
-      mpath--;       /*no on separator*/
-      for ( ; ; )
-      {
-        if ( mpath == fsname->path )
-        {
-          break;                                /*we are now at the top*/
-        }
+				mpath--;
+				if (*mpath == '/')
+				{
+					mpath++;
+					break;
+				}
+			}
 
-        mpath--;
-        if ( *mpath == '/' )
-        {
-          mpath++;
-          break;
-        }
-      }
+			if (!(*path))
+			{
+				if (mpath != fsname->path)
+				{
+					mpath--; /*if we are now at the top*/
+				}
 
-      if ( !( *path ) )
-      {
-        if ( mpath != fsname->path )
-        {
-          mpath--;                                /*if we are now at the top*/
-        }
+				break;
+			}
 
-        break;
-      }
+			path++;
+			continue;
+		}
+		else
+		{
+			if (path == mpath) /*if no was dots just step*/
+			{
+				path += len;
+				mpath += len;
+			}
+			else
+			{
+				unsigned char a;
+				for (a = 0; a < len; a++)
+				{
+					*mpath++ = *path++; /*copy if in different pos*/
+				}
+			}
+		}
 
-      path++;
-      continue;
-    }
-    else
-    {
-      if ( path == mpath )                              /*if no was dots just step*/
-      {
-        path += len;
-        mpath += len;
-      }
-      else
-      {
-        unsigned char  a;
-        for ( a = 0 ; a < len ; a++ )
-        {
-          *mpath++ = *path++;                            /*copy if in different pos*/
-        }
-      }
-    }
+		if (!(*path))
+		{
+			break;
+		}
 
-    if ( !( *path ) )
-    {
-      break;
-    }
+		path++;
+		*mpath++ = '/'; /*add separator*/
+	}
 
-    path++;
-    *mpath++ = '/';   /*add separator*/
-  }
-
-  *mpath = 0; /*terminate it*/
-  return 1;
+	*mpath = 0; /*terminate it*/
+	return 1;
 } /* _f_findpath */
-
 
 /****************************************************************************
  *
@@ -510,38 +500,36 @@ unsigned char _f_findpath ( F_NAME * fsname, F_POS * pos )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char fn_getcwd ( char * buffer, unsigned char maxlen, char root )
+unsigned char fn_getcwd (char * buffer, unsigned char maxlen, char root)
 {
-  unsigned char  a;
+	unsigned char a;
 
-  if ( !maxlen )
-  {
-    return F_NO_ERROR;
-  }
+	if (!maxlen)
+	{
+		return F_NO_ERROR;
+	}
 
-  maxlen--;     /*need for termination*/
-  if ( root && maxlen )
-  {
-    *buffer++ = '/';
-    maxlen--;
-  }
+	maxlen--; /*need for termination*/
+	if (root && maxlen)
+	{
+		*buffer++ = '/';
+		maxlen--;
+	}
 
-  for ( a = 0 ; a < maxlen ; a++ )
-  {
-    char  ch = gl_volume.cwd[a];
-    buffer[a] = ch;
-    if ( !ch )
-    {
-      break;
-    }
-  }
+	for (a = 0; a < maxlen; a++)
+	{
+		char ch = gl_volume.cwd[a];
+		buffer[a] = ch;
+		if (!ch)
+		{
+			break;
+		}
+	}
 
-  buffer[a] = 0;    /*add terminator at the end*/
+	buffer[a] = 0; /*add terminator at the end*/
 
-  return F_NO_ERROR;
+	return F_NO_ERROR;
 } /* fn_getcwd */
-
-
 
 /****************************************************************************
  *
@@ -559,36 +547,33 @@ unsigned char fn_getcwd ( char * buffer, unsigned char maxlen, char root )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char fn_findfirst ( const char * filename, F_FIND * find )
+unsigned char fn_findfirst (const char * filename, F_FIND * find)
 {
-  unsigned char  ret;
+	unsigned char ret;
 
-  if ( _f_setfsname( filename, &find->findfsname ) )
-  {
-    return F_ERR_INVALIDNAME;  /*invalid name*/
-  }
+	if (_f_setfsname(filename, &find->findfsname))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  if ( _f_checkname( find->findfsname.filename, find->findfsname.fileext ) )
-  {
-    return F_ERR_INVALIDNAME;  /*invalid name, wildcard is ok*/
-  }
+	if (_f_checkname(find->findfsname.filename, find->findfsname.fileext))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name, wildcard is ok*/
+	}
 
+	ret = _f_getvolume();
+	if (ret)
+	{
+		return ret;
+	}
 
-  ret = _f_getvolume();
-  if ( ret )
-  {
-    return ret;
-  }
+	if (!_f_findpath(&find->findfsname, &find->pos))
+	{
+		return F_ERR_INVALIDDIR; /*search for path*/
+	}
 
-  if ( !_f_findpath( &find->findfsname, &find->pos ) )
-  {
-    return F_ERR_INVALIDDIR;   /*search for path*/
-  }
-
-  return fn_findnext( find );
+	return fn_findnext(find);
 } /* fn_findfirst */
-
-
 
 /****************************************************************************
  *
@@ -605,46 +590,44 @@ unsigned char fn_findfirst ( const char * filename, F_FIND * find )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char fn_findnext ( F_FIND * find )
+unsigned char fn_findnext (F_FIND * find)
 {
-  F_DIRENTRY   * de;
-  unsigned char  a;
-  unsigned char  ret;
+	F_DIRENTRY * de;
+	unsigned char a;
+	unsigned char ret;
 
-  ret = _f_getvolume();
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_getvolume();
+	if (ret)
+	{
+		return ret;
+	}
 
-  if ( !_f_findfilewc( find->findfsname.filename, find->findfsname.fileext, &find->pos, &de, 1 ) )
-  {
-    return F_ERR_NOTFOUND;
-  }
+	if (!_f_findfilewc(find->findfsname.filename, find->findfsname.fileext, &find->pos, &de, 1))
+	{
+		return F_ERR_NOTFOUND;
+	}
 
-  for ( a = 0 ; a < F_MAXNAME ; a++ )
-  {
-    find->name[a] = de->name[a];
-  }
+	for (a = 0; a < F_MAXNAME; a++)
+	{
+		find->name[a] = de->name[a];
+	}
 
-  for ( a = 0 ; a < F_MAXEXT ; a++ )
-  {
-    find->ext[a] = de->ext[a];
-  }
+	for (a = 0; a < F_MAXEXT; a++)
+	{
+		find->ext[a] = de->ext[a];
+	}
 
-  _f_getfilename( find->filename, (char *)de->name, (char *)de->ext );
+	_f_getfilename(find->filename, (char *)de->name, (char *)de->ext);
 
-  find->attr = de->attr;
-  find->cdate = _f_getword( &de->cdate );
-  find->ctime = _f_getword( &de->ctime );
-  find->filesize = (long)_f_getlong( &de->filesize );
-  find->cluster = _f_getdecluster( de );
-  find->pos.pos++;   /*goto next position*/
+	find->attr = de->attr;
+	find->cdate = _f_getword(&de->cdate);
+	find->ctime = _f_getword(&de->ctime);
+	find->filesize = (long)_f_getlong(&de->filesize);
+	find->cluster = _f_getdecluster(de);
+	find->pos.pos++; /*goto next position*/
 
-  return 0;
+	return 0;
 } /* fn_findnext */
-
-
 
 /****************************************************************************
  *
@@ -662,58 +645,56 @@ unsigned char fn_findnext ( F_FIND * find )
  * other - if any error
  *
  ***************************************************************************/
-unsigned char fn_chdir ( const char * dirname )
+unsigned char fn_chdir (const char * dirname)
 {
-  F_POS          pos;
-  F_NAME         fsname;
-  unsigned char  len;
-  unsigned char  a;
-  unsigned char  ret;
+	F_POS pos;
+	F_NAME fsname;
+	unsigned char len;
+	unsigned char a;
+	unsigned char ret;
 
-  ret = _f_setfsname( dirname, &fsname );
+	ret = _f_setfsname(dirname, &fsname);
 
-  if ( ret == 1 )
-  {
-    return F_ERR_INVALIDNAME;             /*invalid name*/
-  }
+	if (ret == 1)
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  if ( _f_checknamewc( fsname.filename, fsname.fileext ) )
-  {
-    return F_ERR_INVALIDNAME;                                                    /*invalid name*/
-  }
+	if (_f_checknamewc(fsname.filename, fsname.fileext))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  ret = _f_getvolume();
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_getvolume();
+	if (ret)
+	{
+		return ret;
+	}
 
-  for ( len = 0 ; fsname.path[len] ; )
-  {
-    len++;
-  }
+	for (len = 0; fsname.path[len];)
+	{
+		len++;
+	}
 
-  if ( len && ( ( fsname.filename[0] != 32 ) || ( fsname.fileext[0] != 32 ) ) )
-  {
-    fsname.path[len++] = '/';
-  }
+	if (len && ((fsname.filename[0] != 32) || (fsname.fileext[0] != 32)))
+	{
+		fsname.path[len++] = '/';
+	}
 
-  _f_getfilename( fsname.path + len, fsname.filename, fsname.fileext );
+	_f_getfilename(fsname.path + len, fsname.filename, fsname.fileext);
 
-  if ( !( _f_findpath( &fsname, &pos ) ) )
-  {
-    return F_ERR_NOTFOUND;
-  }
+	if (!(_f_findpath(&fsname, &pos)))
+	{
+		return F_ERR_NOTFOUND;
+	}
 
-  for ( a = 0 ; a < F_MAXPATH ; a++ )
-  {
-    gl_volume.cwd[a] = fsname.path[a];
-  }
+	for (a = 0; a < F_MAXPATH; a++)
+	{
+		gl_volume.cwd[a] = fsname.path[a];
+	}
 
-  return F_NO_ERROR;
+	return F_NO_ERROR;
 } /* fn_chdir */
-
-
 
 /****************************************************************************
  *
@@ -728,24 +709,20 @@ unsigned char fn_chdir ( const char * dirname )
  * ext - file extension (3)
  *
  ***************************************************************************/
-static void _f_initentry ( F_DIRENTRY * de, char * name, char * ext )
+static void _f_initentry (F_DIRENTRY * de, char * name, char * ext)
 {
-  unsigned short  date;
-  unsigned short  time;
+	unsigned short date;
+	unsigned short time;
 
-  psp_memset( de, 0, sizeof( F_DIRENTRY ) ); /*reset all entries*/
+	psp_memset(de, 0, sizeof(F_DIRENTRY)); /*reset all entries*/
 
-  psp_memcpy( de->name, name, sizeof( de->name ) );
-  psp_memcpy( de->ext, ext, sizeof( de->ext ) );
+	psp_memcpy(de->name, name, sizeof(de->name));
+	psp_memcpy(de->ext, ext, sizeof(de->ext));
 
-  f_igettimedate( &time, &date );
-  _f_setword( &de->cdate, date ); /*if there is realtime clock then creation date could be set from*/
-  _f_setword( &de->ctime, time ); /*if there is realtime clock then creation time could be set from*/
+	f_igettimedate(&time, &date);
+	_f_setword(&de->cdate, date); /*if there is realtime clock then creation date could be set from*/
+	_f_setword(&de->ctime, time); /*if there is realtime clock then creation time could be set from*/
 }
-
-
-
-
 
 /****************************************************************************
  *
@@ -765,147 +742,145 @@ static void _f_initentry ( F_DIRENTRY * de, char * name, char * ext )
  * other - if any error (see FS_xxx errorcodes)
  *
  ***************************************************************************/
-unsigned char _f_addentry ( F_NAME * fsname, F_POS * pos, F_DIRENTRY * * pde )
+unsigned char _f_addentry (F_NAME * fsname, F_POS * pos, F_DIRENTRY * * pde)
 {
-  unsigned char   ret;
-  unsigned short  date;
-  unsigned short  time;
+	unsigned char ret;
+	unsigned short date;
+	unsigned short time;
 
-  if ( !fsname->filename[0] )
-  {
-    return F_ERR_INVALIDNAME;
-  }
+	if (!fsname->filename[0])
+	{
+		return F_ERR_INVALIDNAME;
+	}
 
-  if ( fsname->filename[0] == '.' )
-  {
-    return F_ERR_INVALIDNAME;
-  }
+	if (fsname->filename[0] == '.')
+	{
+		return F_ERR_INVALIDNAME;
+	}
 
-  while ( pos->cluster < F_CLUSTER_RESERVED )
-  {
-    for ( ; pos->sector < pos->sectorend ; pos->sector++ )
-    {
-      F_DIRENTRY * de = (F_DIRENTRY *)( gl_sector + sizeof( F_DIRENTRY ) * pos->pos );
+	while (pos->cluster < F_CLUSTER_RESERVED)
+	{
+		for (; pos->sector < pos->sectorend; pos->sector++)
+		{
+			F_DIRENTRY * de = (F_DIRENTRY *)(gl_sector + sizeof(F_DIRENTRY) * pos->pos);
 
-      ret = _f_readglsector( pos->sector );
-      if ( ret )
-      {
-        return ret;
-      }
+			ret = _f_readglsector(pos->sector);
+			if (ret)
+			{
+				return ret;
+			}
 
-      for ( ; pos->pos < F_SECTOR_SIZE / sizeof( F_DIRENTRY ) ; de++, pos->pos++ )
-      {
-        if ( ( !de->name[0] ) || ( (unsigned char)( de->name[0] ) == 0xe5 ) )
-        {
-          _f_initentry( de, fsname->filename, fsname->fileext );
-          if ( gl_volume.mediatype == F_FAT32_MEDIA )
-          {
-            f_igettimedate( &time, &date );
-            _f_setword( &de->crtdate, date );             /*if there is realtime clock then creation date could be set from*/
-            _f_setword( &de->crttime, time );             /*if there is realtime clock then creation time could be set from*/
-            _f_setword( &de->lastaccessdate, date );      /*if there is realtime clock then creation date could be set from*/
-          }
+			for (; pos->pos < F_SECTOR_SIZE / sizeof(F_DIRENTRY); de++, pos->pos++)
+			{
+				if ((!de->name[0]) || ((unsigned char)(de->name[0]) == 0xe5))
+				{
+					_f_initentry(de, fsname->filename, fsname->fileext);
+					if (gl_volume.mediatype == F_FAT32_MEDIA)
+					{
+						f_igettimedate(&time, &date);
+						_f_setword(&de->crtdate, date); /*if there is realtime clock then creation date could be set from*/
+						_f_setword(&de->crttime, time); /*if there is realtime clock then creation time could be set from*/
+						_f_setword(&de->lastaccessdate, date); /*if there is realtime clock then creation date could be set from*/
+					}
 
-          if ( pde )
-          {
-            *pde = de;
-          }
+					if (pde)
+					{
+						*pde = de;
+					}
 
-          return F_NO_ERROR;
-        }
-      }
+					return F_NO_ERROR;
+				}
+			}
 
-      pos->pos = 0;
-    }
+			pos->pos = 0;
+		}
 
-    if ( !pos->cluster )
-    {
-      if ( gl_volume.mediatype == F_FAT32_MEDIA )
-      {
-        pos->cluster = gl_volume.bootrecord.rootcluster;
-      }
-      else
-      {
-        return F_ERR_NOMOREENTRY;
-      }
-    }
+		if (!pos->cluster)
+		{
+			if (gl_volume.mediatype == F_FAT32_MEDIA)
+			{
+				pos->cluster = gl_volume.bootrecord.rootcluster;
+			}
+			else
+			{
+				return F_ERR_NOMOREENTRY;
+			}
+		}
 
-    {
-      unsigned long  cluster;
+		{
+			unsigned long cluster;
 
-      gl_volume.fatsector = (unsigned long)-1;
-      ret = _f_getclustervalue( pos->cluster, &cluster );    /*try to get next cluster*/
-      if ( ret )
-      {
-        return ret;
-      }
+			gl_volume.fatsector = (unsigned long)-1;
+			ret = _f_getclustervalue(pos->cluster, &cluster); /*try to get next cluster*/
+			if (ret)
+			{
+				return ret;
+			}
 
-      if ( cluster < F_CLUSTER_RESERVED )
-      {
-        _f_clustertopos( cluster, pos );
-      }
-      else
-      {
-        ret = _f_alloccluster( &cluster );        /*get a new one*/
-        if ( ret )
-        {
-          return ret;
-        }
+			if (cluster < F_CLUSTER_RESERVED)
+			{
+				_f_clustertopos(cluster, pos);
+			}
+			else
+			{
+				ret = _f_alloccluster(&cluster); /*get a new one*/
+				if (ret)
+				{
+					return ret;
+				}
 
-        if ( cluster < F_CLUSTER_RESERVED )
-        {
-          if ( gl_file.mode != F_FILE_CLOSE )
-          {
-            return F_ERR_NOMOREENTRY;
-          }
+				if (cluster < F_CLUSTER_RESERVED)
+				{
+					if (gl_file.mode != F_FILE_CLOSE)
+					{
+						return F_ERR_NOMOREENTRY;
+					}
 
-          _f_clustertopos( cluster, &gl_file.pos );
+					_f_clustertopos(cluster, &gl_file.pos);
 
-          ret = _f_setclustervalue( gl_file.pos.cluster, F_CLUSTER_LAST );
-          if ( ret )
-          {
-            return ret;
-          }
+					ret = _f_setclustervalue(gl_file.pos.cluster, F_CLUSTER_LAST);
+					if (ret)
+					{
+						return ret;
+					}
 
-          ret = _f_setclustervalue( pos->cluster, gl_file.pos.cluster );
-          if ( ret )
-          {
-            return ret;
-          }
+					ret = _f_setclustervalue(pos->cluster, gl_file.pos.cluster);
+					if (ret)
+					{
+						return ret;
+					}
 
-          ret = _f_writefatsector();
-          if ( ret )
-          {
-            return ret;
-          }
+					ret = _f_writefatsector();
+					if (ret)
+					{
+						return ret;
+					}
 
-          gl_volume.fatsector = (unsigned long)-1;
-          psp_memset( gl_sector, 0, F_SECTOR_SIZE );
-          while ( gl_file.pos.sector < gl_file.pos.sectorend )
-          {
-            ret = _f_writeglsector( gl_file.pos.sector );
-            if ( ret )
-            {
-              return ret;
-            }
+					gl_volume.fatsector = (unsigned long)-1;
+					psp_memset(gl_sector, 0, F_SECTOR_SIZE);
+					while (gl_file.pos.sector < gl_file.pos.sectorend)
+					{
+						ret = _f_writeglsector(gl_file.pos.sector);
+						if (ret)
+						{
+							return ret;
+						}
 
-            gl_file.pos.sector++;
-          }
+						gl_file.pos.sector++;
+					}
 
-          _f_clustertopos( gl_file.pos.cluster, pos );
-        }
-        else
-        {
-          return F_ERR_NOMOREENTRY;
-        }
-      }
-    }
-  } /* _f_addentry */
+					_f_clustertopos(gl_file.pos.cluster, pos);
+				}
+				else
+				{
+					return F_ERR_NOMOREENTRY;
+				}
+			}
+		}
+	} /* _f_addentry */
 
-  return F_ERR_NOMOREENTRY;
+	return F_ERR_NOMOREENTRY;
 }
-
-
 
 /****************************************************************************
  *
@@ -922,153 +897,149 @@ unsigned char _f_addentry ( F_NAME * fsname, F_POS * pos, F_DIRENTRY * * pde )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char fn_mkdir ( const char * dirname )
+unsigned char fn_mkdir (const char * dirname)
 {
-  F_POS          posdir;
-  F_POS          pos;
-  F_DIRENTRY   * de;
-  F_NAME         fsname;
-  unsigned long  cluster;
-  unsigned char  ret;
+	F_POS posdir;
+	F_POS pos;
+	F_DIRENTRY * de;
+	F_NAME fsname;
+	unsigned long cluster;
+	unsigned char ret;
 
- #if F_FILE_CHANGED_EVENT
-  ST_FILE_CHANGED  fc;
- #endif
+#if F_FILE_CHANGED_EVENT
+	ST_FILE_CHANGED fc;
+#endif
 
-  if ( _f_setfsname( dirname, &fsname ) )
-  {
-    return F_ERR_INVALIDNAME;                                    /*invalid name*/
-  }
+	if (_f_setfsname(dirname, &fsname))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  if ( _f_checknamewc( fsname.filename, fsname.fileext ) )
-  {
-    return F_ERR_INVALIDNAME;                                                    /*invalid name*/
-  }
+	if (_f_checknamewc(fsname.filename, fsname.fileext))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  ret = _f_getvolume();
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_getvolume();
+	if (ret)
+	{
+		return ret;
+	}
 
-  if ( !_f_findpath( &fsname, &posdir ) )
-  {
-    return F_ERR_INVALIDDIR;
-  }
+	if (!_f_findpath(&fsname, &posdir))
+	{
+		return F_ERR_INVALIDDIR;
+	}
 
-  pos = posdir;
+	pos = posdir;
 
-  if ( fsname.filename[0] == '.' )
-  {
-    return F_ERR_NOTFOUND;
-  }
+	if (fsname.filename[0] == '.')
+	{
+		return F_ERR_NOTFOUND;
+	}
 
-  if ( _f_findfilewc( fsname.filename, fsname.fileext, &pos, &de, 0 ) )
-  {
-    return F_ERR_DUPLICATED;
-  }
+	if (_f_findfilewc(fsname.filename, fsname.fileext, &pos, &de, 0))
+	{
+		return F_ERR_DUPLICATED;
+	}
 
-  pos = posdir;
+	pos = posdir;
 
-  gl_volume.fatsector = (unsigned long)-1;
-  ret = _f_alloccluster( &cluster );
-  if ( ret )
-  {
-    return ret;
-  }
+	gl_volume.fatsector = (unsigned long)-1;
+	ret = _f_alloccluster(&cluster);
+	if (ret)
+	{
+		return ret;
+	}
 
-  ret = _f_addentry( &fsname, &pos, &de );
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_addentry(&fsname, &pos, &de);
+	if (ret)
+	{
+		return ret;
+	}
 
-  de->attr |= F_ATTR_DIR;       /*set as directory*/
+	de->attr |= F_ATTR_DIR; /*set as directory*/
 
- #if F_FILE_CHANGED_EVENT
-  if ( f_filechangedevent )
-  {
-    fc.action = FACTION_ADDED;
-    fc.flags = FFLAGS_DIR_NAME | FFLAGS_ATTRIBUTES | FFLAGS_SIZE | FFLAGS_LAST_WRITE;
-    fc.attr = de->attr;
-    fc.ctime = _f_getword( de->ctime );
-    fc.cdate = _f_getword( de->cdate );
-    fc.filesize = _f_getlong( de->filesize );
-  }
+#if F_FILE_CHANGED_EVENT
+	if ( f_filechangedevent )
+	{
+		fc.action = FACTION_ADDED;
+		fc.flags = FFLAGS_DIR_NAME | FFLAGS_ATTRIBUTES | FFLAGS_SIZE | FFLAGS_LAST_WRITE;
+		fc.attr = de->attr;
+		fc.ctime = _f_getword( de->ctime );
+		fc.cdate = _f_getword( de->cdate );
+		fc.filesize = _f_getlong( de->filesize );
+	}
 
- #endif
+#endif
 
-  if ( gl_file.mode != F_FILE_CLOSE )
-  {
-    return F_ERR_LOCKED;
-  }
+	if (gl_file.mode != F_FILE_CLOSE)
+	{
+		return F_ERR_LOCKED;
+	}
 
-  _f_clustertopos( cluster, &gl_file.pos );
-  _f_setdecluster( de, cluster ); /*new dir*/
+	_f_clustertopos(cluster, &gl_file.pos);
+	_f_setdecluster(de, cluster); /*new dir*/
 
-  (void)_f_writeglsector( (unsigned long)-1 );  /*write actual directory sector*/
+	(void)_f_writeglsector((unsigned long)-1); /*write actual directory sector*/
 
+	de = (F_DIRENTRY *)gl_sector;
 
-  de = (F_DIRENTRY *)gl_sector;
+	_f_initentry(de, ".       ", "   ");
+	de->attr = F_ATTR_DIR; /*set as directory*/
+	_f_setdecluster(de, cluster); /*current*/
+	de++;
 
-  _f_initentry( de, ".       ", "   " );
-  de->attr = F_ATTR_DIR;          /*set as directory*/
-  _f_setdecluster( de, cluster ); /*current*/
-  de++;
+	_f_initentry(de, "..      ", "   ");
+	de->attr = F_ATTR_DIR; /*set as directory*/
+	_f_setdecluster(de, posdir.cluster); /*parent*/
+	de++;
 
-  _f_initentry( de, "..      ", "   " );
-  de->attr = F_ATTR_DIR;                 /*set as directory*/
-  _f_setdecluster( de, posdir.cluster ); /*parent*/
-  de++;
+	psp_memset(de, 0, ( F_SECTOR_SIZE - 2 * sizeof( F_DIRENTRY ) ));
 
-  psp_memset( de, 0, ( F_SECTOR_SIZE - 2 * sizeof( F_DIRENTRY ) ) );
+	ret = _f_writeglsector(gl_file.pos.sector);
+	if (ret)
+	{
+		return ret;
+	}
 
+	gl_file.pos.sector++;
+	psp_memset(gl_sector, 0, (2 * sizeof(F_DIRENTRY)));
+	while (gl_file.pos.sector < gl_file.pos.sectorend)
+	{
+		ret = _f_writeglsector(gl_file.pos.sector);
+		if (ret)
+		{
+			return ret;
+		}
 
-  ret = _f_writeglsector( gl_file.pos.sector );
-  if ( ret )
-  {
-    return ret;
-  }
+		gl_file.pos.sector++;
+	}
 
-  gl_file.pos.sector++;
-  psp_memset( gl_sector, 0, ( 2 * sizeof( F_DIRENTRY ) ) );
-  while ( gl_file.pos.sector < gl_file.pos.sectorend )
-  {
-    ret = _f_writeglsector( gl_file.pos.sector );
-    if ( ret )
-    {
-      return ret;
-    }
+	gl_volume.fatsector = (unsigned long)-1;
+	ret = _f_setclustervalue(gl_file.pos.cluster, F_CLUSTER_LAST);
+	if (ret)
+	{
+		return ret;
+	}
 
-    gl_file.pos.sector++;
-  }
+	ret = _f_writefatsector();
+#if F_FILE_CHANGED_EVENT
+	if ( f_filechangedevent && !ret )
+	{
+		fc.action = FACTION_ADDED;
+		fc.flags = FFLAGS_DIR_NAME;
 
-  gl_volume.fatsector = (unsigned long)-1;
-  ret = _f_setclustervalue( gl_file.pos.cluster, F_CLUSTER_LAST );
-  if ( ret )
-  {
-    return ret;
-  }
+		if ( !_f_createfullname( fc.filename, sizeof( fc.filename ), fsname.path, fsname.filename, fsname.fileext ) )
+		{
+			f_filechangedevent( &fc );
+		}
+	}
 
-  ret = _f_writefatsector();
- #if F_FILE_CHANGED_EVENT
-  if ( f_filechangedevent && !ret )
-  {
-    fc.action = FACTION_ADDED;
-    fc.flags = FFLAGS_DIR_NAME;
+#endif
 
-    if ( !_f_createfullname( fc.filename, sizeof( fc.filename ), fsname.path, fsname.filename, fsname.fileext ) )
-    {
-      f_filechangedevent( &fc );
-    }
-  }
-
- #endif
-
-  return ret;
+	return ret;
 } /* fn_mkdir */
-
-
 
 /****************************************************************************
  *
@@ -1085,137 +1056,136 @@ unsigned char fn_mkdir ( const char * dirname )
  * error code or zero if successful
  *
  ***************************************************************************/
-unsigned char fn_rmdir ( const char * dirname )
+unsigned char fn_rmdir (const char * dirname)
 {
-  unsigned char  ret;
-  F_POS          pos;
-  F_DIRENTRY   * de;
-  F_NAME         fsname;
-  unsigned long  dirsector;
-  unsigned char  a;
+	unsigned char ret;
+	F_POS pos;
+	F_DIRENTRY * de;
+	F_NAME fsname;
+	unsigned long dirsector;
+	unsigned char a;
 
-  if ( _f_setfsname( dirname, &fsname ) )
-  {
-    return F_ERR_INVALIDNAME;                                    /*invalid name*/
-  }
+	if (_f_setfsname(dirname, &fsname))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  if ( _f_checknamewc( fsname.filename, fsname.fileext ) )
-  {
-    return F_ERR_INVALIDNAME;                                                    /*invalid name*/
-  }
+	if (_f_checknamewc(fsname.filename, fsname.fileext))
+	{
+		return F_ERR_INVALIDNAME; /*invalid name*/
+	}
 
-  if ( fsname.filename[0] == '.' )
-  {
-    return F_ERR_NOTFOUND;
-  }
+	if (fsname.filename[0] == '.')
+	{
+		return F_ERR_NOTFOUND;
+	}
 
-  ret = _f_getvolume();
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_getvolume();
+	if (ret)
+	{
+		return ret;
+	}
 
-  if ( !( _f_findpath( &fsname, &pos ) ) )
-  {
-    return F_ERR_INVALIDDIR;
-  }
+	if (!(_f_findpath(&fsname, &pos)))
+	{
+		return F_ERR_INVALIDDIR;
+	}
 
-  if ( !_f_findfilewc( fsname.filename, fsname.fileext, &pos, &de, 0 ) )
-  {
-    return F_ERR_NOTFOUND;
-  }
+	if (!_f_findfilewc(fsname.filename, fsname.fileext, &pos, &de, 0))
+	{
+		return F_ERR_NOTFOUND;
+	}
 
-  if ( !( de->attr & F_ATTR_DIR ) )
-  {
-    return F_ERR_INVALIDDIR;                                       /*not a directory*/
-  }
+	if (!(de->attr & F_ATTR_DIR))
+	{
+		return F_ERR_INVALIDDIR; /*not a directory*/
+	}
 
-  dirsector = gl_volume.actsector;
+	dirsector = gl_volume.actsector;
 
-  if ( gl_file.mode != F_FILE_CLOSE )
-  {
-    return F_ERR_LOCKED;
-  }
+	if (gl_file.mode != F_FILE_CLOSE)
+	{
+		return F_ERR_LOCKED;
+	}
 
-  _f_clustertopos( _f_getdecluster( de ), &gl_file.pos );
+	_f_clustertopos(_f_getdecluster(de), &gl_file.pos);
 
-  for ( ; ; )
-  {
-    F_DIRENTRY * de2;
-    char         ch = 0;
+	for (;;)
+	{
+		F_DIRENTRY * de2;
+		char ch = 0;
 
-    ret = _f_getcurrsector();
-    if ( ret == F_ERR_EOF )
-    {
-      break;
-    }
+		ret = _f_getcurrsector();
+		if (ret == F_ERR_EOF)
+		{
+			break;
+		}
 
-    if ( ret )
-    {
-      return ret;
-    }
+		if (ret)
+		{
+			return ret;
+		}
 
-    de2 = (F_DIRENTRY *)gl_sector;
-    for ( a = 0 ; a < ( F_SECTOR_SIZE / sizeof( F_DIRENTRY ) ) ; a++, de2++ )
-    {
-      ch = de2->name[0];
-      if ( !ch )
-      {
-        break;
-      }
+		de2 = (F_DIRENTRY *)gl_sector;
+		for (a = 0; a < ( F_SECTOR_SIZE / sizeof(F_DIRENTRY)); a++, de2++)
+		{
+			ch = de2->name[0];
+			if (!ch)
+			{
+				break;
+			}
 
-      if ( (unsigned char)ch == 0xe5 )
-      {
-        continue;
-      }
+			if ((unsigned char)ch == 0xe5)
+			{
+				continue;
+			}
 
-      if ( ch == '.' )
-      {
-        continue;
-      }
+			if (ch == '.')
+			{
+				continue;
+			}
 
-      return F_ERR_NOTEMPTY;       /*something is there*/
-    }
+			return F_ERR_NOTEMPTY; /*something is there*/
+		}
 
-    if ( !ch )
-    {
-      break;
-    }
+		if (!ch)
+		{
+			break;
+		}
 
-    gl_file.pos.sector++;
-  }
+		gl_file.pos.sector++;
+	}
 
-  ret = _f_readglsector( dirsector );
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_readglsector(dirsector);
+	if (ret)
+	{
+		return ret;
+	}
 
-  de->name[0] = (unsigned char)0xe5;
+	de->name[0] = (unsigned char)0xe5;
 
-  ret = _f_writeglsector( dirsector );
-  if ( ret )
-  {
-    return ret;
-  }
+	ret = _f_writeglsector(dirsector);
+	if (ret)
+	{
+		return ret;
+	}
 
-  gl_volume.fatsector = (unsigned long)-1;
-  ret = _f_removechain( _f_getdecluster( de ) );
- #if F_FILE_CHANGED_EVENT
-  if ( f_filechangedevent && !ret )
-  {
-    ST_FILE_CHANGED  fc;
-    fc.action = FACTION_REMOVED;
-    fc.flags = FFLAGS_DIR_NAME;
+	gl_volume.fatsector = (unsigned long)-1;
+	ret = _f_removechain(_f_getdecluster(de));
+#if F_FILE_CHANGED_EVENT
+	if ( f_filechangedevent && !ret )
+	{
+		ST_FILE_CHANGED fc;
+		fc.action = FACTION_REMOVED;
+		fc.flags = FFLAGS_DIR_NAME;
 
-    if ( !_f_createfullname( fc.filename, sizeof( fc.filename ), fsname.path, fsname.filename, fsname.fileext ) )
-    {
-      f_filechangedevent( &fc );
-    }
-  }
+		if ( !_f_createfullname( fc.filename, sizeof( fc.filename ), fsname.path, fsname.filename, fsname.fileext ) )
+		{
+			f_filechangedevent( &fc );
+		}
+	}
 
- #endif
-  return ret;
+#endif
+	return ret;
 } /* fn_rmdir */
-
 
