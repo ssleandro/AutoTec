@@ -1060,6 +1060,7 @@ void SEN_vManagementNetwork (void)
 
 				case CAN_APL_SENSOR_SIMULADOR:  //Sensor de Velocidade do Simulador
 				CAN_bSensorSimulador = true;
+				//no break
 				case CAN_APL_SENSOR_DIGITAL_2:  //Sensor digital 2
 				case CAN_APL_SENSOR_DIGITAL_3:  //Sensor digital 3
 				case CAN_APL_SENSOR_DIGITAL_4:  //Sensor digital 4

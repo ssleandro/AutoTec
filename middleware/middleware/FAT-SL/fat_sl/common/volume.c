@@ -715,7 +715,7 @@ unsigned char _f_getvolume (void)
 
 		/* here we don't stop case flow,  */
 		/* because we have to clean up this volume! */
-
+		//no break
 		case F_STATE_NEEDMOUNT:
 		{
 			gl_file.modified = 0;

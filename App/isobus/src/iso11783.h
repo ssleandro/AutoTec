@@ -321,4 +321,6 @@ uint8_t ISO_vInitPointersToTranfer (const uint8_t*, uint32_t);
 void ISO_vSendObjectPool (uint8_t, uint32_t, uint8_t);
 void ISO_vSendEndObjectPool (void);
 
+extern uint32_t ISO_vGetID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio);
+
 #endif
