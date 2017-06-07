@@ -60,7 +60,7 @@ ISOBUSMsg pISOMsg;         // Holds the actual message
 /* *
  * Get the ID of CAN frame from PGN, source address, destination address and priority
  * */
-uint32_t getID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio)
+uint32_t ISO_vGetID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio)
 {
 	return ((((pgn | da) << 8) | sa) | (prio << 26));
 }
@@ -68,7 +68,7 @@ uint32_t getID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio)
 void ISO_vSendAddressClaimed (void)
 {
 
-	(pISOMsg.frame).id = getID(ADDRESS_CLAIM_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ADDRESS_CLAIM_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = NAME[0];
@@ -86,7 +86,7 @@ void ISO_vSendAddressClaimed (void)
 void ISO_vSendCommandedAddress (void)
 {
 
-	(pISOMsg.frame).id = getID(TP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(TP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	/*	TRANSPORT PROTOCOL - CONNECTION MANAGEMENT	*/
@@ -101,7 +101,7 @@ void ISO_vSendCommandedAddress (void)
 
 	PUT_LOCAL_QUEUE(WriteQ, pISOMsg, osWaitForever);
 
-	(pISOMsg.frame).id = getID(TP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(TP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	/*	TRANSPORT PROTOCOL - DATA TRANSFER	*/
@@ -116,7 +116,7 @@ void ISO_vSendCommandedAddress (void)
 
 	PUT_LOCAL_QUEUE(WriteQ, pISOMsg, osWaitForever);
 
-	(pISOMsg.frame).id = getID(TP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(TP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = 0x02;
@@ -134,7 +134,7 @@ void ISO_vSendCommandedAddress (void)
 void ISO_vSendWorkingSetMaster (void)
 {
 
-	(pISOMsg.frame).id = getID(WORKING_SET_MASTER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(WORKING_SET_MASTER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = 0x01;              // Number of members in a WS
@@ -152,7 +152,7 @@ void ISO_vSendWorkingSetMaster (void)
 void ISO_vSendGetHardware (void)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = FUNC_GET_HARDWARE;
@@ -170,7 +170,7 @@ void ISO_vSendGetHardware (void)
 void ISO_vSendWorkingSetMaintenance (bool bInitiatingWS)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	// Working set maintenance ISO 11783-6    
@@ -189,7 +189,7 @@ void ISO_vSendWorkingSetMaintenance (bool bInitiatingWS)
 void ISO_vSendWSMaintenancePoolSent (void)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	// Working set maintenance ISO 11783-6
@@ -209,7 +209,7 @@ void ISO_vSendWSMaintenancePoolSent (void)
 void ISO_vSendGetMemory (uint32_t wMemoryRequired)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = FUNC_GET_MEMORY;                   // VT funtion
@@ -228,7 +228,7 @@ void ISO_vSendRequest (uint32_t wPGNRequested)
 {
 	/*  Request + 3bytes Data (PGN)  */
 
-	(pISOMsg.frame).id = getID(REQUEST_PGN_MSG_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(REQUEST_PGN_MSG_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 3;
 
 	pISOMsg.B1 = wPGNRequested & 0xFF;              // PGN being requested (LSB)
@@ -241,7 +241,7 @@ void ISO_vSendRequest (uint32_t wPGNRequested)
 void ISO_vSendProprietaryA (void)
 {
 
-	(pISOMsg.frame).id = getID(PROPRIETARY_A_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(PROPRIETARY_A_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = 0x00;
@@ -259,7 +259,7 @@ void ISO_vSendProprietaryA (void)
 void ISO_vSendStoreVersion (uint64_t lVersionLabel)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = FUNC_STORE_VERSION;
@@ -277,7 +277,7 @@ void ISO_vSendStoreVersion (uint64_t lVersionLabel)
 void ISO_vSendLoadVersion (uint64_t lVersionLabel)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = FUNC_LOAD_VERSION;
@@ -295,7 +295,7 @@ void ISO_vSendLoadVersion (uint64_t lVersionLabel)
 void ISO_vSendGetNumberSoftKeys (void)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = FUNC_GET_NUMBER_SOFT_KEYS;
@@ -313,7 +313,7 @@ void ISO_vSendGetNumberSoftKeys (void)
 void ISO_vSendEndObjectPool (void)
 {
 
-	(pISOMsg.frame).id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	pISOMsg.B1 = FUNC_OBJECT_POOL_END;
@@ -343,7 +343,7 @@ void ISO_vSendRequestToSend (void)
 	switch (bProtocol)
 	{
 		case TRANSPORT_PROTOCOL:
-		(pISOMsg.frame).id = getID(TP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+		(pISOMsg.frame).id = ISO_vGetID(TP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 		pISOMsg.DLC = 8;
 
 		nPackets = (uint32_t)ceil(POOL_SIZE / 7.0);
@@ -361,7 +361,7 @@ void ISO_vSendRequestToSend (void)
 		PUT_LOCAL_QUEUE(WriteQ, pISOMsg, osWaitForever);
 			break;
 		case EXTENDED_TRANSPORT_PROTOCOL:
-		(pISOMsg.frame).id = getID(ETP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+		(pISOMsg.frame).id = ISO_vGetID(ETP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 		pISOMsg.DLC = 8;
 
 		// Send ETP_CM_RTS (ISO 11783-3)
@@ -383,7 +383,7 @@ void ISO_vSendRequestToSend (void)
 
 void ISO_vSendETP_CM_DPO (uint8_t bNumPackets, uint32_t wDataPacketOffset)
 {
-	(pISOMsg.frame).id = getID(ETP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+	(pISOMsg.frame).id = ISO_vGetID(ETP_CONN_MANAGE_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 	pISOMsg.DLC = 8;
 
 	// wDataPacketOffset is always 1 less than bytes 3 to 5 of the ETP.CM_CTS message
@@ -430,7 +430,7 @@ void ISO_vSendObjectPool (uint8_t bNumPacketsToSend, uint32_t wNextPacketNumber,
 	switch (bProtocol)
 	{
 		case TRANSPORT_PROTOCOL:
-		(pISOMsg.frame).id = getID(TP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+		(pISOMsg.frame).id = ISO_vGetID(TP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 		pISOMsg.DLC = 8;
 		bSentPackets = 1;
 
@@ -476,7 +476,7 @@ void ISO_vSendObjectPool (uint8_t bNumPacketsToSend, uint32_t wNextPacketNumber,
 		}
 			break;
 		case EXTENDED_TRANSPORT_PROTOCOL:
-		(pISOMsg.frame).id = getID(ETP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
+		(pISOMsg.frame).id = ISO_vGetID(ETP_DATA_TRANSFER_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY);
 		pISOMsg.DLC = 8;
 		bSentPackets = 1;
 

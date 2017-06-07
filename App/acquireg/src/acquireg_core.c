@@ -75,14 +75,10 @@ extern uint32_t GPS_dDataHoraSistema (void);
 
 extern uint8_t CAN_bSensorSimulador;
 extern uint8_t CAN_bNumRespostasPNP;
-extern CAN_tsParametrosSensor CAN_sParametrosSensor;
-extern CAN_tsParametrosExtended CAN_sParametrosExtended;
 extern CAN_tsCtrlListaSens CAN_sCtrlLista;
 EXTERN_MUTEX(CAN_MTX_sBufferListaSensores);
 extern void SEN_vAddNewSensor (const uint8_t);
 extern void SEN_vReadDataFromSensors (void);
-extern void SEN_vSensorsParameters (uint8_t bComando, uint8_t bLinha, uint8_t bTipo, uint8_t *pbDados, uint8_t bDLC);
-extern void SEN_vGetVersion (void);
 
 /******************************************************************************
  * Typedefs
@@ -106,7 +102,6 @@ typedef struct
  *******************************************************************************/
 
 extern UOS_tsConfiguracao UOS_sConfiguracao;
-bool bAQRWaitForConfig = false;
 
 /*!<< From MPA2500  */
 //Mutex para controle de acesso às estruturas de dados das entradas e variáveis
@@ -300,7 +295,6 @@ void AQR_vZeraRegs (uint8_t bTudo)
 	//Se foi solicitado para zerar totais
 	if (bTudo != false)
 	{
-
 		//Ajusta a causa de fim:
 		AQR_wCausaFim = AQR_wCF_ZERA_TOTAL;
 
@@ -1219,8 +1213,6 @@ void AQR_vIdentifyEvent (contract_s* contract)
 	{
 		case MODULE_CONTROL:
 		{
-			// Treat an event receive from MODULE_CONTROL
-			bAQRWaitForConfig = true;
 			break;
 		}
 		case MODULE_SENSOR:

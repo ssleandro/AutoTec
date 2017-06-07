@@ -62,8 +62,6 @@ tsAcumulados* psAccumulated;
 
 extern osFlagsGroupId UOS_sFlagSis;
 
-extern uint32_t getID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio);
-
 static sNumberVariableObj asNumVarObjects[ISO_NUM_NUMBER_VARIABLE_OBJECTS];
 static sFillAttributesObj asNumFillAttributesObjects[ISO_NUM_FILL_ATTRIBUTES_OBJECTS];
 static sInputListObj asConfigInputList[ISO_NUM_INPUT_LIST_OBJECTS];
@@ -1403,7 +1401,7 @@ void ISO_vUpdateNumberVariableValue (uint16_t wOutputNumberID, uint32_t dNumeric
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_NUMERIC_VALUE;
@@ -1422,7 +1420,7 @@ void ISO_vUpdateListItemValue (uint16_t wOutputNumberID, uint8_t bListItem)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_LIST_ITEM;
@@ -1441,7 +1439,7 @@ void ISO_vUpdateBarGraphColor (uint16_t wBarGraphID, uint32_t dNumericValue)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ATTRIBUTE;
@@ -1460,7 +1458,7 @@ void ISO_vUpdateFillAttributesValue (uint16_t wFillAttrID, uint8_t bColor)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_FILL_ATTRIBUTES;
@@ -1479,7 +1477,7 @@ void ISO_vChangeActiveMask(eIsobusMask eNewMask)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = getID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ACTIVE_MASK;
