@@ -586,9 +586,6 @@ STATIC const IP_EMC_STATIC_CONFIG_T memreg_config =
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
-#ifndef EA_LPC4357
-static uint32_t pvt_BRD_dNano2Clock (uint32_t freq, uint32_t time);
-#endif
 
 /******************************************************************************
  * Function Definitions
@@ -627,13 +624,6 @@ static uint32_t pvt_BRD_dNano2Clock (uint32_t freq, uint32_t time);
  * <hr>
  *
  *******************************************************************************/
-#ifndef EA_LPC4357
-static uint32_t pvt_BRD_dNano2Clock (uint32_t freq, uint32_t time)
-{
-	return (((uint64_t)time * freq / 1000000000));
-}
-#endif
-
 void BRD_vWait_ms (uint32_t ms)
 {
 #ifdef CORE_M4

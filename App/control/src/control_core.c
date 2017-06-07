@@ -111,11 +111,7 @@ osFlagsGroupId UOS_sFlagFase;
 osFlagsGroupId UOS_sFlagSis;
 osFlagsGroupId CTL_sFlagSis;
 
-//Timers de sistema a serem utilizados pelas tarefas:
-//UOS_tsTimer             asListaTimers[ UOS_bMAX_TIMERS ];
-
 // mutex para a hora
-//OS_EVENT  *UOS_MTX_sDataHora;
 CREATE_MUTEX(UOS_MTX_sDataHora);
 
 // Semaphores
@@ -124,8 +120,6 @@ CREATE_SEMAPHORE(UOS_sSemSincronismo);
 //Semáforo para controle de acesso à exibicao de mensagens de alerta:
 CREATE_SEMAPHORE(UOS_sSemAlerta);
 
-//Buffer para mensagens do sistema de controle:
-//uint8_t UOS_abLCD[ 2560 ];
 
 uint8_t bMem = 1;
 
@@ -142,7 +136,8 @@ extern uint16_t AQR_wAlarmes;
 
 const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 	{
-		//------------------------------------------------------------------------------
+
+	//------------------------------------------------------------------------------
 //UOS_tsCfgMonitor
 		/*FP32   fLimVel;*/20.0f,//Limite de velocidade km/h.
 		/*INT16U wSementesPorMetro;*/15, //Meta de Sementes por Metro. (sementes/m)*10
@@ -161,13 +156,6 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*uint8_t  bLinhasFalhaPausaAuto;*/0, //Número de linhas em falha para pausa automática. (1-32)
 		/*uint8_t  bNumSensorAdicionais;*/0, //Número de sensores adicionais (0-6)
 
-//------------------------------------------------------------------------------
-//tsCfgIHM
-		/*uint8_t abSenha[4]*/0,
-		/*eSelectedLanguage eLanguage;*/ LANGUAGE_PORTUGUESE,
-		/*eSelectedUnitMeasurement eUnit;*/ UNIT_INTERNATIONAL_SYSTEM,
-
-//------------------------------------------------------------------------------
 
 //tsCfgGPS
 		/*INT32S      lFusoHorario;*/-10800, //Usa fuso horário padrão (Brasília -03:00 )
@@ -176,16 +164,17 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*uint8_t       bHorarioVerao;*/false, //Indica se está em horário de verão (bHorarioVerao = 1)
 		/*uint8_t       bSalvaRegistro;*/false, //Indica se gravacao de registros está ativada
 
-//------------------------------------------------------------------------------
-//tsCfgBluetooth
-		/*uint8_t bInstalado;*/false,
-		/*uint8_t bTamPIN;*/0,
-		/*uint8_t abNomeDispositivo[30];*/0,
-		/*uint8_t abPIN[16];*/0,
+		//------------------------------------------------------------------------------
+		/*uint64_t dVeiculo;*/0x00002500A0000000,
 
-//------------------------------------------------------------------------------
-		/*uint64_t dVeiculo;*/0x002500A0000000,
-//------------------------------------------------------------------------------
+		//------------------------------------------------------------------------------
+		//tsCfgIHM
+		/*uint32_t abSenha*/0,
+		/*eSelectedLanguage eLanguage;*/LANGUAGE_PORTUGUESE,
+		/*eSelectedUnitMeasurement eUnit;*/UNIT_INTERNATIONAL_SYSTEM,
+
+
+		//------------------------------------------------------------------------------
 		/*INT16U wCRC16;*/0
 	};
 
@@ -283,35 +272,6 @@ void CTL_vControlPublishThread (void const *argument)
                 PUBLISH(CONTRACT(Control), 0);
             }
         }
-
-		/*       if(evt.status == osEventSignal)
-		 {
-		 switch(evt.value.signals)
-		 {
-		 case UOS_BUZZER_ON:
-
-		 *dPayload = 'A';
-
-		 Publish the array at the CONTROL topic
-		 MESSAGE_HEADER(Control, 1, 1, MT_ARRAYBYTE);
-		 MESSAGE_PAYLOAD(Control) = (void*) dPayload;
-		 PUBLISH(CONTRACT(Control), 0);
-
-		 break;
-		 case UOS_BUZZER_OFF:
-
-		 *dPayload = 'B';
-
-		 Publish the array at the CONTROL topic
-		 MESSAGE_HEADER(Control, 1, 1, MT_ARRAYBYTE);
-		 MESSAGE_PAYLOAD(Control) = (void*) dPayload;
-		 PUBLISH(CONTRACT(Control), 0);
-
-		 break;
-		 default:
-		 break;
-		 }
-		 }*/
 	}
 	osThreadTerminate(NULL);
 }
@@ -361,7 +321,6 @@ void CTL_vIdentifyEvent (contract_s* contract)
 			{
 				memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
 					sizeof(UOS_tsConfiguracao));
-
 			}
 			break;
 		}
@@ -386,8 +345,6 @@ void CTL_vControlThread (void const *argument)
 	// TODO: This is executed after file system initialization
 	// Copy default configurations to start; because we don't have file system
 	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
-	uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
-	UOS_sConfiguracao.dVeiculo = 0x002500A0000000;
 
 	// Create an flag to indicate the system status...
 	status = osFlagGroupCreate(&UOS_sFlagSis);

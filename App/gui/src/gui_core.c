@@ -43,7 +43,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of CONTROL queue
-#define QUEUE_SIZEOFGUI 5
+#define QUEUE_SIZEOFGUI 16
 
 #define THIS_MODULE MODULE_GUI
 
@@ -57,9 +57,9 @@ CREATE_SIGNATURE(GuiControl);
 
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 
-osFlagsGroupId GUI_sFlags;
+CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 16);
 
-eDataMask eCurrDataMask = DATA_MASK_INSTALLATION;
+eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
 
 extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
@@ -135,13 +135,20 @@ eAPPError_s GUI_eInitGuiPublisher (void)
 
 void GUI_vUpdateInterfaceTimerCallback (void const *argument)
 {
-	osFlagSet(GUI_sFlags, GUI_UPDATE_TEST_MODE_INTERFACE);
+	event_e ePubEvt;
+
+	ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
 void GUI_vGuiPublishThread (void const *argument)
 {
-	osFlags dFlags, dFlagsSis;
+	osEvent evt;
+	osFlags dFlagsSis;
+	event_e ePubEvt;
 	PubMessage sGUIPubMessage;
+
+	INITIALIZE_LOCAL_QUEUE(GuiPublishQ);           //!< Initialize message queue to publish thread
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Gui Publish Thread Created");
@@ -161,89 +168,121 @@ void GUI_vGuiPublishThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-		dFlags = osFlagWait(GUI_sFlags, GUI_FLGAS_ALL_FLAGS, true, false, osWaitForever);
+		evt = RECEIVE_LOCAL_QUEUE(GuiPublishQ, &ePubEvt, osWaitForever);
 		WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
-		dFlagsSis = osFlagGet(UOS_sFlagSis);
-
-		if ((dFlags & GUI_UPDATE_INSTALLATION_INTERFACE) > 0)
+		if (evt.status == osEventMessage)
 		{
-			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
-			sGUIPubMessage.eEvtType = EVENT_UPDATE;
-			sGUIPubMessage.vPayload = (void*)&eSensorStatus;
-			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
-			PUBLISH(CONTRACT(Gui), 0);
-		}
+			dFlagsSis = osFlagGet(UOS_sFlagSis);
 
-		if ((dFlags & GUI_UPDATE_PLANTER_INTERFACE) > 0)
-		{
-
-		}
-
-		if ((dFlags & GUI_UPDATE_TEST_MODE_INTERFACE) > 0)
-		{
-			if ((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
+			switch (ePubEvt)
 			{
-				sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-				sGUIPubMessage.eEvtType = EVENT_UPDATE;
-				sGUIPubMessage.vPayload = (void*)&AQR_sAcumulado;
-				MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
-				PUBLISH(CONTRACT(Gui), 0);
+				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_UPDATE;
+					sGUIPubMessage.vPayload = (void*)&eSensorStatus;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_UPDATE;
+					sGUIPubMessage.vPayload = NULL;		//TODO: incorrect payload
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
+				{
+					if ((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
+					{
+						sGUIPubMessage.dEvent = ePubEvt;
+						sGUIPubMessage.eEvtType = EVENT_UPDATE;
+						sGUIPubMessage.vPayload = (void*)&AQR_sAcumulado;
+						MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+						PUBLISH(CONTRACT(Gui), 0);
+					}
+					break;
+				}
+				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_UPDATE;
+					sGUIPubMessage.vPayload = NULL;		//TODO: incorrect payload
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_UPDATE;
+					sGUIPubMessage.vPayload = NULL;		//TODO: incorrect payload
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_REPEAT_TEST:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_CLEAR;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_UPDATE_CONFIG:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = (void*)&SISConfiguration;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYS_CONFIG:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = (void*)&SISConfiguration;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				default:
+					break;
 			}
-		}
-
-		if ((dFlags & GUI_UPDATE_TRIMMING_INTERFACE) > 0)
-		{
-
-		}
-
-		if ((dFlags & GUI_UPDATE_SYSTEM_INTERFACE) > 0)
-		{
-
-		}
-		if ((dFlags & GUI_CHANGE_INSTAL_REPEAT_TEST) > 0)
-		{
-			sGUIPubMessage.dEvent = EVENT_GUI_INSTALLATION_REPEAT_TEST;
-			sGUIPubMessage.eEvtType = EVENT_SET;
-			sGUIPubMessage.vPayload = NULL;
-			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
-			PUBLISH(CONTRACT(Gui), 0);
-		}
-		if ((dFlags & GUI_UPDATE_CONFIG_DATA) > 0)
-		{
-			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_CONFIG;
-			sGUIPubMessage.eEvtType = EVENT_SET;
-			sGUIPubMessage.vPayload = (void*)&GUIConfigurationData;
-			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
-			PUBLISH(CONTRACT(Gui), 0);
-		}
-		if ((dFlags & GUI_UPDATE_SYS_CONFIG_DATA) > 0)
-		{
-			sGUIPubMessage.dEvent = EVENT_GUI_UPDATE_SYS_CONFIG;
-			sGUIPubMessage.eEvtType = EVENT_SET;
-			sGUIPubMessage.vPayload = (void*)&SISConfiguration;
-			MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
-			PUBLISH(CONTRACT(Gui), 0);
 		}
 
 	}
 	osThreadTerminate(NULL);
 }
 
-eSelectedLanguage eLanguage;
-eSelectedUnitMeasurement eUnit;
-uint64_t dVehicleID;
-eAreaMonitor eMonitorArea;
-float fSeedRate;
-uint8_t bNumOfRows;
-float fImplementWidth;
-float fEvaluationDistance;
-uint8_t bTolerance;
-
-
-
 void GUI_SetGuiConfiguration(void)
 {
+	event_e ePublish;
+
 	GUIConfigurationData.bNumOfRows = SISConfiguration.sMonitor.bNumLinhas;
 	GUIConfigurationData.bTolerance = SISConfiguration.sMonitor.bTolerancia;
 	GUIConfigurationData.dVehicleID = SISConfiguration.dVeiculo;
@@ -269,11 +308,14 @@ void GUI_SetGuiConfiguration(void)
 		GUIConfigurationData.fSeedRate = SM2SP(SISConfiguration.sMonitor.wSementesPorMetro);
 		GUIConfigurationData.fImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
 	}
-	osFlagSet(GUI_sFlags, GUI_UPDATE_CONFIG_DATA);
+	ePublish = EVENT_GUI_UPDATE_CONFIG;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 
 void GUI_SetSisConfiguration(void)
 {
+	event_e ePublish;
+
 	SISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
 	SISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
 	SISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
@@ -297,8 +339,8 @@ void GUI_SetSisConfiguration(void)
 		SISConfiguration.sMonitor.wSementesPorMetro = SP2SM(GUIConfigurationData.fSeedRate);
 		SISConfiguration.sMonitor.wLargImpl = FIN2DM(GUIConfigurationData.fImplementWidth);
 	}
-
-	osFlagSet(GUI_sFlags, GUI_UPDATE_SYS_CONFIG_DATA);
+	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 
 void GUI_UpdateConfiguration(sConfigurationDataMask *CfgDataMask)
@@ -328,6 +370,7 @@ void GUI_InitSensorStatus (void)
 
 void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 {
+	event_e ePubEvt;
 	uint8_t bConta;
 	uint8_t bSensor = 0;
 
@@ -368,7 +411,6 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 					eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
 					break;
 				}
-
 				default:
 				{
 					eSensorStatus[bConta] = STATUS_INSTALL_NONE;
@@ -381,7 +423,8 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
 		}
 	}
-	osFlagSet(GUI_sFlags, GUI_UPDATE_INSTALLATION_INTERFACE);
+	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 
 }
 
@@ -395,13 +438,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
-				eCurrDataMask = *((eDataMask*)GET_PUBLISHED_PAYLOAD(contract));
+				eCurrMask = *((eIsobusMask*)GET_PUBLISHED_PAYLOAD(contract));
 
-				if (eCurrDataMask == DATA_MASK_TEST_MODE)
+				if (eCurrMask == DATA_MASK_TEST_MODE)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
 				}
-				else if (eCurrDataMask == DATA_MASK_PLANTER)
+				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 				}
@@ -415,20 +458,22 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_REPEAT_TEST)
 			{
-				osFlagSet(GUI_sFlags, GUI_CHANGE_INSTAL_REPEAT_TEST);
+				ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 
+			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
+			{
+
+			}
 			break;
 		}
 		case MODULE_CONTROL:
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-				GUI_SetGuiConfiguration((UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract));
-			}
-			if (ePubEvt == EVENT_CTL_UPDATE_INTERFACE_CFG)
-			{
-
+				memcpy(&SISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
+				GUI_SetGuiConfiguration();
 			}
 			break;
 		}
@@ -438,6 +483,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 
+			}
+
+			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
+			{
+				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
 		}
@@ -472,9 +523,6 @@ void GUI_vGuiThread (void const *argument)
 
 	INITIALIZE_TIMER(Gui_UptTimer, osTimerPeriodic);
 
-	status = osFlagGroupCreate(&GUI_sFlags);
-	ASSERT(status == osOK);
-
 	GUI_eInitGuiSubs();
 
 	//Create subthreads
@@ -489,7 +537,7 @@ void GUI_vGuiThread (void const *argument)
 	osSignalSet(xMainFromIsobusID, MODULE_GUI);
 
 	SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
+	//ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
 
 	GUI_InitSensorStatus();
 

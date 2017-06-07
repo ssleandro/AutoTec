@@ -65,17 +65,10 @@
 #define ISO_BUTTON_REPEAT_TEST_ID			0x6005
 #define ISO_BUTTON_ERASE_INSTALLATION_ID	0x6006
 
-#define ISO_UPDATE_CURRENT_DATA_MASK 		0x0001
-#define ISO_UPDATE_CURRENT_CONFIGURATION    0x0002
-#define ISO_UPDATE_INSTALLATION_INTERFACE	0x0004
-#define ISO_UPDATE_PLANTER_INTERFACE		0x0008
-#define ISO_UPDATE_TEST_MODE_INTERFACE		0x0010
-#define ISO_UPDATE_TRIMMING_INTERFACE		0x0020
-#define ISO_UPDATE_SYSTEM_INTERFACE			0x0040
-
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
+#define ISO_OBJECT_WORKING_SET_ID	  0x0000
 #define ISO_OBJECT_PICTURE_GRAPHIC_ID 0x1000
 #define ISO_OBJECT_SOFT_KEY_MASK_ID	  0x2000
 #define ISO_OBJECT_POINTER_ID		  0x2100

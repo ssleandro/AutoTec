@@ -1164,13 +1164,13 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
-		AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION,
-		true, false, osWaitForever);
+			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
+			| AQR_APL_FLAG_CONFIRM_INSTALLATION, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
 		{
-			sArqRegPubMsg.dEvent = EVENT_AQR_FINISH_INSTALLATION;
+			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_FINISH_INSTALLATION;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
 			sArqRegPubMsg.vPayload = NULL;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
@@ -1186,13 +1186,20 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		}
 		if ((dFlags & AQR_APL_FLAG_UPDATE_INSTALLATION) > 0)
 		{
-			sArqRegPubMsg.dEvent = EVENT_AQR_UPDATE_INSTALLATION;
+			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
 			sArqRegPubMsg.vPayload = (void*)AQR_sDadosCAN.asLista;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
-
+		if ((dFlags & AQR_APL_FLAG_CONFIRM_INSTALLATION) > 0)
+		{
+			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION;
+			sArqRegPubMsg.eEvtType = EVENT_SET;
+			sArqRegPubMsg.vPayload = NULL;
+			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
+			PUBLISH(CONTRACT(Acquireg), 0);
+		}
 	}
 	osThreadTerminate(NULL);
 }
@@ -1261,6 +1268,11 @@ void AQR_vIdentifyEvent (contract_s* contract)
 				AQR_vRepeteTesteSensores();
 			}
 
+			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK)
+			{
+				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
+				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+			}
 			break;
 		}
 		default:
@@ -1605,6 +1617,7 @@ void AQR_SetStaticRegData (void)
 void AQR_vRepeteTesteSensores (void)
 {
 	osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+	osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 
 	osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ERRO_INST_SENSOR);
 
@@ -2234,6 +2247,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				{
 					//Liga flag de fim de instalação
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+					osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 					//Atualiza flag para avisar a IHM que já pode confirmar o teste dos sensores
 //                    if ( IHM_bConfirmaInstSensores == eSensoresNaoInstalados )
 //                    {
@@ -2572,6 +2586,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 						//Limpa o flag de fim de instalação
 						osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+						osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 
 						//Limpa flag de sensor instalado
 						//                        IHM_bConfirmaInstSensores = eSensoresNaoInstalados;
@@ -2726,6 +2741,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				//Limpa o flag de fim de instalação
 				osFlagClear(UOS_sFlagSis,
 					(UOS_SIS_FLAG_CONFIRMA_INST | UOS_SIS_FLAG_MODO_TESTE | UOS_SIS_FLAG_MODO_TRABALHO));
+				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 
 				//Limpa flag
 				//            IHM_bConfirmaInstSensores = eSensoresNaoInstalados;

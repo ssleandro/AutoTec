@@ -280,17 +280,6 @@ typedef enum WDTStatus_e
 	WDT_ACTIVE = 2, //!< ACTIVE
 } WDTStatus_e;
 
-typedef enum
-{
-	DATA_MASK_CONFIGURATION = 0x5000,
-	DATA_MASK_INSTALLATION,
-	DATA_MASK_PLANTER,
-	DATA_MASK_TEST_MODE,
-	DATA_MASK_TRIMMING,
-	DATA_MASK_SYSTEM,
-	DATA_MASK_INVALID
-} eDataMask;
-
 /******************************************************************************
  * Publish structures
  *******************************************************************************/
@@ -307,7 +296,9 @@ typedef enum event_e
 	EVENT_FFS_CFG,        					//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_FFS_INTERFACE_CFG,    			//!< EVENT FILE INTERFACE STATUS CHANGED
 	EVENT_FFS_STATIC_REG,    				//!< EVENT FILE INTERFACE STATUS CHANGED
-	EVENT_AQR_FINISH_INSTALLATION,
+	EVENT_AQR_INSTALLATION_FINISH_INSTALLATION,
+	EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION,
+	EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION,
 	EVENT_AQR_UPDATE_INSTALLATION,
 	EVENT_GUI_UPDATE_CONFIGURATION_INTERFACE,
 	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
@@ -318,12 +309,15 @@ typedef enum event_e
 	EVENT_GUI_INSTALLATION_FINISH,
 	EVENT_GUI_INSTALLATION_REPEAT_TEST,
 	EVENT_GUI_INSTALLATION_ERASE_INSTALLATION,
+	EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION,
+	EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK,
 	EVENT_GUI_UPDATE_CONFIG,
 	EVENT_GUI_UPDATE_SYS_CONFIG,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
 	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION,
+	EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION,
 	EVENT_CTL_UPDATE_CONFIG,        					//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_CTL_UPDATE_INTERFACE_CFG,
 	EVENT_CTL_UPDATE_SAVE_CONFIG,
@@ -494,13 +488,14 @@ typedef struct
 typedef struct
 {
 	//Senha para operacoes de seguranca:
-	uint8_t abSenha[4];
+	uint32_t abSenha;
 
 	//Idioma:
 	eSelectedLanguage eLanguage;
 
 	// Se egit  sistema imperial ou internacional
 	eSelectedUnitMeasurement eUnit;
+
 } tsCfgIHM;
 
 //Receptor GPS interno:
@@ -513,21 +508,23 @@ typedef struct
 
 	uint8_t bHorarioVerao;       //Indica se estao em horario de verao (bHorarioVerao = 1)
 	uint8_t bSalvaRegistro;      //Indica se gravacao de registros esta ativada
+
 } tsCfgGPS;
+
 
 typedef struct
 {
 	//Configuracao Monitor
 	UOS_tsCfgMonitor sMonitor;
 
-	//Configuracao IHM
-	tsCfgIHM sIHM;
-
 	//Receptor GPS interno:
 	tsCfgGPS sGPS;
 
 	//Identificacao do veiculo:
 	uint64_t dVeiculo;
+
+	//Configuracao IHM
+	tsCfgIHM sIHM;
 
 	//CRC16 desta estrutura:
 	uint16_t wCRC16;

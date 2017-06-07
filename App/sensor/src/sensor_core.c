@@ -72,9 +72,6 @@ CAN_tsCtrlMPA CAN_sCtrlMPA;
 // CAN network status
 CAN_tsStatus CAN_sStatus;
 
-// Holds the status of system...
-extern osFlagsGroupId UOS_sFlagSis;
-
 // Holds the status of CAN interface
 //osFlagsGroupId CAN_psFlagEnl;
 
@@ -507,7 +504,7 @@ void SEN_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_AQR_FINISH_INSTALLATION)
+			if (GET_PUBLISHED_EVENT(contract) == EVENT_AQR_INSTALLATION_FINISH_INSTALLATION)
 			{
 				// Send final handshake messages to sensors...
 

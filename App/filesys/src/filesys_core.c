@@ -372,6 +372,15 @@ void FFS_vIdentifyEvent (contract_s* contract)
 				}
 
 			}
+			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
+			{
+				memcpy(&FFS_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_tsConfig));
+				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				{
+					eAPPError_s error = FFS_vSaveInterfaceCfgFile();
+					ASSERT(error == APP_ERROR_SUCCESS);
+				}
+			}
 			break;
 		}
 		case MODULE_ACQUIREG:
@@ -379,7 +388,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_FFS_STATIC_REG)
 			{
 				memcpy(&FFS_sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
-					sizeof(AQR_tsRegEstaticoCRC));
+							sizeof(AQR_tsRegEstaticoCRC));
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
 					eAPPError_s error = FFS_vSaveStaticReg();

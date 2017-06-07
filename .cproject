@@ -93,12 +93,12 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.638223463" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__USE_LPCOPEN"/>
 									<listOptionValue builtIn="false" value="__USE_WATCHDOG"/>
-									<listOptionValue builtIn="false" value="NO_USE_SYSVIEW"/>
+									<listOptionValue builtIn="false" value="USE_SYSVIEW"/>
 									<listOptionValue builtIn="false" value="CHIP_LPC43XX"/>
 									<listOptionValue builtIn="false" value="CORE_M4"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
 									<listOptionValue builtIn="false" value="M2G_PROTOB"/>
-									<listOptionValue builtIn="false" value="configUSE_SEGGER_SYSTEM_VIEWER_HOOKS=0"/>
+									<listOptionValue builtIn="false" value="configUSE_SEGGER_SYSTEM_VIEWER_HOOKS=1"/>
 									<listOptionValue builtIn="false" value="__SPF"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.other.263015611" name="Other compiler flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.other" useByScannerDiscovery="true" value="" valueType="string"/>

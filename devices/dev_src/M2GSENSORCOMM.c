@@ -56,7 +56,7 @@
 #define NULL (void*)0
 #endif
 
-#define RECV_SENSORBUFSIZE		32
+#define RECV_SENSORBUFSIZE		64
 
 #ifndef UNITY_TEST
 #define DEFAULT_TIMEOUT		500

@@ -1,12 +1,12 @@
 /****************************************************************************
- * Title                 :   MCU ACCESS FILE
- * Filename              :   mcu.c
- * Author                :   Thiago Palmieri
- * Origin Date           :   18/02/2016
+ * Title                 :   isobus_tools
+ * Filename              :   isobus_tools.c
+ * Author                :   Henrique Reis
+ * Origin Date           :   06/06/2017
  * Version               :   1.0.0
- * Compiler              :   GCC 5.2 2015q4
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
- * Notes                 :   None
+ * Notes                 :   Qualicode Machine Technologies
  *
  * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -23,34 +23,29 @@
  *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
  *
- *    Date    Version   Author         Description
- *  18/02/16   1.0.0   Thiago Palmieri MCU ACCESS Created.
+ *    Date    Version       Author          Description
+ * 06/06/2017  1.0.0     Henrique Reis      isobus_tools.c created.
  *
  *****************************************************************************/
-/** @file mcu.c
- *  @brief This module provides a MCU data access for the upper layers
- *
- */
 
 /******************************************************************************
  * Includes
  *******************************************************************************/
-
-#include "mcu.h"
-#include "board.h"
-#include "chip.h"
-#include "fat_sl.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
 
 /******************************************************************************
- * Module Preprocessor Macros
+ * Variables from others modules
  *******************************************************************************/
 
 /******************************************************************************
- * Module Typedefs
+ * Typedefs
+ *******************************************************************************/
+
+/******************************************************************************
+ * Public Variables
  *******************************************************************************/
 
 /******************************************************************************
@@ -64,30 +59,3 @@
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
-
-void MCU_vSysInit (void)
-{
-	BRD_vSystemCoreClockUpdate();
-}
-
-void MCU_vSDRAMInit (void)
-{
-	BRD_ExtMemoryConfig();
-}
-
-uint32_t MCU_wReadBootCode (void)
-{
-	Chip_IAP_init();
-	return Chip_IAP_ReadBootCode();
-}
-
-uint32_t MCU_wReadPID (void)
-{
-	Chip_IAP_init();
-	return Chip_IAP_ReadPID();
-}
-
-void MCU_vFFSInit (void)
-{
-	fs_init();
-}
