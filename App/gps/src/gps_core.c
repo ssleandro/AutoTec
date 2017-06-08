@@ -2836,7 +2836,7 @@ void GPS_vGPSThread (void const *argument)
 
 	/* Init M2GGPSCOMM device for read and write */
 	error = GPS_vInitDeviceLayer();
-	ASSERT(error != APP_ERROR_SUCCESS);
+	ASSERT(error == APP_ERROR_SUCCESS);
 
 	//Flags de eventos da interrupção do TIMEPULSE:
 	status = osFlagGroupCreate(&GPS_sFlagGPS);

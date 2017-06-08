@@ -1235,7 +1235,59 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 				switch (sRcvMsg->B1)
 				{
 					case FUNC_SOFT_KEY_ACTIVATION:
+					{
+						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B4));
+						switch (dAux)
+						{
+							case ISO_SOFT_KEY_PLANTER_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_CONFIG_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_BACK_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_TEST_MODE_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_FINISH_TEST_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_REPEAT_TEST_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_REPLACE_SENSORS_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_ERASE_INSTALLATION_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_OK_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_TRIMMING_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_SYSTEM_ID:
+							{
+								break;
+							}
+							default:
+								break;
+						}
 						break;
+					}
 					case FUNC_BUTTON_ACTIVATION:
 					{
 						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B4));
