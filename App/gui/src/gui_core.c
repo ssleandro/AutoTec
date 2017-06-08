@@ -51,7 +51,7 @@
  * Module Variable Definitions
  *******************************************************************************/
 DECLARE_QUEUE(GuiQueue, QUEUE_SIZEOFGUI);      //!< Declaration of Interface Queue
-CREATE_SIGNATURE(Gui);//!< Signature Declarations
+CREATE_SIGNATURE(GuiIsobus);//!< Signature Declarations
 CREATE_SIGNATURE(GuiAcquireg);
 CREATE_SIGNATURE(GuiControl);
 
@@ -256,7 +256,7 @@ void GUI_vGuiPublishThread (void const *argument)
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
-					sGUIPubMessage.vPayload = (void*)&SISConfiguration;
+					sGUIPubMessage.vPayload = (void*)&GUIConfigurationData;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
@@ -296,17 +296,19 @@ void GUI_SetGuiConfiguration(void)
 
 	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 	{
-		GUIConfigurationData.fEvaluationDistance = DM2FM(SISConfiguration.sMonitor.wDistLinhas);
+		GUIConfigurationData.wEvaluationDistance = SISConfiguration.sMonitor.wAvalia;
 		GUIConfigurationData.fMaxSpeed = SISConfiguration.sMonitor.fLimVel;
-		GUIConfigurationData.fSeedRate = SISConfiguration.sMonitor.wSementesPorMetro;
-		GUIConfigurationData.fImplementWidth = DM2FM(SISConfiguration.sMonitor.wLargImpl);
+		GUIConfigurationData.wSeedRate = SISConfiguration.sMonitor.wSementesPorMetro;
+		GUIConfigurationData.wImplementWidth = SISConfiguration.sMonitor.wLargImpl;
+		GUIConfigurationData.wDistBetweenLines = SISConfiguration.sMonitor.wDistLinhas;
 	}
 	else
 	{
-		GUIConfigurationData.fEvaluationDistance = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
+		GUIConfigurationData.wEvaluationDistance = DM2IN(SISConfiguration.sMonitor.wAvalia);
 		GUIConfigurationData.fMaxSpeed = KMH2MLH(SISConfiguration.sMonitor.fLimVel);
-		GUIConfigurationData.fSeedRate = SM2SP(SISConfiguration.sMonitor.wSementesPorMetro);
-		GUIConfigurationData.fImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
+		GUIConfigurationData.wSeedRate = SDM2SP(SISConfiguration.sMonitor.wSementesPorMetro);
+		GUIConfigurationData.wImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
+		GUIConfigurationData.wDistBetweenLines = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
 	}
 	ePublish = EVENT_GUI_UPDATE_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
@@ -327,36 +329,22 @@ void GUI_SetSisConfiguration(void)
 
 	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 	{
-		SISConfiguration.sMonitor.wDistLinhas = FM2DM(GUIConfigurationData.fEvaluationDistance);
+		SISConfiguration.sMonitor.wAvalia = GUIConfigurationData.wEvaluationDistance;
 		SISConfiguration.sMonitor.fLimVel = GUIConfigurationData.fMaxSpeed;
-		SISConfiguration.sMonitor.wSementesPorMetro = GUIConfigurationData.fSeedRate;
-		SISConfiguration.sMonitor.wLargImpl = FM2DM(GUIConfigurationData.fImplementWidth);
+		SISConfiguration.sMonitor.wSementesPorMetro = GUIConfigurationData.wSeedRate;
+		SISConfiguration.sMonitor.wLargImpl = GUIConfigurationData.wImplementWidth;
+		SISConfiguration.sMonitor.wDistLinhas = GUIConfigurationData.wDistBetweenLines;
 	}
 	else
 	{
-		SISConfiguration.sMonitor.wDistLinhas = FIN2DM(GUIConfigurationData.fEvaluationDistance);
+		SISConfiguration.sMonitor.wAvalia = IN2DM(GUIConfigurationData.wEvaluationDistance);
 		SISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
-		SISConfiguration.sMonitor.wSementesPorMetro = SP2SM(GUIConfigurationData.fSeedRate);
-		SISConfiguration.sMonitor.wLargImpl = FIN2DM(GUIConfigurationData.fImplementWidth);
+		SISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
+		SISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
+		SISConfiguration.sMonitor.wDistLinhas = IN2MM(GUIConfigurationData.wDistBetweenLines);
 	}
 	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
-}
-
-void GUI_UpdateConfiguration(sConfigurationDataMask *CfgDataMask)
-{
-	GUIConfigurationData.eLanguage = *CfgDataMask->eLanguage;
-	GUIConfigurationData.eUnit = *CfgDataMask->eUnit;
-	GUIConfigurationData.dVehicleID = *CfgDataMask->dVehicleID;
-	GUIConfigurationData.eMonitorArea = CfgDataMask->eMonitor;
-	GUIConfigurationData.fSeedRate = *CfgDataMask->fSeedRate;
-	GUIConfigurationData.bNumOfRows = *CfgDataMask->bNumOfRows;
-	GUIConfigurationData.fImplementWidth = *CfgDataMask->fImplementWidth;
-	GUIConfigurationData.fEvaluationDistance = *CfgDataMask->fEvaluationDistance;
-	GUIConfigurationData.bTolerance = *CfgDataMask->bTolerance;
-	GUIConfigurationData.fMaxSpeed = *CfgDataMask->fMaxSpeed;
-	GUIConfigurationData.eAlterRows = CfgDataMask->eAlterRows;
-	GUIConfigurationData.eAltType = CfgDataMask->eAltType;
 }
 
 void GUI_InitSensorStatus (void)
@@ -452,7 +440,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
-				GUI_UpdateConfiguration((sConfigurationDataMask *)GET_PUBLISHED_PAYLOAD(contract));
+				memcpy(&GUIConfigurationData, (sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract), sizeof(sConfigurationData));
 				GUI_SetSisConfiguration();
 			}
 
@@ -500,11 +488,14 @@ void GUI_vIdentifyEvent (contract_s* contract)
 eAPPError_s GUI_eInitGuiSubs (void)
 {
 	/* Prepare the signature - struture that notify the broker about subscribers */
-	SIGNATURE_HEADER(Gui, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(Gui), 0) == osOK);
+	SIGNATURE_HEADER(GuiIsobus, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiIsobus), 0) == osOK);
 
 	SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
+
+	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_CONTROL, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK);
 
 	return APP_ERROR_SUCCESS;
 }
@@ -535,9 +526,6 @@ void GUI_vGuiThread (void const *argument)
 	/* Inform Main thread that initialization was a success */
 	osThreadId xMainFromIsobusID = (osThreadId)argument;
 	osSignalSet(xMainFromIsobusID, MODULE_GUI);
-
-	SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
-	//ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
 
 	GUI_InitSensorStatus();
 

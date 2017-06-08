@@ -81,12 +81,13 @@ static sConfigurationDataMask sConfigDataMask =
 		.eUnit = (eSelectedUnitMeasurement*)(&asConfigInputList[1].bSelectedIndex),
 		.dVehicleID = &(asNumVarObjects[0].dValue),
 		.eMonitor = AREA_MONITOR_DISABLED,
-		.fSeedRate = &(asNumVarObjects[1].fValue),
+		.wSeedRate = &(asNumVarObjects[1].dValue),
 		.bNumOfRows = (uint8_t*)(&asNumVarObjects[2].dValue),
-		.fImplementWidth = &(asNumVarObjects[3].fValue),
-		.fEvaluationDistance = &(asNumVarObjects[4].fValue),
+		.wDistBetweenLines = &(asNumVarObjects[3].dValue),
+		.wEvaluationDistance = &(asNumVarObjects[4].dValue),
 		.bTolerance = (uint8_t*)(&asNumVarObjects[5].dValue),
 		.fMaxSpeed = &(asNumVarObjects[6].fValue),
+		.wImplementWidth =  &(asNumVarObjects[7].dValue),
 		.eAlterRows = ALTERNATE_ROWS_DISABLED,
 		.eAltType = ALTERNATED_ROWS_ODD
 	};
@@ -174,6 +175,7 @@ extern uint8_t pool[];
 
 // Installation
 eInstallationStatus InstallationStatus[36];
+PubMessage sISOPubMessage;
 
 /******************************************************************************
  * Function Prototypes
@@ -185,6 +187,7 @@ void ISO_vUpdateTestModeDataMask (void);
 void ISO_vUpdateTrimmingDataMask (void);
 void ISO_vUpdateSystemDataMask (void);
 void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask);
+void ISO_vTreatUpdateDataEvent(event_e ePubEvt);
 
 /******************************************************************************
  * Function Definitions
@@ -372,7 +375,6 @@ void ISO_vIsobusPublishThread (void const *argument)
 {
 	osEvent evt;
 	event_e ePubEvt;
-	PubMessage sISOPubMessage;
 
 	INITIALIZE_LOCAL_QUEUE(PublishQ);           //!< Initialise message queue to publish thread
 
@@ -409,15 +411,6 @@ void ISO_vIsobusPublishThread (void const *argument)
 					PUBLISH(CONTRACT(Isobus), 0);
 					break;
 				}
-				case EVENT_ISO_UPDATE_CURRENT_CONFIGURATION:
-				{
-					sISOPubMessage.dEvent = ePubEvt;
-					sISOPubMessage.eEvtType = EVENT_UPDATE;
-					sISOPubMessage.vPayload = (void*)&sConfigDataMask;
-					MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-					PUBLISH(CONTRACT(Isobus), 0);
-					break;
-				}
 				case EVENT_ISO_INSTALLATION_REPEAT_TEST:
 				{
 					sISOPubMessage.dEvent = ePubEvt;
@@ -443,6 +436,11 @@ void ISO_vIsobusPublishThread (void const *argument)
 					sISOPubMessage.vPayload = NULL;
 					MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
 					PUBLISH(CONTRACT(Isobus), 0);
+					break;
+				}
+				case EVENT_ISO_CONFIG_UPDATE_DATA:
+				{
+					ISO_vTreatUpdateDataEvent(ePubEvt);
 					break;
 				}
 				default:
@@ -573,6 +571,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
 					ISO_vUpdateConfigData((sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract));
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				default:
@@ -1142,6 +1141,10 @@ void ISO_vInitObjectStruct (void)
 	for (int i = 0; i < ARRAY_SIZE(asNumVarObjects); i++)
 	{
 		asNumVarObjects[i].wObjID = ISO_OBJECT_NUMBER_VARIABLE_ID + i;
+		if (i == ISO_NUM_LARGURA_IMPLEMENTO_INDEX)
+		{
+			asNumVarObjects[i].wObjID = ISO_OBJECT_LARGURA_IMPLEMENTO_ID;
+		}
 	}
 
 	// Initialize fill attributes objects
@@ -1193,9 +1196,8 @@ void ISO_vInitObjectStruct (void)
 // Used to FUNC_CHANGE_NUMERIC_VALUE message
 void ISO_vInputNumberVariableValue (uint16_t wObjectID, uint32_t dValue)
 {
-	uint16_t index = GET_INDEX_FROM_ID(wObjectID);
-
-	if (index < ARRAY_SIZE(asNumVarObjects))
+	uint16_t index;
+	for (index = 0; index < ARRAY_SIZE(asNumVarObjects); index++)
 	{
 		if (asNumVarObjects[index].wObjID == wObjectID)
 		{
@@ -1231,6 +1233,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	{
 		ISO_vInputIndexListValue(wObjectID, dValue);
 	}
+	//EVETNTO()
 }
 
 void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
@@ -1279,6 +1282,8 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 					case FUNC_VT_CHANGE_NUMERIC_VALUE:
 					{
 						ISO_vTreatChangeNumericValueEvent(sRcvMsg);
+						ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
+						PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 						break;
 					}
 					case FUNC_VT_CHANGE_ACTIVE_MASK:
@@ -1495,26 +1500,15 @@ void ISO_vChangeActiveMask(eIsobusMask eNewMask)
 
 void ISO_vUpdateConfigurationDataMask (void)
 {
-	*sConfigDataMask.eLanguage = LANGUAGE_ENGLISH;
-	*sConfigDataMask.eUnit = UNIT_IMPERIAL_SYSTEM;
-	*sConfigDataMask.dVehicleID = 1234;
-	sConfigDataMask.eMonitor = AREA_MONITOR_DISABLED;
-	*sConfigDataMask.fSeedRate = GET_UNSIGNED_INT_VALUE(2.5f);
-	*sConfigDataMask.bNumOfRows = 2;
-	*sConfigDataMask.fImplementWidth = 50;
-	*sConfigDataMask.fEvaluationDistance = 50;
-	*sConfigDataMask.bTolerance = 50;
-	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(12.0f);
-	sConfigDataMask.eAlterRows = ALTERNATE_ROWS_DISABLED;
-
 	ISO_vUpdateNumberVariableValue(0x81E3, *sConfigDataMask.eLanguage);
 //	ISO_vUpdateOutputNumberValue(0x9001, *sConfigDataMask.eUnit);
 
+	ISO_vUpdateNumberVariableValue(0x812d, *sConfigDataMask.wImplementWidth);
 	ISO_vUpdateNumberVariableValue(0x8000, *sConfigDataMask.dVehicleID);
-	ISO_vUpdateNumberVariableValue(0x8001, *sConfigDataMask.fSeedRate);
+	ISO_vUpdateNumberVariableValue(0x8001, *sConfigDataMask.wSeedRate);
 	ISO_vUpdateNumberVariableValue(0x8002, *sConfigDataMask.bNumOfRows);
-	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.fImplementWidth);
-	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.fEvaluationDistance);
+	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.wDistBetweenLines);
+	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.wEvaluationDistance);
 	ISO_vUpdateNumberVariableValue(0x8005, *sConfigDataMask.bTolerance);
 	ISO_vUpdateNumberVariableValue(0x8006, *sConfigDataMask.fMaxSpeed);
 }
@@ -1554,18 +1548,35 @@ void ISO_vUpdateSystemDataMask (void)
 
 }
 
+void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
+{
+	psCfgDataMask->eLanguage = *sConfigDataMask.eLanguage;
+	psCfgDataMask->eUnit = *sConfigDataMask.eUnit;
+	psCfgDataMask->dVehicleID = *sConfigDataMask.dVehicleID;
+	psCfgDataMask->eMonitorArea = sConfigDataMask.eMonitor;
+	psCfgDataMask->wSeedRate = *sConfigDataMask.wSeedRate;
+	psCfgDataMask->bNumOfRows = *sConfigDataMask.bNumOfRows;
+	psCfgDataMask->wDistBetweenLines = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wDistBetweenLines);
+	psCfgDataMask->wImplementWidth = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wImplementWidth);
+	psCfgDataMask->wEvaluationDistance = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wEvaluationDistance);
+	psCfgDataMask->bTolerance = *sConfigDataMask.bTolerance;
+	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
+	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
+}
+
 void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
 {
 	*sConfigDataMask.eLanguage = psCfgDataMask->eLanguage;
 	*sConfigDataMask.eUnit = psCfgDataMask->eUnit;
 	*sConfigDataMask.dVehicleID = psCfgDataMask->dVehicleID;
 	sConfigDataMask.eMonitor = psCfgDataMask->eMonitorArea;
-	*sConfigDataMask.fSeedRate = psCfgDataMask->fSeedRate;
+	*sConfigDataMask.wSeedRate = psCfgDataMask->wSeedRate;
 	*sConfigDataMask.bNumOfRows = psCfgDataMask->bNumOfRows;
-	*sConfigDataMask.fImplementWidth = psCfgDataMask->fImplementWidth;
-	*sConfigDataMask.fEvaluationDistance = psCfgDataMask->fEvaluationDistance;
+	*sConfigDataMask.wDistBetweenLines = GET_FLOAT_VALUE(psCfgDataMask->wDistBetweenLines);
+	*sConfigDataMask.wImplementWidth = GET_FLOAT_VALUE(psCfgDataMask->wImplementWidth);
+	*sConfigDataMask.wEvaluationDistance = GET_FLOAT_VALUE(psCfgDataMask->wEvaluationDistance);
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
-	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
+	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(psCfgDataMask->fMaxSpeed);
 	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
 }
 
@@ -1621,8 +1632,6 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 
 	osThreadSetPriority(NULL, osPriorityHigh);
 
-	ISO_vUpdateConfigurationDataMask();
-
 	ISO_vInitObjectStruct();
 
 	while (1)
@@ -1671,6 +1680,11 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 //					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;
 				}
+				case EVENT_GUI_UPDATE_CONFIG:
+				{
+					ISO_vUpdateConfigurationDataMask();
+					break;
+				}
 				default:
 					break;
 			}
@@ -1682,3 +1696,24 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 void ISO_vIsobusUpdateOPThread(void const *argument)
 {}
 #endif
+
+
+void ISO_vTreatUpdateDataEvent(event_e ePubEvt)
+{
+	static sConfigurationData GUIConfigurationData;
+	switch (eCurrentMask)
+	{
+		case DATA_MASK_CONFIGURATION:
+		{
+			ISO_vUpdateSisConfigData(&GUIConfigurationData);
+			sISOPubMessage.dEvent = EVENT_ISO_UPDATE_CURRENT_CONFIGURATION;
+			sISOPubMessage.eEvtType = EVENT_CLEAR;
+			sISOPubMessage.vPayload = (void*)&GUIConfigurationData;
+			MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
+			PUBLISH(CONTRACT(Isobus), 0);
+			break;
+		}
+		default:
+			break;
+	}
+}

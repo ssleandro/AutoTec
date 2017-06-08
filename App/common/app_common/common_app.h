@@ -173,16 +173,15 @@
 
 // Converter Macros
 #define MM2IN(value) 	((value) * 0.0393701)
-#define FIN2DM(value) 	((uint16_t)(value * 0.2541))
+#define IN2MM(value) 	((uint16_t)(value * 25.41))
+#define DM2IN(value) 	((value) * 3.93701)
+#define IN2DM(value) 	((uint16_t)(value * 0.2541))
 
 #define KMH2MLH(value) 	(value * 0.621371)
 #define MLH2KMH(value) 	(value * 1.60934)
 
-#define SM2SP(value) 	((value) / 3.28084)
-#define SP2SM(value) 	((uint16_t)(value * 3.28084))
-
-#define DM2FM(value) 	(((float)value) / 100)
-#define FM2DM(value) 	((uint16_t)(value * 100))
+#define SDM2SP(value) 	((value) / 3.93701)
+#define SP2SDM(value) 	((uint16_t)(value * 3.93701))
 
 /******************************************************************************
  * Typedefs
@@ -318,6 +317,7 @@ typedef enum event_e
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
 	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION,
 	EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION,
+	EVENT_ISO_CONFIG_UPDATE_DATA,
 	EVENT_CTL_UPDATE_CONFIG,        					//!< EVENT FILE CFG STATUS CHANGED
 	EVENT_CTL_UPDATE_INTERFACE_CFG,
 	EVENT_CTL_UPDATE_SAVE_CONFIG,
@@ -496,6 +496,8 @@ typedef struct
 	// Se egit  sistema imperial ou internacional
 	eSelectedUnitMeasurement eUnit;
 
+	//uint8_t alinhamento[2];
+
 } tsCfgIHM;
 
 //Receptor GPS interno:
@@ -520,16 +522,17 @@ typedef struct
 	//Receptor GPS interno:
 	tsCfgGPS sGPS;
 
-	//Identificacao do veiculo:
-	uint64_t dVeiculo;
-
 	//Configuracao IHM
 	tsCfgIHM sIHM;
+
+	//Identificacao do veiculo:
+	uint32_t dVeiculo;
 
 	//CRC16 desta estrutura:
 	uint16_t wCRC16;
 
-} UOS_tsConfiguracao;
+} __attribute__((aligned(1), packed)) UOS_tsConfiguracao;
+
 
 /******************************************************************************
  * Variables from Control module... Just for test...
@@ -753,8 +756,7 @@ typedef struct
 
 	// CRC da estrutura
 	uint16_t wCRC16;
-}
-IHM_tsConfig;
+} __attribute__((aligned(1), packed)) IHM_tsConfig;
 
 //Estrutura do registro estático:
 typedef struct
@@ -792,7 +794,7 @@ typedef struct
 	//no momento do cálculo do CRC.
 	uint32_t wCRC16;         //CRC desta estrutura.
 
-} AQR_tsRegEstaticoCRC;
+} __attribute__((aligned(1), packed)) AQR_tsRegEstaticoCRC;
 
 #define LCD_bBRILHO_MAX        99
 
