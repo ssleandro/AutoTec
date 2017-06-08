@@ -1608,9 +1608,9 @@ void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
 	psCfgDataMask->eMonitorArea = sConfigDataMask.eMonitor;
 	psCfgDataMask->wSeedRate = *sConfigDataMask.wSeedRate;
 	psCfgDataMask->bNumOfRows = *sConfigDataMask.bNumOfRows;
-	psCfgDataMask->wDistBetweenLines = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wDistBetweenLines);
-	psCfgDataMask->wImplementWidth = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wImplementWidth);
-	psCfgDataMask->wEvaluationDistance = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wEvaluationDistance);
+	psCfgDataMask->wDistBetweenLines = *sConfigDataMask.wDistBetweenLines;
+	psCfgDataMask->wImplementWidth = *sConfigDataMask.wImplementWidth;
+	psCfgDataMask->wEvaluationDistance = *sConfigDataMask.wEvaluationDistance;
 	psCfgDataMask->bTolerance = *sConfigDataMask.bTolerance;
 	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
 	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
@@ -1624,11 +1624,11 @@ void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
 	sConfigDataMask.eMonitor = psCfgDataMask->eMonitorArea;
 	*sConfigDataMask.wSeedRate = psCfgDataMask->wSeedRate;
 	*sConfigDataMask.bNumOfRows = psCfgDataMask->bNumOfRows;
-	*sConfigDataMask.wDistBetweenLines = GET_FLOAT_VALUE(psCfgDataMask->wDistBetweenLines);
-	*sConfigDataMask.wImplementWidth = GET_FLOAT_VALUE(psCfgDataMask->wImplementWidth);
-	*sConfigDataMask.wEvaluationDistance = GET_FLOAT_VALUE(psCfgDataMask->wEvaluationDistance);
+	*sConfigDataMask.wDistBetweenLines = psCfgDataMask->wDistBetweenLines;
+	*sConfigDataMask.wImplementWidth = psCfgDataMask->wImplementWidth;
+	*sConfigDataMask.wEvaluationDistance = psCfgDataMask->wEvaluationDistance;
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
-	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(psCfgDataMask->fMaxSpeed);
+	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
 	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
 }
 
