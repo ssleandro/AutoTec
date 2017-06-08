@@ -44,21 +44,12 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define SENSOR_MODULES \
-    X("SensorRecv"      , 512 , osPriorityNormal      , SEN_vSensorRecvThread               , (1 << 0) , 1 ) \
-    X("SensorWrite"     , 512 , osPriorityAboveNormal , SEN_vSensorWriteThread              , (1 << 1) , 2 ) \
-    X("SensorManagement", 1024 , osPriorityNormal      , SEN_vSensorNetworkManagementThread  , (1 << 2) , 3 ) \
-    X("SensorPublish"   , 512 , osPriorityBelowNormal , SEN_vSensorPublishThread            , (1 << 3) , 4 ) \
-    X(NULL              ,   0 , 0                     , NULL                                , 0        , 5 )
+    X("SensorRecv"      , 512  , osPriorityAboveNormal  , SEN_vSensorRecvThread               , (1 << 0) , 1 ) \
+    X("SensorWrite"     , 512  , osPriorityAboveNormal  , SEN_vSensorWriteThread              , (1 << 1) , 2 ) \
+    X("SensorManagement", 1024 , osPriorityNormal       , SEN_vSensorNetworkManagementThread  , (1 << 2) , 3 ) \
+    X("SensorPublish"   , 512  , osPriorityNormal  	  , SEN_vSensorPublishThread            , (1 << 3) , 4 ) \
+    X(NULL              ,   0  , 0                      , NULL                                , 0        , 5 )
 
-// 500, 250, 150, 250
-/*
- X("SensorRecv"      , 250 , osPriorityNormal      , SEN_vSensorRecvThread               , (1 << 0) , 1 ) \
-    X("SensorWrite"     , 350 , osPriorityNormal      , SEN_vSensorWriteThread              , (1 << 1) , 2 ) \
-    X("SensorManagement", 500 , osPriorityNormal      , SEN_vSensorNetworkManagementThread  , (1 << 2) , 3 ) \
-    X("SensorAQR"       , 250 , osPriorityNormal      , SEN_vSensorAQRThread                , (1 << 3) , 4 ) \
-    X("SensorPublish"   , 250 , osPriorityBelowNormal , SEN_vSensorPublishThread            , (1 << 4) , 5 ) \
-    X(NULL              ,   0 , 0                     , NULL                                , 0        , 6 )
- */
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
@@ -121,12 +112,10 @@ extern void SEN_vSensorWriteThread (void const *argument);
 
 extern void SEN_vSensorNetworkManagementThread (void const *argument);
 
-extern void SEN_vSensorAQRThread (void const *argument);
-
 extern void SEN_vDetectThread (thisWDTFlag* flag, uint8_t* bCounter, void* pFunc);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif  /*APP_ISOBUS_SRC_ISOBUS_THREADCONTROL_H_*/
+#endif  /*APP_SENSOR_SRC_SENSOR_THREADCONTROL_H_*/

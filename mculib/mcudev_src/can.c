@@ -508,8 +508,9 @@ void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANM
 {
 	// Configure an object to TX_RTR_RX_DATA and gets the object index
 	uint32_t obj_idx = CAN_vConfigRemoteMessageObj(pCAN, CANMessage);
-
 	uint32_t arb1, arb2, mctrl, size;
+
+	uint16_t wCount = 0;
 
 	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
 	{
@@ -563,7 +564,7 @@ void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANM
 		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
 			;     // Wait for write to finish
 
-		while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER(pCAN->eCANPort)) >> (obj_idx - 1))
+		while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER(pCAN->eCANPort)) >> (obj_idx - 1) && !(wCount++ > 0xFF))
 		{    // blocking , wait for sending completed
 		}
 	}
