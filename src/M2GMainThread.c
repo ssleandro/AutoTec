@@ -53,19 +53,19 @@
 // a structure to be used on thread creation function
 //  name            , stacksize, priority       , threadfunc              , waitfor         , WDTFunction
 #define STARTING_MODULES \
-        X("Diagnostic" , 500 , osPriorityLow            , DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
-        X("Broker"     , 150 , osPriorityHigh           , BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
-		X("Control"    , 200 , osPriorityHigh           , CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
-		X("Filesys"    , 1024 , osPriorityHigh        	, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
-		X("GPS"        , 400 , osPriorityAboveNormal    , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
-        X("Isobus"     , 200 , osPriorityRealtime       , ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
-        X("Gui"        , 200 , osPriorityAboveNormal    , GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
-        X("Sensor"     , 200 , osPriorityAboveNormal    , SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
-        X("Acquireg"   , 200 , osPriorityAboveNormal    , AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
-        X(NULL         ,   0 , 0                        , NULL                  , 0                 , NULL         )
+        X("Diagnostic" , 512  , osPriorityLow            , DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
+        X("Broker"     , 256  , osPriorityHigh           , BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
+		X("Control"    , 512  , osPriorityHigh           , CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
+		X("Filesys"    , 1024 , osPriorityHigh        	 , FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
+		X("GPS"        , 512  , osPriorityAboveNormal    , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
+        X("Isobus"     , 512  , osPriorityRealtime       , ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
+        X("Gui"        , 512  , osPriorityAboveNormal    , GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
+        X("Sensor"     , 512  , osPriorityAboveNormal    , SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
+        X("Acquireg"   , 512  , osPriorityAboveNormal    , AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
+        X(NULL         ,   0  , 0                        , NULL                  , 0                 , NULL         )
 
 /*
-#define STARTING_MODULES \
+ #define STARTING_MODULES \
         X("Diagnostic" , 500 , osPriorityLow            , DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
         X("Broker"     , 150 , osPriorityHigh           , BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
         X("Control"    , 200 , osPriorityHigh           , CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
@@ -75,14 +75,13 @@
         X("GPS"        , 400 , osPriorityAboveNormal    , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
         X("Acquireg"   , 200 , osPriorityAboveNormal    , AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
         X(NULL         ,   0 , 0                        , NULL                  , 0                 , NULL         )
-*/
+ */
 
 /* ACQUIREG TEST */
 //        X("Control"    , 200 , osPriorityHigh        , CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  )
 //        X("Sensor"     , 200 , osPriorityHigh        , SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  )
 //        X("GPS"        , 400 , osPriorityHigh        , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  )
 //        X("Acquireg"   , 200 , osPriorityHigh        , AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  )
-
 
 //        X("Diagnostic" , 500 , osPriorityLow         , DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  )
 //        X("Broker"     , 150 , osPriorityHigh        , BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  )
@@ -92,7 +91,6 @@
 //        X("Buzzer"     , 150 , osPriorityBelowNormal , BUZ_vBuzzerThread     , MODULE_BUZZER     , BUZ_WDTData  )
 //        X("Filesys"    , 200 , osPriorityHigh        , FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  )
 //        X("GPS"        , 400 , osPriorityHigh        , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  )
-
 //        X("Diagnostic" , 500 , osPriorityLow         , DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  )
 //        X("Broker"     , 150 , osPriorityHigh        , BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  )
 //        X("Sensor"     , 200 , osPriorityHigh        , SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  )
@@ -103,28 +101,27 @@
 //        X("Records"    , 200 , osPriorityHigh        , REC_vRecordsThread    , MODULE_RECORDS    , REC_WDTData  )
 //        X("Simulator"  , 200 , osPriorityHigh        , SIM_vSimulatorThread  , MODULE_SIMULATOR  , SIM_WDTData  )
 
-
 /******************************************************************************
  * Module Typedefs
  *******************************************************************************/
-typedef uint8_t * (*WDTFunc)(uint8_t *);  //!< Watchdog function typedef
+typedef uint8_t * (*WDTFunc) (uint8_t *);  //!< Watchdog function typedef
 
 /**
  * This Typedef is used to define Threads data for initialization
  */
 typedef struct startingThreads_t
 {
-    osThreadDef_t   thisThread;       //!< Thread Definition
-    uint32_t    thisModule;           //!< Synchronization
-    WDTFunc  thisFunc;                //!< Watchdog function used to retrieve module wdt arrays
-}startingThreads_t;
+	osThreadDef_t thisThread;       //!< Thread Definition
+	uint32_t thisModule;           //!< Synchronization
+	WDTFunc thisFunc;                //!< Watchdog function used to retrieve module wdt arrays
+} startingThreads_t;
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
 #define X(a, b, c, d, e, f) {.thisThread.name = a, .thisThread.stacksize = b, .thisThread.tpriority = c, .thisThread.pthread = d, .thisModule = e, .thisFunc = f},
 startingThreads_t sThreads[] = {
-        STARTING_MODULES
-};  //!< Array used to hold Initial threads definition for each module
+STARTING_MODULES
+	};  //!< Array used to hold Initial threads definition for each module
 #undef X
 /******************************************************************************
  * Function Prototypes
@@ -149,82 +146,82 @@ startingThreads_t sThreads[] = {
  * @return     void
  *
  * \b Example
-~~~~~~~~~~~~~~~{.c}
-  * startingThreads_t sThreads;
-  *
-  * sThreads.thisThread.name = "TestThread";          //Thread name
-  * sThreads.thisThread.stacksize = 200;              //Stack size
-  * sThreads.thisThread.tpriority = osPriorityNormal; //Priority
-  * sThreads.thisThread.pthread = TST_Thread;         //Thread function pointer
-  * sThreads.thisModule = MODULE_TEST;                //Wait signal value for synchronization
-  * sThreads.thisFunc = TST_WDTData;                  //Watchdog function to return WDTarray
-  *
-  * MAI_vCreateThread(sThreads);
-~~~~~~~~~~~~~~~
-  *
-  * @see MAI_vCreateThread, MAI_TDAMainThread
-  *
-  * <br><b> - HISTORY OF CHANGES - </b>
-  *
-  * <table align="left" style="width:800px">
-  * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-  * <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-  * </table><br><br>
-  * <hr>
-  *
-  *******************************************************************************/
-static void MAI_vCreateThread(const startingThreads_t sThread )
+ ~~~~~~~~~~~~~~~{.c}
+ * startingThreads_t sThreads;
+ *
+ * sThreads.thisThread.name = "TestThread";          //Thread name
+ * sThreads.thisThread.stacksize = 200;              //Stack size
+ * sThreads.thisThread.tpriority = osPriorityNormal; //Priority
+ * sThreads.thisThread.pthread = TST_Thread;         //Thread function pointer
+ * sThreads.thisModule = MODULE_TEST;                //Wait signal value for synchronization
+ * sThreads.thisFunc = TST_WDTData;                  //Watchdog function to return WDTarray
+ *
+ * MAI_vCreateThread(sThreads);
+ ~~~~~~~~~~~~~~~
+ *
+ * @see MAI_vCreateThread, MAI_TDAMainThread
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 12/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+static void MAI_vCreateThread (const startingThreads_t sThread)
 {
-    osThreadId xThreads = osThreadCreate(&sThread.thisThread, (void*)osThreadGetId());
-    ASSERT(xThreads != NULL);
-    if (sThread.thisModule != 0)
-    {
-        osSignalWait(sThread.thisModule, osWaitForever); //wait for broker initialization
-    }
+	osThreadId xThreads = osThreadCreate(&sThread.thisThread, (void*)osThreadGetId());
+	ASSERT(xThreads != NULL);
+	if (sThread.thisModule != 0)
+	{
+		osSignalWait(sThread.thisModule, osWaitForever); //wait for broker initialization
+	}
 }
 
 void MAI_M2GMainThread (void const *argument)
 {
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-    SEGGER_SYSVIEW_Start(); // Start Trace
-    SEGGER_SYSVIEW_Print("MAIN Thread Created");
+	SEGGER_SYSVIEW_Start(); // Start Trace
+	SEGGER_SYSVIEW_Print("MAIN Thread Created");
 #endif
 
-    WDS_eStart(); //Start Watchdog
+	WDS_eStart(); //Start Watchdog
 
-    uint8_t bIndex = 0;
-    while(sThreads[bIndex].thisThread.pthread != NULL)
-    {
-        uint8_t bSize = 0;
-        if(sThreads[bIndex].thisFunc != NULL)
-        {
-            uint8_t* pFunc = sThreads[bIndex].thisFunc(&bSize);
-            WDS_eAddModule(pFunc, bSize, sThreads[bIndex].thisModule);
-        }
-        MAI_vCreateThread(sThreads[bIndex++]);
-        WDS_eFeed();  //Feed dog
-    }
+	uint8_t bIndex = 0;
+	while (sThreads[bIndex].thisThread.pthread != NULL)
+	{
+		uint8_t bSize = 0;
+		if (sThreads[bIndex].thisFunc != NULL)
+		{
+			uint8_t* pFunc = sThreads[bIndex].thisFunc(&bSize);
+			WDS_eAddModule(pFunc, bSize, sThreads[bIndex].thisModule);
+		}
+		MAI_vCreateThread(sThreads[bIndex++]);
+		WDS_eFeed();  //Feed dog
+	}
 
 //#define FUNCTION_TEST
 #if defined (FUNCTION_TEST)
-    osThreadDef_t sBrokerTestThread;
+	osThreadDef_t sBrokerTestThread;
 
-    sBrokerTestThread.name = "BrokerTest";
-    sBrokerTestThread.stacksize = 500;
-    sBrokerTestThread.tpriority = osPriorityBelowNormal;
-    sBrokerTestThread.pthread = vRunBrokerTestsThread;
+	sBrokerTestThread.name = "BrokerTest";
+	sBrokerTestThread.stacksize = 500;
+	sBrokerTestThread.tpriority = osPriorityBelowNormal;
+	sBrokerTestThread.pthread = vRunBrokerTestsThread;
 
-    osThreadCreate(&sBrokerTestThread, (void*)osThreadGetId());
-    osSignalWait((1 << 0), osWaitForever); //wait for Test initialization
+	osThreadCreate(&sBrokerTestThread, (void*)osThreadGetId());
+	osSignalWait((1 << 0), osWaitForever); //wait for Test initialization
 #endif
 
-    while(1)
-    {
-        osDelay(EXPIRATION_TIMER - 500);
-        WDS_eTreat(); //Handle Dog
-        //osThreadSuspend(NULL);  //Too much work for me, Im going to sleep now...
-    }
-    osThreadTerminate(NULL);  //Ohhhh noes.....
+	while (1)
+	{
+		osDelay(EXPIRATION_TIMER - 500);
+		WDS_eTreat(); //Handle Dog
+		//osThreadSuspend(NULL);  //Too much work for me, Im going to sleep now...
+	}
+	osThreadTerminate(NULL);  //Ohhhh noes.....
 }
 
 #endif

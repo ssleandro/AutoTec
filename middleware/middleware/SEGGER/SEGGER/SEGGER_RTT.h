@@ -1,53 +1,53 @@
 /*********************************************************************
-*               SEGGER MICROCONTROLLER GmbH & Co. KG                 *
-*       Solutions for real time microcontroller applications         *
-**********************************************************************
-*                                                                    *
-*       (c) 2015  SEGGER Microcontroller GmbH & Co. KG               *
-*                                                                    *
-*       www.segger.com     Support: support@segger.com               *
-*                                                                    *
-**********************************************************************
-*                                                                    *
-*       SEGGER SystemView * Real-time application analysis           *
-*                                                                    *
-**********************************************************************
-*                                                                    *
-* All rights reserved.                                               *
-*                                                                    *
-* * This software may in its unmodified form be freely redistributed *
-*   in source form.                                                  *
-* * The source code may be modified, provided the source code        *
-*   retains the above copyright notice, this list of conditions and  *
-*   the following disclaimer.                                        *
-* * Modified versions of this software in source or linkable form    *
-*   may not be distributed without prior consent of SEGGER.          *
-*                                                                    *
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND     *
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,  *
-* THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A        *
-* PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL               *
-* SEGGER Microcontroller BE LIABLE FOR ANY DIRECT, INDIRECT,         *
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES           *
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS    *
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS            *
-* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,       *
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING          *
-* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS *
-* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.       *
-*                                                                    *
-**********************************************************************
-*                                                                    *
-*       SystemView version: V2.26                                    *
-*                                                                    *
-**********************************************************************
----------------------------END-OF-HEADER------------------------------
-File    : SEGGER_RTT.h
-Purpose : Implementation of SEGGER real-time transfer which allows
-          real-time communication on targets which support debugger 
-          memory accesses while the CPU is running.
-----------------------------------------------------------------------
-*/
+ *               SEGGER MICROCONTROLLER GmbH & Co. KG                 *
+ *       Solutions for real time microcontroller applications         *
+ **********************************************************************
+ *                                                                    *
+ *       (c) 2015  SEGGER Microcontroller GmbH & Co. KG               *
+ *                                                                    *
+ *       www.segger.com     Support: support@segger.com               *
+ *                                                                    *
+ **********************************************************************
+ *                                                                    *
+ *       SEGGER SystemView * Real-time application analysis           *
+ *                                                                    *
+ **********************************************************************
+ *                                                                    *
+ * All rights reserved.                                               *
+ *                                                                    *
+ * * This software may in its unmodified form be freely redistributed *
+ *   in source form.                                                  *
+ * * The source code may be modified, provided the source code        *
+ *   retains the above copyright notice, this list of conditions and  *
+ *   the following disclaimer.                                        *
+ * * Modified versions of this software in source or linkable form    *
+ *   may not be distributed without prior consent of SEGGER.          *
+ *                                                                    *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND     *
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,  *
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A        *
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL               *
+ * SEGGER Microcontroller BE LIABLE FOR ANY DIRECT, INDIRECT,         *
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES           *
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS    *
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS            *
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,       *
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING          *
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS *
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.       *
+ *                                                                    *
+ **********************************************************************
+ *                                                                    *
+ *       SystemView version: V2.26                                    *
+ *                                                                    *
+ **********************************************************************
+ ---------------------------END-OF-HEADER------------------------------
+ File    : SEGGER_RTT.h
+ Purpose : Implementation of SEGGER real-time transfer which allows
+ real-time communication on targets which support debugger 
+ memory accesses while the CPU is running.
+ ----------------------------------------------------------------------
+ */
 
 #ifndef SEGGER_RTT_H
 #define SEGGER_RTT_H
@@ -55,43 +55,45 @@ Purpose : Implementation of SEGGER real-time transfer which allows
 #include "SEGGER_RTT_Conf.h"
 
 /*********************************************************************
-*
-*       Defines, fixed
-*
-**********************************************************************
-*/
+ *
+ *       Defines, fixed
+ *
+ **********************************************************************
+ */
 
 /*********************************************************************
-*
-*       Types
-*
-**********************************************************************
-*/
+ *
+ *       Types
+ *
+ **********************************************************************
+ */
 
 //
 // Description for a circular buffer (also called "ring buffer")
 // which is used as up-buffer (T->H)
 //
-typedef struct {
-  const     char*    sName;         // Optional name. Standard names so far are: "Terminal", "SysView", "J-Scope_t4i4"
-            char*    pBuffer;       // Pointer to start of buffer
-            unsigned SizeOfBuffer;  // Buffer size in bytes. Note that one byte is lost, as this implementation does not fill up the buffer in order to avoid the problem of being unable to distinguish between full and empty.
-            unsigned WrOff;         // Position of next item to be written by either target.
-  volatile  unsigned RdOff;         // Position of next item to be read by host. Must be volatile since it may be modified by host.
-            unsigned Flags;         // Contains configuration flags
+typedef struct
+{
+	const char* sName;         // Optional name. Standard names so far are: "Terminal", "SysView", "J-Scope_t4i4"
+	char* pBuffer;       // Pointer to start of buffer
+	unsigned SizeOfBuffer; // Buffer size in bytes. Note that one byte is lost, as this implementation does not fill up the buffer in order to avoid the problem of being unable to distinguish between full and empty.
+	unsigned WrOff;         // Position of next item to be written by either target.
+	volatile unsigned RdOff; // Position of next item to be read by host. Must be volatile since it may be modified by host.
+	unsigned Flags;         // Contains configuration flags
 } SEGGER_RTT_BUFFER_UP;
 
 //
 // Description for a circular buffer (also called "ring buffer")
 // which is used as down-buffer (H->T)
 //
-typedef struct {
-  const     char*    sName;         // Optional name. Standard names so far are: "Terminal", "SysView", "J-Scope_t4i4"
-            char*    pBuffer;       // Pointer to start of buffer
-            unsigned SizeOfBuffer;  // Buffer size in bytes. Note that one byte is lost, as this implementation does not fill up the buffer in order to avoid the problem of being unable to distinguish between full and empty.
-  volatile  unsigned WrOff;         // Position of next item to be written by host. Must be volatile since it may be modified by host.
-            unsigned RdOff;         // Position of next item to be read by target (down-buffer).
-            unsigned Flags;         // Contains configuration flags
+typedef struct
+{
+	const char* sName;         // Optional name. Standard names so far are: "Terminal", "SysView", "J-Scope_t4i4"
+	char* pBuffer;       // Pointer to start of buffer
+	unsigned SizeOfBuffer; // Buffer size in bytes. Note that one byte is lost, as this implementation does not fill up the buffer in order to avoid the problem of being unable to distinguish between full and empty.
+	volatile unsigned WrOff; // Position of next item to be written by host. Must be volatile since it may be modified by host.
+	unsigned RdOff;         // Position of next item to be read by target (down-buffer).
+	unsigned Flags;         // Contains configuration flags
 } SEGGER_RTT_BUFFER_DOWN;
 
 //
@@ -99,80 +101,84 @@ typedef struct {
 // as well as the configuration for each buffer
 //
 //
-typedef struct {
-  char                    acID[16];                                 // Initialized to "SEGGER RTT"
-  int                     MaxNumUpBuffers;                          // Initialized to SEGGER_RTT_MAX_NUM_UP_BUFFERS (type. 2)
-  int                     MaxNumDownBuffers;                        // Initialized to SEGGER_RTT_MAX_NUM_DOWN_BUFFERS (type. 2)
-  SEGGER_RTT_BUFFER_UP    aUp[SEGGER_RTT_MAX_NUM_UP_BUFFERS];       // Up buffers, transferring information up from target via debug probe to host
-  SEGGER_RTT_BUFFER_DOWN  aDown[SEGGER_RTT_MAX_NUM_DOWN_BUFFERS];   // Down buffers, transferring information down from host via debug probe to target
+typedef struct
+{
+	char acID[16];                                 // Initialized to "SEGGER RTT"
+	int MaxNumUpBuffers;                          // Initialized to SEGGER_RTT_MAX_NUM_UP_BUFFERS (type. 2)
+	int MaxNumDownBuffers;                        // Initialized to SEGGER_RTT_MAX_NUM_DOWN_BUFFERS (type. 2)
+	SEGGER_RTT_BUFFER_UP aUp[SEGGER_RTT_MAX_NUM_UP_BUFFERS]; // Up buffers, transferring information up from target via debug probe to host
+	SEGGER_RTT_BUFFER_DOWN aDown[SEGGER_RTT_MAX_NUM_DOWN_BUFFERS]; // Down buffers, transferring information down from host via debug probe to target
 } SEGGER_RTT_CB;
 
 /*********************************************************************
-*
-*       Global data
-*
-**********************************************************************
-*/
+ *
+ *       Global data
+ *
+ **********************************************************************
+ */
 extern SEGGER_RTT_CB _SEGGER_RTT;
 
 /*********************************************************************
-*
-*       RTT API functions
-*
-**********************************************************************
-*/
+ *
+ *       RTT API functions
+ *
+ **********************************************************************
+ */
 #ifdef __cplusplus
-  extern "C" {
+extern "C"
+{
 #endif
-int          SEGGER_RTT_AllocDownBuffer  (const char* sName, void* pBuffer, unsigned BufferSize, unsigned Flags);
-int          SEGGER_RTT_AllocUpBuffer    (const char* sName, void* pBuffer, unsigned BufferSize, unsigned Flags);
-int          SEGGER_RTT_ConfigUpBuffer   (unsigned BufferIndex, const char* sName, void* pBuffer, unsigned BufferSize, unsigned Flags);
-int          SEGGER_RTT_ConfigDownBuffer (unsigned BufferIndex, const char* sName, void* pBuffer, unsigned BufferSize, unsigned Flags);
-int          SEGGER_RTT_GetKey           (void);
-unsigned     SEGGER_RTT_HasData          (unsigned BufferIndex);
-int          SEGGER_RTT_HasKey           (void);
-void         SEGGER_RTT_Init             (void);
-unsigned     SEGGER_RTT_Read             (unsigned BufferIndex,       void* pBuffer, unsigned BufferSize);
-unsigned     SEGGER_RTT_ReadNoLock       (unsigned BufferIndex,       void* pData,   unsigned BufferSize);
-int          SEGGER_RTT_SetNameDownBuffer(unsigned BufferIndex, const char* sName);
-int          SEGGER_RTT_SetNameUpBuffer  (unsigned BufferIndex, const char* sName);
-int          SEGGER_RTT_WaitKey          (void);
-unsigned     SEGGER_RTT_Write            (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
-unsigned     SEGGER_RTT_WriteNoLock      (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
-unsigned     SEGGER_RTT_WriteSkipNoLock  (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
-unsigned     SEGGER_RTT_WriteString      (unsigned BufferIndex, const char* s);
+int SEGGER_RTT_AllocDownBuffer (const char* sName, void* pBuffer, unsigned BufferSize, unsigned Flags);
+int SEGGER_RTT_AllocUpBuffer (const char* sName, void* pBuffer, unsigned BufferSize, unsigned Flags);
+int SEGGER_RTT_ConfigUpBuffer (unsigned BufferIndex, const char* sName, void* pBuffer, unsigned BufferSize,
+	unsigned Flags);
+int SEGGER_RTT_ConfigDownBuffer (unsigned BufferIndex, const char* sName, void* pBuffer, unsigned BufferSize,
+	unsigned Flags);
+int SEGGER_RTT_GetKey (void);
+unsigned SEGGER_RTT_HasData (unsigned BufferIndex);
+int SEGGER_RTT_HasKey (void);
+void SEGGER_RTT_Init (void);
+unsigned SEGGER_RTT_Read (unsigned BufferIndex, void* pBuffer, unsigned BufferSize);
+unsigned SEGGER_RTT_ReadNoLock (unsigned BufferIndex, void* pData, unsigned BufferSize);
+int SEGGER_RTT_SetNameDownBuffer (unsigned BufferIndex, const char* sName);
+int SEGGER_RTT_SetNameUpBuffer (unsigned BufferIndex, const char* sName);
+int SEGGER_RTT_WaitKey (void);
+unsigned SEGGER_RTT_Write (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
+unsigned SEGGER_RTT_WriteNoLock (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
+unsigned SEGGER_RTT_WriteSkipNoLock (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
+unsigned SEGGER_RTT_WriteString (unsigned BufferIndex, const char* s);
 //
 // Function macro for performance optimization
 //
 #define      SEGGER_RTT_HASDATA(n)       (_SEGGER_RTT.aDown[n].WrOff - _SEGGER_RTT.aDown[n].RdOff)
 
 /*********************************************************************
-*
-*       RTT "Terminal" API functions
-*
-**********************************************************************
-*/
-int     SEGGER_RTT_SetTerminal        (char TerminalId);
-int     SEGGER_RTT_TerminalOut        (char TerminalId, const char* s);
+ *
+ *       RTT "Terminal" API functions
+ *
+ **********************************************************************
+ */
+int SEGGER_RTT_SetTerminal (char TerminalId);
+int SEGGER_RTT_TerminalOut (char TerminalId, const char* s);
 
 /*********************************************************************
-*
-*       RTT printf functions (require SEGGER_RTT_printf.c)
-*
-**********************************************************************
-*/
-int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
+ *
+ *       RTT printf functions (require SEGGER_RTT_printf.c)
+ *
+ **********************************************************************
+ */
+int SEGGER_RTT_printf (unsigned BufferIndex, const char * sFormat, ...);
 
 #ifdef __cplusplus
-  }
+}
 #endif
 
 /*********************************************************************
-*
-*       Defines
-*
-**********************************************************************
-*/
+ *
+ *       Defines
+ *
+ **********************************************************************
+ */
 
 //
 // Operating modes. Define behavior if buffer is full (not enough space for entire message)
@@ -224,7 +230,6 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
 #define RTT_CTRL_BG_BRIGHT_MAGENTA    "[4;45m"
 #define RTT_CTRL_BG_BRIGHT_CYAN       "[4;46m"
 #define RTT_CTRL_BG_BRIGHT_WHITE      "[4;47m"
-
 
 #endif
 

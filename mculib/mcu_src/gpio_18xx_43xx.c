@@ -48,55 +48,63 @@
  ****************************************************************************/
 
 /* Initialize GPIO block */
-void Chip_GPIO_Init(LPC_GPIO_T *pGPIO)
+void Chip_GPIO_Init (LPC_GPIO_T *pGPIO)
 {
 }
 
 /* De-Initialize GPIO block */
-void Chip_GPIO_DeInit(LPC_GPIO_T *pGPIO)
+void Chip_GPIO_DeInit (LPC_GPIO_T *pGPIO)
 {
 }
 
 /* Set a GPIO direction */
-void Chip_GPIO_WriteDirBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit, bool setting)
+void Chip_GPIO_WriteDirBit (LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit, bool setting)
 {
-	if (setting) {
+	if (setting)
+	{
 		pGPIO->DIR[port] |= 1UL << bit;
 	}
-	else {
+	else
+	{
 		pGPIO->DIR[port] &= ~(1UL << bit);
 	}
 }
 
 /* Set Direction for a GPIO port */
-void Chip_GPIO_SetDir(LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue, uint8_t out)
+void Chip_GPIO_SetDir (LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue, uint8_t out)
 {
-	if (out) {
+	if (out)
+	{
 		pGPIO->DIR[portNum] |= bitValue;
 	}
-	else {
+	else
+	{
 		pGPIO->DIR[portNum] &= ~bitValue;
 	}
 }
 
 /* Set GPIO direction for a single GPIO pin */
-void Chip_GPIO_SetPinDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool output)
+void Chip_GPIO_SetPinDIR (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool output)
 {
-	if (output) {
+	if (output)
+	{
 		Chip_GPIO_SetPinDIROutput(pGPIO, port, pin);
 	}
-	else {
+	else
+	{
 		Chip_GPIO_SetPinDIRInput(pGPIO, port, pin);
 	}
 }
 
 /* Set GPIO direction for a all selected GPIO pins to an input or output */
-void Chip_GPIO_SetPortDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pinMask, bool outSet)
+void Chip_GPIO_SetPortDIR (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pinMask, bool outSet)
 {
-	if (outSet) {
+	if (outSet)
+	{
 		Chip_GPIO_SetPortDIROutput(pGPIO, port, pinMask);
 	}
-	else {
+	else
+	{
 		Chip_GPIO_SetPortDIRInput(pGPIO, port, pinMask);
 	}
 }

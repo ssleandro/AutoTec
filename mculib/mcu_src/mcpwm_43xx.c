@@ -1,34 +1,34 @@
 /**********************************************************************
-* $Id$		lpc43xx_mcpwm.c		2011-06-02
-*//**
-* @file		lpc43xx_mcpwm.c
-* @brief	Contains all functions support for Motor Control PWM firmware
-* 			library on lpc43xx
-* @version	1.0
-* @date		02. June. 2011
-* @author	NXP MCU SW Application Team
-*
-* Copyright(C) 2011, NXP Semiconductor
-* All rights reserved.
-*
-***********************************************************************
-* Software that is described herein is for illustrative purposes only
-* which provides customers with programming information regarding the
-* products. This software is supplied "AS IS" without any warranties.
-* NXP Semiconductors assumes no responsibility or liability for the
-* use of the software, conveys no license or title under any patent,
-* copyright, or mask work right to the product. NXP Semiconductors
-* reserves the right to make changes in the software without
-* notification. NXP Semiconductors also make no representation or
-* warranty that such application will be suitable for the specified
-* use without further testing or modification.
-* Permission to use, copy, modify, and distribute this software and its
-* documentation is hereby granted, under NXP Semiconductors�
-* relevant copyright in the software, without fee, provided that it
-* is used in conjunction with NXP Semiconductors microcontrollers.  This
-* copyright, permission, and disclaimer notice must appear in all copies of
-* this code.
-**********************************************************************/
+ * $Id$		lpc43xx_mcpwm.c		2011-06-02
+ *//**
+ * @file		lpc43xx_mcpwm.c
+ * @brief	Contains all functions support for Motor Control PWM firmware
+ * 			library on lpc43xx
+ * @version	1.0
+ * @date		02. June. 2011
+ * @author	NXP MCU SW Application Team
+ *
+ * Copyright(C) 2011, NXP Semiconductor
+ * All rights reserved.
+ *
+ ***********************************************************************
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation is hereby granted, under NXP Semiconductors�
+ * relevant copyright in the software, without fee, provided that it
+ * is used in conjunction with NXP Semiconductors microcontrollers.  This
+ * copyright, permission, and disclaimer notice must appear in all copies of
+ * this code.
+ **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
 /** @addtogroup MCPWM
@@ -51,23 +51,21 @@
  * @param[in]	MCPWMx 	Motor Control PWM peripheral selected, should be: LPC_MCPWM
  * @return		None
  **********************************************************************/
-void MCPWM_Init(LPC_MCPWM_T *MCPWMx)
+void MCPWM_Init (LPC_MCPWM_T *MCPWMx)
 {
 	/* Turn On MCPWM PCLK */
 	//LPC_CGU->BASE_VPB1_CLK = (SRC_PL160M_0<<24) | (1<<11);
 	//TODO: CGU_EntityConnect(CGU_CLKSRC_PLL1, CGU_BASE_APB1);
-
 	MCPWMx->CAP_CLR = MCPWM_CAPCLR_CAP(0) | MCPWM_CAPCLR_CAP(1) | MCPWM_CAPCLR_CAP(2);
 
-	MCPWMx->INTF_CLR = MCPWM_INT_ILIM(0) | MCPWM_INT_ILIM(1) | MCPWM_INT_ILIM(2) \
-								| MCPWM_INT_IMAT(0) | MCPWM_INT_IMAT(1) | MCPWM_INT_IMAT(2) \
-								| MCPWM_INT_ICAP(0) | MCPWM_INT_ICAP(1) | MCPWM_INT_ICAP(2);
+	MCPWMx->INTF_CLR = MCPWM_INT_ILIM(0) | MCPWM_INT_ILIM(1) | MCPWM_INT_ILIM(2)
+		| MCPWM_INT_IMAT(0) | MCPWM_INT_IMAT(1) | MCPWM_INT_IMAT(2)
+		| MCPWM_INT_ICAP(0) | MCPWM_INT_ICAP(1) | MCPWM_INT_ICAP(2);
 
-	MCPWMx->INTEN_CLR = MCPWM_INT_ILIM(0) | MCPWM_INT_ILIM(1) | MCPWM_INT_ILIM(2) \
-								| MCPWM_INT_IMAT(0) | MCPWM_INT_IMAT(1) | MCPWM_INT_IMAT(2) \
-								| MCPWM_INT_ICAP(0) | MCPWM_INT_ICAP(1) | MCPWM_INT_ICAP(2);
+	MCPWMx->INTEN_CLR = MCPWM_INT_ILIM(0) | MCPWM_INT_ILIM(1) | MCPWM_INT_ILIM(2)
+		| MCPWM_INT_IMAT(0) | MCPWM_INT_IMAT(1) | MCPWM_INT_IMAT(2)
+		| MCPWM_INT_ICAP(0) | MCPWM_INT_ICAP(1) | MCPWM_INT_ICAP(2);
 }
-
 
 /*********************************************************************//**
  * @brief		Configures each channel in MCPWM peripheral according to the
@@ -79,8 +77,8 @@ void MCPWM_Init(LPC_MCPWM_T *MCPWMx)
  * 				MCPWM channel.
  * @return		None
  **********************************************************************/
-void MCPWM_ConfigChannel(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-						MCPWM_CHANNEL_CFG_Type * channelSetup)
+void MCPWM_ConfigChannel (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	MCPWM_CHANNEL_CFG_Type * channelSetup)
 {
 	if (channelNum <= 2)
 	{
@@ -149,7 +147,6 @@ void MCPWM_ConfigChannel(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
 	}
 }
 
-
 /*********************************************************************//**
  * @brief		Write to MCPWM shadow registers - Update the value for period
  * 				and pulse width in MCPWM peripheral.
@@ -160,8 +157,8 @@ void MCPWM_ConfigChannel(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
  * 				MCPWM channel.
  * @return		None
  **********************************************************************/
-void MCPWM_WriteToShadow(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-													MCPWM_CHANNEL_CFG_Type *channelSetup)
+void MCPWM_WriteToShadow (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	MCPWM_CHANNEL_CFG_Type *channelSetup)
 {
 	if (channelNum == MCPWM_CHANNEL_0)
 	{
@@ -180,8 +177,6 @@ void MCPWM_WriteToShadow(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
 	}
 }
 
-
-
 /*********************************************************************//**
  * @brief		Configures capture function in MCPWM peripheral
  * @param[in]	MCPWMx 	Motor Control PWM peripheral selected, should be: LPC_MCPWM
@@ -191,8 +186,8 @@ void MCPWM_WriteToShadow(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
  * 				specified MCPWM capture.
  * @return
  **********************************************************************/
-void MCPWM_ConfigCapture(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-												MCPWM_CAPTURE_CFG_Type *captureConfig)
+void MCPWM_ConfigCapture (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	MCPWM_CAPTURE_CFG_Type *captureConfig)
 {
 	if ((channelNum <= MCPWM_CHANNEL_2))
 	{
@@ -235,14 +230,13 @@ void MCPWM_ConfigCapture(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
 	}
 }
 
-
 /*********************************************************************//**
  * @brief		Clears current captured value in specified capture channel
  * @param[in]	MCPWMx 	Motor Control PWM peripheral selected, should be: LPC_MCPWM
  * @param[in]	captureChannel	Capture channel number, should be: 0..2
  * @return		None
  **********************************************************************/
-void MCPWM_ClearCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
+void MCPWM_ClearCapture (LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
 {
 	MCPWMx->CAP_CLR = MCPWM_CAPCLR_CAP(captureChannel);
 }
@@ -253,7 +247,7 @@ void MCPWM_ClearCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
  * @param[in]	captureChannel	Capture channel number, should be: 0..2
  * @return		None
  **********************************************************************/
-uint32_t MCPWM_GetCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
+uint32_t MCPWM_GetCapture (LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
 {
 	if (captureChannel == MCPWM_CHANNEL_0)
 	{
@@ -270,7 +264,6 @@ uint32_t MCPWM_GetCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
 	return (0);
 }
 
-
 /*********************************************************************//**
  * @brief		Configures Count control in MCPWM peripheral
  * @param[in]	MCPWMx 	Motor Control PWM peripheral selected, should be: LPC_MCPWM
@@ -283,8 +276,8 @@ uint32_t MCPWM_GetCapture(LPC_MCPWM_T *MCPWMx, uint32_t captureChannel)
  * 				specified MCPWM count control.
  * @return		None
  **********************************************************************/
-void MCPWM_CountConfig(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
-									uint32_t countMode, MCPWM_COUNT_CFG_Type *countConfig)
+void MCPWM_CountConfig (LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
+	uint32_t countMode, MCPWM_COUNT_CFG_Type *countConfig)
 {
 	if ((channelNum <= 2))
 	{
@@ -294,20 +287,20 @@ void MCPWM_CountConfig(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
 
 			if (countConfig->countFalling == ENABLE)
 			{
-				MCPWMx->CNTCON_SET = MCPWM_CNTCON_TCMCI_FE(countConfig->counterChannel,channelNum);
+				MCPWMx->CNTCON_SET = MCPWM_CNTCON_TCMCI_FE(countConfig->counterChannel, channelNum);
 			}
 			else
 			{
-				MCPWMx->CNTCON_CLR = MCPWM_CNTCON_TCMCI_FE(countConfig->counterChannel,channelNum);
+				MCPWMx->CNTCON_CLR = MCPWM_CNTCON_TCMCI_FE(countConfig->counterChannel, channelNum);
 			}
 
 			if (countConfig->countRising == ENABLE)
 			{
-				MCPWMx->CNTCON_SET = MCPWM_CNTCON_TCMCI_RE(countConfig->counterChannel,channelNum);
+				MCPWMx->CNTCON_SET = MCPWM_CNTCON_TCMCI_RE(countConfig->counterChannel, channelNum);
 			}
 			else
 			{
-				MCPWMx->CNTCON_CLR = MCPWM_CNTCON_TCMCI_RE(countConfig->counterChannel,channelNum);
+				MCPWMx->CNTCON_CLR = MCPWM_CNTCON_TCMCI_RE(countConfig->counterChannel, channelNum);
 			}
 		}
 		else
@@ -316,7 +309,6 @@ void MCPWM_CountConfig(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
 		}
 	}
 }
-
 
 /*********************************************************************//**
  * @brief		Start MCPWM activity for each MCPWM channel
@@ -332,17 +324,16 @@ void MCPWM_CountConfig(LPC_MCPWM_T *MCPWMx, uint32_t channelNum,
  * 					- DISABLE: 'Start' command will not effect on channel 2
  * @return		None
  **********************************************************************/
-void MCPWM_Start(LPC_MCPWM_T *MCPWMx, uint32_t channel0,
-									uint32_t channel1, uint32_t channel2)
+void MCPWM_Start (LPC_MCPWM_T *MCPWMx, uint32_t channel0,
+	uint32_t channel1, uint32_t channel2)
 {
 	uint32_t regVal = 0;
 
-	regVal = (channel0 ? MCPWM_CON_RUN(0) : 0) | (channel1 ? MCPWM_CON_RUN(1) : 0) \
-				| (channel2 ? MCPWM_CON_RUN(2) : 0);
+	regVal = (channel0 ? MCPWM_CON_RUN(0) : 0) | (channel1 ? MCPWM_CON_RUN(1) : 0)
+		| (channel2 ? MCPWM_CON_RUN(2) : 0);
 
 	MCPWMx->CON_SET = regVal;
 }
-
 
 /*********************************************************************//**
  * @brief		Stop MCPWM activity for each MCPWM channel
@@ -358,17 +349,16 @@ void MCPWM_Start(LPC_MCPWM_T *MCPWMx, uint32_t channel0,
  * 					- DISABLE: 'Stop' command will not effect on channel 2
  * @return		None
  **********************************************************************/
-void MCPWM_Stop(LPC_MCPWM_T *MCPWMx, uint32_t channel0,
-		uint32_t channel1, uint32_t channel2)
+void MCPWM_Stop (LPC_MCPWM_T *MCPWMx, uint32_t channel0,
+	uint32_t channel1, uint32_t channel2)
 {
 	uint32_t regVal = 0;
 
-	regVal = (channel0 ? MCPWM_CON_RUN(0) : 0) | (channel1 ? MCPWM_CON_RUN(1) : 0) \
-				| (channel2 ? MCPWM_CON_RUN(2) : 0);
+	regVal = (channel0 ? MCPWM_CON_RUN(0) : 0) | (channel1 ? MCPWM_CON_RUN(1) : 0)
+		| (channel2 ? MCPWM_CON_RUN(2) : 0);
 
 	MCPWMx->CON_CLR = regVal;
 }
-
 
 /*********************************************************************//**
  * @brief		Enables/Disables 3-phase AC motor mode on MCPWM peripheral
@@ -378,7 +368,7 @@ void MCPWM_Stop(LPC_MCPWM_T *MCPWMx, uint32_t channel0,
  * 					- DISABLE.
  * @return		None
  **********************************************************************/
-void MCPWM_ACMode(LPC_MCPWM_T *MCPWMx, uint32_t acMode)
+void MCPWM_ACMode (LPC_MCPWM_T *MCPWMx, uint32_t acMode)
 {
 	if (acMode)
 	{
@@ -389,7 +379,6 @@ void MCPWM_ACMode(LPC_MCPWM_T *MCPWMx, uint32_t acMode)
 		MCPWMx->CON_CLR = MCPWM_CON_ACMODE;
 	}
 }
-
 
 /*********************************************************************//**
  * @brief		Enables/Disables 3-phase DC motor mode on MCPWM peripheral
@@ -413,8 +402,8 @@ void MCPWM_ACMode(LPC_MCPWM_T *MCPWMx, uint32_t acMode)
  *
  * Note: all these outputPatent values above can be ORed together for using as input parameter.
  **********************************************************************/
-void MCPWM_DCMode(LPC_MCPWM_T *MCPWMx, uint32_t dcMode,
-					uint32_t outputInvered, uint32_t outputPattern)
+void MCPWM_DCMode (LPC_MCPWM_T *MCPWMx, uint32_t dcMode,
+	uint32_t outputInvered, uint32_t outputPattern)
 {
 	if (dcMode)
 	{
@@ -437,7 +426,6 @@ void MCPWM_DCMode(LPC_MCPWM_T *MCPWMx, uint32_t dcMode,
 	MCPWMx->CCP = outputPattern;
 }
 
-
 /*********************************************************************//**
  * @brief		Configures the specified interrupt in MCPWM peripheral
  * @param[in]	MCPWMx 	Motor Control PWM peripheral selected, should be: LPC_MCPWM
@@ -459,7 +447,7 @@ void MCPWM_DCMode(LPC_MCPWM_T *MCPWMx, uint32_t dcMode,
  *
  * Note: all these ulIntType values above can be ORed together for using as input parameter.
  **********************************************************************/
-void MCPWM_IntConfig(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType, FunctionalState NewState)
+void MCPWM_IntConfig (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType, FunctionalState NewState)
 {
 	if (NewState)
 	{
@@ -470,7 +458,6 @@ void MCPWM_IntConfig(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType, FunctionalState Ne
 		MCPWMx->INTEN_CLR = ulIntType;
 	}
 }
-
 
 /*********************************************************************//**
  * @brief		Sets/Forces the specified interrupt for MCPWM peripheral
@@ -489,11 +476,10 @@ void MCPWM_IntConfig(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType, FunctionalState Ne
  * @return		None
  * Note: all these ulIntType values above can be ORed together for using as input parameter.
  **********************************************************************/
-void MCPWM_IntSet(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
+void MCPWM_IntSet (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
 {
 	MCPWMx->INTF_SET = ulIntType;
 }
-
 
 /*********************************************************************//**
  * @brief		Clear the specified interrupt pending for MCPWM peripheral
@@ -512,11 +498,10 @@ void MCPWM_IntSet(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
  * @return		None
  * Note: all these ulIntType values above can be ORed together for using as input parameter.
  **********************************************************************/
-void MCPWM_IntClear(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
+void MCPWM_IntClear (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
 {
 	MCPWMx->INTF_CLR = ulIntType;
 }
-
 
 /*********************************************************************//**
  * @brief		Check whether if the specified interrupt in MCPWM is set or not
@@ -534,7 +519,7 @@ void MCPWM_IntClear(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
  * 					- MCPWM_INTFLAG_ABORT	:Fast abort interrupt
  * @return		None
  **********************************************************************/
-FlagStatus MCPWM_GetIntStatus(LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
+FlagStatus MCPWM_GetIntStatus (LPC_MCPWM_T *MCPWMx, uint32_t ulIntType)
 {
 	return ((MCPWMx->INTF & ulIntType) ? SET : RESET);
 }

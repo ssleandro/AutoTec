@@ -33,7 +33,8 @@
 #define __HSADC_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup HSADC_18XX_43XX CHIP:  LPC18xx/43xx High speed ADC driver
@@ -44,39 +45,41 @@ extern "C" {
 /**
  * @brief High speed ADC interrupt control structure
  */
-typedef struct {
-	__O  uint32_t CLR_EN;			/*!< Interrupt clear mask */
-	__O  uint32_t SET_EN;			/*!< Interrupt set mask */
-	__I  uint32_t MASK;				/*!< Interrupt mask */
-	__I  uint32_t STATUS;			/*!< Interrupt status */
-	__O  uint32_t CLR_STAT;			/*!< Interrupt clear status */
-	__O  uint32_t SET_STAT;			/*!< Interrupt set status */
+typedef struct
+{
+	__O uint32_t CLR_EN; /*!< Interrupt clear mask */
+	__O uint32_t SET_EN; /*!< Interrupt set mask */
+	__I uint32_t MASK; /*!< Interrupt mask */
+	__I uint32_t STATUS; /*!< Interrupt status */
+	__O uint32_t CLR_STAT; /*!< Interrupt clear status */
+	__O uint32_t SET_STAT; /*!< Interrupt set status */
 	uint32_t RESERVED[2];
 } HSADCINTCTRL_T;
 
 /**
  * @brief HSADC register block structure
  */
-typedef struct {					/*!< HSADC Structure */
-	__O  uint32_t FLUSH;			/*!< Flushes FIFO */
-	__IO uint32_t DMA_REQ;			/*!< Set or clear DMA write request */
-	__I  uint32_t FIFO_STS;			/*!< Indicates FIFO fill level status */
-	__IO uint32_t FIFO_CFG;			/*!< Configures FIFO fill level */
-	__O  uint32_t TRIGGER;			/*!< Enable software trigger to start descriptor processing */
-	__IO uint32_t DSCR_STS;			/*!< Indicates active descriptor table and descriptor entry */
-	__IO uint32_t POWER_DOWN;		/*!< Set or clear power down mode */
-	__IO uint32_t CONFIG;			/*!< Configures external trigger mode, store channel ID in FIFO and walk-up recovery time from power down */
-	__IO uint32_t THR[2];			/*!< Configures window comparator A or B levels */
-	__I  uint32_t LAST_SAMPLE[6];	/*!< Contains last converted sample of input M [M=0..5) and result of window comparator */
+typedef struct
+{ /*!< HSADC Structure */
+	__O uint32_t FLUSH; /*!< Flushes FIFO */
+	__IO uint32_t DMA_REQ; /*!< Set or clear DMA write request */
+	__I uint32_t FIFO_STS; /*!< Indicates FIFO fill level status */
+	__IO uint32_t FIFO_CFG; /*!< Configures FIFO fill level */
+	__O uint32_t TRIGGER; /*!< Enable software trigger to start descriptor processing */
+	__IO uint32_t DSCR_STS; /*!< Indicates active descriptor table and descriptor entry */
+	__IO uint32_t POWER_DOWN; /*!< Set or clear power down mode */
+	__IO uint32_t CONFIG; /*!< Configures external trigger mode, store channel ID in FIFO and walk-up recovery time from power down */
+	__IO uint32_t THR[2]; /*!< Configures window comparator A or B levels */
+	__I uint32_t LAST_SAMPLE[6]; /*!< Contains last converted sample of input M [M=0..5) and result of window comparator */
 	uint32_t RESERVED0[49];
-	__IO uint32_t ADC_SPEED;		/*!< ADC speed control */
-	__IO uint32_t POWER_CONTROL;	/*!< Configures ADC power vs. speed, DC-in biasing, output format and power gating */
+	__IO uint32_t ADC_SPEED; /*!< ADC speed control */
+	__IO uint32_t POWER_CONTROL; /*!< Configures ADC power vs. speed, DC-in biasing, output format and power gating */
 	uint32_t RESERVED1[61];
-	__I  uint32_t FIFO_OUTPUT[16];	/*!< FIFO output mapped to 16 consecutive address locations */
+	__I uint32_t FIFO_OUTPUT[16]; /*!< FIFO output mapped to 16 consecutive address locations */
 	uint32_t RESERVED2[48];
-	__IO uint32_t DESCRIPTOR[2][8];	/*!< Table 0 and 1 descriptors */
+	__IO uint32_t DESCRIPTOR[2][8]; /*!< Table 0 and 1 descriptors */
 	uint32_t RESERVED3[752];
-	HSADCINTCTRL_T INTS[2];			/*!< Interrupt 0 and 1 control and status registers */
+	HSADCINTCTRL_T INTS[2]; /*!< Interrupt 0 and 1 control and status registers */
 } LPC_HSADC_T;
 
 #define HSADC_MAX_SAMPLEVAL 0xFFF
@@ -86,21 +89,21 @@ typedef struct {					/*!< HSADC Structure */
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	Nothing
  */
-void Chip_HSADC_Init(LPC_HSADC_T *pHSADC);
+void Chip_HSADC_Init (LPC_HSADC_T *pHSADC);
 
 /**
  * @brief	Shutdown HSADC
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	Nothing
  */
-void Chip_HSADC_DeInit(LPC_HSADC_T *pHSADC);
+void Chip_HSADC_DeInit (LPC_HSADC_T *pHSADC);
 
 /**
  * @brief	Flush High speed ADC FIFO
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_FlushFIFO(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_FlushFIFO (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->FLUSH = 1;
 }
@@ -111,7 +114,7 @@ STATIC INLINE void Chip_HSADC_FlushFIFO(LPC_HSADC_T *pHSADC)
  * @return	Nothing
  * @note	WHat is this used for?
  */
-STATIC INLINE void Chip_HSADC_LoadDMADesc(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_LoadDMADesc (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->DMA_REQ = 1;
 }
@@ -122,7 +125,7 @@ STATIC INLINE void Chip_HSADC_LoadDMADesc(LPC_HSADC_T *pHSADC)
  * @return	FIFO level, 0 for empty, 1 to 15, or 16 for full
  * @note	WHat is this used for?
  */
-STATIC INLINE uint32_t Chip_HSADC_GetFIFOLevel(LPC_HSADC_T *pHSADC)
+STATIC INLINE uint32_t Chip_HSADC_GetFIFOLevel (LPC_HSADC_T *pHSADC)
 {
 	return pHSADC->FIFO_STS;
 }
@@ -137,14 +140,14 @@ STATIC INLINE uint32_t Chip_HSADC_GetFIFOLevel(LPC_HSADC_T *pHSADC)
  *			Sample packging allows packing 2 samples into a single 32-bit
  *			word.
  */
-void Chip_HSADC_SetupFIFO(LPC_HSADC_T *pHSADC, uint8_t trip, bool packed);
+void Chip_HSADC_SetupFIFO (LPC_HSADC_T *pHSADC, uint8_t trip, bool packed);
 
 /**
  * @brief	Starts a manual (software) trigger of HSADC descriptors
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_SWTrigger(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_SWTrigger (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->TRIGGER = 1;
 }
@@ -160,9 +163,9 @@ STATIC INLINE void Chip_HSADC_SWTrigger(LPC_HSADC_T *pHSADC)
  *			immediately. This should only be updated when descriptors are
  *			not running (halted).
  */
-STATIC INLINE void Chip_HSADC_SetActiveDescriptor(LPC_HSADC_T *pHSADC, uint8_t table, uint8_t desc)
+STATIC INLINE void Chip_HSADC_SetActiveDescriptor (LPC_HSADC_T *pHSADC, uint8_t table, uint8_t desc)
 {
-	pHSADC->DSCR_STS = (uint32_t) ((desc << 1) | table);
+	pHSADC->DSCR_STS = (uint32_t)((desc << 1) | table);
 }
 
 /**
@@ -170,9 +173,9 @@ STATIC INLINE void Chip_HSADC_SetActiveDescriptor(LPC_HSADC_T *pHSADC, uint8_t t
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	the current active descriptor index, 0 to 7
  */
-STATIC INLINE uint8_t Chip_HSADC_GetActiveDescriptorIndex(LPC_HSADC_T *pHSADC)
+STATIC INLINE uint8_t Chip_HSADC_GetActiveDescriptorIndex (LPC_HSADC_T *pHSADC)
 {
-	return (uint8_t) ((pHSADC->DSCR_STS >> 1) & 0x7);
+	return (uint8_t)((pHSADC->DSCR_STS >> 1) & 0x7);
 }
 
 /**
@@ -180,9 +183,9 @@ STATIC INLINE uint8_t Chip_HSADC_GetActiveDescriptorIndex(LPC_HSADC_T *pHSADC)
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	the current active descriptor table, 0 or 1
  */
-STATIC INLINE uint8_t Chip_HSADC_GetActiveDescriptorTable(LPC_HSADC_T *pHSADC)
+STATIC INLINE uint8_t Chip_HSADC_GetActiveDescriptorTable (LPC_HSADC_T *pHSADC)
 {
-	return (uint8_t) (pHSADC->DSCR_STS & 1);
+	return (uint8_t)(pHSADC->DSCR_STS & 1);
 }
 
 /**
@@ -192,7 +195,7 @@ STATIC INLINE uint8_t Chip_HSADC_GetActiveDescriptorTable(LPC_HSADC_T *pHSADC)
  * @note	In most cases, this function doesn't need to be used as
  * the descriptors control power as needed.
  */
-STATIC INLINE void Chip_HSADC_EnablePowerDownMode(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_EnablePowerDownMode (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->POWER_DOWN = 1;
 }
@@ -204,37 +207,41 @@ STATIC INLINE void Chip_HSADC_EnablePowerDownMode(LPC_HSADC_T *pHSADC)
  * @note	In most cases, this function doesn't need to be used as
  * the descriptors control power as needed.
  */
-STATIC INLINE void Chip_HSADC_DisablePowerDownMode(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_DisablePowerDownMode (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->POWER_DOWN = 0;
 }
 
 /* HSADC trigger configuration mask types */
-typedef enum {
-	HSADC_CONFIG_TRIGGER_OFF = 0,				/*!< ADCHS triggers off */
-	HSADC_CONFIG_TRIGGER_SW = 1,				/*!< ADCHS software trigger only */
-	HSADC_CONFIG_TRIGGER_EXT = 2,				/*!< ADCHS external trigger only */
-	HSADC_CONFIG_TRIGGER_BOTH = 3				/*!< ADCHS both software and external triggers allowed */
+typedef enum
+{
+	HSADC_CONFIG_TRIGGER_OFF = 0, /*!< ADCHS triggers off */
+	HSADC_CONFIG_TRIGGER_SW = 1, /*!< ADCHS software trigger only */
+	HSADC_CONFIG_TRIGGER_EXT = 2, /*!< ADCHS external trigger only */
+	HSADC_CONFIG_TRIGGER_BOTH = 3 /*!< ADCHS both software and external triggers allowed */
 } HSADC_TRIGGER_MASK_T;
 
 /* HSADC trigger configuration mode types */
-typedef enum {
-	HSADC_CONFIG_TRIGGER_RISEEXT = (0 << 2),	/*!< ADCHS rising external trigger */
-	HSADC_CONFIG_TRIGGER_FALLEXT = (1 << 2),	/*!< ADCHS falling external trigger */
-	HSADC_CONFIG_TRIGGER_LOWEXT = (2 << 2),		/*!< ADCHS low external trigger */
-	HSADC_CONFIG_TRIGGER_HIGHEXT = (3 << 2)		/*!< ADCHS high external trigger */
+typedef enum
+{
+	HSADC_CONFIG_TRIGGER_RISEEXT = (0 << 2), /*!< ADCHS rising external trigger */
+	HSADC_CONFIG_TRIGGER_FALLEXT = (1 << 2), /*!< ADCHS falling external trigger */
+	HSADC_CONFIG_TRIGGER_LOWEXT = (2 << 2), /*!< ADCHS low external trigger */
+	HSADC_CONFIG_TRIGGER_HIGHEXT = (3 << 2) /*!< ADCHS high external trigger */
 } HSADC_TRIGGER_MODE_T;
 
 /* HSADC trigger configuration sync types */
-typedef enum {
-	HSADC_CONFIG_TRIGGER_NOEXTSYNC = (0 << 4),	/*!< do not synchronize external trigger input */
-	HSADC_CONFIG_TRIGGER_EXTSYNC = (1 << 4),	/*!< synchronize external trigger input */
+typedef enum
+{
+	HSADC_CONFIG_TRIGGER_NOEXTSYNC = (0 << 4), /*!< do not synchronize external trigger input */
+	HSADC_CONFIG_TRIGGER_EXTSYNC = (1 << 4), /*!< synchronize external trigger input */
 } HSADC_TRIGGER_SYNC_T;
 
 /* HSADC trigger configuration channel ID */
-typedef enum {
-	HSADC_CHANNEL_ID_EN_NONE = (0 << 5),	/*!< do not add channel ID to FIFO output data */
-	HSADC_CHANNEL_ID_EN_ADD = (1 << 5),		/*!< add channel ID to FIFO output data */
+typedef enum
+{
+	HSADC_CHANNEL_ID_EN_NONE = (0 << 5), /*!< do not add channel ID to FIFO output data */
+	HSADC_CHANNEL_ID_EN_ADD = (1 << 5), /*!< add channel ID to FIFO output data */
 } HSADC_CHANNEL_ID_EN_T;
 
 /**
@@ -247,14 +254,14 @@ typedef enum {
  * @param	recoveryTime	: ADC recovery time (in HSADC clocks) from powerdown (255 max)
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_ConfigureTrigger(LPC_HSADC_T *pHSADC,
-											   HSADC_TRIGGER_MASK_T mask,
-											   HSADC_TRIGGER_MODE_T mode,
-											   HSADC_TRIGGER_SYNC_T sync,
-											   HSADC_CHANNEL_ID_EN_T chID, uint16_t recoveryTime)
+STATIC INLINE void Chip_HSADC_ConfigureTrigger (LPC_HSADC_T *pHSADC,
+	HSADC_TRIGGER_MASK_T mask,
+	HSADC_TRIGGER_MODE_T mode,
+	HSADC_TRIGGER_SYNC_T sync,
+	HSADC_CHANNEL_ID_EN_T chID, uint16_t recoveryTime)
 {
-	pHSADC->CONFIG = (uint32_t) mask | (uint32_t) mode | (uint32_t) sync |
-					 (uint32_t) chID | (uint32_t) (recoveryTime << 6);
+	pHSADC->CONFIG = (uint32_t)mask | (uint32_t)mode | (uint32_t)sync |
+		(uint32_t)chID | (uint32_t)(recoveryTime << 6);
 }
 
 /**
@@ -264,7 +271,7 @@ STATIC INLINE void Chip_HSADC_ConfigureTrigger(LPC_HSADC_T *pHSADC,
  * @param   value	: Threshold low data value (should be 12-bit value)
  * @return	None
  */
-void Chip_HSADC_SetThrLowValue(LPC_HSADC_T *pHSADC, uint8_t thrnum, uint16_t value);
+void Chip_HSADC_SetThrLowValue (LPC_HSADC_T *pHSADC, uint8_t thrnum, uint16_t value);
 
 /**
  * @brief	Set HSADC Threshold high value
@@ -273,7 +280,7 @@ void Chip_HSADC_SetThrLowValue(LPC_HSADC_T *pHSADC, uint8_t thrnum, uint16_t val
  * @param   value       : Threshold high data value (should be 12-bit value)
  * @return	None
  */
-void Chip_HSADC_SetThrHighValue(LPC_HSADC_T *pHSADC, uint8_t thrnum, uint16_t value);
+void Chip_HSADC_SetThrHighValue (LPC_HSADC_T *pHSADC, uint8_t thrnum, uint16_t value);
 
 /** HSADC last sample registers bit fields */
 #define HSADC_LS_DONE                    (1 << 0)		/*!< Sample conversion complete bit */
@@ -302,7 +309,7 @@ void Chip_HSADC_SetThrHighValue(LPC_HSADC_T *pHSADC, uint8_t thrnum, uint16_t va
  * HSADC_LS_CROSSING(sample) macros and comparing the result against the
  * HSADC_LS_RANGE_* or HSADC_LS_CROSSING_* definitions.<br>
  */
-STATIC INLINE uint32_t Chip_HSADC_GetLastSample(LPC_HSADC_T *pHSADC, uint8_t channel)
+STATIC INLINE uint32_t Chip_HSADC_GetLastSample (LPC_HSADC_T *pHSADC, uint8_t channel)
 {
 	return pHSADC->LAST_SAMPLE[channel];
 }
@@ -316,7 +323,7 @@ STATIC INLINE uint32_t Chip_HSADC_GetLastSample(LPC_HSADC_T *pHSADC, uint8_t cha
  * @note	It is recommended not to use this function, as the values needed
  * for this register will be setup with the Chip_HSADC_SetPowerSpeed() function.
  */
-void Chip_HSADC_SetSpeed(LPC_HSADC_T *pHSADC, uint8_t channel, uint8_t speed);
+void Chip_HSADC_SetSpeed (LPC_HSADC_T *pHSADC, uint8_t channel, uint8_t speed);
 
 /**
  * @brief	Setup (common) HSADC power and speed settings
@@ -330,12 +337,13 @@ void Chip_HSADC_SetSpeed(LPC_HSADC_T *pHSADC, uint8_t channel, uint8_t speed);
  * This function is also used to set the data format of the sampled data. It is
  * recommended to call this function if the HSADC sample rate changes.
  */
-void Chip_HSADC_SetPowerSpeed(LPC_HSADC_T *pHSADC, bool comp2);
+void Chip_HSADC_SetPowerSpeed (LPC_HSADC_T *pHSADC, bool comp2);
 
 /* AC-DC coupling selection for vin_neg and vin_pos sides */
-typedef enum {
-	HSADC_CHANNEL_NODCBIAS = 0,		/*!< No DC bias */
-	HSADC_CHANNEL_DCBIAS = 1,		/*!< DC bias on vin_neg side */
+typedef enum
+{
+	HSADC_CHANNEL_NODCBIAS = 0, /*!< No DC bias */
+	HSADC_CHANNEL_DCBIAS = 1, /*!< DC bias on vin_neg side */
 } HSADC_DCBIAS_T;
 
 /**
@@ -352,8 +360,8 @@ typedef enum {
  * This function is also used to set the data format of the sampled data. It is
  * recommended to call this function if the HSADC sample rate changes.
  */
-void Chip_HSADC_SetACDCBias(LPC_HSADC_T *pHSADC, uint8_t channel,
-							HSADC_DCBIAS_T dcInNeg, HSADC_DCBIAS_T dcInPos);
+void Chip_HSADC_SetACDCBias (LPC_HSADC_T *pHSADC, uint8_t channel,
+	HSADC_DCBIAS_T dcInNeg, HSADC_DCBIAS_T dcInPos);
 
 /**
  * @brief	Enable HSADC power control and band gap reference
@@ -362,7 +370,7 @@ void Chip_HSADC_SetACDCBias(LPC_HSADC_T *pHSADC, uint8_t channel,
  * @note	This function enables both the HSADC power and band gap
  * reference.
  */
-STATIC INLINE void Chip_HSADC_EnablePower(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_EnablePower (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->POWER_CONTROL |= (1 << 17) | (1 << 18);
 }
@@ -374,7 +382,7 @@ STATIC INLINE void Chip_HSADC_EnablePower(LPC_HSADC_T *pHSADC)
  * @note	This function disables both the HSADC power and band gap
  * reference.
  */
-STATIC INLINE void Chip_HSADC_DisablePower(LPC_HSADC_T *pHSADC)
+STATIC INLINE void Chip_HSADC_DisablePower (LPC_HSADC_T *pHSADC)
 {
 	pHSADC->POWER_CONTROL &= ~((1 << 17) | (1 << 18));
 }
@@ -399,7 +407,7 @@ STATIC INLINE void Chip_HSADC_DisablePower(LPC_HSADC_T *pHSADC)
  * variable that can be used with the HSADC_FIFO_* macros. Note that
  * even if packing is enabled, the packed sample may not be valid.
  */
-STATIC INLINE uint32_t Chip_HSADC_GetFIFO(LPC_HSADC_T *pHSADC)
+STATIC INLINE uint32_t Chip_HSADC_GetFIFO (LPC_HSADC_T *pHSADC)
 {
 	return pHSADC->FIFO_OUTPUT[0];
 }
@@ -435,8 +443,8 @@ STATIC INLINE uint32_t Chip_HSADC_GetFIFO(LPC_HSADC_T *pHSADC)
  * Chip_HSADC_SetupDescEntry(LPC_HSADC, 0, 4, (HSADC_DESC_CH(0) | HSADC_DESC_HALT |
  *    HSADC_DESC_INT));
  */
-STATIC INLINE void Chip_HSADC_SetupDescEntry(LPC_HSADC_T *pHSADC, uint8_t table,
-											 uint8_t descNo, uint32_t desc)
+STATIC INLINE void Chip_HSADC_SetupDescEntry (LPC_HSADC_T *pHSADC, uint8_t table,
+	uint8_t descNo, uint32_t desc)
 {
 	pHSADC->DESCRIPTOR[table][descNo] = desc;
 }
@@ -450,13 +458,13 @@ STATIC INLINE void Chip_HSADC_SetupDescEntry(LPC_HSADC_T *pHSADC, uint8_t table,
  * function should be used after all descriptors are setup with
  * the Chip_HSADC_SetupDescEntry() function.
  */
-STATIC INLINE void Chip_HSADC_UpdateDescTable(LPC_HSADC_T *pHSADC, uint8_t table)
+STATIC INLINE void Chip_HSADC_UpdateDescTable (LPC_HSADC_T *pHSADC, uint8_t table)
 {
 	pHSADC->DESCRIPTOR[table][0] |= HSADC_DESC_UPDATE_TABLE;
 }
 
 /* Interrupt selection for interrupt 0 set - these interrupts and statuses
-   should only be used with the interrupt 0 register set */
+ should only be used with the interrupt 0 register set */
 #define HSADC_INT0_FIFO_FULL         (1 << 0)		/*!< number of samples in FIFO is more than FIFO_LEVEL */
 #define HSADC_INT0_FIFO_EMPTY        (1 << 1)		/*!< FIFO is empty */
 #define HSADC_INT0_FIFO_OVERFLOW     (1 << 2)		/*!< FIFO was full; conversion sample is not stored and lost */
@@ -466,7 +474,7 @@ STATIC INLINE void Chip_HSADC_UpdateDescTable(LPC_HSADC_T *pHSADC, uint8_t table
 #define HSADC_INT0_ADC_UNF           (1 << 6)		/*!< Converted sample value was under range of the 12 bit output code */
 
 /* Interrupt selection for interrupt 1 set - these interrupts and statuses
-   should only be used with the interrupt 1 register set */
+ should only be used with the interrupt 1 register set */
 #define HSADC_INT1_THCMP_BRANGE(ch)  (1 << ((ch * 5) + 0))	/*!< Input channel result below range */
 #define HSADC_INT1_THCMP_ARANGE(ch)  (1 << ((ch * 5) + 1))	/*!< Input channel result above range */
 #define HSADC_INT1_THCMP_DCROSS(ch)  (1 << ((ch * 5) + 2))	/*!< Input channel result downward threshold crossing detected */
@@ -481,7 +489,7 @@ STATIC INLINE void Chip_HSADC_UpdateDescTable(LPC_HSADC_T *pHSADC, uint8_t table
  *                    and HSADC_INT1_* values for group 1
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_EnableInts(LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t intMask)
+STATIC INLINE void Chip_HSADC_EnableInts (LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t intMask)
 {
 	pHSADC->INTS[intGrp].SET_EN = intMask;
 }
@@ -494,7 +502,7 @@ STATIC INLINE void Chip_HSADC_EnableInts(LPC_HSADC_T *pHSADC, uint8_t intGrp, ui
  *                    and HSADC_INT1_* values for group 1
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_DisableInts(LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t intMask)
+STATIC INLINE void Chip_HSADC_DisableInts (LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t intMask)
 {
 	pHSADC->INTS[intGrp].CLR_EN = intMask;
 }
@@ -507,7 +515,7 @@ STATIC INLINE void Chip_HSADC_DisableInts(LPC_HSADC_T *pHSADC, uint8_t intGrp, u
  * @note	Mask the return value with a HSADC_INT0_* macro for group 0
  * or HSADC_INT1_* values for group 1 to determine which interrupts are enabled.
  */
-STATIC INLINE uint32_t Chip_HSADC_GetEnabledInts(LPC_HSADC_T *pHSADC, uint8_t intGrp)
+STATIC INLINE uint32_t Chip_HSADC_GetEnabledInts (LPC_HSADC_T *pHSADC, uint8_t intGrp)
 {
 	return pHSADC->INTS[intGrp].MASK;
 }
@@ -520,7 +528,7 @@ STATIC INLINE uint32_t Chip_HSADC_GetEnabledInts(LPC_HSADC_T *pHSADC, uint8_t in
  * @note	Mask the return value with a HSADC_INT0_* macro for group 0
  * or HSADC_INT1_* values for group 1 to determine which statuses are active.
  */
-STATIC INLINE uint32_t Chip_HSADC_GetIntStatus(LPC_HSADC_T *pHSADC, uint8_t intGrp)
+STATIC INLINE uint32_t Chip_HSADC_GetIntStatus (LPC_HSADC_T *pHSADC, uint8_t intGrp)
 {
 	return pHSADC->INTS[intGrp].STATUS;
 }
@@ -533,7 +541,7 @@ STATIC INLINE uint32_t Chip_HSADC_GetIntStatus(LPC_HSADC_T *pHSADC, uint8_t intG
  *                    and HSADC_INT1_* values for group 1
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_ClearIntStatus(LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t stsMask)
+STATIC INLINE void Chip_HSADC_ClearIntStatus (LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t stsMask)
 {
 	pHSADC->INTS[intGrp].CLR_STAT = stsMask;
 }
@@ -546,7 +554,7 @@ STATIC INLINE void Chip_HSADC_ClearIntStatus(LPC_HSADC_T *pHSADC, uint8_t intGrp
  *                    and HSADC_INT1_* values for group 1
  * @return	Nothing
  */
-STATIC INLINE void Chip_HSADC_SetIntStatus(LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t stsMask)
+STATIC INLINE void Chip_HSADC_SetIntStatus (LPC_HSADC_T *pHSADC, uint8_t intGrp, uint32_t stsMask)
 {
 	pHSADC->INTS[intGrp].SET_STAT = stsMask;
 }
@@ -556,9 +564,9 @@ STATIC INLINE void Chip_HSADC_SetIntStatus(LPC_HSADC_T *pHSADC, uint8_t intGrp, 
  * @param	pHSADC	: The base of HSADC peripheral on the chip
  * @return	clock rate in Hz for the HSADC
  */
-STATIC INLINE uint32_t Chip_HSADC_GetBaseClockRate(LPC_HSADC_T *pHSADC)
+STATIC INLINE uint32_t Chip_HSADC_GetBaseClockRate (LPC_HSADC_T *pHSADC)
 {
-	(void) pHSADC;
+	(void)pHSADC;
 
 	/* Return computed sample rate for the high speed ADC peripheral */
 	return Chip_Clock_GetRate(CLK_ADCHS);

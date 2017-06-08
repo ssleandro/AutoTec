@@ -33,7 +33,8 @@
 #define __AES_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup AES_18XX_43XX CHIP: LPC18xx/43xx AES Engine driver
@@ -44,11 +45,12 @@ extern "C" {
 /**
  * @brief	AES Engine operation mode
  */
-typedef enum CHIP_AES_OP_MODE {
-	CHIP_AES_API_CMD_ENCODE_ECB,	/*!< ECB Encode mode */
-	CHIP_AES_API_CMD_DECODE_ECB,	/*!< ECB Decode mode */
-	CHIP_AES_API_CMD_ENCODE_CBC,	/*!< CBC Encode mode */
-	CHIP_AES_API_CMD_DECODE_CBC,	/*!< CBC Decode mode */
+typedef enum CHIP_AES_OP_MODE
+{
+	CHIP_AES_API_CMD_ENCODE_ECB, /*!< ECB Encode mode */
+	CHIP_AES_API_CMD_DECODE_ECB, /*!< ECB Decode mode */
+	CHIP_AES_API_CMD_ENCODE_CBC, /*!< CBC Encode mode */
+	CHIP_AES_API_CMD_DECODE_CBC, /*!< CBC Decode mode */
 } CHIP_AES_OP_MODE_T;
 
 /**
@@ -57,21 +59,21 @@ typedef enum CHIP_AES_OP_MODE {
  * This function will initialize all the AES Engine driver function pointers
  * and call the AES Engine Initialization function.
  */
-void Chip_AES_Init(void);
+void Chip_AES_Init (void);
 
 /**
  * @brief	Set operation mode in AES Engine
  * @param	AesMode		: AES Operation Mode
  * @return	Status
  */
-uint32_t Chip_AES_SetMode(CHIP_AES_OP_MODE_T AesMode);
+uint32_t Chip_AES_SetMode (CHIP_AES_OP_MODE_T AesMode);
 
 /**
  * @brief	Load 128-bit AES user key in AES Engine
  * @param	keyNum: 0 - Load AES 128-bit user key 1, else load user key2
  * @return	None
  */
-void Chip_AES_LoadKey(uint32_t keyNum);
+void Chip_AES_LoadKey (uint32_t keyNum);
 
 /**
  * @brief	Load randomly generated key in AES engine
@@ -79,21 +81,21 @@ void Chip_AES_LoadKey(uint32_t keyNum);
  * To update the RNG and load a new random number,
  * the API call Chip_OTP_GenRand should be used
  */
-void Chip_AES_LoadKeyRNG(void);
+void Chip_AES_LoadKeyRNG (void);
 
 /**
  * @brief	Load 128-bit AES software defined user key in AES Engine
  * @param	pKey		: Pointer to 16 byte user key
  * @return	None
  */
-void Chip_AES_LoadKeySW(uint8_t *pKey);
+void Chip_AES_LoadKeySW (uint8_t *pKey);
 
 /**
  * @brief Load 128-bit AES initialization vector in AES Engine
  * @param	pVector		: Pointer to 16 byte Initialisation vector
  * @return	None
  */
-void Chip_AES_LoadIV_SW(uint8_t *pVector);
+void Chip_AES_LoadIV_SW (uint8_t *pVector);
 
 /**
  * @brief Load IC specific 128-bit AES initialization vector in AES Engine
@@ -101,7 +103,7 @@ void Chip_AES_LoadIV_SW(uint8_t *pVector);
  * This loads 128-bit AES IC specific initialization vector,
  * which is used to decrypt a boot image
  */
-void Chip_AES_LoadIV_IC(void);
+void Chip_AES_LoadIV_IC (void);
 
 /**
  * @brief Operate AES Engine
@@ -113,7 +115,7 @@ void Chip_AES_LoadIV_IC(void);
  * has been set using Chip_AES_SetMode and the appropriate keys
  * and init vectors have been loaded
  */
-uint32_t Chip_AES_Operate(uint8_t *pDatOut, uint8_t *pDatIn, uint32_t Size);
+uint32_t Chip_AES_Operate (uint8_t *pDatOut, uint8_t *pDatIn, uint32_t Size);
 
 /**
  * @brief	Program 128-bit AES Key in OTP
@@ -122,7 +124,7 @@ uint32_t Chip_AES_Operate(uint8_t *pDatOut, uint8_t *pDatIn, uint32_t Size);
  * @return	Status
  * When calling the aes_ProgramKey2 function, ensure that VPP = 2.7 V to 3.6 V.
  */
-uint32_t Chip_AES_ProgramKey(uint32_t KeyNum, uint8_t *pKey);
+uint32_t Chip_AES_ProgramKey (uint32_t KeyNum, uint8_t *pKey);
 
 /**
  * @brief	Checks for valid AES configuration of the chip and setup 
@@ -130,7 +132,7 @@ uint32_t Chip_AES_ProgramKey(uint32_t KeyNum, uint8_t *pKey);
  * @param	channel_id	: channel id
  * @return	Status
  */
-uint32_t Chip_AES_Config_DMA(uint32_t channel_id);
+uint32_t Chip_AES_Config_DMA (uint32_t channel_id);
 
 /**
  * @brief	Checks for valid AES configuration of the chip and 
@@ -141,14 +143,14 @@ uint32_t Chip_AES_Config_DMA(uint32_t channel_id);
  * @param	size		: number of 128 bit AES blocks
  * @return	Status
  */
-uint32_t Chip_AES_OperateDMA(uint32_t channel_id, uint8_t *dataOutAddr, uint8_t *dataInAddr, uint32_t size);
+uint32_t Chip_AES_OperateDMA (uint32_t channel_id, uint8_t *dataOutAddr, uint8_t *dataInAddr, uint32_t size);
 
 /**
  * @brief	Read status of DMA channels that process an AES data block.
  * @param	channel_id	: channel id
  * @return	Status
  */
- uint32_t Chip_AES_GetStatusDMA(uint32_t channel_id);
+uint32_t Chip_AES_GetStatusDMA (uint32_t channel_id);
 
 /**
  * @}

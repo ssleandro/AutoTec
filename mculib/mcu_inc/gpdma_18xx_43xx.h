@@ -33,7 +33,8 @@
 #define __GPDMA_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup GPDMA_18XX_43XX CHIP: LPC18xx/43xx General Purpose DMA driver
@@ -49,35 +50,37 @@ extern "C" {
 /**
  * @brief GPDMA Channel register block structure
  */
-typedef struct {
-	__IO uint32_t  SRCADDR;				/*!< DMA Channel Source Address Register */
-	__IO uint32_t  DESTADDR;			/*!< DMA Channel Destination Address Register */
-	__IO uint32_t  LLI;					/*!< DMA Channel Linked List Item Register */
-	__IO uint32_t  CONTROL;				/*!< DMA Channel Control Register */
-	__IO uint32_t  CONFIG;				/*!< DMA Channel Configuration Register */
-	__I  uint32_t  RESERVED1[3];
+typedef struct
+{
+	__IO uint32_t SRCADDR; /*!< DMA Channel Source Address Register */
+	__IO uint32_t DESTADDR; /*!< DMA Channel Destination Address Register */
+	__IO uint32_t LLI; /*!< DMA Channel Linked List Item Register */
+	__IO uint32_t CONTROL; /*!< DMA Channel Control Register */
+	__IO uint32_t CONFIG; /*!< DMA Channel Configuration Register */
+	__I uint32_t RESERVED1[3];
 } GPDMA_CH_T;
 
 /**
  * @brief GPDMA register block
  */
-typedef struct {						/*!< GPDMA Structure */
-	__I  uint32_t  INTSTAT;				/*!< DMA Interrupt Status Register */
-	__I  uint32_t  INTTCSTAT;			/*!< DMA Interrupt Terminal Count Request Status Register */
-	__O  uint32_t  INTTCCLEAR;			/*!< DMA Interrupt Terminal Count Request Clear Register */
-	__I  uint32_t  INTERRSTAT;			/*!< DMA Interrupt Error Status Register */
-	__O  uint32_t  INTERRCLR;			/*!< DMA Interrupt Error Clear Register */
-	__I  uint32_t  RAWINTTCSTAT;		/*!< DMA Raw Interrupt Terminal Count Status Register */
-	__I  uint32_t  RAWINTERRSTAT;		/*!< DMA Raw Error Interrupt Status Register */
-	__I  uint32_t  ENBLDCHNS;			/*!< DMA Enabled Channel Register */
-	__IO uint32_t  SOFTBREQ;			/*!< DMA Software Burst Request Register */
-	__IO uint32_t  SOFTSREQ;			/*!< DMA Software Single Request Register */
-	__IO uint32_t  SOFTLBREQ;			/*!< DMA Software Last Burst Request Register */
-	__IO uint32_t  SOFTLSREQ;			/*!< DMA Software Last Single Request Register */
-	__IO uint32_t  CONFIG;				/*!< DMA Configuration Register */
-	__IO uint32_t  SYNC;				/*!< DMA Synchronization Register */
-	__I  uint32_t  RESERVED0[50];
-	GPDMA_CH_T     CH[GPDMA_NUMBER_CHANNELS];
+typedef struct
+{ /*!< GPDMA Structure */
+	__I uint32_t INTSTAT; /*!< DMA Interrupt Status Register */
+	__I uint32_t INTTCSTAT; /*!< DMA Interrupt Terminal Count Request Status Register */
+	__O uint32_t INTTCCLEAR; /*!< DMA Interrupt Terminal Count Request Clear Register */
+	__I uint32_t INTERRSTAT; /*!< DMA Interrupt Error Status Register */
+	__O uint32_t INTERRCLR; /*!< DMA Interrupt Error Clear Register */
+	__I uint32_t RAWINTTCSTAT; /*!< DMA Raw Interrupt Terminal Count Status Register */
+	__I uint32_t RAWINTERRSTAT; /*!< DMA Raw Error Interrupt Status Register */
+	__I uint32_t ENBLDCHNS; /*!< DMA Enabled Channel Register */
+	__IO uint32_t SOFTBREQ; /*!< DMA Software Burst Request Register */
+	__IO uint32_t SOFTSREQ; /*!< DMA Software Single Request Register */
+	__IO uint32_t SOFTLBREQ; /*!< DMA Software Last Burst Request Register */
+	__IO uint32_t SOFTLSREQ; /*!< DMA Software Last Single Request Register */
+	__IO uint32_t CONFIG; /*!< DMA Configuration Register */
+	__IO uint32_t SYNC; /*!< DMA Synchronization Register */
+	__I uint32_t RESERVED0[50];
+	GPDMA_CH_T CH[GPDMA_NUMBER_CHANNELS];
 } LPC_GPDMA_T;
 
 /**
@@ -120,58 +123,62 @@ typedef struct {						/*!< GPDMA Structure */
 /**
  * @brief GPDMA Interrupt Clear Status
  */
-typedef enum {
-	GPDMA_STATCLR_INTTC,	/*!< GPDMA Interrupt Terminal Count Request Clear */
-	GPDMA_STATCLR_INTERR	/*!< GPDMA Interrupt Error Clear */
+typedef enum
+{
+	GPDMA_STATCLR_INTTC, /*!< GPDMA Interrupt Terminal Count Request Clear */
+	GPDMA_STATCLR_INTERR /*!< GPDMA Interrupt Error Clear */
 } GPDMA_STATECLEAR_T;
 
 /**
  * @brief GPDMA Type of Interrupt Status
  */
-typedef enum {
-	GPDMA_STAT_INT,			/*!< GPDMA Interrupt Status */
-	GPDMA_STAT_INTTC,		/*!< GPDMA Interrupt Terminal Count Request Status */
-	GPDMA_STAT_INTERR,		/*!< GPDMA Interrupt Error Status */
-	GPDMA_STAT_RAWINTTC,	/*!< GPDMA Raw Interrupt Terminal Count Status */
-	GPDMA_STAT_RAWINTERR,	/*!< GPDMA Raw Error Interrupt Status */
-	GPDMA_STAT_ENABLED_CH	/*!< GPDMA Enabled Channel Status */
+typedef enum
+{
+	GPDMA_STAT_INT, /*!< GPDMA Interrupt Status */
+	GPDMA_STAT_INTTC, /*!< GPDMA Interrupt Terminal Count Request Status */
+	GPDMA_STAT_INTERR, /*!< GPDMA Interrupt Error Status */
+	GPDMA_STAT_RAWINTTC, /*!< GPDMA Raw Interrupt Terminal Count Status */
+	GPDMA_STAT_RAWINTERR, /*!< GPDMA Raw Error Interrupt Status */
+	GPDMA_STAT_ENABLED_CH /*!< GPDMA Enabled Channel Status */
 } GPDMA_STATUS_T;
 
 /**
  * @brief GPDMA Type of DMA controller
  */
-typedef enum {
-	GPDMA_TRANSFERTYPE_M2M_CONTROLLER_DMA              = ((0UL)),	/*!< Memory to memory - DMA control */
-	GPDMA_TRANSFERTYPE_M2P_CONTROLLER_DMA              = ((1UL)),	/*!< Memory to peripheral - DMA control */
-	GPDMA_TRANSFERTYPE_P2M_CONTROLLER_DMA              = ((2UL)),	/*!< Peripheral to memory - DMA control */
-	GPDMA_TRANSFERTYPE_P2P_CONTROLLER_DMA              = ((3UL)),	/*!< Source peripheral to destination peripheral - DMA control */
-	GPDMA_TRANSFERTYPE_P2P_CONTROLLER_DestPERIPHERAL   = ((4UL)),	/*!< Source peripheral to destination peripheral - destination peripheral control */
-	GPDMA_TRANSFERTYPE_M2P_CONTROLLER_PERIPHERAL       = ((5UL)),	/*!< Memory to peripheral - peripheral control */
-	GPDMA_TRANSFERTYPE_P2M_CONTROLLER_PERIPHERAL       = ((6UL)),	/*!< Peripheral to memory - peripheral control */
-	GPDMA_TRANSFERTYPE_P2P_CONTROLLER_SrcPERIPHERAL    = ((7UL))	/*!< Source peripheral to destination peripheral - source peripheral control */
+typedef enum
+{
+	GPDMA_TRANSFERTYPE_M2M_CONTROLLER_DMA = ((0UL)), /*!< Memory to memory - DMA control */
+	GPDMA_TRANSFERTYPE_M2P_CONTROLLER_DMA = ((1UL)), /*!< Memory to peripheral - DMA control */
+	GPDMA_TRANSFERTYPE_P2M_CONTROLLER_DMA = ((2UL)), /*!< Peripheral to memory - DMA control */
+	GPDMA_TRANSFERTYPE_P2P_CONTROLLER_DMA = ((3UL)), /*!< Source peripheral to destination peripheral - DMA control */
+	GPDMA_TRANSFERTYPE_P2P_CONTROLLER_DestPERIPHERAL = ((4UL)), /*!< Source peripheral to destination peripheral - destination peripheral control */
+	GPDMA_TRANSFERTYPE_M2P_CONTROLLER_PERIPHERAL = ((5UL)), /*!< Memory to peripheral - peripheral control */
+	GPDMA_TRANSFERTYPE_P2M_CONTROLLER_PERIPHERAL = ((6UL)), /*!< Peripheral to memory - peripheral control */
+	GPDMA_TRANSFERTYPE_P2P_CONTROLLER_SrcPERIPHERAL = ((7UL)) /*!< Source peripheral to destination peripheral - source peripheral control */
 } GPDMA_FLOW_CONTROL_T;
 
 /**
  * @brief GPDMA structure using for DMA configuration
  */
-typedef struct {
-	uint32_t ChannelNum;	/*!< DMA channel number, should be in
-							 *  range from 0 to 7.
-							 *  Note: DMA channel 0 has the highest priority
-							 *  and DMA channel 7 the lowest priority.
-							 */
-	uint32_t TransferSize;	/*!< Length/Size of transfer */
-	uint32_t TransferWidth;	/*!< Transfer width - used for TransferType is GPDMA_TRANSFERTYPE_M2M only */
-	uint32_t SrcAddr;		/*!< Physical Source Address, used in case TransferType is chosen as
-							 *   GPDMA_TRANSFERTYPE_M2M or GPDMA_TRANSFERTYPE_M2P */
-	uint32_t DstAddr;		/*!< Physical Destination Address, used in case TransferType is chosen as
-							 *   GPDMA_TRANSFERTYPE_M2M or GPDMA_TRANSFERTYPE_P2M */
-	uint32_t TransferType;	/*!< Transfer Type, should be one of the following:
-							 * - GPDMA_TRANSFERTYPE_M2M: Memory to memory - DMA control
-							 * - GPDMA_TRANSFERTYPE_M2P: Memory to peripheral - DMA control
-							 * - GPDMA_TRANSFERTYPE_P2M: Peripheral to memory - DMA control
-							 * - GPDMA_TRANSFERTYPE_P2P: Source peripheral to destination peripheral - DMA control
-							 */
+typedef struct
+{
+	uint32_t ChannelNum; /*!< DMA channel number, should be in
+	 *  range from 0 to 7.
+	 *  Note: DMA channel 0 has the highest priority
+	 *  and DMA channel 7 the lowest priority.
+	 */
+	uint32_t TransferSize; /*!< Length/Size of transfer */
+	uint32_t TransferWidth; /*!< Transfer width - used for TransferType is GPDMA_TRANSFERTYPE_M2M only */
+	uint32_t SrcAddr; /*!< Physical Source Address, used in case TransferType is chosen as
+	 *   GPDMA_TRANSFERTYPE_M2M or GPDMA_TRANSFERTYPE_M2P */
+	uint32_t DstAddr; /*!< Physical Destination Address, used in case TransferType is chosen as
+	 *   GPDMA_TRANSFERTYPE_M2M or GPDMA_TRANSFERTYPE_P2M */
+	uint32_t TransferType; /*!< Transfer Type, should be one of the following:
+	 * - GPDMA_TRANSFERTYPE_M2M: Memory to memory - DMA control
+	 * - GPDMA_TRANSFERTYPE_M2P: Memory to peripheral - DMA control
+	 * - GPDMA_TRANSFERTYPE_P2M: Peripheral to memory - DMA control
+	 * - GPDMA_TRANSFERTYPE_P2P: Source peripheral to destination peripheral - DMA control
+	 */
 } GPDMA_CH_CFG_T;
 
 /**
@@ -237,18 +244,20 @@ typedef struct {
 /**
  * @brief DMA channel handle structure
  */
-typedef struct {
-	FunctionalState ChannelStatus;	/*!< DMA channel status */
+typedef struct
+{
+	FunctionalState ChannelStatus; /*!< DMA channel status */
 } DMA_ChannelHandle_t;
 
 /**
  * @brief Transfer Descriptor structure typedef
  */
-typedef struct DMA_TransferDescriptor {
-	uint32_t src;	/*!< Source address */
-	uint32_t dst;	/*!< Destination address */
-	uint32_t lli;	/*!< Pointer to next descriptor structure */
-	uint32_t ctrl;	/*!< Control word that has transfer size, type etc. */
+typedef struct DMA_TransferDescriptor
+{
+	uint32_t src; /*!< Source address */
+	uint32_t dst; /*!< Destination address */
+	uint32_t lli; /*!< Pointer to next descriptor structure */
+	uint32_t ctrl; /*!< Control word that has transfer size, type etc. */
 } DMA_TransferDescriptor_t;
 
 /**
@@ -256,14 +265,14 @@ typedef struct DMA_TransferDescriptor {
  * @param	pGPDMA	: The base of GPDMA on the chip
  * @return	Nothing
  */
-void Chip_GPDMA_Init(LPC_GPDMA_T *pGPDMA);
+void Chip_GPDMA_Init (LPC_GPDMA_T *pGPDMA);
 
 /**
  * @brief	Shutdown the GPDMA
  * @param	pGPDMA	: The base of GPDMA on the chip
  * @return	Nothing
  */
-void Chip_GPDMA_DeInit(LPC_GPDMA_T *pGPDMA);
+void Chip_GPDMA_DeInit (LPC_GPDMA_T *pGPDMA);
 
 /**
  * @brief	Initialize channel configuration strucutre
@@ -278,13 +287,13 @@ void Chip_GPDMA_DeInit(LPC_GPDMA_T *pGPDMA);
  * @param	TransferType	: Select the transfer controller and the type of transfer. (See, #GPDMA_FLOW_CONTROL_T)
  * @return	ERROR on error, SUCCESS on success
  */
-int Chip_GPDMA_InitChannelCfg(LPC_GPDMA_T *pGPDMA,
-							  GPDMA_CH_CFG_T *GPDMACfg,
-							  uint8_t  ChannelNum,
-							  uint32_t src,
-							  uint32_t dst,
-							  uint32_t Size,
-							  GPDMA_FLOW_CONTROL_T TransferType);
+int Chip_GPDMA_InitChannelCfg (LPC_GPDMA_T *pGPDMA,
+	GPDMA_CH_CFG_T *GPDMACfg,
+	uint8_t ChannelNum,
+	uint32_t src,
+	uint32_t dst,
+	uint32_t Size,
+	GPDMA_FLOW_CONTROL_T TransferType);
 
 /**
  * @brief	Enable or Disable the GPDMA Channel
@@ -293,7 +302,7 @@ int Chip_GPDMA_InitChannelCfg(LPC_GPDMA_T *pGPDMA,
  * @param	NewState	: ENABLE to enable GPDMA or DISABLE to disable GPDMA
  * @return	Nothing
  */
-void Chip_GPDMA_ChannelCmd(LPC_GPDMA_T *pGPDMA, uint8_t channelNum, FunctionalState NewState);
+void Chip_GPDMA_ChannelCmd (LPC_GPDMA_T *pGPDMA, uint8_t channelNum, FunctionalState NewState);
 
 /**
  * @brief	Stop a stream DMA transfer
@@ -301,7 +310,7 @@ void Chip_GPDMA_ChannelCmd(LPC_GPDMA_T *pGPDMA, uint8_t channelNum, FunctionalSt
  * @param	ChannelNum	: Channel Number to be closed
  * @return	Nothing
  */
-void Chip_GPDMA_Stop(LPC_GPDMA_T *pGPDMA, uint8_t ChannelNum);
+void Chip_GPDMA_Stop (LPC_GPDMA_T *pGPDMA, uint8_t ChannelNum);
 
 /**
  * @brief	The GPDMA stream interrupt status checking
@@ -311,7 +320,7 @@ void Chip_GPDMA_Stop(LPC_GPDMA_T *pGPDMA, uint8_t ChannelNum);
  *              - SUCCESS	: DMA transfer success
  *              - ERROR		: DMA transfer failed
  */
-Status Chip_GPDMA_Interrupt(LPC_GPDMA_T *pGPDMA, uint8_t ChannelNum);
+Status Chip_GPDMA_Interrupt (LPC_GPDMA_T *pGPDMA, uint8_t ChannelNum);
 
 /**
  * @brief	Read the status from different registers according to the type
@@ -326,7 +335,7 @@ Status Chip_GPDMA_Interrupt(LPC_GPDMA_T *pGPDMA, uint8_t ChannelNum);
  * @param	channel	: The GPDMA channel : 0 - 7
  * @return	SET is interrupt is pending or RESET if not pending
  */
-IntStatus Chip_GPDMA_IntGetStatus(LPC_GPDMA_T *pGPDMA, GPDMA_STATUS_T type, uint8_t channel);
+IntStatus Chip_GPDMA_IntGetStatus (LPC_GPDMA_T *pGPDMA, GPDMA_STATUS_T type, uint8_t channel);
 
 /**
  * @brief	Clear the Interrupt Flag from different registers according to the type
@@ -337,7 +346,7 @@ IntStatus Chip_GPDMA_IntGetStatus(LPC_GPDMA_T *pGPDMA, GPDMA_STATUS_T type, uint
  * @param	channel	: The GPDMA channel : 0 - 7
  * @return	Nothing
  */
-void Chip_GPDMA_ClearIntPending(LPC_GPDMA_T *pGPDMA, GPDMA_STATECLEAR_T type, uint8_t channel);
+void Chip_GPDMA_ClearIntPending (LPC_GPDMA_T *pGPDMA, GPDMA_STATECLEAR_T type, uint8_t channel);
 
 /**
  * @brief	Get a free GPDMA channel for one DMA connection
@@ -345,8 +354,8 @@ void Chip_GPDMA_ClearIntPending(LPC_GPDMA_T *pGPDMA, GPDMA_STATECLEAR_T type, ui
  * @param	PeripheralConnection_ID	: Some chip fix each peripheral DMA connection on a specified channel ( have not used in 17xx/40xx )
  * @return	The channel number which is selected
  */
-uint8_t Chip_GPDMA_GetFreeChannel(LPC_GPDMA_T *pGPDMA,
-								  uint32_t PeripheralConnection_ID);
+uint8_t Chip_GPDMA_GetFreeChannel (LPC_GPDMA_T *pGPDMA,
+	uint32_t PeripheralConnection_ID);
 
 /**
  * @brief	Do a DMA transfer M2M, M2P,P2M or P2P
@@ -366,12 +375,12 @@ uint8_t Chip_GPDMA_GetFreeChannel(LPC_GPDMA_T *pGPDMA,
  * @param	Size		: The number of DMA transfers
  * @return	ERROR on error, SUCCESS on success
  */
-Status Chip_GPDMA_Transfer(LPC_GPDMA_T *pGPDMA,
-						   uint8_t ChannelNum,
-						   uint32_t src,
-						   uint32_t dst,
-						   GPDMA_FLOW_CONTROL_T TransferType,
-						   uint32_t Size);
+Status Chip_GPDMA_Transfer (LPC_GPDMA_T *pGPDMA,
+	uint8_t ChannelNum,
+	uint32_t src,
+	uint32_t dst,
+	GPDMA_FLOW_CONTROL_T TransferType,
+	uint32_t Size);
 
 /**
  * @brief	Do a DMA transfer using linked list of descriptors
@@ -381,10 +390,10 @@ Status Chip_GPDMA_Transfer(LPC_GPDMA_T *pGPDMA,
  * @param	TransferType	: Select the transfer controller and the type of transfer. (See, #GPDMA_FLOW_CONTROL_T)
  * @return	ERROR on error, SUCCESS on success
  */
-Status Chip_GPDMA_SGTransfer(LPC_GPDMA_T *pGPDMA,
-							 uint8_t ChannelNum,
-							 const DMA_TransferDescriptor_t *DMADescriptor,
-							 GPDMA_FLOW_CONTROL_T TransferType);
+Status Chip_GPDMA_SGTransfer (LPC_GPDMA_T *pGPDMA,
+	uint8_t ChannelNum,
+	const DMA_TransferDescriptor_t *DMADescriptor,
+	GPDMA_FLOW_CONTROL_T TransferType);
 
 /**
  * @brief	Prepare a single DMA descriptor
@@ -399,13 +408,13 @@ Status Chip_GPDMA_SGTransfer(LPC_GPDMA_T *pGPDMA,
  * @param	NextDescriptor	: Pointer to next descriptor (0 if no more descriptors available)
  * @return	ERROR on error, SUCCESS on success
  */
-Status Chip_GPDMA_PrepareDescriptor(LPC_GPDMA_T *pGPDMA,
-									DMA_TransferDescriptor_t *DMADescriptor,
-									uint32_t src,
-									uint32_t dst,
-									uint32_t Size,
-									GPDMA_FLOW_CONTROL_T TransferType,
-									const DMA_TransferDescriptor_t *NextDescriptor);
+Status Chip_GPDMA_PrepareDescriptor (LPC_GPDMA_T *pGPDMA,
+	DMA_TransferDescriptor_t *DMADescriptor,
+	uint32_t src,
+	uint32_t dst,
+	uint32_t Size,
+	GPDMA_FLOW_CONTROL_T TransferType,
+	const DMA_TransferDescriptor_t *NextDescriptor);
 
 /**
  * @}

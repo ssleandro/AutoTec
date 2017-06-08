@@ -36,34 +36,35 @@
  ****************************************************************************/
 
 /* Structure for initial base clock states */
-struct CLK_BASE_STATES {
-	CHIP_CGU_BASE_CLK_T clk;	/* Base clock */
-	CHIP_CGU_CLKIN_T clkin;	/* Base clock source, see UM for allowable souorces per base clock */
-	bool autoblock_enab;	/* Set to true to enable autoblocking on frequency change */
-	bool powerdn;			/* Set to true if the base clock is initially powered down */
+struct CLK_BASE_STATES
+{
+	CHIP_CGU_BASE_CLK_T clk; /* Base clock */
+	CHIP_CGU_CLKIN_T clkin; /* Base clock source, see UM for allowable souorces per base clock */
+	bool autoblock_enab; /* Set to true to enable autoblocking on frequency change */
+	bool powerdn; /* Set to true if the base clock is initially powered down */
 };
 
 static const struct CLK_BASE_STATES InitClkStates[] = {
-	{CLK_BASE_SAFE, CLKIN_IRC, true, false},
-	{CLK_BASE_APB1, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_APB3, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_USB0, CLKIN_USBPLL, true, true},
-#if defined(CHIP_LPC43XX)
-	{CLK_BASE_PERIPH, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_SPI, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_ADCHS, CLKIN_MAINPLL, true, true},
-#endif
-	{CLK_BASE_SDIO, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_SSP0, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_SSP1, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_UART0, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_UART1, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_UART2, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_UART3, CLKIN_MAINPLL, true, false},
-	{CLK_BASE_OUT, CLKINPUT_PD, true, false},
-	{CLK_BASE_APLL, CLKINPUT_PD, true, false},
-	{CLK_BASE_CGU_OUT0, CLKINPUT_PD, true, false},
-	{CLK_BASE_CGU_OUT1, CLKINPUT_PD, true, false},
+	{ CLK_BASE_SAFE, CLKIN_IRC, true, false },
+	{ CLK_BASE_APB1, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_APB3, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_USB0, CLKIN_USBPLL, true, true },
+	#if defined(CHIP_LPC43XX)
+	{ CLK_BASE_PERIPH, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_SPI, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_ADCHS, CLKIN_MAINPLL, true, true },
+	#endif
+	{ CLK_BASE_SDIO, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_SSP0, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_SSP1, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_UART0, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_UART1, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_UART2, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_UART3, CLKIN_MAINPLL, true, false },
+	{ CLK_BASE_OUT, CLKINPUT_PD, true, false },
+	{ CLK_BASE_APLL, CLKINPUT_PD, true, false },
+	{ CLK_BASE_CGU_OUT0, CLKINPUT_PD, true, false },
+	{ CLK_BASE_CGU_OUT1, CLKINPUT_PD, true, false },
 };
 
 /*****************************************************************************
@@ -78,14 +79,15 @@ static const struct CLK_BASE_STATES InitClkStates[] = {
  * Public functions
  ****************************************************************************/
 /* Setup Chip Core clock */
-void Chip_SetupCoreClock(CHIP_CGU_CLKIN_T clkin, uint32_t core_freq, bool setbase)
+void Chip_SetupCoreClock (CHIP_CGU_CLKIN_T clkin, uint32_t core_freq, bool setbase)
 {
 	int i;
 	volatile uint32_t delay = 500;
 	uint32_t direct = 0;
 	PLL_PARAM_T ppll;
 
-	if (clkin == CLKIN_CRYSTAL) {
+	if (clkin == CLKIN_CRYSTAL)
+	{
 		/* Switch main system clocking to crystal */
 		Chip_Clock_EnableCrystal();
 	}
@@ -96,19 +98,27 @@ void Chip_SetupCoreClock(CHIP_CGU_CLKIN_T clkin, uint32_t core_freq, bool setbas
 	ppll.srcin = clkin;
 	Chip_Clock_CalcMainPLLValue(core_freq, &ppll);
 
-	if (core_freq > 110000000UL) {
-		if (!(ppll.ctrl & (1 << 7)) || ppll.psel) {
+	if (core_freq > 110000000UL)
+	{
+		if (!(ppll.ctrl & (1 << 7)) || ppll.psel)
+		{
 			PLL_PARAM_T lpll;
 			/* Calculate the PLL Parameters */
 			lpll.srcin = clkin;
 			Chip_Clock_CalcMainPLLValue(110000000UL, &lpll);
 			Chip_Clock_SetupMainPLL(&lpll);
 			/* Wait for the PLL to lock */
-			while(!Chip_Clock_MainPLLLocked()) {}
+			while (!Chip_Clock_MainPLLLocked())
+			{
+			}
 			Chip_Clock_SetBaseClock(CLK_BASE_MX, CLKIN_MAINPLL, true, false);
-			while(delay --){}
+			while (delay--)
+			{
+			}
 			delay = 500;
-		} else {
+		}
+		else
+		{
 			direct = 1;
 			ppll.ctrl &= ~(1 << 7);
 		}
@@ -118,44 +128,53 @@ void Chip_SetupCoreClock(CHIP_CGU_CLKIN_T clkin, uint32_t core_freq, bool setbas
 	Chip_Clock_SetupMainPLL(&ppll);
 
 	/* Wait for the PLL to lock */
-	while(!Chip_Clock_MainPLLLocked()) {}
+	while (!Chip_Clock_MainPLLLocked())
+	{
+	}
 
 	/* Set core clock base as PLL1 */
 	Chip_Clock_SetBaseClock(CLK_BASE_MX, CLKIN_MAINPLL, true, false);
 
-	while(delay --){} /* Wait for approx 50 uSec */
-	if (direct) {
+	while (delay--)
+	{
+	} /* Wait for approx 50 uSec */
+	if (direct)
+	{
 		delay = 500;
 		ppll.ctrl |= 1 << 7;
 		Chip_Clock_SetupMainPLL(&ppll); /* Set DIRECT to operate at full frequency */
-		while(delay --){} /* Wait for approx 50 uSec */
+		while (delay--)
+		{
+		} /* Wait for approx 50 uSec */
 	}
 
-	if (setbase) {
+	if (setbase)
+	{
 		/* Setup system base clocks and initial states. This won't enable and
-		   disable individual clocks, but sets up the base clock sources for
-		   each individual peripheral clock. */
-		for (i = 0; i < (sizeof(InitClkStates) / sizeof(InitClkStates[0])); i++) {
+		 disable individual clocks, but sets up the base clock sources for
+		 each individual peripheral clock. */
+		for (i = 0; i < (sizeof(InitClkStates) / sizeof(InitClkStates[0])); i++)
+		{
 			Chip_Clock_SetBaseClock(InitClkStates[i].clk, InitClkStates[i].clkin,
-									InitClkStates[i].autoblock_enab, InitClkStates[i].powerdn);
+				InitClkStates[i].autoblock_enab, InitClkStates[i].powerdn);
 		}
 	}
 }
 
 /* Setup system clocking */
-void Chip_SetupXtalClocking(void)
+void Chip_SetupXtalClocking (void)
 {
 	Chip_SetupCoreClock(CLKIN_CRYSTAL, MAX_CLOCK_FREQ, true);
 }
 
 /* Set up and initialize hardware prior to call to main */
-void Chip_SetupIrcClocking(void)
+void Chip_SetupIrcClocking (void)
 {
 	Chip_SetupCoreClock(CLKIN_IRC, MAX_CLOCK_FREQ, true);
 }
 
 /* Set up and initialize hardware prior to call to main */
-void Chip_SystemInit(void)
+void Chip_SystemInit (void)
 {
 	/* Initial internal clocking */
 	Chip_SetupIrcClocking();

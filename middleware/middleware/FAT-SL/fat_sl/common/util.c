@@ -46,9 +46,8 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
-
 
 /****************************************************************************
  *
@@ -65,17 +64,16 @@
  * word number
  *
  ***************************************************************************/
-unsigned short _f_getword ( void * ptr )
+unsigned short _f_getword (void * ptr)
 {
-  unsigned char * sptr = (unsigned char *)ptr;
-  unsigned short  ret;
+	unsigned char * sptr = (unsigned char *)ptr;
+	unsigned short ret;
 
-  ret = (unsigned short)( sptr[1] & 0xff );
-  ret <<= 8;
-  ret |= ( sptr[0] & 0xff );
-  return ret;
+	ret = (unsigned short)(sptr[1] & 0xff);
+	ret <<= 8;
+	ret |= (sptr[0] & 0xff);
+	return ret;
 }
-
 
 /****************************************************************************
  *
@@ -89,14 +87,13 @@ unsigned short _f_getword ( void * ptr )
  * num - 16 bit number to store
  *
  ***************************************************************************/
-void _f_setword ( void * ptr, unsigned short num )
+void _f_setword (void * ptr, unsigned short num)
 {
-  unsigned char * sptr = (unsigned char *)ptr;
+	unsigned char * sptr = (unsigned char *)ptr;
 
-  sptr[1] = (unsigned char)( num >> 8 );
-  sptr[0] = (unsigned char)( num );
+	sptr[1] = (unsigned char)(num >> 8);
+	sptr[0] = (unsigned char)(num);
 }
-
 
 /****************************************************************************
  *
@@ -113,21 +110,20 @@ void _f_setword ( void * ptr, unsigned short num )
  * long number
  *
  ***************************************************************************/
-unsigned long _f_getlong ( void * ptr )
+unsigned long _f_getlong (void * ptr)
 {
-  unsigned char * sptr = (unsigned char *)ptr;
-  unsigned long   ret;
+	unsigned char * sptr = (unsigned char *)ptr;
+	unsigned long ret;
 
-  ret = (unsigned long)( sptr[3] & 0xff );
-  ret <<= 8;
-  ret |= ( sptr[2] & 0xff );
-  ret <<= 8;
-  ret |= ( sptr[1] & 0xff );
-  ret <<= 8;
-  ret |= ( sptr[0] & 0xff );
-  return ret;
+	ret = (unsigned long)(sptr[3] & 0xff);
+	ret <<= 8;
+	ret |= (sptr[2] & 0xff);
+	ret <<= 8;
+	ret |= (sptr[1] & 0xff);
+	ret <<= 8;
+	ret |= (sptr[0] & 0xff);
+	return ret;
 }
-
 
 /****************************************************************************
  *
@@ -141,16 +137,15 @@ unsigned long _f_getlong ( void * ptr )
  * num - 32 bit number to store
  *
  ***************************************************************************/
-void _f_setlong ( void * ptr, unsigned long num )
+void _f_setlong (void * ptr, unsigned long num)
 {
-  unsigned char * sptr = (unsigned char *)ptr;
+	unsigned char * sptr = (unsigned char *)ptr;
 
-  sptr[3] = (unsigned char)( num >> 24 );
-  sptr[2] = (unsigned char)( num >> 16 );
-  sptr[1] = (unsigned char)( num >> 8 );
-  sptr[0] = (unsigned char)( num );
+	sptr[3] = (unsigned char)(num >> 24);
+	sptr[2] = (unsigned char)(num >> 16);
+	sptr[1] = (unsigned char)(num >> 8);
+	sptr[0] = (unsigned char)(num);
 }
-
 
 /****************************************************************************
  *
@@ -168,16 +163,15 @@ void _f_setlong ( void * ptr, unsigned long num )
  * last write position
  *
  ***************************************************************************/
-unsigned char * _setcharzero ( int num, unsigned char * ptr )
+unsigned char * _setcharzero (int num, unsigned char * ptr)
 {
-  while ( num-- )
-  {
-    *ptr++ = 0;
-  }
+	while (num--)
+	{
+		*ptr++ = 0;
+	}
 
-  return ptr;
+	return ptr;
 }
-
 
 /****************************************************************************
  *
@@ -196,21 +190,20 @@ unsigned char * _setcharzero ( int num, unsigned char * ptr )
  * last write position
  *
  ***************************************************************************/
-unsigned char * _setchar ( const unsigned char * array, int num, unsigned char * ptr )
+unsigned char * _setchar (const unsigned char * array, int num, unsigned char * ptr)
 {
-  if ( !array )
-  {
-    return _setcharzero( num, ptr );
-  }
+	if (!array)
+	{
+		return _setcharzero(num, ptr);
+	}
 
-  while ( num-- )
-  {
-    *ptr++ = *array++;
-  }
+	while (num--)
+	{
+		*ptr++ = *array++;
+	}
 
-  return ptr;
+	return ptr;
 }
-
 
 /****************************************************************************
  *
@@ -228,12 +221,11 @@ unsigned char * _setchar ( const unsigned char * array, int num, unsigned char *
  * last write position
  *
  ***************************************************************************/
-unsigned char * _setword ( unsigned short num, unsigned char * ptr )
+unsigned char * _setword (unsigned short num, unsigned char * ptr)
 {
-  _f_setword( ptr, num );
-  return ptr + 2;
+	_f_setword(ptr, num);
+	return ptr + 2;
 }
-
 
 /****************************************************************************
  *
@@ -251,12 +243,11 @@ unsigned char * _setword ( unsigned short num, unsigned char * ptr )
  * last write position
  *
  ***************************************************************************/
-unsigned char * _setlong ( unsigned long num, unsigned char * ptr )
+unsigned char * _setlong (unsigned long num, unsigned char * ptr)
 {
-  _f_setlong( ptr, num );
-  return ptr + 4;
+	_f_setlong(ptr, num);
+	return ptr + 4;
 }
-
 
 /****************************************************************************
  *
@@ -269,16 +260,15 @@ unsigned char * _setlong ( unsigned long num, unsigned char * ptr )
  * s - input string to convert
  *
  ***************************************************************************/
-char _f_toupper ( char ch )
+char _f_toupper (char ch)
 {
-  if ( ( ch >= 'a' ) && ( ch <= 'z' ) )
-  {
-    return (char)( ch - 'a' + 'A' );
-  }
+	if ((ch >= 'a') && (ch <= 'z'))
+	{
+		return (char)(ch - 'a' + 'A');
+	}
 
-  return ch;
+	return ch;
 }
-
 
 /****************************************************************************
  *
@@ -295,28 +285,20 @@ char _f_toupper ( char ch )
  *    none
  *
  ***************************************************************************/
-void f_igettimedate ( unsigned short * time, unsigned short * date )
+void f_igettimedate (unsigned short * time, unsigned short * date)
 {
-  t_psp_timedate  s_timedate;
+	t_psp_timedate s_timedate;
 
-  psp_getcurrenttimedate( &s_timedate );
+	psp_getcurrenttimedate(&s_timedate);
 
-  *time = ( ( (uint16_t)s_timedate.hour << F_CTIME_HOUR_SHIFT ) & F_CTIME_HOUR_MASK )
-          | ( ( (uint16_t)s_timedate.min << F_CTIME_MIN_SHIFT )  & F_CTIME_MIN_MASK )
-          | ( ( ( (uint16_t)s_timedate.sec >> 1 ) << F_CTIME_SEC_SHIFT )  & F_CTIME_SEC_MASK );
+	*time = (((uint16_t)s_timedate.hour << F_CTIME_HOUR_SHIFT) & F_CTIME_HOUR_MASK)
+		| (((uint16_t)s_timedate.min << F_CTIME_MIN_SHIFT) & F_CTIME_MIN_MASK)
+		| ((((uint16_t)s_timedate.sec >> 1) << F_CTIME_SEC_SHIFT) & F_CTIME_SEC_MASK);
 
-  *date = ( ( ( s_timedate.year - 1980 ) << F_CDATE_YEAR_SHIFT ) & F_CDATE_YEAR_MASK )
-          | ( ( (uint16_t)s_timedate.month << F_CDATE_MONTH_SHIFT ) & F_CDATE_MONTH_MASK )
-          | ( ( (uint16_t)s_timedate.day << F_CDATE_DAY_SHIFT ) & F_CDATE_DAY_MASK );
+	*date = (((s_timedate.year - 1980) << F_CDATE_YEAR_SHIFT) & F_CDATE_YEAR_MASK)
+		| (((uint16_t)s_timedate.month << F_CDATE_MONTH_SHIFT) & F_CDATE_MONTH_MASK)
+		| (((uint16_t)s_timedate.day << F_CDATE_DAY_SHIFT) & F_CDATE_DAY_MASK);
 
-  return;
+	return;
 }
-
-
-
-
-
-
-
-
 

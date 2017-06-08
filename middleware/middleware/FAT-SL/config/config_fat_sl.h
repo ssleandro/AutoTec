@@ -43,21 +43,21 @@
 
 #include "../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #include "../api/api_mdriver.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-
-/**************************************************************************
-**
-**  FAT SL user settings
-**
-**************************************************************************/
+	/**************************************************************************
+	 **
+	 **  FAT SL user settings
+	 **
+	 **************************************************************************/
 #define F_SECTOR_SIZE           512u  /* Disk sector size. */
 #define F_FS_THREAD_AWARE       1     /* Set to one if the file system will be access from more than one task. */
 #define F_MAXPATH               64    /* Maximum length a file name (including its full path) can be. */

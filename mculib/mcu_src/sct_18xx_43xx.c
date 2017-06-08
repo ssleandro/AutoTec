@@ -48,34 +48,36 @@
  ****************************************************************************/
 
 /* Initialize SCT */
-void Chip_SCT_Init(LPC_SCT_T *pSCT)
+void Chip_SCT_Init (LPC_SCT_T *pSCT)
 {
 	Chip_Clock_EnableOpts(CLK_MX_SCT, true, true, 1);
 }
 
 /* Shutdown SCT */
-void Chip_SCT_DeInit(LPC_SCT_T *pSCT)
+void Chip_SCT_DeInit (LPC_SCT_T *pSCT)
 {
 	Chip_Clock_Disable(CLK_MX_SCT);
 }
 
 /* Set/Clear SCT control register */
-void Chip_SCT_SetClrControl(LPC_SCT_T *pSCT, uint32_t value, FunctionalState ena)
+void Chip_SCT_SetClrControl (LPC_SCT_T *pSCT, uint32_t value, FunctionalState ena)
 {
 	uint32_t tem;
 
 	tem = pSCT->CTRL_U;
-	if (ena == ENABLE) {
+	if (ena == ENABLE)
+	{
 		tem |= value;
 	}
-	else {
+	else
+	{
 		tem &= (~value);
 	}
 	pSCT->CTRL_U = tem;
 }
 
 /* Set Conflict resolution */
-void Chip_SCT_SetConflictResolution(LPC_SCT_T *pSCT, uint8_t outnum, uint8_t value)
+void Chip_SCT_SetConflictResolution (LPC_SCT_T *pSCT, uint8_t outnum, uint8_t value)
 {
 	uint32_t tem;
 

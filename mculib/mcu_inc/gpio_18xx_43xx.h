@@ -33,7 +33,8 @@
 #define __GPIO_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup GPIO_18XX_43XX CHIP: LPC18xx/43xx GPIO driver
@@ -44,16 +45,17 @@ extern "C" {
 /**
  * @brief  GPIO port register block structure
  */
-typedef struct {				/*!< GPIO_PORT Structure */
-	__IO uint8_t B[128][32];	/*!< Offset 0x0000: Byte pin registers ports 0 to n; pins PIOn_0 to PIOn_31 */
-	__IO uint32_t W[32][32];	/*!< Offset 0x1000: Word pin registers port 0 to n */
-	__IO uint32_t DIR[32];		/*!< Offset 0x2000: Direction registers port n */
-	__IO uint32_t MASK[32];		/*!< Offset 0x2080: Mask register port n */
-	__IO uint32_t PIN[32];		/*!< Offset 0x2100: Portpin register port n */
-	__IO uint32_t MPIN[32];		/*!< Offset 0x2180: Masked port register port n */
-	__IO uint32_t SET[32];		/*!< Offset 0x2200: Write: Set register for port n Read: output bits for port n */
-	__O  uint32_t CLR[32];		/*!< Offset 0x2280: Clear port n */
-	__O  uint32_t NOT[32];		/*!< Offset 0x2300: Toggle port n */
+typedef struct
+{ /*!< GPIO_PORT Structure */
+	__IO uint8_t B[128][32]; /*!< Offset 0x0000: Byte pin registers ports 0 to n; pins PIOn_0 to PIOn_31 */
+	__IO uint32_t W[32][32]; /*!< Offset 0x1000: Word pin registers port 0 to n */
+	__IO uint32_t DIR[32]; /*!< Offset 0x2000: Direction registers port n */
+	__IO uint32_t MASK[32]; /*!< Offset 0x2080: Mask register port n */
+	__IO uint32_t PIN[32]; /*!< Offset 0x2100: Portpin register port n */
+	__IO uint32_t MPIN[32]; /*!< Offset 0x2180: Masked port register port n */
+	__IO uint32_t SET[32]; /*!< Offset 0x2200: Write: Set register for port n Read: output bits for port n */
+	__O uint32_t CLR[32]; /*!< Offset 0x2280: Clear port n */
+	__O uint32_t NOT[32]; /*!< Offset 0x2300: Toggle port n */
 } LPC_GPIO_T;
 
 /**
@@ -61,14 +63,14 @@ typedef struct {				/*!< GPIO_PORT Structure */
  * @param	pGPIO	: The base of GPIO peripheral on the chip
  * @return	Nothing
  */
-void Chip_GPIO_Init(LPC_GPIO_T *pGPIO);
+void Chip_GPIO_Init (LPC_GPIO_T *pGPIO);
 
 /**
  * @brief	De-Initialize GPIO block
  * @param	pGPIO	: The base of GPIO peripheral on the chip
  * @return	Nothing
  */
-void Chip_GPIO_DeInit(LPC_GPIO_T *pGPIO);
+void Chip_GPIO_DeInit (LPC_GPIO_T *pGPIO);
 
 /**
  * @brief	Set a GPIO port/bit state
@@ -78,7 +80,7 @@ void Chip_GPIO_DeInit(LPC_GPIO_T *pGPIO);
  * @param	setting	: true for high, false for low
  * @return	Nothing
  */
-STATIC INLINE void Chip_GPIO_WritePortBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_t pin, bool setting)
+STATIC INLINE void Chip_GPIO_WritePortBit (LPC_GPIO_T *pGPIO, uint32_t port, uint8_t pin, bool setting)
 {
 	pGPIO->B[port][pin] = setting;
 }
@@ -92,7 +94,7 @@ STATIC INLINE void Chip_GPIO_WritePortBit(LPC_GPIO_T *pGPIO, uint32_t port, uint
  * @return	Nothing
  * @note	This function replaces Chip_GPIO_WritePortBit()
  */
-STATIC INLINE void Chip_GPIO_SetPinState(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool setting)
+STATIC INLINE void Chip_GPIO_SetPinState (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool setting)
 {
 	pGPIO->B[port][pin] = setting;
 }
@@ -105,9 +107,9 @@ STATIC INLINE void Chip_GPIO_SetPinState(LPC_GPIO_T *pGPIO, uint8_t port, uint8_
  * @return	true of the GPIO is high, false if low
  * @note	It is recommended to use the Chip_GPIO_GetPinState() function instead.
  */
-STATIC INLINE bool Chip_GPIO_ReadPortBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_t pin)
+STATIC INLINE bool Chip_GPIO_ReadPortBit (LPC_GPIO_T *pGPIO, uint32_t port, uint8_t pin)
 {
-	return (bool) pGPIO->B[port][pin];
+	return (bool)pGPIO->B[port][pin];
 }
 
 /**
@@ -118,9 +120,9 @@ STATIC INLINE bool Chip_GPIO_ReadPortBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8
  * @return	true if the GPIO is high, false if low
  * @note	This function replaces Chip_GPIO_ReadPortBit()
  */
-STATIC INLINE bool Chip_GPIO_GetPinState(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE bool Chip_GPIO_GetPinState (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
-	return (bool) pGPIO->B[port][pin];
+	return (bool)pGPIO->B[port][pin];
 }
 
 /**
@@ -134,7 +136,7 @@ STATIC INLINE bool Chip_GPIO_GetPinState(LPC_GPIO_T *pGPIO, uint8_t port, uint8_
  * Chip_GPIO_SetPinDIRInput() or Chip_GPIO_SetPinDIR() functions instead
  * of this function.
  */
-void Chip_GPIO_WriteDirBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit, bool setting);
+void Chip_GPIO_WriteDirBit (LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit, bool setting);
 
 /**
  * @brief	Set GPIO direction for a single GPIO pin to an output
@@ -143,7 +145,7 @@ void Chip_GPIO_WriteDirBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit, bool s
  * @param	pin		: GPIO pin to set direction on as output
  * @return	Nothing
  */
-STATIC INLINE void Chip_GPIO_SetPinDIROutput(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE void Chip_GPIO_SetPinDIROutput (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
 	pGPIO->DIR[port] |= 1UL << pin;
 }
@@ -155,7 +157,7 @@ STATIC INLINE void Chip_GPIO_SetPinDIROutput(LPC_GPIO_T *pGPIO, uint8_t port, ui
  * @param	pin		: GPIO pin to set direction on as input
  * @return	Nothing
  */
-STATIC INLINE void Chip_GPIO_SetPinDIRInput(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE void Chip_GPIO_SetPinDIRInput (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
 	pGPIO->DIR[port] &= ~(1UL << pin);
 }
@@ -168,7 +170,7 @@ STATIC INLINE void Chip_GPIO_SetPinDIRInput(LPC_GPIO_T *pGPIO, uint8_t port, uin
  * @param	output	: true for output, false for input
  * @return	Nothing
  */
-void Chip_GPIO_SetPinDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool output);
+void Chip_GPIO_SetPinDIR (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool output);
 
 /**
  * @brief	Read a GPIO direction (out or in)
@@ -178,9 +180,9 @@ void Chip_GPIO_SetPinDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin, bool outp
  * @return	true of the GPIO is an output, false if input
  * @note	It is recommended to use the Chip_GPIO_GetPinDIR() function instead.
  */
-STATIC INLINE bool Chip_GPIO_ReadDirBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit)
+STATIC INLINE bool Chip_GPIO_ReadDirBit (LPC_GPIO_T *pGPIO, uint32_t port, uint8_t bit)
 {
-	return (bool) (((pGPIO->DIR[port]) >> bit) & 1);
+	return (bool)(((pGPIO->DIR[port]) >> bit) & 1);
 }
 
 /**
@@ -190,9 +192,9 @@ STATIC INLINE bool Chip_GPIO_ReadDirBit(LPC_GPIO_T *pGPIO, uint32_t port, uint8_
  * @param	pin		: GPIO pin to get direction for
  * @return	true if the GPIO is an output, false if input
  */
-STATIC INLINE bool Chip_GPIO_GetPinDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE bool Chip_GPIO_GetPinDIR (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
-	return (bool) (((pGPIO->DIR[port]) >> pin) & 1);
+	return (bool)(((pGPIO->DIR[port]) >> pin) & 1);
 }
 
 /**
@@ -205,7 +207,7 @@ STATIC INLINE bool Chip_GPIO_GetPinDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t 
  * @note	Bits set to '0' are not altered. It is recommended to use the
  * Chip_GPIO_SetPortDIR() function instead.
  */
-void Chip_GPIO_SetDir(LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue, uint8_t out);
+void Chip_GPIO_SetDir (LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue, uint8_t out);
 
 /**
  * @brief	Set GPIO direction for a all selected GPIO pins to an output
@@ -216,7 +218,7 @@ void Chip_GPIO_SetDir(LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue, uin
  * @note	Sets multiple GPIO pins to the output direction, each bit's position that is
  * high sets the corresponding pin number for that bit to an output.
  */
-STATIC INLINE void Chip_GPIO_SetPortDIROutput(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pinMask)
+STATIC INLINE void Chip_GPIO_SetPortDIROutput (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pinMask)
 {
 	pGPIO->DIR[port] |= pinMask;
 }
@@ -230,7 +232,7 @@ STATIC INLINE void Chip_GPIO_SetPortDIROutput(LPC_GPIO_T *pGPIO, uint8_t port, u
  * @note	Sets multiple GPIO pins to the input direction, each bit's position that is
  * high sets the corresponding pin number for that bit to an input.
  */
-STATIC INLINE void Chip_GPIO_SetPortDIRInput(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pinMask)
+STATIC INLINE void Chip_GPIO_SetPortDIRInput (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pinMask)
 {
 	pGPIO->DIR[port] &= ~pinMask;
 }
@@ -245,7 +247,7 @@ STATIC INLINE void Chip_GPIO_SetPortDIRInput(LPC_GPIO_T *pGPIO, uint8_t port, ui
  * @note	Sets multiple GPIO pins to the input direction, each bit's position that is
  * high sets the corresponding pin number for that bit to an input.
  */
-void Chip_GPIO_SetPortDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pinMask, bool outSet);
+void Chip_GPIO_SetPortDIR (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pinMask, bool outSet);
 
 /**
  * @brief	Get GPIO direction for a all GPIO pins
@@ -255,7 +257,7 @@ void Chip_GPIO_SetPortDIR(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pinMask, bool
  * @note	For pins 0..n, a high state in a bit corresponds to an output state for the
  * same pin, while a low  state corresponds to an input state.
  */
-STATIC INLINE uint32_t Chip_GPIO_GetPortDIR(LPC_GPIO_T *pGPIO, uint8_t port)
+STATIC INLINE uint32_t Chip_GPIO_GetPortDIR (LPC_GPIO_T *pGPIO, uint8_t port)
 {
 	return pGPIO->DIR[port];
 }
@@ -270,7 +272,7 @@ STATIC INLINE uint32_t Chip_GPIO_GetPortDIR(LPC_GPIO_T *pGPIO, uint8_t port)
  * GPIO read and write functions. A low state indicates the pin is settable
  * and readable via the masked write and read functions.
  */
-STATIC INLINE void Chip_GPIO_SetPortMask(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t mask)
+STATIC INLINE void Chip_GPIO_SetPortMask (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t mask)
 {
 	pGPIO->MASK[port] = mask;
 }
@@ -283,7 +285,7 @@ STATIC INLINE void Chip_GPIO_SetPortMask(LPC_GPIO_T *pGPIO, uint8_t port, uint32
  * @note	A high bit in the return value indicates that that GPIO pin for the
  * port cannot be set using the masked write function.
  */
-STATIC INLINE uint32_t Chip_GPIO_GetPortMask(LPC_GPIO_T *pGPIO, uint8_t port)
+STATIC INLINE uint32_t Chip_GPIO_GetPortMask (LPC_GPIO_T *pGPIO, uint8_t port)
 {
 	return pGPIO->MASK[port];
 }
@@ -295,7 +297,7 @@ STATIC INLINE uint32_t Chip_GPIO_GetPortMask(LPC_GPIO_T *pGPIO, uint8_t port)
  * @param	value	: Value to set all GPIO pin states (0..n) to
  * @return	Nothing
  */
-STATIC INLINE void Chip_GPIO_SetPortValue(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t value)
+STATIC INLINE void Chip_GPIO_SetPortValue (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t value)
 {
 	pGPIO->PIN[port] = value;
 }
@@ -306,7 +308,7 @@ STATIC INLINE void Chip_GPIO_SetPortValue(LPC_GPIO_T *pGPIO, uint8_t port, uint3
  * @param	port	: GPIO Port number where @a pin is located
  * @return	Current (raw) state of all GPIO pins
  */
-STATIC INLINE uint32_t Chip_GPIO_GetPortValue(LPC_GPIO_T *pGPIO, uint8_t port)
+STATIC INLINE uint32_t Chip_GPIO_GetPortValue (LPC_GPIO_T *pGPIO, uint8_t port)
 {
 	return pGPIO->PIN[port];
 }
@@ -318,7 +320,7 @@ STATIC INLINE uint32_t Chip_GPIO_GetPortValue(LPC_GPIO_T *pGPIO, uint8_t port)
  * @param	value	: Value to set all GPIO pin states (0..n) to
  * @return	Nothing
  */
-STATIC INLINE void Chip_GPIO_SetMaskedPortValue(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t value)
+STATIC INLINE void Chip_GPIO_SetMaskedPortValue (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t value)
 {
 	pGPIO->MPIN[port] = value;
 }
@@ -329,7 +331,7 @@ STATIC INLINE void Chip_GPIO_SetMaskedPortValue(LPC_GPIO_T *pGPIO, uint8_t port,
  * @param	port	: GPIO Port number where @a pin is located
  * @return	Current (masked) state of all GPIO pins
  */
-STATIC INLINE uint32_t Chip_GPIO_GetMaskedPortValue(LPC_GPIO_T *pGPIO, uint8_t port)
+STATIC INLINE uint32_t Chip_GPIO_GetMaskedPortValue (LPC_GPIO_T *pGPIO, uint8_t port)
 {
 	return pGPIO->MPIN[port];
 }
@@ -344,7 +346,7 @@ STATIC INLINE uint32_t Chip_GPIO_GetMaskedPortValue(LPC_GPIO_T *pGPIO, uint8_t p
  * applies to ports configured as an output. It is recommended to use the
  * Chip_GPIO_SetPortOutHigh() function instead.
  */
-STATIC INLINE void Chip_GPIO_SetValue(LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue)
+STATIC INLINE void Chip_GPIO_SetValue (LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue)
 {
 	pGPIO->SET[portNum] = bitValue;
 }
@@ -358,7 +360,7 @@ STATIC INLINE void Chip_GPIO_SetValue(LPC_GPIO_T *pGPIO, uint8_t portNum, uint32
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_SetPortOutHigh(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pins)
+STATIC INLINE void Chip_GPIO_SetPortOutHigh (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pins)
 {
 	pGPIO->SET[port] = pins;
 }
@@ -372,7 +374,7 @@ STATIC INLINE void Chip_GPIO_SetPortOutHigh(LPC_GPIO_T *pGPIO, uint8_t port, uin
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_SetPinOutHigh(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE void Chip_GPIO_SetPinOutHigh (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
 	pGPIO->SET[port] = (1 << pin);
 }
@@ -386,7 +388,7 @@ STATIC INLINE void Chip_GPIO_SetPinOutHigh(LPC_GPIO_T *pGPIO, uint8_t port, uint
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_ClearValue(LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue)
+STATIC INLINE void Chip_GPIO_ClearValue (LPC_GPIO_T *pGPIO, uint8_t portNum, uint32_t bitValue)
 {
 	pGPIO->CLR[portNum] = bitValue;
 }
@@ -400,7 +402,7 @@ STATIC INLINE void Chip_GPIO_ClearValue(LPC_GPIO_T *pGPIO, uint8_t portNum, uint
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_SetPortOutLow(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pins)
+STATIC INLINE void Chip_GPIO_SetPortOutLow (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pins)
 {
 	pGPIO->CLR[port] = pins;
 }
@@ -414,7 +416,7 @@ STATIC INLINE void Chip_GPIO_SetPortOutLow(LPC_GPIO_T *pGPIO, uint8_t port, uint
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_SetPinOutLow(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE void Chip_GPIO_SetPinOutLow (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
 	pGPIO->CLR[port] = (1 << pin);
 }
@@ -428,7 +430,7 @@ STATIC INLINE void Chip_GPIO_SetPinOutLow(LPC_GPIO_T *pGPIO, uint8_t port, uint8
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_SetPortToggle(LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pins)
+STATIC INLINE void Chip_GPIO_SetPortToggle (LPC_GPIO_T *pGPIO, uint8_t port, uint32_t pins)
 {
 	pGPIO->NOT[port] = pins;
 }
@@ -442,7 +444,7 @@ STATIC INLINE void Chip_GPIO_SetPortToggle(LPC_GPIO_T *pGPIO, uint8_t port, uint
  * @note	Any bit set as a '0' will not have it's state changed. This only
  * applies to ports configured as an output.
  */
-STATIC INLINE void Chip_GPIO_SetPinToggle(LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE void Chip_GPIO_SetPinToggle (LPC_GPIO_T *pGPIO, uint8_t port, uint8_t pin)
 {
 	pGPIO->NOT[port] = (1 << pin);
 }
@@ -455,7 +457,7 @@ STATIC INLINE void Chip_GPIO_SetPinToggle(LPC_GPIO_T *pGPIO, uint8_t port, uint8
  * @note	The current states of the bits for the port are read, regardless of
  * whether the GPIO port bits are input or output.
  */
-STATIC INLINE uint32_t Chip_GPIO_ReadValue(LPC_GPIO_T *pGPIO, uint8_t portNum)
+STATIC INLINE uint32_t Chip_GPIO_ReadValue (LPC_GPIO_T *pGPIO, uint8_t portNum)
 {
 	return pGPIO->PIN[portNum];
 }

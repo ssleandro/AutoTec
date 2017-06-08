@@ -45,140 +45,138 @@
 #include "../../media-drv/spansionBD/FTL/include/Flash.h"
 #include "../../media-drv/spansionBD/FTL/source/include/ftl_if_ex.h"
 
-
 /* The F_DRIVER structure that is filled with the Spansion disk versions of the read
-sector, write sector, etc. functions. */
-static F_DRIVER  t_driver;
+ sector, write sector, etc. functions. */
+static F_DRIVER t_driver;
 
 /*
  Name: span_format
-*/
+ */
 
-int span_format( void )
+int span_format (void)
 {
-  FTL_INIT_STRUCT initStruct;
-  FTL_STATUS status;
-  initStruct.format = FTL_FORCE_FORMAT;       
-  initStruct.os_type = FTL_RTOS_INT;         // Use Blocking Code
-  initStruct.table_storage = FTL_TABLE_LOCATION;
-  initStruct.allocate = FTL_ALLOCATE;        // Allocate tables
-  
-  if((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
-  {
+	FTL_INIT_STRUCT initStruct;
+	FTL_STATUS status;
+	initStruct.format = FTL_FORCE_FORMAT;
+	initStruct.os_type = FTL_RTOS_INT;         // Use Blocking Code
+	initStruct.table_storage = FTL_TABLE_LOCATION;
+	initStruct.allocate = FTL_ALLOCATE;        // Allocate tables
+
+	if ((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
+	{
 //    DBG_Printf("ERROR: ioctl_span_format: FTL_InitAll() \n", 0, 0);
-    return MDRIVER_SPAN_ERR_FORMAT;
-  }
-  
-  return MDRIVER_SPAN_NO_ERROR;
+		return MDRIVER_SPAN_ERR_FORMAT;
+	}
+
+	return MDRIVER_SPAN_NO_ERROR;
 }
 
 /*
  Name: span_init
-*/
+ */
 
-int span_init(void)
+int span_init (void)
 {
-  FTL_INIT_STRUCT initStruct;
-  FTL_STATUS status;
+	FTL_INIT_STRUCT initStruct;
+	FTL_STATUS status;
 
-  initStruct.format = FTL_DONT_FORMAT;       // Format as needed
-  initStruct.os_type = FTL_RTOS_INT;         // Use Blocking Code
-  initStruct.table_storage = FTL_TABLE_LOCATION;
-  initStruct.allocate = FTL_ALLOCATE;        // Allocate tables
+	initStruct.format = FTL_DONT_FORMAT;       // Format as needed
+	initStruct.os_type = FTL_RTOS_INT;         // Use Blocking Code
+	initStruct.table_storage = FTL_TABLE_LOCATION;
+	initStruct.allocate = FTL_ALLOCATE;        // Allocate tables
 
-  if((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
-  {
-    if(status == FTL_ERR_NOT_FORMATTED)
-    {
-      if((status = FTL_Format()) !=  FTL_ERR_PASS)
-      {
+	if ((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
+	{
+		if (status == FTL_ERR_NOT_FORMATTED)
+		{
+			if ((status = FTL_Format()) != FTL_ERR_PASS)
+			{
 //       DBG_Printf("ERROR: ioctl_span_init: FTL_Format() \n", 0, 0);
-       return MDRIVER_SPAN_ERR_SECTOR;
-      }
-      
-      if((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
-      {
-//       DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() 2\n", 0, 0);
-       return MDRIVER_SPAN_ERR_SECTOR;
-      }
-	  }
-		else
-    {
-//     DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() \n", 0, 0);
-     return MDRIVER_SPAN_NO_ERROR;
-    }
+				return MDRIVER_SPAN_ERR_SECTOR;
+			}
 
-  }
-  return MDRIVER_SPAN_NO_ERROR;
+			if ((status = FTL_InitAll(&initStruct)) != FTL_ERR_PASS)
+			{
+//       DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() 2\n", 0, 0);
+				return MDRIVER_SPAN_ERR_SECTOR;
+			}
+		}
+		else
+		{
+//     DBG_Printf("ERROR: ioctl_span_init: FTL_InitAll() \n", 0, 0);
+			return MDRIVER_SPAN_NO_ERROR;
+		}
+
+	}
+	return MDRIVER_SPAN_NO_ERROR;
 }
 
 /*
  Name: span_terminate
-*/
+ */
 
-static int span_terminate( F_DRIVER * driver )
+static int span_terminate (F_DRIVER * driver)
 {
-  FTL_STATUS status;
-  if((status = FTL_Shutdown()) != FTL_ERR_PASS)
-   {
+	FTL_STATUS status;
+	if ((status = FTL_Shutdown()) != FTL_ERR_PASS)
+	{
 //    DBG_Printf("ERROR: ioctl_span_terminate: FTL_Shutdown() \n", 0, 0);
-    return MDRIVER_SPAN_ERR_SECTOR;
-   }
-  return MDRIVER_SPAN_NO_ERROR;
+		return MDRIVER_SPAN_ERR_SECTOR;
+	}
+	return MDRIVER_SPAN_NO_ERROR;
 }
 
 /*
  Name: getphy_span
-*/
+ */
 
-static int getphy_span( F_DRIVER * driver, F_PHY * phy )
+static int getphy_span (F_DRIVER * driver, F_PHY * phy)
 {
-  FTL_STATUS status;
-  FTL_CAPACITY cap;
-  if((status = FTL_GetCapacity(&cap)) != FTL_ERR_PASS)
-   {
-    DBG_Printf("ERROR: ioctl_getphy_span: FTL_GetCapacity() \n", 0, 0);
-    return MDRIVER_SPAN_ERR_SECTOR;
-   }
-  
-  phy->number_of_sectors = cap.numBlocks;
-  phy->bytes_per_sector = (cap.totalSize/cap.numBlocks);
+	FTL_STATUS status;
+	FTL_CAPACITY cap;
+	if ((status = FTL_GetCapacity(&cap)) != FTL_ERR_PASS)
+	{
+		DBG_Printf("ERROR: ioctl_getphy_span: FTL_GetCapacity() \n", 0, 0);
+		return MDRIVER_SPAN_ERR_SECTOR;
+	}
+
+	phy->number_of_sectors = cap.numBlocks;
+	phy->bytes_per_sector = (cap.totalSize / cap.numBlocks);
 	return MDRIVER_SPAN_NO_ERROR;
 }
 
-
 /*
  Name: readsector_span
-*/
+ */
 
-static int readsector_span( F_DRIVER * driver, void * data, unsigned long sector )
+static int readsector_span (F_DRIVER * driver, void * data, unsigned long sector)
 {
-  FTL_STATUS status;
-  unsigned long done;
-  if((status = FTL_DeviceObjectsRead((unsigned char *)data, sector, 1, &done)) != FTL_ERR_PASS)
-  {
+	FTL_STATUS status;
+	unsigned long done;
+	if ((status = FTL_DeviceObjectsRead((unsigned char *)data, sector, 1, &done)) != FTL_ERR_PASS)
+	{
 //   DBG_Printf("ERROR: readsector_span: sect_no=0x%X, ", sector, 0);
-   return MDRIVER_SPAN_ERR_SECTOR;
-  }
+		return MDRIVER_SPAN_ERR_SECTOR;
+	}
 
-  return MDRIVER_SPAN_NO_ERROR;
+	return MDRIVER_SPAN_NO_ERROR;
 }
 
 /*
  Name: writesector_span
-*/
+ */
 
-static int writesector_span( F_DRIVER * driver, void * data, unsigned long sector )
+static int writesector_span (F_DRIVER * driver, void * data, unsigned long sector)
 {
-  FTL_STATUS status;
-  unsigned long done;
-  if((status = FTL_DeviceObjectsWrite((unsigned char *)data, sector, 1, &done)) != FTL_ERR_PASS)
-  {
+	FTL_STATUS status;
+	unsigned long done;
+	if ((status = FTL_DeviceObjectsWrite((unsigned char *)data, sector, 1, &done)) != FTL_ERR_PASS)
+	{
 //   DBG_Printf("ERROR: writesector_span: sect_no=0x%X, ", sector, 0);
-   return MDRIVER_SPAN_ERR_SECTOR;
-  }
-  
-  return MDRIVER_SPAN_NO_ERROR;
+		return MDRIVER_SPAN_ERR_SECTOR;
+	}
+
+	return MDRIVER_SPAN_NO_ERROR;
 }
 
 /****************************************************************************
@@ -197,17 +195,17 @@ static int writesector_span( F_DRIVER * driver, void * data, unsigned long secto
  * driver structure pointer
  *
  ***************************************************************************/
-F_DRIVER * initfunc_span ( unsigned long driver_param )
+F_DRIVER * initfunc_span (unsigned long driver_param)
 {
-  ( void ) driver_param;
-  
-  (void)psp_memset( &t_driver, 0, sizeof( F_DRIVER ) );
-  
-  t_driver.readsector = readsector_span;
-  t_driver.writesector = writesector_span;
-  t_driver.getphy = getphy_span;
-  t_driver.release = span_terminate;
-  
-  return &t_driver;
+	(void)driver_param;
+
+	(void)psp_memset(&t_driver, 0, sizeof(F_DRIVER));
+
+	t_driver.readsector = readsector_span;
+	t_driver.writesector = writesector_span;
+	t_driver.getphy = getphy_span;
+	t_driver.release = span_terminate;
+
+	return &t_driver;
 } /* initfunc_span */
 

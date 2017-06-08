@@ -38,8 +38,9 @@
 // The entry point for the C++ library startup
 //
 //*****************************************************************************
-extern "C" {
-    extern void __libc_init_array(void);
+extern "C"
+{
+	extern void __libc_init_array(void);
 }
 #endif
 #endif
@@ -49,14 +50,15 @@ extern "C" {
 
 //*****************************************************************************
 #if defined (__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 //*****************************************************************************
 #if defined (__USE_CMSIS) || defined (__USE_LPCOPEN)
 // Declaration of external SystemInit function
 //extern void BRD_BoardConfig(void);
-extern void SystemInit(void);
+extern void SystemInit (void);
 #endif
 
 //*****************************************************************************
@@ -66,17 +68,17 @@ extern void SystemInit(void);
 // automatically take precedence over these weak definitions
 //
 //*****************************************************************************
-void ResetISR(void);
-WEAK void NMI_Handler(void);
-WEAK void HardFault_Handler(void);
-WEAK void MemManage_Handler(void);
-WEAK void BusFault_Handler(void);
-WEAK void UsageFault_Handler(void);
-WEAK void SVC_Handler(void);
-WEAK void DebugMon_Handler(void);
-WEAK void PendSV_Handler(void);
-WEAK void SysTick_Handler(void);
-WEAK void IntDefaultHandler(void);
+void ResetISR (void);
+WEAK void NMI_Handler (void);
+WEAK void HardFault_Handler (void);
+WEAK void MemManage_Handler (void);
+WEAK void BusFault_Handler (void);
+WEAK void UsageFault_Handler (void);
+WEAK void SVC_Handler (void);
+WEAK void DebugMon_Handler (void);
+WEAK void PendSV_Handler (void);
+WEAK void SysTick_Handler (void);
+WEAK void IntDefaultHandler (void);
 
 //*****************************************************************************
 //
@@ -86,64 +88,64 @@ WEAK void IntDefaultHandler(void);
 // precedence over these weak definitions
 //
 //*****************************************************************************
-void DAC_IRQHandler(void) ALIAS(IntDefaultHandler);
+void DAC_IRQHandler (void) ALIAS(IntDefaultHandler);
 #if defined (__USE_LPCOPEN)
-void M0APP_IRQHandler(void) ALIAS(IntDefaultHandler);
+void M0APP_IRQHandler (void) ALIAS(IntDefaultHandler);
 #else
 void M0CORE_IRQHandler(void) ALIAS(IntDefaultHandler);
 #endif
-void DMA_IRQHandler(void) ALIAS(IntDefaultHandler);
-void FLASH_EEPROM_IRQHandler(void) ALIAS(IntDefaultHandler);
-void ETH_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SDIO_IRQHandler(void) ALIAS(IntDefaultHandler);
-void LCD_IRQHandler(void) ALIAS(IntDefaultHandler);
-void USB0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void USB1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SCT_IRQHandler(void) ALIAS(IntDefaultHandler);
-void RIT_IRQHandler(void) ALIAS(IntDefaultHandler);
-void TIMER0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void TIMER1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void TIMER2_IRQHandler(void) ALIAS(IntDefaultHandler);
-void TIMER3_IRQHandler(void) ALIAS(IntDefaultHandler);
-void MCPWM_IRQHandler(void) ALIAS(IntDefaultHandler);
-void ADC0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void I2C0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SPI_IRQHandler(void) ALIAS(IntDefaultHandler);
-void I2C1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void ADC1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SSP0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SSP1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void UART0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void UART1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void UART2_IRQHandler(void) ALIAS(IntDefaultHandler);
-void UART3_IRQHandler(void) ALIAS(IntDefaultHandler);
-void I2S0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void I2S1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SPIFI_IRQHandler(void) ALIAS(IntDefaultHandler);
-void SGPIO_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO2_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO3_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO4_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO5_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO6_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GPIO7_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GINT0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void GINT1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void EVRT_IRQHandler(void) ALIAS(IntDefaultHandler);
-void CAN1_IRQHandler(void) ALIAS(IntDefaultHandler);
+void DMA_IRQHandler (void) ALIAS(IntDefaultHandler);
+void FLASH_EEPROM_IRQHandler (void) ALIAS(IntDefaultHandler);
+void ETH_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SDIO_IRQHandler (void) ALIAS(IntDefaultHandler);
+void LCD_IRQHandler (void) ALIAS(IntDefaultHandler);
+void USB0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void USB1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SCT_IRQHandler (void) ALIAS(IntDefaultHandler);
+void RIT_IRQHandler (void) ALIAS(IntDefaultHandler);
+void TIMER0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void TIMER1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void TIMER2_IRQHandler (void) ALIAS(IntDefaultHandler);
+void TIMER3_IRQHandler (void) ALIAS(IntDefaultHandler);
+void MCPWM_IRQHandler (void) ALIAS(IntDefaultHandler);
+void ADC0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void I2C0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SPI_IRQHandler (void) ALIAS(IntDefaultHandler);
+void I2C1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void ADC1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SSP0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SSP1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void UART0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void UART1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void UART2_IRQHandler (void) ALIAS(IntDefaultHandler);
+void UART3_IRQHandler (void) ALIAS(IntDefaultHandler);
+void I2S0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void I2S1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SPIFI_IRQHandler (void) ALIAS(IntDefaultHandler);
+void SGPIO_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO2_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO3_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO4_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO5_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO6_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GPIO7_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GINT0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void GINT1_IRQHandler (void) ALIAS(IntDefaultHandler);
+void EVRT_IRQHandler (void) ALIAS(IntDefaultHandler);
+void CAN1_IRQHandler (void) ALIAS(IntDefaultHandler);
 #if defined (__USE_LPCOPEN)
-void ADCHS_IRQHandler(void) ALIAS(IntDefaultHandler);
+void ADCHS_IRQHandler (void) ALIAS(IntDefaultHandler);
 #else
 void VADC_IRQHandler(void) ALIAS(IntDefaultHandler);
 #endif
-void ATIMER_IRQHandler(void) ALIAS(IntDefaultHandler);
-void RTC_IRQHandler(void) ALIAS(IntDefaultHandler);
-void WDT_IRQHandler(void) ALIAS(IntDefaultHandler);
-void M0SUB_IRQHandler(void) ALIAS(IntDefaultHandler);
-void CAN0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void QEI_IRQHandler(void) ALIAS(IntDefaultHandler);
+void ATIMER_IRQHandler (void) ALIAS(IntDefaultHandler);
+void RTC_IRQHandler (void) ALIAS(IntDefaultHandler);
+void WDT_IRQHandler (void) ALIAS(IntDefaultHandler);
+void M0SUB_IRQHandler (void) ALIAS(IntDefaultHandler);
+void CAN0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void QEI_IRQHandler (void) ALIAS(IntDefaultHandler);
 
 //*****************************************************************************
 //
@@ -155,13 +157,13 @@ void QEI_IRQHandler(void) ALIAS(IntDefaultHandler);
 #if defined (__REDLIB__)
 extern void __main(void);
 #endif
-extern int main(void);
+extern int main (void);
 //*****************************************************************************
 //
 // External declaration for the pointer to the stack top from the Linker Script
 //
 //*****************************************************************************
-extern void _estack(void);
+extern void _estack (void);
 
 //*****************************************************************************
 #if defined (__cplusplus)
@@ -175,89 +177,89 @@ extern void _estack(void);
 //*****************************************************************************
 //extern void (* const g_pfnVectors[])(void);
 __attribute__ ((used,section(".isr_vector")))
-void (* const g_pfnVectors[])(void) = {
-    // Core Level - CM4
-    &_estack,                    	// The initial stack pointer
-    ResetISR,                       // The reset handler
-    NMI_Handler,                    // The NMI handler
-    HardFault_Handler,              // The hard fault handler
-    MemManage_Handler,              // The MPU fault handler
-    BusFault_Handler,               // The bus fault handler
-    UsageFault_Handler,             // The usage fault handler
-    0,                              // Reserved
-    0,                              // Reserved
-    0,                              // Reserved
-    0,                              // Reserved
-    SVC_Handler,                    // SVCall handler
-    DebugMon_Handler,               // Debug monitor handler
-    0,                              // Reserved
-    PendSV_Handler,                 // The PendSV handler
-    SysTick_Handler,                // The SysTick handler
+void (* const g_pfnVectors[]) (void) =
+{
+	// Core Level - CM4
+	&_estack,// The initial stack pointer
+	ResetISR,// The reset handler
+	NMI_Handler,// The NMI handler
+	HardFault_Handler,// The hard fault handler
+	MemManage_Handler,// The MPU fault handler
+	BusFault_Handler,// The bus fault handler
+	UsageFault_Handler,// The usage fault handler
+	0,// Reserved
+	0,// Reserved
+	0,// Reserved
+	0,// Reserved
+	SVC_Handler,// SVCall handler
+	DebugMon_Handler,// Debug monitor handler
+	0,// Reserved
+	PendSV_Handler,// The PendSV handler
+	SysTick_Handler,// The SysTick handler
 
-    // Chip Level - LPC43 (M4)
-    DAC_IRQHandler,           // 16
+	// Chip Level - LPC43 (M4)
+	DAC_IRQHandler,// 16
 #if defined (__USE_LPCOPEN)
-    M0APP_IRQHandler,        // 17 CortexM4/M0 (LPC43XX ONLY)
+	M0APP_IRQHandler,        // 17 CortexM4/M0 (LPC43XX ONLY)
 #else
-    M0CORE_IRQHandler,        // 17
+	M0CORE_IRQHandler,        // 17
 #endif
-    DMA_IRQHandler,           // 18
-    0,           // 19
-    FLASH_EEPROM_IRQHandler,   // 20 ORed flash Bank A, flash Bank B, EEPROM interrupts
-    ETH_IRQHandler,           // 21
-    SDIO_IRQHandler,          // 22
-    LCD_IRQHandler,           // 23
-    USB0_IRQHandler,          // 24
-    USB1_IRQHandler,          // 25
-    SCT_IRQHandler,           // 26
-    RIT_IRQHandler,           // 27
-    TIMER0_IRQHandler,        // 28
-    TIMER1_IRQHandler,        // 29
-    TIMER2_IRQHandler,        // 30
-    TIMER3_IRQHandler,        // 31
-    MCPWM_IRQHandler,         // 32
-    ADC0_IRQHandler,          // 33
-    I2C0_IRQHandler,          // 34
-    I2C1_IRQHandler,          // 35
-    SPI_IRQHandler,           // 36
-    ADC1_IRQHandler,          // 37
-    SSP0_IRQHandler,          // 38
-    SSP1_IRQHandler,          // 39
-    UART0_IRQHandler,         // 40
-    UART1_IRQHandler,         // 41
-    UART2_IRQHandler,         // 42
-    UART3_IRQHandler,         // 43
-    I2S0_IRQHandler,          // 44
-    I2S1_IRQHandler,          // 45
-    SPIFI_IRQHandler,         // 46
-    SGPIO_IRQHandler,         // 47
-    GPIO0_IRQHandler,         // 48
-    GPIO1_IRQHandler,         // 49
-    GPIO2_IRQHandler,         // 50
-    GPIO3_IRQHandler,         // 51
-    GPIO4_IRQHandler,         // 52
-    GPIO5_IRQHandler,         // 53
-    GPIO6_IRQHandler,         // 54
-    GPIO7_IRQHandler,         // 55
-    GINT0_IRQHandler,         // 56
-    GINT1_IRQHandler,         // 57
-    EVRT_IRQHandler,          // 58
-    CAN1_IRQHandler,          // 59
-    0,                        // 60
+	DMA_IRQHandler,           // 18
+	0,// 19
+	FLASH_EEPROM_IRQHandler,// 20 ORed flash Bank A, flash Bank B, EEPROM interrupts
+	ETH_IRQHandler,// 21
+	SDIO_IRQHandler,// 22
+	LCD_IRQHandler,// 23
+	USB0_IRQHandler,// 24
+	USB1_IRQHandler,// 25
+	SCT_IRQHandler,// 26
+	RIT_IRQHandler,// 27
+	TIMER0_IRQHandler,// 28
+	TIMER1_IRQHandler,// 29
+	TIMER2_IRQHandler,// 30
+	TIMER3_IRQHandler,// 31
+	MCPWM_IRQHandler,// 32
+	ADC0_IRQHandler,// 33
+	I2C0_IRQHandler,// 34
+	I2C1_IRQHandler,// 35
+	SPI_IRQHandler,// 36
+	ADC1_IRQHandler,// 37
+	SSP0_IRQHandler,// 38
+	SSP1_IRQHandler,// 39
+	UART0_IRQHandler,// 40
+	UART1_IRQHandler,// 41
+	UART2_IRQHandler,// 42
+	UART3_IRQHandler,// 43
+	I2S0_IRQHandler,// 44
+	I2S1_IRQHandler,// 45
+	SPIFI_IRQHandler,// 46
+	SGPIO_IRQHandler,// 47
+	GPIO0_IRQHandler,// 48
+	GPIO1_IRQHandler,// 49
+	GPIO2_IRQHandler,// 50
+	GPIO3_IRQHandler,// 51
+	GPIO4_IRQHandler,// 52
+	GPIO5_IRQHandler,// 53
+	GPIO6_IRQHandler,// 54
+	GPIO7_IRQHandler,// 55
+	GINT0_IRQHandler,// 56
+	GINT1_IRQHandler,// 57
+	EVRT_IRQHandler,// 58
+	CAN1_IRQHandler,// 59
+	0,// 60
 #if defined (__USE_LPCOPEN)
-    ADCHS_IRQHandler,         // 61 ADCHS combined interrupt
+	ADCHS_IRQHandler,         // 61 ADCHS combined interrupt
 #else
-    VADC_IRQHandler,          // 61
+	VADC_IRQHandler,          // 61
 #endif
-    ATIMER_IRQHandler,        // 62
-    RTC_IRQHandler,           // 63
-    0,                        // 64
-    WDT_IRQHandler,           // 65
-    M0SUB_IRQHandler,         // 66
-    CAN0_IRQHandler,          // 67
-    QEI_IRQHandler,           // 68
+	ATIMER_IRQHandler,        // 62
+	RTC_IRQHandler,// 63
+	0,// 64
+	WDT_IRQHandler,// 65
+	M0SUB_IRQHandler,// 66
+	CAN0_IRQHandler,// 67
+	QEI_IRQHandler,// 68
 };
-
 
 //*****************************************************************************
 // Functions to carry out the initialization of RW and BSS data sections. These
@@ -265,22 +267,24 @@ void (* const g_pfnVectors[])(void) = {
 // ResetISR() function in order to cope with MCUs with multiple banks of
 // memory.
 //*****************************************************************************
-        __attribute__((section(".after_vectors"
-)))
-void data_init(unsigned int romstart, unsigned int start, unsigned int len) {
-    unsigned int *pulDest = (unsigned int*) start;
-    unsigned int *pulSrc = (unsigned int*) romstart;
-    unsigned int loop;
-    for (loop = 0; loop < len; loop = loop + 4)
-        *pulDest++ = *pulSrc++;
+__attribute__((section(".after_vectors"
+				)))
+void data_init (unsigned int romstart, unsigned int start, unsigned int len)
+{
+	unsigned int *pulDest = (unsigned int*)start;
+	unsigned int *pulSrc = (unsigned int*)romstart;
+	unsigned int loop;
+	for (loop = 0; loop < len; loop = loop + 4)
+		*pulDest++ = *pulSrc++;
 }
 
 __attribute__ ((section(".after_vectors")))
-void bss_init(unsigned int start, unsigned int len) {
-    unsigned int *pulDest = (unsigned int*) start;
-    unsigned int loop;
-    for (loop = 0; loop < len; loop = loop + 4)
-        *pulDest++ = 0;
+void bss_init (unsigned int start, unsigned int len)
+{
+	unsigned int *pulDest = (unsigned int*)start;
+	unsigned int loop;
+	for (loop = 0; loop < len; loop = loop + 4)
+		*pulDest++ = 0;
 }
 
 //*****************************************************************************
@@ -313,7 +317,8 @@ extern unsigned int _ebss;
 // library.
 //
 //*****************************************************************************
-void ResetISR(void) {
+void ResetISR (void)
+{
 
 // *************************************************************
 // The following conditional block of code manually resets as
@@ -328,167 +333,168 @@ void ResetISR(void) {
 //
 #ifndef DONT_RESET_ON_RESTART
 
-    // Disable interrupts
-    __asm volatile ("cpsid i");
-    // equivalent to CMSIS '__disable_irq()' function
+	// Disable interrupts
+	__asm volatile ("cpsid i");
+	// equivalent to CMSIS '__disable_irq()' function
 
-    unsigned int *RESET_CONTROL = (unsigned int *) 0x40053100;
-    // LPC_RGU->RESET_CTRL0 @ 0x40053100
-    // LPC_RGU->RESET_CTRL1 @ 0x40053104
-    // Note that we do not use the CMSIS register access mechanism,
-    // as there is no guarantee that the project has been configured
-    // to use CMSIS.
+	unsigned int *RESET_CONTROL = (unsigned int *)0x40053100;
+	// LPC_RGU->RESET_CTRL0 @ 0x40053100
+	// LPC_RGU->RESET_CTRL1 @ 0x40053104
+	// Note that we do not use the CMSIS register access mechanism,
+	// as there is no guarantee that the project has been configured
+	// to use CMSIS.
 
-    // Write to LPC_RGU->RESET_CTRL0
-    *(RESET_CONTROL + 0) = 0x10DF1000;
-    // GPIO_RST|AES_RST|ETHERNET_RST|SDIO_RST|DMA_RST|
-    // USB1_RST|USB0_RST|LCD_RST|M0_SUB_RST
+	// Write to LPC_RGU->RESET_CTRL0
+	*(RESET_CONTROL + 0) = 0x10DF1000;
+	// GPIO_RST|AES_RST|ETHERNET_RST|SDIO_RST|DMA_RST|
+	// USB1_RST|USB0_RST|LCD_RST|M0_SUB_RST
 
-    // Write to LPC_RGU->RESET_CTRL1
-    *(RESET_CONTROL + 1) = 0x01DFF7FF;
-    // M0APP_RST|CAN0_RST|CAN1_RST|I2S_RST|SSP1_RST|SSP0_RST|
-    // I2C1_RST|I2C0_RST|UART3_RST|UART1_RST|UART1_RST|UART0_RST|
-    // DAC_RST|ADC1_RST|ADC0_RST|QEI_RST|MOTOCONPWM_RST|SCT_RST|
-    // RITIMER_RST|TIMER3_RST|TIMER2_RST|TIMER1_RST|TIMER0_RST
-	
+	// Write to LPC_RGU->RESET_CTRL1
+	*(RESET_CONTROL + 1) = 0x01DFF7FF;
+	// M0APP_RST|CAN0_RST|CAN1_RST|I2S_RST|SSP1_RST|SSP0_RST|
+	// I2C1_RST|I2C0_RST|UART3_RST|UART1_RST|UART1_RST|UART0_RST|
+	// DAC_RST|ADC1_RST|ADC0_RST|QEI_RST|MOTOCONPWM_RST|SCT_RST|
+	// RITIMER_RST|TIMER3_RST|TIMER2_RST|TIMER1_RST|TIMER0_RST
+
 	/* Enable un-aligned memory access */
 	__asm volatile("	ldr r1, =0xE000ED14\n"
-				   "	ldr.w r0,[R1,#0x0]\n"
-				   "	bic r0,r0,#0x8\n"
-				   "	str.w r0,[r1,#0x0]\n"
-				  );
-	
-	 /* set stack pointer */
+			"	ldr.w r0,[R1,#0x0]\n"
+			"	bic r0,r0,#0x8\n"
+			"	str.w r0,[r1,#0x0]\n"
+	);
+
+	/* set stack pointer */
 	__asm volatile("	ldr sp, =_estack \n"
-				  );
-				  
-				  
+	);
 
-    // Clear all pending interrupts in the NVIC
-    volatile unsigned int *NVIC_ICPR = (unsigned int *) 0xE000E280;
-    unsigned int irqpendloop;
-    for (irqpendloop = 0; irqpendloop < 8; irqpendloop++) {
-        *(NVIC_ICPR + irqpendloop) = 0xFFFFFFFF;
-    }
+	// Clear all pending interrupts in the NVIC
+	volatile unsigned int *NVIC_ICPR = (unsigned int *)0xE000E280;
+	unsigned int irqpendloop;
+	for (irqpendloop = 0; irqpendloop < 8; irqpendloop++)
+	{
+		*(NVIC_ICPR + irqpendloop) = 0xFFFFFFFF;
+	}
 
-    // Reenable interrupts
-    __asm volatile ("cpsie i");
-    // equivalent to CMSIS '__enable_irq()' function
+	// Reenable interrupts
+	__asm volatile ("cpsie i");
+	// equivalent to CMSIS '__enable_irq()' function
 
 #endif  // ifndef DONT_RESET_ON_RESTART
 // *************************************************************
 
 #if defined (__USE_LPCOPEN)
-    SystemInit();
+	SystemInit();
 #endif
 
-    //
-    // Copy the data sections from flash to SRAM.
-    //
-    // unsigned int LoadAddr, ExeAddr, SectionLen;
-    // unsigned int *SectionTableAddr;
+	//
+	// Copy the data sections from flash to SRAM.
+	//
+	// unsigned int LoadAddr, ExeAddr, SectionLen;
+	// unsigned int *SectionTableAddr;
 
-    // Load base address of Global Section Table
-    // SectionTableAddr = &__data_section_table;
+	// Load base address of Global Section Table
+	// SectionTableAddr = &__data_section_table;
 
-    // Copy the data sections from flash to SRAM.
-    //while (SectionTableAddr < &__data_section_table_end) {
-    //    LoadAddr = *SectionTableAddr++;
-    //    ExeAddr = *SectionTableAddr++;
-    //    SectionLen = *SectionTableAddr++;
-    //    data_init(LoadAddr, ExeAddr, SectionLen);
-    //}
-    // At this point, SectionTableAddr = &__bss_start__;
-    // Zero fill the bss segment
-    //while (SectionTableAddr < &__bss_section_table_end) {
-    //    ExeAddr = *SectionTableAddr++;
-    //    SectionLen = *SectionTableAddr++;
-    //    bss_init(ExeAddr, SectionLen);
-    //}
+	// Copy the data sections from flash to SRAM.
+	//while (SectionTableAddr < &__data_section_table_end) {
+	//    LoadAddr = *SectionTableAddr++;
+	//    ExeAddr = *SectionTableAddr++;
+	//    SectionLen = *SectionTableAddr++;
+	//    data_init(LoadAddr, ExeAddr, SectionLen);
+	//}
+	// At this point, SectionTableAddr = &__bss_start__;
+	// Zero fill the bss segment
+	//while (SectionTableAddr < &__bss_section_table_end) {
+	//    ExeAddr = *SectionTableAddr++;
+	//    SectionLen = *SectionTableAddr++;
+	//    bss_init(ExeAddr, SectionLen);
+	//}
 
 	/* 1. copy .data section (Copy from ROM to RAM) */
 	/* 2. Clear .bss section (Zero init) */
 	__asm volatile("	movs r1, #0\n"
-				   "	b LoopCopyDataInit\n"
-				   "CopyDataInit:\n"
-				   "	ldr r3, =_sidata\n"
-				   "	ldr r3, [r3, r1]\n"
-				   "	str r3, [r0, r1]\n"
-				   "	adds r1, r1, #4\n"
-				   "LoopCopyDataInit:\n"
-				   "	ldr r0, =_sdata\n"
-				   "	ldr r3, =_edata\n"
-				   "	adds r2, r0, r1\n"
-				   "	cmp r2, r3\n"
-				   "	bcc CopyDataInit\n"
-				   "	ldr r2, =_sbss\n"
-				   "	b LoopFillZerobss\n"
-				   "FillZerobss:\n"
-				   "	movs r3, #0\n"
-				   "	str r3, [r2], #4\n"
-				   "LoopFillZerobss:\n"
-				   "	ldr r3, = _ebss\n"
-				   "	cmp r2, r3\n"
-				   "	bcc FillZerobss\n"
+			"	b LoopCopyDataInit\n"
+			"CopyDataInit:\n"
+			"	ldr r3, =_sidata\n"
+			"	ldr r3, [r3, r1]\n"
+			"	str r3, [r0, r1]\n"
+			"	adds r1, r1, #4\n"
+			"LoopCopyDataInit:\n"
+			"	ldr r0, =_sdata\n"
+			"	ldr r3, =_edata\n"
+			"	adds r2, r0, r1\n"
+			"	cmp r2, r3\n"
+			"	bcc CopyDataInit\n"
+			"	ldr r2, =_sbss\n"
+			"	b LoopFillZerobss\n"
+			"FillZerobss:\n"
+			"	movs r3, #0\n"
+			"	str r3, [r2], #4\n"
+			"LoopFillZerobss:\n"
+			"	ldr r3, = _ebss\n"
+			"	cmp r2, r3\n"
+			"	bcc FillZerobss\n"
 	);
-	
+
 #if !defined (__USE_LPCOPEN)
 // LPCOpen init code deals with FP and VTOR initialisation
 #if defined (__VFP_FP__) && !defined (__SOFTFP__)
-    /*
-     * Code to enable the Cortex-M4 FPU only included
-     * if appropriate build options have been selected.
-     * Code taken from Section 7.1, Cortex-M4 TRM (DDI0439C)
-     */
-    // CPACR is located at address 0xE000ED88
-    asm("LDR.W R0, =0xE000ED88");
-    // Read CPACR
-    asm("LDR R1, [R0]");
-    // Set bits 20-23 to enable CP10 and CP11 coprocessors
-    asm(" ORR R1, R1, #(0xF << 20)");
-    // Write back the modified value to the CPACR
-    asm("STR R1, [R0]");
+	/*
+	 * Code to enable the Cortex-M4 FPU only included
+	 * if appropriate build options have been selected.
+	 * Code taken from Section 7.1, Cortex-M4 TRM (DDI0439C)
+	 */
+	// CPACR is located at address 0xE000ED88
+	asm("LDR.W R0, =0xE000ED88");
+	// Read CPACR
+	asm("LDR R1, [R0]");
+	// Set bits 20-23 to enable CP10 and CP11 coprocessors
+	asm(" ORR R1, R1, #(0xF << 20)");
+	// Write back the modified value to the CPACR
+	asm("STR R1, [R0]");
 #endif // (__VFP_FP__) && !(__SOFTFP__)
-    // ******************************
-    // Check to see if we are running the code from a non-zero
-    // address (eg RAM, external flash), in which case we need
-    // to modify the VTOR register to tell the CPU that the
-    // vector table is located at a non-0x0 address.
+	// ******************************
+	// Check to see if we are running the code from a non-zero
+	// address (eg RAM, external flash), in which case we need
+	// to modify the VTOR register to tell the CPU that the
+	// vector table is located at a non-0x0 address.
 
-    // Note that we do not use the CMSIS register access mechanism,
-    // as there is no guarantee that the project has been configured
-    // to use CMSIS.
-    unsigned int * pSCB_VTOR = (unsigned int *) 0xE000ED08;
-    if ((unsigned int *) g_pfnVectors != (unsigned int *) 0x00000000) {
-        // CMSIS : SCB->VTOR = <address of vector table>
-        *pSCB_VTOR = (unsigned int) g_pfnVectors;
-    }
+	// Note that we do not use the CMSIS register access mechanism,
+	// as there is no guarantee that the project has been configured
+	// to use CMSIS.
+	unsigned int * pSCB_VTOR = (unsigned int *) 0xE000ED08;
+	if ((unsigned int *) g_pfnVectors != (unsigned int *) 0x00000000)
+	{
+		// CMSIS : SCB->VTOR = <address of vector table>
+		*pSCB_VTOR = (unsigned int) g_pfnVectors;
+	}
 #endif
 
 #if defined (__USE_CMSIS)
-    BRD_BoardConfig();
+	BRD_BoardConfig();
 #endif
 
 #if defined (__cplusplus)
-    //
-    // Call C++ library initialisation
-    //
-    __libc_init_array();
+	//
+	// Call C++ library initialisation
+	//
+	__libc_init_array();
 #endif
 
 #if defined (__REDLIB__)
-    // Call the Redlib library, which in turn calls main()
-    __main();
+	// Call the Redlib library, which in turn calls main()
+	__main();
 #else
-    main();
+	main();
 #endif
 
-    //
-    // main() shouldn't return, but if it does, we'll just enter an infinite loop
-    //
-    while (1) {
-        ;
-    }
+	//
+	// main() shouldn't return, but if it does, we'll just enter an infinite loop
+	//
+	while (1)
+	{
+		;
+	}
 }
 
 //*****************************************************************************
@@ -496,49 +502,67 @@ void ResetISR(void) {
 // handler routines in your application code.
 //*****************************************************************************
 __attribute__ ((section(".after_vectors")))
-void NMI_Handler(void) {
-    while (1) {
-    }
+void NMI_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void HardFault_Handler(void) {
-    while (1) {
-    }
+void HardFault_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void MemManage_Handler(void) {
-    while (1) {
-    }
+void MemManage_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void BusFault_Handler(void) {
-    while (1) {
-    }
+void BusFault_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void UsageFault_Handler(void) {
-    while (1) {
-    }
+void UsageFault_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void SVC_Handler(void) {
-    while (1) {
-    }
+void SVC_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void DebugMon_Handler(void) {
-    while (1) {
-    }
+void DebugMon_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void PendSV_Handler(void) {
-    while (1) {
-    }
+void PendSV_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 __attribute__ ((section(".after_vectors")))
-void SysTick_Handler(void) {
-    while (1) {
-    }
+void SysTick_Handler (void)
+{
+	while (1)
+	{
+	}
 }
 
 //*****************************************************************************
@@ -548,7 +572,9 @@ void SysTick_Handler(void) {
 //
 //*****************************************************************************
 __attribute__ ((section(".after_vectors")))
-void IntDefaultHandler(void) {
-    while (1) {
-    }
+void IntDefaultHandler (void)
+{
+	while (1)
+	{
+	}
 }

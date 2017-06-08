@@ -95,7 +95,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	eAPPError_s ret;
 
 	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet (FFS_sFlagSis);
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
@@ -116,7 +116,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
 				ASSERT(bErr == 1);
 
 				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco (&wCRC16_C, (uint8_t *) &FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
+				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
 				//Se o CRC esta OK:
 				if (wCRC16_C == 0)
 				{
@@ -131,15 +131,14 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	//Carrega arquivo de configuracao default
 	if (bErroCfg == true)
 	{
-		memcpy (&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
-		uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
-		memcpy (FFS_sConfiguracao.sVeiculo.abCodigo, abCodigo, sizeof(FFS_sConfiguracao.sVeiculo.abCodigo));
+		memcpy(&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
 
-		osFlagClear (FFS_sFlagSis, FFS_FLAG_CFG);
+		osFlagClear(FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_ERROR;
-	} else
+	}
+	else
 	{
-		osFlagSet (FFS_sFlagSis, FFS_FLAG_CFG);
+		osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_SUCCESS;
 	}
 	return ret;
@@ -165,14 +164,14 @@ eAPPError_s FFS_vSaveConfigFile (void)
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
 	//Confere o CRC da configuracao:
-	TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sConfiguracao,
-					(sizeof(FFS_sConfiguracao) - sizeof(FFS_sConfiguracao.wCRC16)));
+	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sConfiguracao,
+		(sizeof(FFS_sConfiguracao) - sizeof(FFS_sConfiguracao.wCRC16)));
 
 	//Atualiza o valor do crc na estrutura:
 	FFS_sConfiguracao.wCRC16 = wCRC16;
 
 	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet (FFS_sFlagSis);
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
@@ -228,14 +227,14 @@ eAPPError_s FFS_vSaveInterfaceCfgFile (void)
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
 	//Confere o CRC da configuracao:
-	TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sConfig,
-					(sizeof(FFS_sConfig) - sizeof(FFS_sConfig.wCRC16)));
+	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sConfig,
+		(sizeof(FFS_sConfig) - sizeof(FFS_sConfig.wCRC16)));
 
 	//Atualiza o valor do crc na estrutura:
 	FFS_sConfig.wCRC16 = wCRC16;
 
 	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet (FFS_sFlagSis);
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
@@ -283,7 +282,7 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 	eAPPError_s ret;
 
 	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet (FFS_sFlagSis);
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
@@ -304,7 +303,7 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 				ASSERT(bErr == 1);
 
 				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco (&wCRC16_C, (uint8_t *) &FFS_sConfig, sizeof(FFS_sConfig));
+				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfig, sizeof(FFS_sConfig));
 				//Se o CRC esta OK:
 				if (wCRC16_C == 0)
 				{
@@ -320,13 +319,13 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 	if (bErroCfg == true)
 	{
 		// Inicia parâmetros default:
-		memset (&FFS_sConfig, 0, sizeof(FFS_sConfig));
+		memset(&FFS_sConfig, 0, sizeof(FFS_sConfig));
 		FFS_sConfig.bBrilho = LCD_bBRILHO_MAX;
 		FFS_sConfig.bContraste = LCD_bCONTRASTE_MAX / 2;
-		memcpy (FFS_sConfig.abSenha, "\x1\x2\x3\x4", 4);
+		memcpy(FFS_sConfig.abSenha, "\x1\x2\x3\x4", 4);
 		FFS_sConfig.bIdioma = 0;
 		FFS_sConfig.bSistImperial = false;
-		ret = FFS_vSaveInterfaceCfgFile ();
+		ret = FFS_vSaveInterfaceCfgFile();
 		ASSERT(ret == APP_ERROR_SUCCESS);
 		if (ret == APP_ERROR_SUCCESS)
 		{
@@ -335,11 +334,12 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 	}
 	if (bErroCfg == true)
 	{
-		osFlagClear (FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
+		osFlagClear(FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
 		ret = APP_ERROR_ERROR;
-	} else
+	}
+	else
 	{
-		osFlagSet (FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
+		osFlagSet(FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
 		ret = APP_ERROR_SUCCESS;
 	}
 	return ret;
@@ -367,14 +367,14 @@ eAPPError_s FFS_vSaveStaticReg (void)
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
 	//Confere o CRC da configuracao:
-	TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sRegEstaticoCRC,
-					(sizeof(FFS_sRegEstaticoCRC) - sizeof(FFS_sRegEstaticoCRC.wCRC16)));
+	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sRegEstaticoCRC,
+		(sizeof(FFS_sRegEstaticoCRC) - sizeof(FFS_sRegEstaticoCRC.wCRC16)));
 
 	//Atualiza o valor do crc na estrutura:
 	FFS_sRegEstaticoCRC.wCRC16 = wCRC16;
 
 	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet (FFS_sFlagSis);
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
@@ -422,7 +422,7 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	eAPPError_s ret;
 
 	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet (FFS_sFlagSis);
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
@@ -443,7 +443,7 @@ eAPPError_s FFS_vLoadStaticReg (void)
 				ASSERT(bErr == 1);
 
 				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco (&wCRC16_C, (uint8_t *) &FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
+				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
 				//Se o CRC esta OK:
 				if (wCRC16_C == 0)
 				{
@@ -459,24 +459,14 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	if (bErroCfg == true)
 	{
 		//Limpa a estrutura do registro estático:
-		memset (&FFS_sRegEstaticoCRC, 0x00, sizeof(FFS_sRegEstaticoCRC));
-
-		//Calcula o crc da estrutura do registro estático:
-		TLS_vCalculaCRC16Bloco (&wCRC16, (uint8_t *) &FFS_sRegEstaticoCRC,
-						(sizeof(FFS_sRegEstaticoCRC) - sizeof(FFS_sRegEstaticoCRC.wCRC16)));
-
-		//Atualiza o valor do crc na estrutura combinada:
-		FFS_sRegEstaticoCRC.wCRC16 = wCRC16;
-
-		//Recria o arquivo
-		xFileHandle = f_open(FFS_abStaticRegCfgName, "w+");
-		ASSERT(xFileHandle != NULL);
+		memset(&FFS_sRegEstaticoCRC, 0x00, sizeof(FFS_sRegEstaticoCRC));
 
 		ret = APP_ERROR_ERROR;
-	} else
+	}
+	else
 	{
 		ret = APP_ERROR_SUCCESS;
 	}
-	osFlagSet (FFS_sFlagSis, FFS_FLAG_STATIC_REG);
+	osFlagSet(FFS_sFlagSis, FFS_FLAG_STATIC_REG);
 	return ret;
 }

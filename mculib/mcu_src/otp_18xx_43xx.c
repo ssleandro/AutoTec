@@ -48,98 +48,101 @@ static unsigned long *BOOTROM_API_TABLE;
  * Private functions
  ****************************************************************************/
 
-static uint32_t (*Otp_ProgBootSrc)(CHIP_OTP_BOOT_SRC_T BootSrc);
-static uint32_t (*Otp_ProgJTAGDis)(void);
-static uint32_t (*Otp_ProgUSBID)(uint32_t ProductID, uint32_t VendorID);
-static uint32_t (*Otp_ProgGP0)(uint32_t Data, uint32_t Mask);
-static uint32_t (*Otp_ProgGP1)(uint32_t Data, uint32_t Mask);
-static uint32_t (*Otp_ProgGP2)(uint32_t Data, uint32_t Mask);
-static uint32_t (*Otp_ProgKey1)(uint8_t *key);
-static uint32_t (*Otp_ProgKey2)(uint8_t *key);
-static uint32_t (*Otp_GenRand)(void);
+static uint32_t (*Otp_ProgBootSrc) (CHIP_OTP_BOOT_SRC_T BootSrc);
+static uint32_t (*Otp_ProgJTAGDis) (void);
+static uint32_t (*Otp_ProgUSBID) (uint32_t ProductID, uint32_t VendorID);
+static uint32_t (*Otp_ProgGP0) (uint32_t Data, uint32_t Mask);
+static uint32_t (*Otp_ProgGP1) (uint32_t Data, uint32_t Mask);
+static uint32_t (*Otp_ProgGP2) (uint32_t Data, uint32_t Mask);
+static uint32_t (*Otp_ProgKey1) (uint8_t *key);
+static uint32_t (*Otp_ProgKey2) (uint8_t *key);
+static uint32_t (*Otp_GenRand) (void);
 
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
 
 /* CHIP OTP Initialisation function */
-uint32_t Chip_OTP_Init(void)
+uint32_t Chip_OTP_Init (void)
 {
-	uint32_t (*ROM_otp_Init)(void);
+	uint32_t (*ROM_otp_Init) (void);
 
 	BOOTROM_API_TABLE = *((unsigned long * *) BOOTROM_BASE + OTP_API_TABLE_OFFSET);
 
-	ROM_otp_Init      = (uint32_t (*)(void))BOOTROM_API_TABLE[0];
-	Otp_ProgBootSrc   = (uint32_t (*)(CHIP_OTP_BOOT_SRC_T BootSrc))BOOTROM_API_TABLE[1];
-	Otp_ProgJTAGDis   = (uint32_t (*)(void))BOOTROM_API_TABLE[2];
-	Otp_ProgUSBID     = (uint32_t (*)(uint32_t ProductID, uint32_t VendorID))BOOTROM_API_TABLE[3];
-	Otp_ProgGP0       = (uint32_t (*)(uint32_t Data, uint32_t Mask))BOOTROM_API_TABLE[8];
-	Otp_ProgGP1       = (uint32_t (*)(uint32_t Data, uint32_t Mask))BOOTROM_API_TABLE[9];
-	Otp_ProgGP2       = (uint32_t (*)(uint32_t Data, uint32_t Mask))BOOTROM_API_TABLE[10];
-	Otp_ProgKey1      = (uint32_t (*)(uint8_t *key))BOOTROM_API_TABLE[11];
-	Otp_ProgKey2      = (uint32_t (*)(uint8_t *key))BOOTROM_API_TABLE[12];
-	Otp_GenRand       = (uint32_t (*)(void))BOOTROM_API_TABLE[13];
+	ROM_otp_Init = (uint32_t (*) (void))BOOTROM_API_TABLE[0];
+	Otp_ProgBootSrc = (uint32_t (*) (CHIP_OTP_BOOT_SRC_T BootSrc))BOOTROM_API_TABLE[1];
+	Otp_ProgJTAGDis = (uint32_t (*) (void))BOOTROM_API_TABLE[2];
+	Otp_ProgUSBID = (uint32_t (*) (uint32_t ProductID, uint32_t VendorID))BOOTROM_API_TABLE[3];
+	Otp_ProgGP0 = (uint32_t (*) (uint32_t Data, uint32_t Mask))BOOTROM_API_TABLE[8];
+	Otp_ProgGP1 = (uint32_t (*) (uint32_t Data, uint32_t Mask))BOOTROM_API_TABLE[9];
+	Otp_ProgGP2 = (uint32_t (*) (uint32_t Data, uint32_t Mask))BOOTROM_API_TABLE[10];
+	Otp_ProgKey1 = (uint32_t (*) (uint8_t *key))BOOTROM_API_TABLE[11];
+	Otp_ProgKey2 = (uint32_t (*) (uint8_t *key))BOOTROM_API_TABLE[12];
+	Otp_GenRand = (uint32_t (*) (void))BOOTROM_API_TABLE[13];
 
 	return ROM_otp_Init();
 }
 
 /* Program boot source in OTP Controller */
-uint32_t Chip_OTP_ProgBootSrc(CHIP_OTP_BOOT_SRC_T BootSrc)
+uint32_t Chip_OTP_ProgBootSrc (CHIP_OTP_BOOT_SRC_T BootSrc)
 {
 	return Otp_ProgBootSrc(BootSrc);
 }
 
 /* Program the JTAG bit in OTP Controller */
-uint32_t Chip_OTP_ProgJTAGDis(void)
+uint32_t Chip_OTP_ProgJTAGDis (void)
 {
 	return Otp_ProgJTAGDis();
 }
 
 /* Program USB ID in OTP Controller */
-uint32_t Chip_OTP_ProgUSBID(uint32_t ProductID, uint32_t VendorID)
+uint32_t Chip_OTP_ProgUSBID (uint32_t ProductID, uint32_t VendorID)
 {
 	return Otp_ProgUSBID(ProductID, VendorID);
 }
 
 /* Program OTP GP Word memory */
-uint32_t Chip_OTP_ProgGPWord(uint32_t WordNum, uint32_t Data, uint32_t Mask)
+uint32_t Chip_OTP_ProgGPWord (uint32_t WordNum, uint32_t Data, uint32_t Mask)
 {
 	uint32_t status;
 
-	switch (WordNum) {
-	case 1:
+	switch (WordNum)
+	{
+		case 1:
 		status = Otp_ProgGP1(Data, Mask);
-		break;
+			break;
 
-	case 2:
+		case 2:
 		status = Otp_ProgGP2(Data, Mask);
-		break;
+			break;
 
-	case 0:
-	default:
+		case 0:
+		default:
 		status = Otp_ProgGP0(Data, Mask);
-		break;
+			break;
 	}
 
 	return status;
 }
 
 /* Program AES Key */
-uint32_t Chip_OTP_ProgKey(uint32_t KeyNum, uint8_t *key)
+uint32_t Chip_OTP_ProgKey (uint32_t KeyNum, uint8_t *key)
 {
 	uint32_t status;
 
-	if (KeyNum) {
+	if (KeyNum)
+	{
 		status = Otp_ProgKey2(key);
 	}
-	else {
+	else
+	{
 		status = Otp_ProgKey1(key);
 	}
 	return status;
 }
 
 /* Generate Random Number using HW Random Number Generator */
-uint32_t Chip_OTP_GenRand(void)
+uint32_t Chip_OTP_GenRand (void)
 {
 	return Otp_GenRand();
 }

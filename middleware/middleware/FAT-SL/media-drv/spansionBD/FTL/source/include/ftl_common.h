@@ -1,35 +1,35 @@
 // file: ftl_common.h
 /**************************************************************************
-* Copyright (C)2012 Spansion Inc. All Rights Reserved. 
-*
-* This software is owned and published by: 
-* Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
-*
-* BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
-* BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
-*
-* This software constitutes driver source code for use in programming Spansion's 
-* Flash memory components. This software is licensed by Spansion to be adapted only 
-* for use in systems utilizing Spansion's Flash memories. Spansion is not be 
-* responsible for misuse or illegal use of this software for devices not 
-* supported herein.  Spansion is providing this source code "AS IS" and will 
-* not be responsible for issues arising from incorrect user implementation 
-* of the source code herein.  
-*
-* SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
-* REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
-* USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
-* FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
-* HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
-* OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
-* INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
-* SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
-* EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
-*
-* This software may be replicated in part or whole for the licensed use, 
-* with the restriction that this Copyright notice must be included with 
-* this software, whether used in part or whole, at all times.  
-*/
+ * Copyright (C)2012 Spansion Inc. All Rights Reserved. 
+ *
+ * This software is owned and published by: 
+ * Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
+ *
+ * BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
+ * BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
+ *
+ * This software constitutes driver source code for use in programming Spansion's 
+ * Flash memory components. This software is licensed by Spansion to be adapted only 
+ * for use in systems utilizing Spansion's Flash memories. Spansion is not be 
+ * responsible for misuse or illegal use of this software for devices not 
+ * supported herein.  Spansion is providing this source code "AS IS" and will 
+ * not be responsible for issues arising from incorrect user implementation 
+ * of the source code herein.  
+ *
+ * SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
+ * REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
+ * USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
+ * FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
+ * HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
+ * OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
+ * INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
+ * EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
+ *
+ * This software may be replicated in part or whole for the licensed use, 
+ * with the restriction that this Copyright notice must be included with 
+ * this software, whether used in part or whole, at all times.  
+ */
 
 #ifndef FTL_COMMON_H
 #define FTL_COMMON_H
@@ -37,113 +37,113 @@
 #include "ftl_debug.h"
 #include "ftl_calc.h"
 
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #if (FTL_DEFECT_MANAGEMENT == FTL_TRUE)
-UINT8 GetBadEBlockStatus(FTL_DEV devID, UINT16 logicalEBNum);
-void SetBadEBlockStatus(FTL_DEV devID, UINT16 logicalEBNum, UINT8 badBlockStatus);
+	UINT8 GetBadEBlockStatus(FTL_DEV devID, UINT16 logicalEBNum);
+	void SetBadEBlockStatus(FTL_DEV devID, UINT16 logicalEBNum, UINT8 badBlockStatus);
 #endif
-FTL_STATUS TRANS_InitTransMap(void);
-void TABLE_ClearFreeBitMap(FTL_DEV devID, UINT16 eBlockNum);
-void TABLE_ClearMappingTable(FTL_DEV devID, UINT16 logicalEBNum, UINT16 phyEBAddr, UINT32 eraseCount);
-FTL_STATUS TABLE_InitMappingTable(void);
-void TABLE_ClearPPATable(FTL_DEV devID, UINT16 eBlockNum);
-FTL_STATUS TABLE_InitPPAMappingTable(void);
-FTL_STATUS FTL_WriteSysEBlockInfo(FLASH_PAGE_INFO_PTR flashPagePtr, SYS_EBLOCK_INFO_PTR sysInfoPtr);
-UINT8 GetTMDevID(UINT16 index);
-void SetTMDevID(UINT16 index, FTL_DEV devId);
-UINT8 GetTMNumSectors(UINT16 index);
-void SetTMNumSectors(UINT16 index, UINT8 sec);
-UINT32 GetTMStartLBA(UINT16 index);
-void SetTMStartLBA(UINT16 index, UINT32 lba);
-TRANS_MAP_ENTRY_PTR GetTMPointer(UINT16 index);
-UINT32 GetTMPhyPage(UINT16 index);
-void SetTMPhyPage(UINT16 index, UINT32 phyPage);
-UINT32 GetTMMergePage(UINT16 index);
-void SetTMMergePage(UINT16 index, UINT32 mergePage);
-UINT8 GetTMStartSector(UINT16 index);
-void SetTMStartSector(UINT16 index, UINT8 sector);
-void SetTMLogInfo(UINT16 index, UINT16 value);
-UINT16 GetTMLogInfo(UINT16 index);
-void DecGCOrFreePageNum(FTL_DEV devID, UINT16 logicalEBNum);
-UINT16 GetTotalFreePages(FTL_DEV devID, UINT16 logicalEBNum);
-FTL_STATUS INIT_InitBasic(void);
-UINT16 GetPhysicalEBlockAddr(FTL_DEV devID, UINT16 logicalBlockNum);
-UINT16 GetLogicalEBlockAddr(FTL_DEV devID, UINT16 physicalBlockNum);
-void SetPhysicalEBlockAddr(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 phyBlockNum);
-UINT32 GetEraseCount(FTL_DEV devID, UINT16 logicalBlockNum);
-void SetEraseCount(FTL_DEV devID, UINT16 logicalBlockNum, UINT32 eraseCount);
-void IncEraseCount(FTL_DEV devID, UINT16 logicalBlockNum);
-UINT16 GetDirtyCount(FTL_DEV devID, UINT16 logicalBlockNum);
-void SetDirtyCount(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 dirtyCount);
-UINT16 GetFreePageIndex(FTL_DEV devID, UINT16 logicalBlockNum);
-void SetFreePageIndex(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 freePageIdx);
-UINT32 GetGCNum(FTL_DEV devID, UINT16 logicalBlockNum);
+	FTL_STATUS TRANS_InitTransMap (void);
+	void TABLE_ClearFreeBitMap (FTL_DEV devID, UINT16 eBlockNum);
+	void TABLE_ClearMappingTable (FTL_DEV devID, UINT16 logicalEBNum, UINT16 phyEBAddr, UINT32 eraseCount);
+	FTL_STATUS TABLE_InitMappingTable (void);
+	void TABLE_ClearPPATable (FTL_DEV devID, UINT16 eBlockNum);
+	FTL_STATUS TABLE_InitPPAMappingTable (void);
+	FTL_STATUS FTL_WriteSysEBlockInfo (FLASH_PAGE_INFO_PTR flashPagePtr, SYS_EBLOCK_INFO_PTR sysInfoPtr);
+	UINT8 GetTMDevID (UINT16 index);
+	void SetTMDevID (UINT16 index, FTL_DEV devId);
+	UINT8 GetTMNumSectors (UINT16 index);
+	void SetTMNumSectors (UINT16 index, UINT8 sec);
+	UINT32 GetTMStartLBA (UINT16 index);
+	void SetTMStartLBA (UINT16 index, UINT32 lba);
+	TRANS_MAP_ENTRY_PTR GetTMPointer (UINT16 index);
+	UINT32 GetTMPhyPage (UINT16 index);
+	void SetTMPhyPage (UINT16 index, UINT32 phyPage);
+	UINT32 GetTMMergePage (UINT16 index);
+	void SetTMMergePage (UINT16 index, UINT32 mergePage);
+	UINT8 GetTMStartSector (UINT16 index);
+	void SetTMStartSector (UINT16 index, UINT8 sector);
+	void SetTMLogInfo (UINT16 index, UINT16 value);
+	UINT16 GetTMLogInfo (UINT16 index);
+	void DecGCOrFreePageNum (FTL_DEV devID, UINT16 logicalEBNum);
+	UINT16 GetTotalFreePages (FTL_DEV devID, UINT16 logicalEBNum);
+	FTL_STATUS INIT_InitBasic (void);
+	UINT16 GetPhysicalEBlockAddr (FTL_DEV devID, UINT16 logicalBlockNum);
+	UINT16 GetLogicalEBlockAddr (FTL_DEV devID, UINT16 physicalBlockNum);
+	void SetPhysicalEBlockAddr (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 phyBlockNum);
+	UINT32 GetEraseCount (FTL_DEV devID, UINT16 logicalBlockNum);
+	void SetEraseCount (FTL_DEV devID, UINT16 logicalBlockNum, UINT32 eraseCount);
+	void IncEraseCount (FTL_DEV devID, UINT16 logicalBlockNum);
+	UINT16 GetDirtyCount (FTL_DEV devID, UINT16 logicalBlockNum);
+	void SetDirtyCount (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 dirtyCount);
+	UINT16 GetFreePageIndex (FTL_DEV devID, UINT16 logicalBlockNum);
+	void SetFreePageIndex (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 freePageIdx);
+	UINT32 GetGCNum (FTL_DEV devID, UINT16 logicalBlockNum);
 
 #if(FTL_EBLOCK_CHAINING == FTL_TRUE)
-UINT16 GetChainLogicalEBNum(FTL_DEV devID, UINT16 logicalBlockNum);
-UINT16 GetChainPhyEBNum(FTL_DEV devID, UINT16 logicalBlockNum);
-void SetChainLogicalEBNum(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 logEBNum);
-void SetChainPhyEBNum(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 PhyEBNum);
-void SetChainLink(FTL_DEV devID, UINT16 logEBNumFrom, UINT16 logEBNumTo, 
-    UINT16 phyEBNumFrom, UINT16 phyEBNumTo);
-void ClearChainLink(FTL_DEV devID, UINT16 logicalBlockNumFrom, UINT16 logicalBlockNumTo);
-UINT16 GetLongestChain(FTL_DEV devID);
-UINT16 GetChainWithLowestVaildUsedRatio(FTL_DEV devID);
-UINT16 GetChainWithLowestVaildPages(FTL_DEV devID);
+	UINT16 GetChainLogicalEBNum (FTL_DEV devID, UINT16 logicalBlockNum);
+	UINT16 GetChainPhyEBNum (FTL_DEV devID, UINT16 logicalBlockNum);
+	void SetChainLogicalEBNum (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 logEBNum);
+	void SetChainPhyEBNum (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 PhyEBNum);
+	void SetChainLink (FTL_DEV devID, UINT16 logEBNumFrom, UINT16 logEBNumTo,
+	UINT16 phyEBNumFrom, UINT16 phyEBNumTo);
+	void ClearChainLink (FTL_DEV devID, UINT16 logicalBlockNumFrom, UINT16 logicalBlockNumTo);
+	UINT16 GetLongestChain (FTL_DEV devID);
+	UINT16 GetChainWithLowestVaildUsedRatio (FTL_DEV devID);
+	UINT16 GetChainWithLowestVaildPages (FTL_DEV devID);
 #endif  // #if(FTL_EBLOCK_CHAINING == FTL_TRUE)
 
-FREE_BIT_MAP_TYPE GetEBlockMapFreeBitIndex(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 phyPageOffset);
-void SetEBlockMapFreeBitIndex(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 phyPageOffset, FREE_BIT_MAP_TYPE value);
-void SetGCOrFreePageNum(FTL_DEV devID, UINT16 logicalBlockNum, UINT32 GCNum);
-void ClearEBlockMapFreeBitIndex(FTL_DEV devID, UINT16 logicalEBNum);
-void MarkEBlockMappingTableSectorDirty(FTL_DEV devID, UINT16 sector);
-void MarkEBlockMappingTableEntryDirty(FTL_DEV devID, UINT16 logicalEBNum);
-void MarkEBlockMappingTableSectorClean(FTL_DEV devID, UINT16 sector);
-UINT8 IsEBlockMappingTableSectorDirty(FTL_DEV devID, UINT16 sector);
-UINT16 GetPPASlot(FTL_DEV devID, UINT16 logicalEBNum, UINT16 logicalPageOffset);
-void SetPPASlot(FTL_DEV devID, UINT16 logicalEBNum, UINT16 logicalPageOffset, UINT16 value);
-void MarkPPAMappingTableSectorDirty(FTL_DEV devID, UINT16 sector);
-void MarkPPAMappingTableEntryDirty(FTL_DEV devID, UINT16 logicalEBNum, UINT16 logicalPageOffset);
-void MarkPPAMappingTableSectorClean(FTL_DEV devID, UINT16 sector);
-UINT8 IsPPAMappingTableSectorDirty(FTL_DEV devID, UINT16 sector);
-FTL_STATUS TABLE_InitEBOrderingTable(FTL_DEV devID);
-FTL_STATUS TABLE_ClearReservedEB(FTL_DEV devID);
-FTL_STATUS TABLE_InsertReservedEB(FTL_DEV devID, UINT16 logicalAddr);
-FTL_STATUS TABLE_GetReservedEB(FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT8 WLflag);
-UINT16 TABLE_GetReservedEBlockNum(FTL_DEV devID); /* changed by Nobu Feb 18, 2015 : UINT8 -> UINT16 for ML16G2 */
-UINT16 TABLE_GetUsedSysEBCount(FTL_DEV devID);
-FTL_STATUS TABLE_CheckUsedSysEB(FTL_DEV devID, UINT16 logicalAddr);
-FTL_STATUS TABLE_FlushEBInsert(FTL_DEV devID, UINT16 logicalAddr, UINT16 phyEBAddr, UINT32 key);
-FTL_STATUS TABLE_FlushEBRemove(FTL_DEV devID, UINT16 blockNum);
-FTL_STATUS TABLE_FlushEBGetNext(FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT16_PTR phyEBAddrPtr, UINT32_PTR keyPtr);
-FTL_STATUS TABLE_FlushEBGetLatest(FTL_DEV devID, UINT16_PTR flushEBlockPtr,
-    UINT16_PTR phyEBAddrPtr, UINT32 keyPtr);
-FTL_STATUS TABLE_FlushEBClear(FTL_DEV devID);
+	FREE_BIT_MAP_TYPE GetEBlockMapFreeBitIndex (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 phyPageOffset);
+	void SetEBlockMapFreeBitIndex (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 phyPageOffset, FREE_BIT_MAP_TYPE value);
+	void SetGCOrFreePageNum (FTL_DEV devID, UINT16 logicalBlockNum, UINT32 GCNum);
+	void ClearEBlockMapFreeBitIndex (FTL_DEV devID, UINT16 logicalEBNum);
+	void MarkEBlockMappingTableSectorDirty (FTL_DEV devID, UINT16 sector);
+	void MarkEBlockMappingTableEntryDirty (FTL_DEV devID, UINT16 logicalEBNum);
+	void MarkEBlockMappingTableSectorClean (FTL_DEV devID, UINT16 sector);
+	UINT8 IsEBlockMappingTableSectorDirty (FTL_DEV devID, UINT16 sector);
+	UINT16 GetPPASlot (FTL_DEV devID, UINT16 logicalEBNum, UINT16 logicalPageOffset);
+	void SetPPASlot (FTL_DEV devID, UINT16 logicalEBNum, UINT16 logicalPageOffset, UINT16 value);
+	void MarkPPAMappingTableSectorDirty (FTL_DEV devID, UINT16 sector);
+	void MarkPPAMappingTableEntryDirty (FTL_DEV devID, UINT16 logicalEBNum, UINT16 logicalPageOffset);
+	void MarkPPAMappingTableSectorClean (FTL_DEV devID, UINT16 sector);
+	UINT8 IsPPAMappingTableSectorDirty (FTL_DEV devID, UINT16 sector);
+	FTL_STATUS TABLE_InitEBOrderingTable (FTL_DEV devID);
+	FTL_STATUS TABLE_ClearReservedEB (FTL_DEV devID);
+	FTL_STATUS TABLE_InsertReservedEB (FTL_DEV devID, UINT16 logicalAddr);
+	FTL_STATUS TABLE_GetReservedEB (FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT8 WLflag);
+UINT16 TABLE_GetReservedEBlockNum (FTL_DEV devID); /* changed by Nobu Feb 18, 2015 : UINT8 -> UINT16 for ML16G2 */
+UINT16 TABLE_GetUsedSysEBCount (FTL_DEV devID);
+FTL_STATUS TABLE_CheckUsedSysEB (FTL_DEV devID, UINT16 logicalAddr);
+FTL_STATUS TABLE_FlushEBInsert (FTL_DEV devID, UINT16 logicalAddr, UINT16 phyEBAddr, UINT32 key);
+FTL_STATUS TABLE_FlushEBRemove (FTL_DEV devID, UINT16 blockNum);
+FTL_STATUS TABLE_FlushEBGetNext (FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT16_PTR phyEBAddrPtr, UINT32_PTR keyPtr);
+FTL_STATUS TABLE_FlushEBGetLatest (FTL_DEV devID, UINT16_PTR flushEBlockPtr,
+UINT16_PTR phyEBAddrPtr, UINT32 keyPtr);
+FTL_STATUS TABLE_FlushEBClear (FTL_DEV devID);
 #if (CACHE_RAM_BD_MODULE == FTL_FALSE)
-FTL_STATUS AdjustFlushEBlockFreePage(FTL_DEV devID, UINT16 logicalFlushEBlockNum, UINT16 dirtyBitMapCount);
+FTL_STATUS AdjustFlushEBlockFreePage (FTL_DEV devID, UINT16 logicalFlushEBlockNum, UINT16 dirtyBitMapCount);
 #endif
-FTL_STATUS RestoreFlushEBlockFreePage(FTL_DEV devID, UINT16 logicalFlushEBlockNum);
-FTL_STATUS TABLE_TransLogEBInsert(FTL_DEV devID, UINT16 logicalAddr, UINT16 phyEBAddr, UINT32 key);
-FTL_STATUS TABLE_TransLogEBGetNext(FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT16_PTR phyEBAddrPtr, UINT32_PTR keyPtr);
-FTL_STATUS TABLE_TransEBClear(FTL_DEV devID);
-FTL_STATUS TABLE_TransLogEBRemove(FTL_DEV devID, UINT16 blockNum);
-void TABLE_SortTransTable(FTL_DEV devID);
-FTL_STATUS TABLE_TransLogEBGetLatest(FTL_DEV devID, UINT16_PTR LogEBlockPtr,
-    UINT16_PTR phyEBAddrPtr, UINT32 keyPtr);
-UINT16 GetTransLogEBArrayCount(FTL_DEV devID);
-UINT32 GetTransLogEBCounter(FTL_DEV devID);
-void SetTransLogEBCounter(FTL_DEV devID, UINT32 counter);
-UINT32 GetFlushEBCounter(FTL_DEV devID);
-void SetFlushLogEBCounter(FTL_DEV devID, UINT32 counter);
-UINT16 GetFlushLogEBArrayCount(FTL_DEV devID);
-FTL_STATUS TABLE_GetTransLogEntry(FTL_DEV devID, UINT16 blockNum, UINT16_PTR logicalEBNumPtr, UINT16_PTR phyAddrPtr, UINT32_PTR keyPtr);
-FTL_STATUS TABLE_SetTransLogEntry(FTL_DEV devID, UINT16 blockNum, UINT16 logicalEBNum, UINT16 phyAddr, UINT32 key);
-FTL_STATUS TABLE_GetFlushLogEntry(FTL_DEV devID, UINT16 blockNum, UINT16_PTR logicalEBNumPtr, UINT16_PTR phyAddrPtr, UINT32_PTR keyPtr);
-FTL_STATUS TABLE_SetFlushLogEntry(FTL_DEV devID, UINT16 blockNum, UINT16 logicalEBNum, UINT16 phyAddr, UINT32 key);
+FTL_STATUS RestoreFlushEBlockFreePage (FTL_DEV devID, UINT16 logicalFlushEBlockNum);
+FTL_STATUS TABLE_TransLogEBInsert (FTL_DEV devID, UINT16 logicalAddr, UINT16 phyEBAddr, UINT32 key);
+FTL_STATUS TABLE_TransLogEBGetNext (FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT16_PTR phyEBAddrPtr, UINT32_PTR keyPtr);
+FTL_STATUS TABLE_TransEBClear (FTL_DEV devID);
+FTL_STATUS TABLE_TransLogEBRemove (FTL_DEV devID, UINT16 blockNum);
+void TABLE_SortTransTable (FTL_DEV devID);
+FTL_STATUS TABLE_TransLogEBGetLatest (FTL_DEV devID, UINT16_PTR LogEBlockPtr,
+UINT16_PTR phyEBAddrPtr, UINT32 keyPtr);
+UINT16 GetTransLogEBArrayCount (FTL_DEV devID);
+UINT32 GetTransLogEBCounter (FTL_DEV devID);
+void SetTransLogEBCounter (FTL_DEV devID, UINT32 counter);
+UINT32 GetFlushEBCounter (FTL_DEV devID);
+void SetFlushLogEBCounter (FTL_DEV devID, UINT32 counter);
+UINT16 GetFlushLogEBArrayCount (FTL_DEV devID);
+FTL_STATUS TABLE_GetTransLogEntry (FTL_DEV devID, UINT16 blockNum, UINT16_PTR logicalEBNumPtr, UINT16_PTR phyAddrPtr, UINT32_PTR keyPtr);
+FTL_STATUS TABLE_SetTransLogEntry (FTL_DEV devID, UINT16 blockNum, UINT16 logicalEBNum, UINT16 phyAddr, UINT32 key);
+FTL_STATUS TABLE_GetFlushLogEntry (FTL_DEV devID, UINT16 blockNum, UINT16_PTR logicalEBNumPtr, UINT16_PTR phyAddrPtr, UINT32_PTR keyPtr);
+FTL_STATUS TABLE_SetFlushLogEntry (FTL_DEV devID, UINT16 blockNum, UINT16 logicalEBNum, UINT16 phyAddr, UINT32 key);
 #if (CACHE_RAM_BD_MODULE == FTL_TRUE)
 #if (CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
 FTL_STATUS CACHE_DynamicAllocation(UINT32 total_ram_allowed);
@@ -155,133 +155,135 @@ FTL_STATUS ClearSaveStaticWL(FTL_DEV devID, UINT16 logicalEBNum, UINT32 eraseCou
 FTL_STATUS SetSaveStaticWL(FTL_DEV devID, UINT16 logicalEBNum, UINT32 eraseCount);
 FTL_STATUS GetSaveStaticWL(FTL_DEV devID, UINT16_PTR logicalEBNum, UINT32_PTR eraseCount, UINT8 hlFlag);
 #endif
-FTL_STATUS FTL_SwapDataReserveEBlock(FTL_DEV devID, UINT16 logicalPageNum, UINT16_PTR ptrPhyReservedBlock, UINT16_PTR ptrLogicalReservedBlock, UINT8 WLflag, UINT8 badBlockFlagIn);
-FTL_STATUS TABLE_Flush(UINT8 flushMode);
-FTL_STATUS TABLE_LoadFlushTable(void);
-FTL_STATUS TRANS_ClearTransMap(void);
-FTL_STATUS FTL_CheckForFreePages(ADDRESS_STRUCT_PTR startPage, ADDRESS_STRUCT_PTR endPage, UINT32 totalPages);
-FTL_STATUS GetPhyPageAddr(ADDRESS_STRUCT_PTR currentPage, UINT16 phyEBNum, 
-    UINT16 logEBNum, UINT32_PTR phyPage);
-FTL_STATUS ClearGC_Info(void);
-FTL_STATUS ClearMergeGC_Info(FTL_DEV DevID, UINT16 logicalEBNum, UINT32 logicalPageNum);
-FTL_STATUS UpdateTransferMap(UINT32 currentLBA, ADDRESS_STRUCT_PTR currentPage, 
-    ADDRESS_STRUCT_PTR endPage, ADDRESS_STRUCT_PTR startPage, UINT32 totalPages, 
-    UINT32 phyPage, UINT32 mergePage, UINT8 isWrite, UINT8 isChained);
-FTL_STATUS ClearGCPageBitMap(void);
-FTL_STATUS SetPageMoved(UINT16 pageAddress, UINT32 phyPageAddr);
-FTL_STATUS IsPageMoved(UINT32 pageAddr, UINT8_PTR isMoved);
+FTL_STATUS FTL_SwapDataReserveEBlock (FTL_DEV devID, UINT16 logicalPageNum, UINT16_PTR ptrPhyReservedBlock, UINT16_PTR ptrLogicalReservedBlock, UINT8 WLflag, UINT8 badBlockFlagIn);
+FTL_STATUS TABLE_Flush (UINT8 flushMode);
+FTL_STATUS TABLE_LoadFlushTable (void);
+FTL_STATUS TRANS_ClearTransMap (void);
+FTL_STATUS FTL_CheckForFreePages (ADDRESS_STRUCT_PTR startPage, ADDRESS_STRUCT_PTR endPage, UINT32 totalPages);
+FTL_STATUS GetPhyPageAddr (ADDRESS_STRUCT_PTR currentPage, UINT16 phyEBNum,
+UINT16 logEBNum, UINT32_PTR phyPage);
+FTL_STATUS ClearGC_Info (void);
+FTL_STATUS ClearMergeGC_Info (FTL_DEV DevID, UINT16 logicalEBNum, UINT32 logicalPageNum);
+FTL_STATUS UpdateTransferMap (UINT32 currentLBA, ADDRESS_STRUCT_PTR currentPage,
+	ADDRESS_STRUCT_PTR endPage, ADDRESS_STRUCT_PTR startPage, UINT32 totalPages,
+	UINT32 phyPage, UINT32 mergePage, UINT8 isWrite, UINT8 isChained);
+FTL_STATUS ClearGCPageBitMap (void);
+FTL_STATUS SetPageMoved (UINT16 pageAddress, UINT32 phyPageAddr);
+FTL_STATUS IsPageMoved (UINT32 pageAddr, UINT8_PTR isMoved);
 
 #if(FTL_DEVICE_TYPE == FTL_DEVICE_NOR)
-FTL_STATUS TABLE_InitTransLogEntry(void);
-FTL_STATUS InsertEntryIntoLogEntry(UINT16 index, UINT32 phyPageAddr, 
-    UINT32 currentLBA, ADDRESS_STRUCT_PTR currentPage, UINT8 isChained);
-FTL_STATUS ProcessPageLoc(FTL_DEV devID, LOG_PHY_PAGE_LOCATION_PTR pageLocPtr, UINT32 pageAddress);
-FTL_STATUS UpdateRAMTablesUsingTransLogs(FTL_DEV devID);
-FTL_STATUS FTL_ClearA(void);
-FTL_STATUS FTL_ClearB(UINT16 count);
-FTL_STATUS FTL_ClearC(UINT16 seqNum);
+FTL_STATUS TABLE_InitTransLogEntry (void);
+FTL_STATUS InsertEntryIntoLogEntry (UINT16 index, UINT32 phyPageAddr,
+UINT32 currentLBA, ADDRESS_STRUCT_PTR currentPage, UINT8 isChained);
+FTL_STATUS ProcessPageLoc (FTL_DEV devID, LOG_PHY_PAGE_LOCATION_PTR pageLocPtr, UINT32 pageAddress);
+FTL_STATUS UpdateRAMTablesUsingTransLogs (FTL_DEV devID);
+FTL_STATUS FTL_ClearA (void);
+FTL_STATUS FTL_ClearB (UINT16 count);
+FTL_STATUS FTL_ClearC (UINT16 seqNum);
 #endif  // #if(FTL_DEVICE_TYPE == FTL_DEVICE_NOR)
 
-void SetOldPageIndex(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 oldPageIdx);
-FTL_STATUS FTL_WriteLogInfo(FLASH_PAGE_INFO_PTR flashPagePtr, UINT8_PTR logPtr);
-FTL_STATUS FTL_WriteFlushInfo(FLASH_PAGE_INFO_PTR flashPagePtr, SYS_EBLOCK_FLUSH_INFO_PTR flushInfoPtr);
-void IncGCOrFreePageNum(FTL_DEV devID, UINT16 logicalEBNum);
-FTL_STATUS GetNextFlushEntryLocation(FTL_DEV devID, FLASH_PAGE_INFO_PTR flushInfoPtr, FLASH_PAGE_INFO_PTR flushRamTablePtr, UINT16_PTR logicalBlockNumPtr);
-FTL_STATUS CreateNextFlushEntryLocation(FTL_DEV devID, UINT16 logicalBlockNum);
-FTL_STATUS GetFlushLoc(FTL_DEV devID, UINT16 phyEBlockAddr, UINT16 freePageIndex, FLASH_PAGE_INFO_PTR flushInfoPtr, FLASH_PAGE_INFO_PTR flushRamTablePtr);
-FTL_STATUS FTL_GetNextTransferMapEntry(UINT16_PTR nextEntryIndex, UINT16_PTR startIndex, UINT16_PTR endIndex);
-UINT16 FTL_GetCurrentIndex(void);
-void SetUsedPageIndex(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 usedPageIdx);
-FTL_STATUS TABLE_InitGcNum(void);
-void TABLE_SortFlushTable(FTL_DEV devID);
-FTL_STATUS GetNextLogEntryLocation(FTL_DEV devID, FLASH_PAGE_INFO_PTR pageInfoPtr);
-FTL_STATUS CreateNextLogEntryLocation(FTL_DEV devID, UINT16 logicalBlockNum);
-FTL_STATUS CreateNextTransLogEBlock(FTL_DEV devID, UINT16 logicalBlockNum);
-FTL_STATUS UpdateEBOrderingTable(FTL_DEV devID, UINT16 startEB, UINT16_PTR formatCount);
-FTL_STATUS CheckFlushSpace(FTL_DEV devID);
-FTL_STATUS FTL_EraseOp(FTL_DEV devID, UINT16 logicalEBNum);
-FTL_STATUS FTL_EraseOpNoDirty(FTL_DEV devID, UINT16 logicalEBNum);
-FTL_STATUS FTL_EraseAllTransLogBlocksOp(FTL_DEV devID);
-UINT32 CalcFlushRamTablePages(UINT16 phyEBNum, UINT16 index);
-UINT16 CalcFlushRamTableOffset(UINT16 index);
-FTL_STATUS LoadRamTable(FLASH_PAGE_INFO_PTR flashPage, UINT8_PTR ramTablePtr, UINT16 tableOffset, UINT32 devTableSize);
-FTL_STATUS GetTransLogsSetRAMTables(FTL_DEV devID, LOG_ENTRY_LOC_PTR startLoc, UINT8_PTR ramTablesUpdated, UINT8_PTR logEblockFount);
-FTL_STATUS FTL_FindEmptyTransLogEBlock(FTL_DEV devID, UINT16_PTR logicalEBNumPtr, UINT16_PTR physicalEBNumPtr);
-FTL_STATUS UpdateRAMTablesUsingGCLogs(FTL_DEV devID, GC_LOG_ENTRY_PTR ptrGCLog);
+void SetOldPageIndex (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 oldPageIdx);
+FTL_STATUS FTL_WriteLogInfo (FLASH_PAGE_INFO_PTR flashPagePtr, UINT8_PTR logPtr);
+FTL_STATUS FTL_WriteFlushInfo (FLASH_PAGE_INFO_PTR flashPagePtr, SYS_EBLOCK_FLUSH_INFO_PTR flushInfoPtr);
+void IncGCOrFreePageNum (FTL_DEV devID, UINT16 logicalEBNum);
+FTL_STATUS GetNextFlushEntryLocation (FTL_DEV devID, FLASH_PAGE_INFO_PTR flushInfoPtr,
+	FLASH_PAGE_INFO_PTR flushRamTablePtr, UINT16_PTR logicalBlockNumPtr);
+FTL_STATUS CreateNextFlushEntryLocation (FTL_DEV devID, UINT16 logicalBlockNum);
+FTL_STATUS GetFlushLoc (FTL_DEV devID, UINT16 phyEBlockAddr, UINT16 freePageIndex, FLASH_PAGE_INFO_PTR flushInfoPtr,
+	FLASH_PAGE_INFO_PTR flushRamTablePtr);
+FTL_STATUS FTL_GetNextTransferMapEntry (UINT16_PTR nextEntryIndex, UINT16_PTR startIndex, UINT16_PTR endIndex);
+UINT16 FTL_GetCurrentIndex (void);
+void SetUsedPageIndex (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 usedPageIdx);
+FTL_STATUS TABLE_InitGcNum (void);
+void TABLE_SortFlushTable (FTL_DEV devID);
+FTL_STATUS GetNextLogEntryLocation (FTL_DEV devID, FLASH_PAGE_INFO_PTR pageInfoPtr);
+FTL_STATUS CreateNextLogEntryLocation (FTL_DEV devID, UINT16 logicalBlockNum);
+FTL_STATUS CreateNextTransLogEBlock (FTL_DEV devID, UINT16 logicalBlockNum);
+FTL_STATUS UpdateEBOrderingTable (FTL_DEV devID, UINT16 startEB, UINT16_PTR formatCount);
+FTL_STATUS CheckFlushSpace (FTL_DEV devID);
+FTL_STATUS FTL_EraseOp (FTL_DEV devID, UINT16 logicalEBNum);
+FTL_STATUS FTL_EraseOpNoDirty (FTL_DEV devID, UINT16 logicalEBNum);
+FTL_STATUS FTL_EraseAllTransLogBlocksOp (FTL_DEV devID);
+UINT32 CalcFlushRamTablePages (UINT16 phyEBNum, UINT16 index);
+UINT16 CalcFlushRamTableOffset (UINT16 index);
+FTL_STATUS LoadRamTable (FLASH_PAGE_INFO_PTR flashPage, UINT8_PTR ramTablePtr, UINT16 tableOffset, UINT32 devTableSize);
+FTL_STATUS GetTransLogsSetRAMTables (FTL_DEV devID, LOG_ENTRY_LOC_PTR startLoc, UINT8_PTR ramTablesUpdated, UINT8_PTR logEblockFount);
+FTL_STATUS FTL_FindEmptyTransLogEBlock (FTL_DEV devID, UINT16_PTR logicalEBNumPtr, UINT16_PTR physicalEBNumPtr);
+FTL_STATUS UpdateRAMTablesUsingGCLogs (FTL_DEV devID, GC_LOG_ENTRY_PTR ptrGCLog);
 
 #if(FTL_EBLOCK_CHAINING == FTL_TRUE)
-FTL_STATUS UpdateRAMTablesUsingChainLogs(FTL_DEV devID, CHAIN_LOG_ENTRY_PTR chainLogPtr);
+FTL_STATUS UpdateRAMTablesUsingChainLogs (FTL_DEV devID, CHAIN_LOG_ENTRY_PTR chainLogPtr);
 #endif  // #if(FTL_EBLOCK_CHAINING == FTL_TRUE)
 
 #if (FTL_ENABLE_UNUSED_EB_SWAP == FTL_TRUE)
-FTL_STATUS UpdateRAMTablesUsingEBSwapLogs(FTL_DEV devID, EBSWAP_LOG_ENTRY_PTR EBSwapLogPtr);
-FTL_STATUS CreateSwapEBLog(FTL_DEV devID, UINT16 logicalDataEB, UINT16 logicalReservedEB);
+FTL_STATUS UpdateRAMTablesUsingEBSwapLogs (FTL_DEV devID, EBSWAP_LOG_ENTRY_PTR EBSwapLogPtr);
+FTL_STATUS CreateSwapEBLog (FTL_DEV devID, UINT16 logicalDataEB, UINT16 logicalReservedEB);
 #endif  // #if (FTL_ENABLE_UNUSED_EB_SWAP == FTL_TRUE)
 
 #if(FTL_UNLINK_GC == FTL_TRUE)
-FTL_STATUS UnlinkChain(FTL_DEV devID, UINT16 logicalBlockNumFrom, UINT16 logicalBlockNumTo);
-FTL_STATUS UpdateRAMTablesUsingUnlinkLogs(FTL_DEV devID, UNLINK_LOG_ENTRY_PTR ptrUnlinkLog);
+FTL_STATUS UnlinkChain (FTL_DEV devID, UINT16 logicalBlockNumFrom, UINT16 logicalBlockNumTo);
+FTL_STATUS UpdateRAMTablesUsingUnlinkLogs (FTL_DEV devID, UNLINK_LOG_ENTRY_PTR ptrUnlinkLog);
 #endif  // #if(FTL_UNLINK_GC == FTL_TRUE)
 
-UINT16 FTL_GetNumLogEntries(ADDRESS_STRUCT_PTR startPage, UINT32 totalPages);
+UINT16 FTL_GetNumLogEntries (ADDRESS_STRUCT_PTR startPage, UINT32 totalPages);
 
-FTL_STATUS TABLE_FlushDevice(FTL_DEV devID, UINT8 flushMode);
-FTL_STATUS TRANS_ClearEntry(UINT16 index);
-UINT32 GetTotalDirtyBitCnt(FTL_DEV devID);
-UINT16 GetNumFreePages(FTL_DEV devID, UINT16 logicalEBNum);
-UINT16 GetNumValidPages(FTL_DEV devID, UINT16 logicalEBNum);
-UINT16 GetNumUsedPages(FTL_DEV devID, UINT16 logicalEBNum);
-UINT16 GetNumInvalidPages(FTL_DEV devID, UINT16 logicalEBNum);
-void GetNumValidUsedPages(FTL_DEV devID, UINT16 logicalEBNum, UINT16_PTR used, UINT16_PTR valid);
-FTL_STATUS Flush_GC(FTL_DEV devID);
-void UpdatePageTableInfo(FTL_DEV devID, UINT16 logicalBlockNum, UINT16 logicalPageIndex, 
-    UINT16 phyPageIdx, UINT8 bitStatus);
-FTL_STATUS DBG_CheckPPAandBitMap(FTL_DEV devID, UINT16 logicalEBNum);
-FTL_STATUS DBG_CheckMappingTables(void);
+FTL_STATUS TABLE_FlushDevice (FTL_DEV devID, UINT8 flushMode);
+FTL_STATUS TRANS_ClearEntry (UINT16 index);
+UINT32 GetTotalDirtyBitCnt (FTL_DEV devID);
+UINT16 GetNumFreePages (FTL_DEV devID, UINT16 logicalEBNum);
+UINT16 GetNumValidPages (FTL_DEV devID, UINT16 logicalEBNum);
+UINT16 GetNumUsedPages (FTL_DEV devID, UINT16 logicalEBNum);
+UINT16 GetNumInvalidPages (FTL_DEV devID, UINT16 logicalEBNum);
+void GetNumValidUsedPages (FTL_DEV devID, UINT16 logicalEBNum, UINT16_PTR used, UINT16_PTR valid);
+FTL_STATUS Flush_GC (FTL_DEV devID);
+void UpdatePageTableInfo (FTL_DEV devID, UINT16 logicalBlockNum, UINT16 logicalPageIndex,
+UINT16 phyPageIdx, UINT8 bitStatus);
+FTL_STATUS DBG_CheckPPAandBitMap (FTL_DEV devID, UINT16 logicalEBNum);
+FTL_STATUS DBG_CheckMappingTables (void);
 
 extern GC_SAVE gcSave[MAX_BLOCKS_TO_SAVE];
 extern UINT16 gcSaveCount;
 void FTL_ClearGCSave (UINT8 clearMode);
 FTL_STATUS FTL_AddToGCSave (FTL_DEV devId, UINT16 phyEbNum);
-FTL_STATUS FTL_CheckForGCLogSpace(FTL_DEV devID);
+FTL_STATUS FTL_CheckForGCLogSpace (FTL_DEV devID);
 /***ERASE COUNT**********/
 #if (ENABLE_EB_ERASED_BIT == FTL_TRUE)
-UINT8 GetEBErased(FTL_DEV devID, UINT16 logEBNum);
-void SetEBErased(FTL_DEV devID, UINT16 logEBNum, UINT8 eraseStatus);
+UINT8 GetEBErased (FTL_DEV devID, UINT16 logEBNum);
+void SetEBErased (FTL_DEV devID, UINT16 logEBNum, UINT8 eraseStatus);
 #endif  // #if (ENABLE_EB_ERASED_BIT == FTL_TRUE)
 
 #if (FTL_SUPER_SYS_EBLOCK == FTL_TRUE)
-FTL_STATUS FTL_WriteSuperInfo(FLASH_PAGE_INFO_PTR flashPagePtr, UINT8_PTR logPtr);
-FTL_STATUS FTL_FindSuperSysEB(FTL_DEV devID);
-FTL_STATUS GetSuperSysInfoLogs(FTL_DEV devID, UINT16_PTR storePhySysEB, UINT8_PTR checkSuperPF);
-FTL_STATUS SetSysEBRamTable(FTL_DEV devID, UINT16_PTR storeSysEB, UINT16_PTR formatCount);
-FTL_STATUS FTL_CheckForSuperSysEBLogSpace(FTL_DEV devID, UINT8 mode);
-FTL_STATUS FTL_CreateSuperSysEBLog(FTL_DEV devID, UINT8 mode);
+FTL_STATUS FTL_WriteSuperInfo (FLASH_PAGE_INFO_PTR flashPagePtr, UINT8_PTR logPtr);
+FTL_STATUS FTL_FindSuperSysEB (FTL_DEV devID);
+FTL_STATUS GetSuperSysInfoLogs (FTL_DEV devID, UINT16_PTR storePhySysEB, UINT8_PTR checkSuperPF);
+FTL_STATUS SetSysEBRamTable (FTL_DEV devID, UINT16_PTR storeSysEB, UINT16_PTR formatCount);
+FTL_STATUS FTL_CheckForSuperSysEBLogSpace (FTL_DEV devID, UINT8 mode);
+FTL_STATUS FTL_CreateSuperSysEBLog (FTL_DEV devID, UINT8 mode);
 
-FTL_STATUS GetNextSuperSysEBEntryLocation(FTL_DEV devID, FLASH_PAGE_INFO_PTR pageInfoPtr, UINT16_PTR entryIndexPtr);
-FTL_STATUS CreateNextSuperSystemEBlockOp(FTL_DEV devID);
+FTL_STATUS GetNextSuperSysEBEntryLocation (FTL_DEV devID, FLASH_PAGE_INFO_PTR pageInfoPtr, UINT16_PTR entryIndexPtr);
+FTL_STATUS CreateNextSuperSystemEBlockOp (FTL_DEV devID);
 
-FTL_STATUS FTL_FindEmptySuperSysEBlock(FTL_DEV devID, UINT16_PTR logicalEBNumPtr, UINT16_PTR physicalEBNumPtr);
-FTL_STATUS FTL_FindAllAreaSuperSysEBlock(FTL_DEV devID, UINT16_PTR findDataEBNumPtr, UINT16_PTR findSystemEBNumPtr);
-FTL_STATUS DataGCForSuperSysEB(void);
-FTL_STATUS ClearSuperEBInfo(void);
-void SetSuperSysEBCounter(FTL_DEV devID, UINT32 counter);
-UINT32 GetSuperSysEBCounter(FTL_DEV devID);
-FTL_STATUS TABLE_GetSuperSysEBEntry(FTL_DEV devID, UINT16 blockNum, UINT16_PTR logEBlockPtr, UINT16_PTR phyAddrPtr, UINT32_PTR keyPtr);
-FTL_STATUS TABLE_SuperSysEBClear(FTL_DEV devID);
-FTL_STATUS TABLE_SuperSysEBInsert(FTL_DEV devID, UINT16 logicalAddr, UINT16 phyEBAddr, UINT32 key);
-FTL_STATUS TABLE_SuperSysEBGetLatest(FTL_DEV devID, UINT16_PTR logEBlockPtr, UINT16_PTR phyEBAddrPtr, UINT32 key); 
-FTL_STATUS TABLE_SuperSysEBGetNext(FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT16_PTR phyEBAddrPtr, UINT32_PTR keyPtr);
-void TABLE_SortSuperTable(FTL_DEV devID);
-FTL_STATUS TABLE_SuperSysEBRemove(FTL_DEV devID, UINT16 blockNum);
-FTL_STATUS TABLE_GetPhySysEB(FTL_DEV devID, UINT16_PTR countPtr, UINT16_PTR phyEBAddrPtr);
-FTL_STATUS TABLE_CheckUsedSuperEB(FTL_DEV devID, UINT16 logicalAddr);
+FTL_STATUS FTL_FindEmptySuperSysEBlock (FTL_DEV devID, UINT16_PTR logicalEBNumPtr, UINT16_PTR physicalEBNumPtr);
+FTL_STATUS FTL_FindAllAreaSuperSysEBlock (FTL_DEV devID, UINT16_PTR findDataEBNumPtr, UINT16_PTR findSystemEBNumPtr);
+FTL_STATUS DataGCForSuperSysEB (void);
+FTL_STATUS ClearSuperEBInfo (void);
+void SetSuperSysEBCounter (FTL_DEV devID, UINT32 counter);
+UINT32 GetSuperSysEBCounter (FTL_DEV devID);
+FTL_STATUS TABLE_GetSuperSysEBEntry (FTL_DEV devID, UINT16 blockNum, UINT16_PTR logEBlockPtr, UINT16_PTR phyAddrPtr, UINT32_PTR keyPtr);
+FTL_STATUS TABLE_SuperSysEBClear (FTL_DEV devID);
+FTL_STATUS TABLE_SuperSysEBInsert (FTL_DEV devID, UINT16 logicalAddr, UINT16 phyEBAddr, UINT32 key);
+FTL_STATUS TABLE_SuperSysEBGetLatest (FTL_DEV devID, UINT16_PTR logEBlockPtr, UINT16_PTR phyEBAddrPtr, UINT32 key);
+FTL_STATUS TABLE_SuperSysEBGetNext (FTL_DEV devID, UINT16_PTR logicalAddrPtr, UINT16_PTR phyEBAddrPtr, UINT32_PTR keyPtr);
+void TABLE_SortSuperTable (FTL_DEV devID);
+FTL_STATUS TABLE_SuperSysEBRemove (FTL_DEV devID, UINT16 blockNum);
+FTL_STATUS TABLE_GetPhySysEB (FTL_DEV devID, UINT16_PTR countPtr, UINT16_PTR phyEBAddrPtr);
+FTL_STATUS TABLE_CheckUsedSuperEB (FTL_DEV devID, UINT16 logicalAddr);
 #endif  // #if (FTL_SUPER_SYS_EBLOCK == FTL_TRUE)
 
-void SwapUnusedEBlock(FTL_DEV devID, UINT16 logicalDataEB, UINT16 logicalReservedEB);
-void MarkAllPagesStatus(FTL_DEV devID, UINT16 logEBNum, UINT8 bitStatus);
-FTL_STATUS FindAndSwapUnusedEB(FTL_DEV devID, UINT16 logFrom, UINT16_PTR logTo);
-UINT32 GetTrueEraseCount(FTL_DEV devID, UINT16 logicalBlockNum);
+void SwapUnusedEBlock (FTL_DEV devID, UINT16 logicalDataEB, UINT16 logicalReservedEB);
+void MarkAllPagesStatus (FTL_DEV devID, UINT16 logEBNum, UINT8 bitStatus);
+FTL_STATUS FindAndSwapUnusedEB (FTL_DEV devID, UINT16 logFrom, UINT16_PTR logTo);
+UINT32 GetTrueEraseCount (FTL_DEV devID, UINT16 logicalBlockNum);
 
 #ifndef FTL_RAM_TABLES_C
 #if (CACHE_RAM_BD_MODULE == FTL_FALSE)
@@ -319,7 +321,7 @@ extern TRANSFER_MAP_STRUCT transferMap[NUM_TRANSFER_MAP_ENTRIES];
 extern UINT16 TransferMapIndexEnd;
 extern UINT16 TransferMapIndexStart;
 extern FTL_DEV previousDevice;
-extern UINT8 GCMoveArray[NUM_PAGES_PER_EBLOCK];    
+extern UINT8 GCMoveArray[NUM_PAGES_PER_EBLOCK];
 extern UINT8 GCMoveArrayNotEmpty;
 
 #if (FTL_SUPER_SYS_EBLOCK == FTL_TRUE)
@@ -353,15 +355,15 @@ extern UINT32 crc32_table[256];
 
 #endif  // #ifndef FTL_RAM_TABLES_C
 
-void ClearTransferEB(void);
-void SetTransferEB(ADDRESS_STRUCT_PTR startPage, ADDRESS_STRUCT_PTR endPage);
-void GetTransferEB(UINT8 eblockCount, TRANSFER_EB_PTR transferEBPtr);
-FTL_STATUS ClearDeleteInfo(void);
-FTL_STATUS InitFTLRAMSTables(void);
-FTL_STATUS InitDeleteInfo(UINT8 devID, UINT32 logicalPageAddr, UINT8 startSector, UINT8 numSectors);
-FTL_STATUS HitDeleteInfo(UINT8 devID, UINT32 logicalPageAddr);
-FTL_STATUS UpdateDeleteInfo(UINT8 startSector, UINT8 numSectors);
-UINT8 GetDeleteInfoNumSectors(void);
+void ClearTransferEB (void);
+void SetTransferEB (ADDRESS_STRUCT_PTR startPage, ADDRESS_STRUCT_PTR endPage);
+void GetTransferEB (UINT8 eblockCount, TRANSFER_EB_PTR transferEBPtr);
+FTL_STATUS ClearDeleteInfo (void);
+FTL_STATUS InitFTLRAMSTables (void);
+FTL_STATUS InitDeleteInfo (UINT8 devID, UINT32 logicalPageAddr, UINT8 startSector, UINT8 numSectors);
+FTL_STATUS HitDeleteInfo (UINT8 devID, UINT32 logicalPageAddr);
+FTL_STATUS UpdateDeleteInfo (UINT8 startSector, UINT8 numSectors);
+UINT8 GetDeleteInfoNumSectors (void);
 
 #if(FTL_RPB_CACHE == FTL_TRUE)
 UINT8 GetRPBCacheStatus(UINT8 devID);
@@ -404,35 +406,35 @@ extern UINT8 packedLog[SECTOR_SIZE];
 extern UINT8 writeLogFlag;
 #endif  // #if(FTL_DEVICE_TYPE == FTL_DEVICE_NAND)
 
-FTL_STATUS FTL_InternalFormat(void);
-FTL_STATUS FTL_InternalForcedGC(FTL_DEV DeviceID, unsigned short logicalEBNum, unsigned short * FreedUpPages, 
-    unsigned short * freePageIndex, UINT8 flag );
+FTL_STATUS FTL_InternalFormat (void);
+FTL_STATUS FTL_InternalForcedGC (FTL_DEV DeviceID, unsigned short logicalEBNum, unsigned short * FreedUpPages,
+	unsigned short * freePageIndex, UINT8 flag);
 
-FTL_STATUS FTL_CheckMount_SetMTLockBit(void);
-FTL_STATUS FTL_CheckUnmount_SetMTLockBit(void);
-FTL_STATUS FTL_SetMTLockBit(void);
-FTL_STATUS FTL_ClearMTLockBit(void);
-void FTL_SetMountBit(void);
-void FTL_ClearMountBit(void);
-FTL_STATUS FTL_CheckDevID(UINT8 DevID);
-FTL_STATUS FTL_CheckRange(UINT32 LBA, UINT32 NB);
-FTL_STATUS FTL_CheckPointer(void *Ptr);
-FTL_STATUS ResetIndexValue(FTL_DEV devID, LOG_ENTRY_LOC_PTR startLoc);
+FTL_STATUS FTL_CheckMount_SetMTLockBit (void);
+FTL_STATUS FTL_CheckUnmount_SetMTLockBit (void);
+FTL_STATUS FTL_SetMTLockBit (void);
+FTL_STATUS FTL_ClearMTLockBit (void);
+void FTL_SetMountBit (void);
+void FTL_ClearMountBit (void);
+FTL_STATUS FTL_CheckDevID (UINT8 DevID);
+FTL_STATUS FTL_CheckRange (UINT32 LBA, UINT32 NB);
+FTL_STATUS FTL_CheckPointer (void *Ptr);
+FTL_STATUS ResetIndexValue (FTL_DEV devID, LOG_ENTRY_LOC_PTR startLoc);
 
 // WEAR LEVELLING
-UINT32 FindEraseCountRange(FTL_DEV devID, UINT16_PTR coldestEB);
-FTL_STATUS FTL_StaticWearLevelData(void);
-UINT32 GetStaticWLThreshold(void);
-void IncStaticWLCount(void);
-void CheckStaticWLCount(void);
-extern STATIC_WL_INFO         StaticWLInfo;
-FTL_STATUS InitStaticWLInfo(void);
+UINT32 FindEraseCountRange (FTL_DEV devID, UINT16_PTR coldestEB);
+FTL_STATUS FTL_StaticWearLevelData (void);
+UINT32 GetStaticWLThreshold (void);
+void IncStaticWLCount (void);
+void CheckStaticWLCount (void);
+extern STATIC_WL_INFO StaticWLInfo;
+FTL_STATUS InitStaticWLInfo (void);
 
 #if(FTL_CHECK_VERSION == FTL_TRUE)
-FTL_STATUS FTL_CheckVersion(void);
+FTL_STATUS FTL_CheckVersion (void);
 #endif // #if(FTL_CHECK_VERSION == FTL_TRUE)
 
-void Init_PseudoRPB(void);
+void Init_PseudoRPB (void);
 
 #if (FTL_DEFECT_MANAGEMENT == FTL_TRUE)
 FTL_STATUS BadBlockEraseFailure(FTL_DEV devID, UINT16 eBlockNum);
@@ -459,11 +461,9 @@ FTL_STATUS BB_ManageBadBlockErrorForGCLog(void);
 FTL_STATUS BB_ManageBadBlockErrorForSource(void);
 FTL_STATUS BB_ManageBadBlockErrorForChainErase(void);
 FTL_STATUS InternalForcedGCWithBBManagement(FTL_DEV devID, UINT16 logicalEBNum,
-    UINT16_PTR FreedUpPages, UINT16_PTR freePageIndex, UINT8 WLflag );
+		UINT16_PTR FreedUpPages, UINT16_PTR freePageIndex, UINT8 WLflag );
 UINT32 GetBBPageMoved(UINT16 pageOffset);
 #endif
-
-
 
 #if (CACHE_RAM_BD_MODULE == FTL_TRUE)
 #if (CACHE_DYNAMIC_ALLOCATION == FTL_FALSE)
@@ -525,8 +525,8 @@ FTL_STATUS CACHE_CleanAllDirtyIndex(FTL_DEV devID);
 FTL_STATUS CACHE_InsertEB (FTL_DEV devID, UINT16 logicalEBNum, UINT16 index, UINT8 dependency, UINT8 present, UINT8 typeAPI);
 FTL_STATUS CACHE_RemoveEB (FTL_DEV devID, UINT16 logicalEBNum);
 FTL_STATUS CACHE_GetSector(UINT16 logicalEBNum, UINT32_PTR sector_ptr);
-UINT8_PTR  CACHE_GetEBMCachePtr(FTL_DEV devID, UINT16 index);
-UINT8_PTR  CACHE_GetPPACachePtr(FTL_DEV devID, UINT16 index);
+UINT8_PTR CACHE_GetEBMCachePtr(FTL_DEV devID, UINT16 index);
+UINT8_PTR CACHE_GetPPACachePtr(FTL_DEV devID, UINT16 index);
 
 // Index EB Translation Interface
 FTL_STATUS CACHE_GetIndex (FTL_DEV devID, UINT16 logicalEBNum, UINT16_PTR index_ptr, UINT8_PTR dependency_ptr);

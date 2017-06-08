@@ -44,7 +44,7 @@
  ****************************************************************************/
 
 /* Get divider value */
-STATIC Status getClkDiv(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format, uint16_t *pxDiv, uint16_t *pyDiv, uint32_t *pN)
+STATIC Status getClkDiv (LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format, uint16_t *pxDiv, uint16_t *pyDiv, uint32_t *pN)
 {
 	uint32_t pClk;
 	uint32_t x, y;
@@ -57,43 +57,54 @@ STATIC Status getClkDiv(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format, uint16_t *p
 	pClk = Chip_Clock_GetRate(CLK_APB1_I2S);
 
 	/* divider is a fixed point number with 16 fractional bits */
-	divider = (((uint64_t) (format->SampleRate) * 2 * (format->WordWidth) * 2) << 16) / pClk;
+	divider = (((uint64_t)(format->SampleRate) * 2 * (format->WordWidth) * 2) << 16) / pClk;
 	/* find N that make x/y <= 1 -> divider <= 2^16 */
-	for (N = 64; N > 0; N--) {
-		if ((divider * N) < (1 << 16)) {
+	for (N = 64; N > 0; N--)
+	{
+		if ((divider * N) < (1 << 16))
+		{
 			break;
 		}
 	}
-	if (N == 0) {
+	if (N == 0)
+	{
 		return ERROR;
 	}
 	divider *= N;
-	for (y = 255; y > 0; y--) {
+	for (y = 255; y > 0; y--)
+	{
 		x = y * divider;
-		if (x & (0xFF000000)) {
+		if (x & (0xFF000000))
+		{
 			continue;
 		}
 		dif = x & 0xFFFF;
-		if (dif > 0x8000) {
+		if (dif > 0x8000)
+		{
 			err = 0x10000 - dif;
 		}
-		else {
+		else
+		{
 			err = dif;
 		}
-		if (err == 0) {
+		if (err == 0)
+		{
 			yDiv = y;
 			break;
 		}
-		else if (err < ErrorOptimal) {
+		else if (err < ErrorOptimal)
+		{
 			ErrorOptimal = err;
 			yDiv = y;
 		}
 	}
-	xDiv = ((uint64_t) yDiv * (format->SampleRate) * 2 * (format->WordWidth) * N * 2) / pClk;
-	if (xDiv >= 256) {
+	xDiv = ((uint64_t)yDiv * (format->SampleRate) * 2 * (format->WordWidth) * N * 2) / pClk;
+	if (xDiv >= 256)
+	{
 		xDiv = 0xFF;
 	}
-	if (xDiv == 0) {
+	if (xDiv == 0)
+	{
 		xDiv = 1;
 	}
 
@@ -108,13 +119,13 @@ STATIC Status getClkDiv(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format, uint16_t *p
  ****************************************************************************/
 
 /* Initialize the I2S interface */
-void Chip_I2S_Init(LPC_I2S_T *pI2S)
+void Chip_I2S_Init (LPC_I2S_T *pI2S)
 {
 	Chip_Clock_Enable(CLK_APB1_I2S);
 }
 
 /* Shutdown I2S */
-void Chip_I2S_DeInit(LPC_I2S_T *pI2S)
+void Chip_I2S_DeInit (LPC_I2S_T *pI2S)
 {
 	pI2S->DAI = 0x07E1;
 	pI2S->DAO = 0x87E1;
@@ -127,24 +138,28 @@ void Chip_I2S_DeInit(LPC_I2S_T *pI2S)
 }
 
 /* Configure I2S for Audio Format input */
-Status Chip_I2S_TxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format)
+Status Chip_I2S_TxConfig (LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format)
 {
 	uint32_t temp;
 	uint16_t xDiv, yDiv;
 	uint32_t N;
 
-	if (getClkDiv(pI2S, format, &xDiv, &yDiv, &N) == ERROR) {
+	if (getClkDiv(pI2S, format, &xDiv, &yDiv, &N) == ERROR)
+	{
 		return ERROR;
 	}
 
 	temp = pI2S->DAO & (~(I2S_DAO_WORDWIDTH_MASK | I2S_DAO_MONO | I2S_DAO_SLAVE | I2S_DAO_WS_HALFPERIOD_MASK));
-	if (format->WordWidth <= 8) {
+	if (format->WordWidth <= 8)
+	{
 		temp |= I2S_WORDWIDTH_8;
 	}
-	else if (format->WordWidth <= 16) {
+	else if (format->WordWidth <= 16)
+	{
 		temp |= I2S_WORDWIDTH_16;
 	}
-	else {
+	else
+	{
 		temp |= I2S_WORDWIDTH_32;
 	}
 
@@ -159,23 +174,27 @@ Status Chip_I2S_TxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format)
 }
 
 /* Configure I2S for Audio Format input */
-Status Chip_I2S_RxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format)
+Status Chip_I2S_RxConfig (LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format)
 {
 	uint32_t temp;
 	uint16_t xDiv, yDiv;
 	uint32_t N;
 
-	if (getClkDiv(pI2S, format, &xDiv, &yDiv, &N) == ERROR) {
+	if (getClkDiv(pI2S, format, &xDiv, &yDiv, &N) == ERROR)
+	{
 		return ERROR;
 	}
 	temp = pI2S->DAI & (~(I2S_DAI_WORDWIDTH_MASK | I2S_DAI_MONO | I2S_DAI_SLAVE | I2S_DAI_WS_HALFPERIOD_MASK));
-	if (format->WordWidth <= 8) {
+	if (format->WordWidth <= 8)
+	{
 		temp |= I2S_WORDWIDTH_8;
 	}
-	else if (format->WordWidth <= 16) {
+	else if (format->WordWidth <= 16)
+	{
 		temp |= I2S_WORDWIDTH_16;
 	}
-	else {
+	else
+	{
 		temp |= I2S_WORDWIDTH_32;
 	}
 
@@ -190,68 +209,76 @@ Status Chip_I2S_RxConfig(LPC_I2S_T *pI2S, I2S_AUDIO_FORMAT_T *format)
 }
 
 /* Enable/Disable Interrupt with a specific FIFO depth */
-void Chip_I2S_Int_TxCmd(LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth)
+void Chip_I2S_Int_TxCmd (LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth)
 {
 	uint32_t temp;
 	depth &= 0x0F;
-	if (newState == ENABLE) {
-	    temp = pI2S->IRQ & (~I2S_IRQ_TX_DEPTH_MASK);
-	    pI2S->IRQ = temp | (I2S_IRQ_TX_DEPTH(depth));
+	if (newState == ENABLE)
+	{
+		temp = pI2S->IRQ & (~I2S_IRQ_TX_DEPTH_MASK);
+		pI2S->IRQ = temp | (I2S_IRQ_TX_DEPTH(depth));
 		pI2S->IRQ |= 0x02;
 	}
-	else {
+	else
+	{
 		pI2S->IRQ &= (~0x02);
 	}
 }
 
 /* Enable/Disable Interrupt with a specific FIFO depth */
-void Chip_I2S_Int_RxCmd(LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth)
+void Chip_I2S_Int_RxCmd (LPC_I2S_T *pI2S, FunctionalState newState, uint8_t depth)
 {
 	uint32_t temp;
 	depth &= 0x0F;
-	if (newState == ENABLE) {
-	    temp = pI2S->IRQ & (~I2S_IRQ_RX_DEPTH_MASK);
-	    pI2S->IRQ = temp | (I2S_IRQ_RX_DEPTH(depth));
+	if (newState == ENABLE)
+	{
+		temp = pI2S->IRQ & (~I2S_IRQ_RX_DEPTH_MASK);
+		pI2S->IRQ = temp | (I2S_IRQ_RX_DEPTH(depth));
 		pI2S->IRQ |= 0x01;
 	}
-	else {
+	else
+	{
 		pI2S->IRQ &= (~0x01);
 	}
 }
 
 /* Enable/Disable DMA with a specific FIFO depth */
-void Chip_I2S_DMA_TxCmd(LPC_I2S_T *pI2S,
-						I2S_DMA_CHANNEL_T dmaNum,
-						FunctionalState newState,
-						uint8_t depth)
+void Chip_I2S_DMA_TxCmd (LPC_I2S_T *pI2S,
+	I2S_DMA_CHANNEL_T dmaNum,
+	FunctionalState newState,
+	uint8_t depth)
 {
 	/* Enable/Disable I2S transmit*/
-	if (newState == ENABLE) {
-	    /* Set FIFO Level */
-	    pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_1] &= ~(0x0F << 16);
-	    pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_1] |= depth << 16;
+	if (newState == ENABLE)
+	{
+		/* Set FIFO Level */
+		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_1] &= ~(0x0F << 16);
+		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_1] |= depth << 16;
 		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_1] |= 0x02;
 	}
-	else {
+	else
+	{
 		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_1] &= ~0x02;
 	}
 }
 
 /* Enable/Disable DMA with a specific FIFO depth */
-void Chip_I2S_DMA_RxCmd(LPC_I2S_T *pI2S,
-						I2S_DMA_CHANNEL_T dmaNum,
-						FunctionalState newState,
-						uint8_t depth)
+void Chip_I2S_DMA_RxCmd (LPC_I2S_T *pI2S,
+	I2S_DMA_CHANNEL_T dmaNum,
+	FunctionalState newState,
+	uint8_t depth)
 {
-	
+
 	/* Enable/Disable I2S Receive */
-	if (newState == ENABLE) {
-	    /* Set FIFO Level */
-	    pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_2] &= ~(0x0F << 8);
-	    pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_2] |= depth << 8;
+	if (newState == ENABLE)
+	{
+		/* Set FIFO Level */
+		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_2] &= ~(0x0F << 8);
+		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_2] |= depth << 8;
 		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_2] |= 0x01;
 	}
-	else {
+	else
+	{
 		pI2S->DMA[I2S_DMA_REQUEST_CHANNEL_2] &= ~0x01;
 	}
 }

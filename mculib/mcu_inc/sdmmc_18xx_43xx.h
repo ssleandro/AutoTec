@@ -35,7 +35,8 @@
 #include "sdmmc.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup SDMMC_18XX_43XX CHIP: LPC18xx/43xx SD/MMC driver
@@ -83,7 +84,8 @@ extern "C" {
 #define CMD_WRITE_MULTIPLE  CMD(MMC_WRITE_MULTIPLE_BLOCK, 1) | CMD_BIT_DATA | CMD_BIT_WRITE | CMD_BIT_AUTO_STOP
 
 /* Card specific setup data */
-typedef struct _mci_card_struct {
+typedef struct _mci_card_struct
+{
 	sdif_device sdif_dev;
 	SDMMC_CARD_T card_info;
 } mci_card_struct;
@@ -93,7 +95,7 @@ typedef struct _mci_card_struct {
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	Current SD card transfer state
  */
-int32_t Chip_SDMMC_GetState(LPC_SDMMC_T *pSDMMC);
+int32_t Chip_SDMMC_GetState (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Function to enumerate the SD/MMC/SDHC/MMC+ cards
@@ -101,14 +103,14 @@ int32_t Chip_SDMMC_GetState(LPC_SDMMC_T *pSDMMC);
  * @param	pcardinfo	: Pointer to pre-allocated card info structure
  * @return	1 if a card is acquired, otherwise 0
  */
-uint32_t Chip_SDMMC_Acquire(LPC_SDMMC_T *pSDMMC, mci_card_struct *pcardinfo);
+uint32_t Chip_SDMMC_Acquire (LPC_SDMMC_T *pSDMMC, mci_card_struct *pcardinfo);
 
 /**
  * @brief	Get the device size of SD/MMC card (after enumeration)
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	Card size in number of bytes (capacity)
  */
-uint64_t Chip_SDMMC_GetDeviceSize(LPC_SDMMC_T *pSDMMC);
+uint64_t Chip_SDMMC_GetDeviceSize (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Get the number of device blocks of SD/MMC card (after enumeration)
@@ -118,7 +120,7 @@ uint64_t Chip_SDMMC_GetDeviceSize(LPC_SDMMC_T *pSDMMC);
  * @param	pSDMMC	: SDMMC peripheral selected
  * @return	Number of 512 bytes blocks in the card
  */
-int32_t Chip_SDMMC_GetDeviceBlocks(LPC_SDMMC_T *pSDMMC);
+int32_t Chip_SDMMC_GetDeviceBlocks (LPC_SDMMC_T *pSDMMC);
 
 /**
  * @brief	Performs the read of data from the SD/MMC card
@@ -128,7 +130,7 @@ int32_t Chip_SDMMC_GetDeviceBlocks(LPC_SDMMC_T *pSDMMC);
  * @param	num_blocks	: Number of block to read
  * @return	Bytes read, or 0 on error
  */
-int32_t Chip_SDMMC_ReadBlocks(LPC_SDMMC_T *pSDMMC, void *buffer, int32_t start_block, int32_t num_blocks);
+int32_t Chip_SDMMC_ReadBlocks (LPC_SDMMC_T *pSDMMC, void *buffer, int32_t start_block, int32_t num_blocks);
 
 /**
  * @brief	Performs write of data to the SD/MMC card
@@ -138,7 +140,7 @@ int32_t Chip_SDMMC_ReadBlocks(LPC_SDMMC_T *pSDMMC, void *buffer, int32_t start_b
  * @param	num_blocks	: Number of block to write
  * @return	Number of bytes actually written, or 0 on error
  */
-int32_t Chip_SDMMC_WriteBlocks(LPC_SDMMC_T *pSDMMC, void *buffer, int32_t start_block, int32_t num_blocks);
+int32_t Chip_SDMMC_WriteBlocks (LPC_SDMMC_T *pSDMMC, void *buffer, int32_t start_block, int32_t num_blocks);
 
 /**
  * @}

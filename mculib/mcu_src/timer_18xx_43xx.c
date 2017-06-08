@@ -44,20 +44,24 @@
  ****************************************************************************/
 
 /* Returns clock index for the peripheral block */
-STATIC CHIP_CCU_CLK_T Chip_TIMER_GetClockIndex(LPC_TIMER_T *pTMR)
+STATIC CHIP_CCU_CLK_T Chip_TIMER_GetClockIndex (LPC_TIMER_T *pTMR)
 {
 	CHIP_CCU_CLK_T clkTMR;
 
-	if (pTMR == LPC_TIMER3) {
+	if (pTMR == LPC_TIMER3)
+	{
 		clkTMR = CLK_MX_TIMER3;
 	}
-    else if (pTMR == LPC_TIMER2) {
+	else if (pTMR == LPC_TIMER2)
+	{
 		clkTMR = CLK_MX_TIMER2;
 	}
-    else if (pTMR == LPC_TIMER1) {
+	else if (pTMR == LPC_TIMER1)
+	{
 		clkTMR = CLK_MX_TIMER1;
 	}
-	else {
+	else
+	{
 		clkTMR = CLK_MX_TIMER0;
 	}
 
@@ -69,19 +73,19 @@ STATIC CHIP_CCU_CLK_T Chip_TIMER_GetClockIndex(LPC_TIMER_T *pTMR)
  ****************************************************************************/
 
 /* Initialize a timer */
-void Chip_TIMER_Init(LPC_TIMER_T *pTMR)
+void Chip_TIMER_Init (LPC_TIMER_T *pTMR)
 {
 	Chip_Clock_Enable(Chip_TIMER_GetClockIndex(pTMR));
 }
 
 /*	Shutdown a timer */
-void Chip_TIMER_DeInit(LPC_TIMER_T *pTMR)
+void Chip_TIMER_DeInit (LPC_TIMER_T *pTMR)
 {
 	Chip_Clock_Disable(Chip_TIMER_GetClockIndex(pTMR));
 }
 
 /* Resets the timer terminal and prescale counts to 0 */
-void Chip_TIMER_Reset(LPC_TIMER_T *pTMR)
+void Chip_TIMER_Reset (LPC_TIMER_T *pTMR)
 {
 	uint32_t reg;
 
@@ -94,15 +98,17 @@ void Chip_TIMER_Reset(LPC_TIMER_T *pTMR)
 	pTMR->TCR = TIMER_RESET;
 
 	/* Wait for terminal count to clear */
-	while (pTMR->TC != 0) {}
+	while (pTMR->TC != 0)
+	{
+	}
 
 	/* Restore timer state */
 	pTMR->TCR = reg;
 }
 
 /* Sets external match control (MATn.matchnum) pin control */
-void Chip_TIMER_ExtMatchControlSet(LPC_TIMER_T *pTMR, int8_t initial_state,
-								   TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum)
+void Chip_TIMER_ExtMatchControlSet (LPC_TIMER_T *pTMR, int8_t initial_state,
+	TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum)
 {
 	uint32_t mask, reg;
 
@@ -111,7 +117,7 @@ void Chip_TIMER_ExtMatchControlSet(LPC_TIMER_T *pTMR, int8_t initial_state,
 	reg = pTMR->EMR &= ~mask;
 
 	/* Set new configuration for selected match register */
-	pTMR->EMR = reg | (((uint32_t) initial_state) << matchnum) |
-				(((uint32_t) matchState) << (4 + (matchnum * 2)));
+	pTMR->EMR = reg | (((uint32_t)initial_state) << matchnum) |
+		(((uint32_t)matchState) << (4 + (matchnum * 2)));
 }
 

@@ -41,14 +41,14 @@
 
 static struct
 {
-	void (*wake_evt)(LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg);
-	uint32_t (*wait_evt)(LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg);
+	void (*wake_evt) (LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg);
+	uint32_t (*wait_evt) (LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg);
 	uint32_t flag;
 	uint32_t response[4];
 	int fnum;
-	uint16_t blkSz[8];     /* Block size setting for the 8- function blocks */
-	sdif_device sdev;      /* SDIO interface device structure */
-}sdio_context, *sdioif = &sdio_context;
+	uint16_t blkSz[8]; /* Block size setting for the 8- function blocks */
+	sdif_device sdev; /* SDIO interface device structure */
+} sdio_context, *sdioif = &sdio_context;
 
 /*****************************************************************************
  * Public types/enumerations/variables
@@ -59,38 +59,44 @@ static struct
  ****************************************************************************/
 
 /* Set the SDIO Card voltage level to 3v3 */
-static int SDIO_Card_SetVoltage(LPC_SDMMC_T *pSDMMC)
+static int SDIO_Card_SetVoltage (LPC_SDMMC_T *pSDMMC)
 {
 	int ret, i;
 	uint32_t val;
 
 	ret = SDIO_Send_Command(pSDMMC, CMD5, 0);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	val = sdioif->response[0];
 
 	/* Number of functions supported by the card */
 	sdioif->fnum = (val >> 28) & 7;
 
 	/* Check number of I/O functions*/
-	if(sdioif->fnum == 0) {
+	if (sdioif->fnum == 0)
+	{
 		/* Number of I/O functions */
 		return SDIO_ERR_FNUM;
 	}
 
 	/* ---- check OCR ---- */
-	if((val & SDIO_VOLT_3_3) == 0){
+	if ((val & SDIO_VOLT_3_3) == 0)
+	{
 		/* invalid voltage */
 		return SDIO_ERR_VOLT;
 	}
 
 	/* ==== send CMD5 write new voltage  === */
-	for(i = 0; i < 100; i++){
+	for (i = 0; i < 100; i++)
+	{
 		ret = SDIO_Send_Command(pSDMMC, CMD5, SDIO_VOLT_3_3);
-		if (ret) return ret;
+		if (ret)
+			return ret;
 		val = sdioif->response[0];
 
 		/* Is card ready ? */
-		if(val & (1UL << 31)){
+		if (val & (1UL << 31))
+		{
 			break;
 		}
 
@@ -98,7 +104,8 @@ static int SDIO_Card_SetVoltage(LPC_SDMMC_T *pSDMMC)
 	}
 
 	/* ==== Check C bit  ==== */
-	if(val & (1UL << 31)){
+	if (val & (1UL << 31))
+	{
 		return 0;
 	}
 
@@ -106,19 +113,21 @@ static int SDIO_Card_SetVoltage(LPC_SDMMC_T *pSDMMC)
 }
 
 /* Set SDIO Card RCA */
-static int SDIO_CARD_SetRCA(LPC_SDMMC_T *pSDMMC)
+static int SDIO_CARD_SetRCA (LPC_SDMMC_T *pSDMMC)
 {
 	int ret;
 
 	/* ==== send CMD3 get RCA  ==== */
 	ret = SDIO_Send_Command(pSDMMC, CMD3, 0);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* R6 response to CMD3 */
-	if((sdioif->response[0] & 0x0000e000) != 0){
-						/* COM_CRC_ERROR */
-						/* ILLEGAL_CRC_ERROR */
-						/* ERROR */
+	if ((sdioif->response[0] & 0x0000e000) != 0)
+	{
+		/* COM_CRC_ERROR */
+		/* ILLEGAL_CRC_ERROR */
+		/* ERROR */
 		return SDIO_ERR_RCA;
 	}
 
@@ -133,7 +142,7 @@ static int SDIO_CARD_SetRCA(LPC_SDMMC_T *pSDMMC)
 }
 
 /* Set the Clock speed and mode [1/4 bit] of the card */
-static int SDIO_Card_SetMode(LPC_SDMMC_T *pSDMMC, uint32_t clk, int mode_4bit)
+static int SDIO_Card_SetMode (LPC_SDMMC_T *pSDMMC, uint32_t clk, int mode_4bit)
 {
 	int ret;
 	uint32_t val;
@@ -145,9 +154,11 @@ static int SDIO_Card_SetMode(LPC_SDMMC_T *pSDMMC, uint32_t clk, int mode_4bit)
 
 	val = 0x02;
 	ret = SDIO_WriteRead_Direct(pSDMMC, SDIO_AREA_CIA, 0x07, &val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
-	if (val & 0x02) {
+	if (val & 0x02)
+	{
 		Chip_SDIF_SetCardType(pSDMMC, MCI_CTYPE_4BIT);
 	}
 	return 0;
@@ -157,7 +168,7 @@ static int SDIO_Card_SetMode(LPC_SDMMC_T *pSDMMC, uint32_t clk, int mode_4bit)
  * Public functions
  ****************************************************************************/
 /* Set the block size of a function */
-int SDIO_Card_SetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t blkSize)
+int SDIO_Card_SetBlockSize (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t blkSize)
 {
 	int ret;
 	uint32_t tmp, asz;
@@ -169,19 +180,21 @@ int SDIO_Card_SetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t blkSize)
 
 	tmp = blkSize & 0xFF;
 	ret = SDIO_WriteRead_Direct(pSDMMC, SDIO_AREA_CIA, (func << 8) + 0x10, &tmp);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	asz = tmp;
 
 	tmp = blkSize >> 8;
 	ret = SDIO_WriteRead_Direct(pSDMMC, SDIO_AREA_CIA, (func << 8) + 0x11, &tmp);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	asz |= tmp << 8;
 	sdioif->blkSz[func] = asz;
 	return 0;
 }
 
 /* Get the block size of a particular function */
-uint32_t SDIO_Card_GetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func)
+uint32_t SDIO_Card_GetBlockSize (LPC_SDMMC_T *pSDMMC, uint32_t func)
 {
 	if (func > sdioif->fnum)
 		return 0;
@@ -190,7 +203,7 @@ uint32_t SDIO_Card_GetBlockSize(LPC_SDMMC_T *pSDMMC, uint32_t func)
 }
 
 /* Write data to SDIO Card */
-int SDIO_Card_WriteData(LPC_SDMMC_T *pSDMMC, uint32_t func,
+int SDIO_Card_WriteData (LPC_SDMMC_T *pSDMMC, uint32_t func,
 	uint32_t dest_addr, const uint8_t *src_addr,
 	uint32_t size, uint32_t flags)
 {
@@ -204,9 +217,11 @@ int SDIO_Card_WriteData(LPC_SDMMC_T *pSDMMC, uint32_t func,
 	if (bsize > 512 || bsize == 0)
 		return SDIO_ERR_INVARG;
 
-	if (flags & SDIO_MODE_BLOCK) {
+	if (flags & SDIO_MODE_BLOCK)
+	{
 		uint32_t bs = SDIO_Card_GetBlockSize(pSDMMC, func);
-		if (!bs) return SDIO_ERR_INVARG;
+		if (!bs)
+			return SDIO_ERR_INVARG;
 		size *= bs;
 	}
 
@@ -217,18 +232,21 @@ int SDIO_Card_WriteData(LPC_SDMMC_T *pSDMMC, uint32_t func,
 	Chip_SDIF_SetByteCnt(pSDMMC, size);
 
 	sdioif->wait_evt(pSDMMC, SDIO_START_DATA, 0);
-	Chip_SDIF_DmaSetup(pSDMMC, &sdioif->sdev, (uint32_t) src_addr, size);
+	Chip_SDIF_DmaSetup(pSDMMC, &sdioif->sdev, (uint32_t)src_addr, size);
 
-	ret = SDIO_Send_Command(pSDMMC, cmd, (func << 28) | (dest_addr << 9) | (bsize & 0x1FF) | (1UL << 31) | (flags & (0x3 << 26)));
-	if (ret) return ret;
+	ret = SDIO_Send_Command(pSDMMC, cmd,
+		(func << 28) | (dest_addr << 9) | (bsize & 0x1FF) | (1UL << 31) | (flags & (0x3 << 26)));
+	if (ret)
+		return ret;
 
 	/* Check response for errors */
-	if(sdioif->response[0] & 0xcb00){
-						/* COM_CRC_ERROR */
-						/* ILLEGAL_CRC_ERROR */
-						/* ERROR */
-						/* RFU FUNCTION_NUMBER */
-						/* OUT_OF_RANGE */
+	if (sdioif->response[0] & 0xcb00)
+	{
+		/* COM_CRC_ERROR */
+		/* ILLEGAL_CRC_ERROR */
+		/* ERROR */
+		/* RFU FUNCTION_NUMBER */
+		/* OUT_OF_RANGE */
 		/* Response flag error */
 		return SDIO_ERR_READWRITE;
 	}
@@ -236,7 +254,8 @@ int SDIO_Card_WriteData(LPC_SDMMC_T *pSDMMC, uint32_t func,
 }
 
 /* Write data to SDIO Card */
-int SDIO_Card_ReadData(LPC_SDMMC_T *pSDMMC, uint32_t func, uint8_t *dest_addr, uint32_t src_addr, uint32_t size, uint32_t flags)
+int SDIO_Card_ReadData (LPC_SDMMC_T *pSDMMC, uint32_t func, uint8_t *dest_addr, uint32_t src_addr, uint32_t size,
+	uint32_t flags)
 {
 	int ret;
 	uint32_t bs = size, bsize = size;
@@ -248,9 +267,11 @@ int SDIO_Card_ReadData(LPC_SDMMC_T *pSDMMC, uint32_t func, uint8_t *dest_addr, u
 	if (bsize > 512 || bsize == 0)
 		return SDIO_ERR_INVARG;
 
-	if (flags & SDIO_MODE_BLOCK) {
+	if (flags & SDIO_MODE_BLOCK)
+	{
 		bs = SDIO_Card_GetBlockSize(pSDMMC, func);
-		if (!bs) return SDIO_ERR_INVARG;
+		if (!bs)
+			return SDIO_ERR_INVARG;
 		size *= bs;
 	}
 	/* Set the block size */
@@ -260,18 +281,21 @@ int SDIO_Card_ReadData(LPC_SDMMC_T *pSDMMC, uint32_t func, uint8_t *dest_addr, u
 	Chip_SDIF_SetByteCnt(pSDMMC, size);
 
 	sdioif->wait_evt(pSDMMC, SDIO_START_DATA, 0);
-	Chip_SDIF_DmaSetup(pSDMMC, &sdioif->sdev, (uint32_t) dest_addr, size);
+	Chip_SDIF_DmaSetup(pSDMMC, &sdioif->sdev, (uint32_t)dest_addr, size);
 
-	ret = SDIO_Send_Command(pSDMMC, cmd | (1 << 13), (func << 28) | (src_addr << 9) | (bsize & 0x1FF) | (flags & (0x3 << 26)));
-	if (ret) return ret;
+	ret = SDIO_Send_Command(pSDMMC, cmd | (1 << 13),
+		(func << 28) | (src_addr << 9) | (bsize & 0x1FF) | (flags & (0x3 << 26)));
+	if (ret)
+		return ret;
 
 	/* Check response for errors */
-	if(sdioif->response[0] & 0xcb00){
-						/* COM_CRC_ERROR */
-						/* ILLEGAL_CRC_ERROR */
-						/* ERROR */
-						/* RFU FUNCTION_NUMBER */
-						/* OUT_OF_RANGE */
+	if (sdioif->response[0] & 0xcb00)
+	{
+		/* COM_CRC_ERROR */
+		/* ILLEGAL_CRC_ERROR */
+		/* ERROR */
+		/* RFU FUNCTION_NUMBER */
+		/* OUT_OF_RANGE */
 		/* Response flag error */
 		return SDIO_ERR_READWRITE;
 	}
@@ -280,7 +304,7 @@ int SDIO_Card_ReadData(LPC_SDMMC_T *pSDMMC, uint32_t func, uint8_t *dest_addr, u
 }
 
 /* Enable SDIO function interrupt */
-int SDIO_Card_EnableInt(LPC_SDMMC_T *pSDMMC, uint32_t func)
+int SDIO_Card_EnableInt (LPC_SDMMC_T *pSDMMC, uint32_t func)
 {
 	int ret;
 	uint32_t val;
@@ -289,17 +313,19 @@ int SDIO_Card_EnableInt(LPC_SDMMC_T *pSDMMC, uint32_t func)
 		return SDIO_ERR_INVFUNC;
 
 	ret = SDIO_Read_Direct(pSDMMC, SDIO_AREA_CIA, 0x04, &val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	val |= (1 << func) | 1;
 	ret = SDIO_Write_Direct(pSDMMC, SDIO_AREA_CIA, 0x04, val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	pSDMMC->INTMASK |= SDIO_CARD_INT_MSK;
 
 	return 0;
 }
 
 /* Disable SDIO function interrupt */
-int SDIO_Card_DisableInt(LPC_SDMMC_T *pSDMMC, uint32_t func)
+int SDIO_Card_DisableInt (LPC_SDMMC_T *pSDMMC, uint32_t func)
 {
 	int ret;
 	uint32_t val;
@@ -308,14 +334,16 @@ int SDIO_Card_DisableInt(LPC_SDMMC_T *pSDMMC, uint32_t func)
 		return SDIO_ERR_INVFUNC;
 
 	ret = SDIO_Read_Direct(pSDMMC, SDIO_AREA_CIA, 0x04, &val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	val &= ~(1 << func);
 
 	/* Disable master interrupt if it is the only thing enabled */
 	if (val == 1)
 		val = 0;
 	ret = SDIO_Write_Direct(pSDMMC, SDIO_AREA_CIA, 0x04, val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 	if (!val)
 		pSDMMC->INTMASK &= ~SDIO_CARD_INT_MSK;
 
@@ -323,7 +351,7 @@ int SDIO_Card_DisableInt(LPC_SDMMC_T *pSDMMC, uint32_t func)
 }
 
 /* Initialize the SDIO card */
-int SDIO_Card_Init(LPC_SDMMC_T *pSDMMC, uint32_t freq)
+int SDIO_Card_Init (LPC_SDMMC_T *pSDMMC, uint32_t freq)
 {
 	int ret;
 	uint32_t val;
@@ -332,26 +360,31 @@ int SDIO_Card_Init(LPC_SDMMC_T *pSDMMC, uint32_t freq)
 	Chip_SDIF_SetClock(pSDMMC, Chip_Clock_GetBaseClocktHz(CLK_BASE_SDIO), freq);
 	Chip_SDIF_SetCardType(pSDMMC, 0);
 
-	sdioif->wait_evt(pSDMMC, SDIO_WAIT_DELAY, (void *) 100); /* Wait for card to wake up */
+	sdioif->wait_evt(pSDMMC, SDIO_WAIT_DELAY, (void *)100); /* Wait for card to wake up */
 
-	if (sdioif->flag & SDIO_POWER_INIT) {
+	if (sdioif->flag & SDIO_POWER_INIT)
+	{
 		/* Write to the Reset Bit */
 		ret = SDIO_Write_Direct(pSDMMC, SDIO_AREA_CIA, 0x06, 0x08);
-		if (ret) return ret;
+		if (ret)
+			return ret;
 	}
 
 	/* Set Voltage level to 3v3 */
 	ret = SDIO_Card_SetVoltage(pSDMMC);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* Set the RCA */
 	ret = SDIO_CARD_SetRCA(pSDMMC);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* ==== check card capability ==== */
 	val = 0x02;
 	ret = SDIO_WriteRead_Direct(pSDMMC, SDIO_AREA_CIA, 0x13, &val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* FIXME: Verify */
 	/* FIFO threshold settings for DMA, DMA burst of 4,   FIFO watermark at 16 */
@@ -361,15 +394,18 @@ int SDIO_Card_Init(LPC_SDMMC_T *pSDMMC, uint32_t freq)
 	pSDMMC->BMOD = MCI_BMOD_DE | MCI_BMOD_PBL1 | MCI_BMOD_DSL(0);
 
 	/* High Speed Support? */
-	if ((val & 0x03) == 3) {
+	if ((val & 0x03) == 3)
+	{
 		return SDIO_Card_SetMode(pSDMMC, SDIO_CLK_HISPEED, 1);
 	}
 
 	ret = SDIO_Read_Direct(pSDMMC, SDIO_AREA_CIA, 0x08, &val);
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* Full Speed Support? */
-	if (val & SDIO_CCCR_LSC) {
+	if (val & SDIO_CCCR_LSC)
+	{
 		return SDIO_Card_SetMode(pSDMMC, SDIO_CLK_FULLSPEED, 1);
 	}
 
@@ -378,20 +414,22 @@ int SDIO_Card_Init(LPC_SDMMC_T *pSDMMC, uint32_t freq)
 }
 
 /* Write given data to register space of the CARD */
-int SDIO_Write_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t data)
+int SDIO_Write_Direct (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t data)
 {
 	int ret;
 
 	ret = SDIO_Send_Command(pSDMMC, CMD52, (func << 28) | (addr << 9) | (data & 0xFF) | (1UL << 31));
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* Check response for errors */
-	if(sdioif->response[0] & 0xcb00){
-						/* COM_CRC_ERROR */
-						/* ILLEGAL_CRC_ERROR */
-						/* ERROR */
-						/* RFU FUNCTION_NUMBER */
-						/* OUT_OF_RANGE */
+	if (sdioif->response[0] & 0xcb00)
+	{
+		/* COM_CRC_ERROR */
+		/* ILLEGAL_CRC_ERROR */
+		/* ERROR */
+		/* RFU FUNCTION_NUMBER */
+		/* OUT_OF_RANGE */
 		/* Response flag error */
 		return SDIO_ERR_READWRITE;
 	}
@@ -399,20 +437,22 @@ int SDIO_Write_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_
 }
 
 /* Write given data to register, and read back the register into data */
-int SDIO_WriteRead_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data)
+int SDIO_WriteRead_Direct (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data)
 {
 	int ret;
 
 	ret = SDIO_Send_Command(pSDMMC, CMD52, (func << 28) | (1 << 27) | (addr << 9) | ((*data) & 0xFF) | (1UL << 31));
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* Check response for errors */
-	if(sdioif->response[0] & 0xcb00){
-						/* COM_CRC_ERROR */
-						/* ILLEGAL_CRC_ERROR */
-						/* ERROR */
-						/* RFU FUNCTION_NUMBER */
-						/* OUT_OF_RANGE */
+	if (sdioif->response[0] & 0xcb00)
+	{
+		/* COM_CRC_ERROR */
+		/* ILLEGAL_CRC_ERROR */
+		/* ERROR */
+		/* RFU FUNCTION_NUMBER */
+		/* OUT_OF_RANGE */
 		/* Response flag error */
 		return SDIO_ERR_READWRITE;
 	}
@@ -421,19 +461,21 @@ int SDIO_WriteRead_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uin
 }
 
 /* Read a register from the register address space of the CARD */
-int SDIO_Read_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data)
+int SDIO_Read_Direct (LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t *data)
 {
 	int ret;
 	ret = SDIO_Send_Command(pSDMMC, CMD52, ((func & 7) << 28) | ((addr & 0x1FFFF) << 9));
-	if (ret) return ret;
+	if (ret)
+		return ret;
 
 	/* Check response for errors */
-	if(sdioif->response[0] & 0xcb00){
-						/* COM_CRC_ERROR */
-						/* ILLEGAL_CRC_ERROR */
-						/* ERROR */
-						/* RFU FUNCTION_NUMBER */
-						/* OUT_OF_RANGE */
+	if (sdioif->response[0] & 0xcb00)
+	{
+		/* COM_CRC_ERROR */
+		/* ILLEGAL_CRC_ERROR */
+		/* ERROR */
+		/* RFU FUNCTION_NUMBER */
+		/* OUT_OF_RANGE */
 		/* Response flag error */
 		return SDIO_ERR_READWRITE;
 	}
@@ -442,16 +484,16 @@ int SDIO_Read_Direct(LPC_SDMMC_T *pSDMMC, uint32_t func, uint32_t addr, uint32_t
 }
 
 /* Set up the wait and wake call-back functions */
-void SDIO_Setup_Callback(LPC_SDMMC_T *pSDMMC,
-	void (*wake_evt)(LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg),
-	uint32_t (*wait_evt)(LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg))
+void SDIO_Setup_Callback (LPC_SDMMC_T *pSDMMC,
+	void (*wake_evt) (LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg),
+	uint32_t (*wait_evt) (LPC_SDMMC_T *pSDMMC, uint32_t event, void *arg))
 {
 	sdioif->wake_evt = wake_evt;
 	sdioif->wait_evt = wait_evt;
 }
 
 /* Send and SD Command to the SDIO Card */
-uint32_t SDIO_Send_Command(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg)
+uint32_t SDIO_Send_Command (LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg)
 {
 	uint32_t ret, ival;
 	uint32_t imsk = pSDMMC->INTMASK;
@@ -459,7 +501,8 @@ uint32_t SDIO_Send_Command(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg)
 	ival = SDIO_CMD_INT_MSK & ~ret;
 
 	/* Set data interrupts for data commands */
-	if (cmd & SDIO_CMD_DATA) {
+	if (cmd & SDIO_CMD_DATA)
+	{
 		ival |= SDIO_DATA_INT_MSK;
 		imsk |= SDIO_DATA_INT_MSK;
 	}
@@ -467,7 +510,8 @@ uint32_t SDIO_Send_Command(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg)
 	Chip_SDIF_SetIntMask(pSDMMC, ival);
 	Chip_SDIF_SendCmd(pSDMMC, cmd, arg);
 	ret = sdioif->wait_evt(pSDMMC, SDIO_WAIT_COMMAND, 0);
-	if (!ret && (cmd & SDIO_CMD_RESP_R1)) {
+	if (!ret && (cmd & SDIO_CMD_RESP_R1))
+	{
 		Chip_SDIF_GetResponse(pSDMMC, &sdioif->response[0]);
 	}
 
@@ -476,39 +520,47 @@ uint32_t SDIO_Send_Command(LPC_SDMMC_T *pSDMMC, uint32_t cmd, uint32_t arg)
 }
 
 /* SDIO Card interrupt handler */
-void SDIO_Handler(LPC_SDMMC_T *pSDMMC)
+void SDIO_Handler (LPC_SDMMC_T *pSDMMC)
 {
 	uint32_t status = pSDMMC->MINTSTS;
 	uint32_t iclr = 0;
 
 	/* Card Detected */
-	if (status & 1) {
+	if (status & 1)
+	{
 		sdioif->wake_evt(pSDMMC, SDIO_CARD_DETECT, 0);
 		iclr = 1;
 	}
 
 	/* Command event error */
-	if (status & (SDIO_CMD_INT_MSK & ~4)) {
-		sdioif->wake_evt(pSDMMC, SDIO_CMD_ERR, (void *) (status & (SDIO_CMD_INT_MSK & ~4)));
+	if (status & (SDIO_CMD_INT_MSK & ~4))
+	{
+		sdioif->wake_evt(pSDMMC, SDIO_CMD_ERR, (void *)(status & (SDIO_CMD_INT_MSK & ~4)));
 		iclr |= status & SDIO_CMD_INT_MSK;
-	} else if (status & 4) {
+	}
+	else if (status & 4)
+	{
 		/* Command event done */
-		sdioif->wake_evt(pSDMMC, SDIO_CMD_DONE, (void *) status);
+		sdioif->wake_evt(pSDMMC, SDIO_CMD_DONE, (void *)status);
 		iclr |= status & SDIO_CMD_INT_MSK;
 	}
 
 	/* Command event error */
-	if (status & (SDIO_DATA_INT_MSK & ~8)) {
-		sdioif->wake_evt(pSDMMC, SDIO_DATA_ERR, (void *) (status & (SDIO_DATA_INT_MSK & ~8)));
+	if (status & (SDIO_DATA_INT_MSK & ~8))
+	{
+		sdioif->wake_evt(pSDMMC, SDIO_DATA_ERR, (void *)(status & (SDIO_DATA_INT_MSK & ~8)));
 		iclr |= (status & SDIO_DATA_INT_MSK) | (3 << 4);
-	} else if (status & 8) {
+	}
+	else if (status & 8)
+	{
 		/* Command event done */
-		sdioif->wake_evt(pSDMMC, SDIO_DATA_DONE, (void *) status);
+		sdioif->wake_evt(pSDMMC, SDIO_DATA_DONE, (void *)status);
 		iclr |= (status & SDIO_DATA_INT_MSK) | (3 << 4);
 	}
 
 	/* Handle Card interrupt */
-	if (status & SDIO_CARD_INT_MSK) {
+	if (status & SDIO_CARD_INT_MSK)
+	{
 		sdioif->wake_evt(pSDMMC, SDIO_CARD_INT, 0);
 		iclr |= status & SDIO_CARD_INT_MSK;
 	}

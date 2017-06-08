@@ -1,35 +1,35 @@
 // file: ftl_debug.h
 /**************************************************************************
-* Copyright (C)2012 Spansion Inc. All Rights Reserved. 
-*
-* This software is owned and published by: 
-* Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
-*
-* BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
-* BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
-*
-* This software constitutes driver source code for use in programming Spansion's 
-* Flash memory components. This software is licensed by Spansion to be adapted only 
-* for use in systems utilizing Spansion's Flash memories. Spansion is not be 
-* responsible for misuse or illegal use of this software for devices not 
-* supported herein.  Spansion is providing this source code "AS IS" and will 
-* not be responsible for issues arising from incorrect user implementation 
-* of the source code herein.  
-*
-* SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
-* REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
-* USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
-* FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
-* HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
-* OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
-* INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
-* SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
-* EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
-*
-* This software may be replicated in part or whole for the licensed use, 
-* with the restriction that this Copyright notice must be included with 
-* this software, whether used in part or whole, at all times.  
-*/
+ * Copyright (C)2012 Spansion Inc. All Rights Reserved. 
+ *
+ * This software is owned and published by: 
+ * Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
+ *
+ * BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
+ * BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
+ *
+ * This software constitutes driver source code for use in programming Spansion's 
+ * Flash memory components. This software is licensed by Spansion to be adapted only 
+ * for use in systems utilizing Spansion's Flash memories. Spansion is not be 
+ * responsible for misuse or illegal use of this software for devices not 
+ * supported herein.  Spansion is providing this source code "AS IS" and will 
+ * not be responsible for issues arising from incorrect user implementation 
+ * of the source code herein.  
+ *
+ * SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
+ * REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
+ * USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
+ * FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
+ * HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
+ * OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
+ * INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
+ * EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
+ *
+ * This software may be replicated in part or whole for the licensed use, 
+ * with the restriction that this Copyright notice must be included with 
+ * this software, whether used in part or whole, at all times.  
+ */
 /* external APIs suppied to the outside world */
 /*This file will contain API declerations, to be used for FTL debug in the event of the FTL failure*/
 
@@ -189,7 +189,6 @@ extern UINT32 APICallLogIndex;
 
 #endif  // #if (FTL_ENABLE_DEBUG_CODE == FTL_TRUE)
 
-
 #if (DEBUG_CACHE_RAM_BD_MODULE == FTL_TRUE)
 
 #define DEBUG_DATA_TRANS
@@ -207,7 +206,7 @@ extern UINT32 APICallLogIndex;
 #define PPA_TABLE_SIZE (NUMBER_OF_DEVICES*NUMBER_OF_ERASE_BLOCKS*NUMBER_OF_PAGES_PER_EBLOCK*PPA_MAPPING_ENTRY_SIZE) // for test
 
 extern UINT8 EBlockMappingTable[EB_TABLE_SIZE];
-extern UINT8 PPAMappingTable[PPA_TABLE_SIZE]; 
+extern UINT8 PPAMappingTable[PPA_TABLE_SIZE];
 #ifdef DEBUG_TEST_ARRAY
 extern UINT32 EBlockMappingTableTest[NUMBER_OF_ERASE_BLOCKS][EBLOCK_MAPPING_ENTRY_SIZE/4];
 extern UINT32 PPAMappingTableTest[NUMBER_OF_ERASE_BLOCKS][(NUMBER_OF_PAGES_PER_EBLOCK * PPA_MAPPING_ENTRY_SIZE)/4];
@@ -228,7 +227,5 @@ extern UINT32 gDistanceUpAndDownCase;
 #endif
 
 #endif // #if (DEBUG_CACHE_RAM_BD_MODULE == FTL_TRUE)
-
-
 
 #endif  // #ifndef FTL_DEBUG_H

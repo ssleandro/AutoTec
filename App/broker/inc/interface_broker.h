@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   interface_broker Include File
-* Filename              :   interface_broker.h
-* Author                :   thiago.palmieri
-* Origin Date           :   03/03/2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
-* Target                :   LPC43XX M4
-* Notes                 :   None
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   interface_broker Include File
+ * Filename              :   interface_broker.h
+ * Author                :   thiago.palmieri
+ * Origin Date           :   03/03/2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
+ * Target                :   LPC43XX M4
+ * Notes                 :   None
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version   Author         Description
-*  03/03/2016   1.0.0   thiago.palmieri interface_broker include file Created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version   Author         Description
+ *  03/03/2016   1.0.0   thiago.palmieri interface_broker include file Created.
+ *
+ *****************************************************************************/
 /** @file interface_broker.h
  *  @brief This file provides the broker module interface.
  *
@@ -52,8 +52,8 @@
 #define BROKER_INC_INTERFACE_BROKER_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #ifndef UNITY_TEST
 #include <auteq_os.h>
 #include "common_app.h"
@@ -70,8 +70,8 @@
  */
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 #define QUEUE_SIZEOFPUBLISH 32      //!< MACRO to define the size of PUBLISH queue
 #define QUEUE_SIZEOFSUBSCRIBE 32    //!< MACRO to define the size of SUBSCRIBE queue
 #define QUEUE_SIZEOFUNSUBSCRIBE 32  //!< MACRO to define the size of UNSUBSCRIBE queue
@@ -80,12 +80,12 @@
 typedef void * osMessageQId;
 #endif
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 //Queue MACROS
 //!< Create a Message Queue Definition for broker Publishing
 #define DECLARE_QUEUE(QueueName, QueueSize) \
@@ -160,8 +160,8 @@ typedef void * osMessageQId;
 #define GET_MESSAGE(FromContract) ((message_s*)FromContract->sMessage)
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
 /**
  * This typedef defines the size of message aggregation (and not its format)
@@ -171,11 +171,11 @@ typedef void * osMessageQId;
  */
 typedef enum messageType_e
 {
-  MT_BYTE             = (1 << 0),  //!< 8 bits size
-  MT_TWOBYTE          = (1 << 1),  //!< 16 bits size
-  MT_FOURBYTE         = (1 << 2),  //!< 32 bits size
-  MT_EIGHTBYTE        = (1 << 3),  //!< 64 bits size
-  MT_ARRAYBYTE        = (1 << 4),  //!< Variable size
+	MT_BYTE = (1 << 0),  //!< 8 bits size
+	MT_TWOBYTE = (1 << 1),  //!< 16 bits size
+	MT_FOURBYTE = (1 << 2),  //!< 32 bits size
+	MT_EIGHTBYTE = (1 << 3),  //!< 64 bits size
+	MT_ARRAYBYTE = (1 << 4),  //!< Variable size
 } messageType_e;
 
 /**
@@ -183,10 +183,10 @@ typedef enum messageType_e
  */
 typedef struct message_s
 {
-  uint16_t hMessageKey;           //!< Message Key
-  messageType_e eMessageType;     //!< Message Type
-  uint16_t hMessageSize;          //!< Size of message
-  void * pvMessage;               //!< Pointer to the message structure
+	uint16_t hMessageKey;           //!< Message Key
+	messageType_e eMessageType;     //!< Message Type
+	uint16_t hMessageSize;          //!< Size of message
+	void * pvMessage;               //!< Pointer to the message structure
 } message_s;
 
 /**
@@ -194,10 +194,10 @@ typedef struct message_s
  */
 typedef struct contract_s
 {
-  origin_e eOrigin;         //!< Module that originated the message
-  topic_e eTopic;           //!< Topic of the message
-  uint8_t bVersion;         //!< Contract Version
-  message_s * sMessage;     //!< Pointer to Message data
+	origin_e eOrigin;         //!< Module that originated the message
+	topic_e eTopic;           //!< Topic of the message
+	uint8_t bVersion;         //!< Contract Version
+	message_s * sMessage;     //!< Pointer to Message data
 } contract_s;
 
 /**
@@ -205,97 +205,98 @@ typedef struct contract_s
  */
 typedef struct signature_s
 {
-  destine_e eDestine;           //!< Module that is performing/canceling the subscription
-  topic_e eTopic;               //!< Topic of the message
-  osMessageQId vpDestineQueue;  //!< Module Queue
-}signature_s;
+	destine_e eDestine;           //!< Module that is performing/canceling the subscription
+	topic_e eTopic;               //!< Topic of the message
+	osMessageQId vpDestineQueue;  //!< Module Queue
+} signature_s;
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 #ifndef UNITY_TEST
 EXTERN_QUEUE(BrokerPublish);     //!< identifies the message queue (pointer to a message queue control block).
 EXTERN_QUEUE(BrokerSubscribe);   //!< identifies the message queue (pointer to a message queue control block).
 EXTERN_QUEUE(BrokerUnsubscribe); //!< identifies the message queue (pointer to a message queue control block).
 #endif
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
 /******************************************************************************
-* Function : BRK_vBrokerThread (void const *argument)
-*//**
-* \b Description:
-*
-* After the Thread is created, it will create other two threads responsible for
-* subscription and unsubscription. Then it will reach the main loop and will
-* wait for a publish message. When it arrives it will search the subscription list
-* for modules that need to receive the publication and forward it to them.
-*
-* PRE-CONDITION: None
-*
-* POST-CONDITION: Broker initialized
-*
-* @return     void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* osThreadDef_t sBrokerThread;
-*
-* sBrokerThread.name = "Broker";
-* sBrokerThread.stacksize = 500;
-* sBrokerThread.tpriority = osPriorityNormal;
-* sBrokerThread.pthread = vBrokerThread;
-*
-* osThreadCreate(&sBrokerThread, NULL);
-~~~~~~~~~~~~~~~
-*
-* @see BRK_vBrokerThread, BRK_vUnSubscriptorThread, BRK_vSubscriptorThread
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 11/03/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
+ * Function : BRK_vBrokerThread (void const *argument)
+ *//**
+ * \b Description:
+ *
+ * After the Thread is created, it will create other two threads responsible for
+ * subscription and unsubscription. Then it will reach the main loop and will
+ * wait for a publish message. When it arrives it will search the subscription list
+ * for modules that need to receive the publication and forward it to them.
+ *
+ * PRE-CONDITION: None
+ *
+ * POST-CONDITION: Broker initialized
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * osThreadDef_t sBrokerThread;
+ *
+ * sBrokerThread.name = "Broker";
+ * sBrokerThread.stacksize = 500;
+ * sBrokerThread.tpriority = osPriorityNormal;
+ * sBrokerThread.pthread = vBrokerThread;
+ *
+ * osThreadCreate(&sBrokerThread, NULL);
+ ~~~~~~~~~~~~~~~
+ *
+ * @see BRK_vBrokerThread, BRK_vUnSubscriptorThread, BRK_vSubscriptorThread
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 11/03/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
 void BRK_vBrokerThread (void const *argument);
 
 /******************************************************************************
-* Function : XXX_WDTData(uint8_t * pbNumberOfThreads)
-*//**
-* \b Description:
-*
-* This is a publik function used by the watchdog interface to fetch the watchdog thread
-* array and number os threads runing on the module.
-*
-* PRE-CONDITION: Watchdog interface activated
-*
-* POST-CONDITION: none
-*
-* @return void
-*
-* \b Example
-~~~~~~~~~~~~~~~{.c}
-* uint8_t bNumberOfThreads = 0;
-* uint8_t * pbArray = XXX_WDTData(&bNumberOfThreads);
-~~~~~~~~~~~~~~~
-*
-* @see
-*
-* <br><b> - HISTORY OF CHANGES - </b>
-*
-* <table align="left" style="width:800px">
-* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
-* <tr><td> 16/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
-* </table><br><br>
-* <hr>
-*
-*******************************************************************************/
-uint8_t * BRK_WDTData(uint8_t * pbNumberOfThreads);
+ * Function : XXX_WDTData(uint8_t * pbNumberOfThreads)
+ *//**
+ * \b Description:
+ *
+ * This is a publik function used by the watchdog interface to fetch the watchdog thread
+ * array and number os threads runing on the module.
+ *
+ * PRE-CONDITION: Watchdog interface activated
+ *
+ * POST-CONDITION: none
+ *
+ * @return void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * uint8_t bNumberOfThreads = 0;
+ * uint8_t * pbArray = XXX_WDTData(&bNumberOfThreads);
+ ~~~~~~~~~~~~~~~
+ *
+ * @see
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ * <table align="left" style="width:800px">
+ * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+ * <tr><td> 16/05/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+ * </table><br><br>
+ * <hr>
+ *
+ *******************************************************************************/
+uint8_t * BRK_WDTData (uint8_t * pbNumberOfThreads);
 
 #ifdef __cplusplus
 } // extern "C"

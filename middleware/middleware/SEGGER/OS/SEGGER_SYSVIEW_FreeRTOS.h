@@ -1,54 +1,54 @@
 /*********************************************************************
-*               SEGGER MICROCONTROLLER GmbH & Co. KG                 *
-*       Solutions for real time microcontroller applications         *
-**********************************************************************
-*                                                                    *
-*       (c) 2015  SEGGER Microcontroller GmbH & Co. KG               *
-*                                                                    *
-*       www.segger.com     Support: support@segger.com               *
-*                                                                    *
-**********************************************************************
-*                                                                    *
-*       SEGGER SystemView * Real-time application analysis           *
-*                                                                    *
-**********************************************************************
-*                                                                    *
-* All rights reserved.                                               *
-*                                                                    *
-* * This software may in its unmodified form be freely redistributed *
-*   in source form.                                                  *
-* * The source code may be modified, provided the source code        *
-*   retains the above copyright notice, this list of conditions and  *
-*   the following disclaimer.                                        *
-* * Modified versions of this software in source or linkable form    *
-*   may not be distributed without prior consent of SEGGER.          *
-*                                                                    *
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND     *
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,  *
-* THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A        *
-* PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL               *
-* SEGGER Microcontroller BE LIABLE FOR ANY DIRECT, INDIRECT,         *
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES           *
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS    *
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS            *
-* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,       *
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING          *
-* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS *
-* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.       *
-*                                                                    *
-**********************************************************************
-*                                                                    *
-*       SystemView version: V2.26                                    *
-*                                                                    *
-**********************************************************************
-----------------------------------------------------------------------
-File    : SEGGER_SYSVIEW_FreeRTOS.h
-Purpose : Interface between FreeRTOS and SystemView.
+ *               SEGGER MICROCONTROLLER GmbH & Co. KG                 *
+ *       Solutions for real time microcontroller applications         *
+ **********************************************************************
+ *                                                                    *
+ *       (c) 2015  SEGGER Microcontroller GmbH & Co. KG               *
+ *                                                                    *
+ *       www.segger.com     Support: support@segger.com               *
+ *                                                                    *
+ **********************************************************************
+ *                                                                    *
+ *       SEGGER SystemView * Real-time application analysis           *
+ *                                                                    *
+ **********************************************************************
+ *                                                                    *
+ * All rights reserved.                                               *
+ *                                                                    *
+ * * This software may in its unmodified form be freely redistributed *
+ *   in source form.                                                  *
+ * * The source code may be modified, provided the source code        *
+ *   retains the above copyright notice, this list of conditions and  *
+ *   the following disclaimer.                                        *
+ * * Modified versions of this software in source or linkable form    *
+ *   may not be distributed without prior consent of SEGGER.          *
+ *                                                                    *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND     *
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,  *
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A        *
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL               *
+ * SEGGER Microcontroller BE LIABLE FOR ANY DIRECT, INDIRECT,         *
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES           *
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS    *
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS            *
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,       *
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING          *
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS *
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.       *
+ *                                                                    *
+ **********************************************************************
+ *                                                                    *
+ *       SystemView version: V2.26                                    *
+ *                                                                    *
+ **********************************************************************
+ ----------------------------------------------------------------------
+ File    : SEGGER_SYSVIEW_FreeRTOS.h
+ Purpose : Interface between FreeRTOS and SystemView.
 
-          Include this file at the end of FreeRTOSConfig.h
+ Include this file at the end of FreeRTOSConfig.h
 
---------- END-OF-HEADER ---------------------------------------------
-*/
+ --------- END-OF-HEADER ---------------------------------------------
+ */
 
 #ifndef SYSVIEW_FREERTOS_H
 #define SYSVIEW_FREERTOS_H
@@ -56,11 +56,11 @@ Purpose : Interface between FreeRTOS and SystemView.
 #include "SEGGER_SYSVIEW.h"
 
 /*********************************************************************
-*
-*       Defines, fixed
-*
-**********************************************************************
-*/
+ *
+ *       Defines, fixed
+ *
+ **********************************************************************
+ */
 #define apiID_OFFSET                              (32u)
 
 #define apiID_VTASKALLOCATEMPUREGIONS             (1u)
@@ -198,7 +198,6 @@ Purpose : Interface between FreeRTOS and SystemView.
 #define traceQUEUE_SEND_FROM_ISR( pxQueue )                           SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_XQUEUEGENERICSENDFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pxHigherPriorityTaskWoken)
 #define traceQUEUE_SEND_FROM_ISR_FAILED( pxQueue )                    SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_XQUEUEGENERICSENDFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pxHigherPriorityTaskWoken)
 
-
 #define traceTASK_CREATE(pxNewTCB)                  if (pxNewTCB != NULL) {                                             \
                                                       SEGGER_SYSVIEW_OnTaskCreate((U32)pxNewTCB);                       \
                                                       SYSVIEW_SendTaskInfo( (U32)pxNewTCB,                              \
@@ -225,13 +224,13 @@ Purpose : Interface between FreeRTOS and SystemView.
 // Define INCLUDE_xTaskGetIdleTaskHandle as 1 in FreeRTOSConfig.h to allow identification of Idle state.
 //
 #if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
-  #define traceTASK_SWITCHED_IN()                   if(prvGetTCBFromHandle(NULL) == xIdleTaskHandle) {                  \
+#define traceTASK_SWITCHED_IN()                   if(prvGetTCBFromHandle(NULL) == xIdleTaskHandle) {                  \
                                                       SEGGER_SYSVIEW_OnIdle();                                          \
                                                     } else {                                                            \
                                                       SEGGER_SYSVIEW_OnTaskStartExec((U32)pxCurrentTCB);                \
                                                     }
 #else
-  #define traceTASK_SWITCHED_IN()                   {                                                                   \
+#define traceTASK_SWITCHED_IN()                   {                                                                   \
                                                       if (memcmp(pxCurrentTCB->pcTaskName, "IDLE", 5) != 0) {           \
                                                         SEGGER_SYSVIEW_OnTaskStartExec((U32)pxCurrentTCB);              \
                                                       } else {                                                          \
@@ -247,24 +246,24 @@ Purpose : Interface between FreeRTOS and SystemView.
 #define traceMOVED_TASK_TO_OVERFLOW_DELAYED_LIST()  SEGGER_SYSVIEW_OnTaskStopReady((U32)pxCurrentTCB,  (1u << 2))
 #define traceMOVED_TASK_TO_SUSPENDED_LIST(pxTCB)    SEGGER_SYSVIEW_OnTaskStopReady((U32)pxTCB,         ((3u << 3) | 3))
 
-
 #define traceISR_EXIT_TO_SCHEDULER()                SEGGER_SYSVIEW_RecordExitISRToScheduler()
 #define traceISR_EXIT()                             SEGGER_SYSVIEW_RecordExitISR()
 #define traceISR_ENTER()                            SEGGER_SYSVIEW_RecordEnterISR()
 
 /*********************************************************************
-*
-*       API functions
-*
-**********************************************************************
-*/
+ *
+ *       API functions
+ *
+ **********************************************************************
+ */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void SYSVIEW_SendTaskInfo(U32 TaskID, const char* sName, unsigned Prio, U32 StackBase, unsigned StackSize);
-void SYSVIEW_RecordU32x4(unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3);
-void SYSVIEW_RecordU32x5(unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3, U32 Para4);
+void SYSVIEW_SendTaskInfo (U32 TaskID, const char* sName, unsigned Prio, U32 StackBase, unsigned StackSize);
+void SYSVIEW_RecordU32x4 (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3);
+void SYSVIEW_RecordU32x5 (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3, U32 Para4);
 
 #ifdef __cplusplus
 }

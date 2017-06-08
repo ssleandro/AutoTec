@@ -43,18 +43,19 @@
 
 #include "../../version/ver_fat_sl.h"
 #if VER_FAT_SL_MAJOR != 5 || VER_FAT_SL_MINOR != 2
- #error Incompatible FAT_SL version number!
+#error Incompatible FAT_SL version number!
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern F_DRIVER * mdrv;  /* driver structure */
+extern F_DRIVER * mdrv; /* driver structure */
 
-unsigned char _f_checkstatus ( void );
-unsigned char _f_readglsector ( unsigned long );
-unsigned char _f_writeglsector ( unsigned long );
+unsigned char _f_checkstatus (void);
+unsigned char _f_readglsector (unsigned long);
+unsigned char _f_writeglsector (unsigned long);
 
 #ifdef __cplusplus
 }

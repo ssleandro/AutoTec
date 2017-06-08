@@ -33,7 +33,8 @@
 #define __CREG_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup CREG_18XX_43XX CHIP: LPC18xx/43xx CREG driver
@@ -44,55 +45,56 @@ extern "C" {
 /**
  * @brief CREG Register Block
  */
-typedef struct {						/*!< CREG Structure         */
-	__I  uint32_t  RESERVED0;
-	__IO uint32_t  CREG0;				/*!< Chip configuration register 32 kHz oscillator output and BOD control register. */
-	__I  uint32_t  RESERVED1[62];
-	__IO uint32_t  MXMEMMAP;			/*!< ARM Cortex-M3/M4 memory mapping */
+typedef struct
+{ /*!< CREG Structure         */
+	__I uint32_t RESERVED0;
+	__IO uint32_t CREG0; /*!< Chip configuration register 32 kHz oscillator output and BOD control register. */
+	__I uint32_t RESERVED1[62];
+	__IO uint32_t MXMEMMAP; /*!< ARM Cortex-M3/M4 memory mapping */
 #if defined(CHIP_LPC18XX)
-	__I  uint32_t  RESERVED2[5];
+	__I uint32_t RESERVED2[5];
 #else
-	__I  uint32_t  RESERVED2;
-	__I  uint32_t  CREG1;				/*!< Configuration Register 1 */
-	__I  uint32_t  CREG2;				/*!< Configuration Register 2 */
-	__I  uint32_t  CREG3;				/*!< Configuration Register 3 */
-	__I  uint32_t  CREG4;				/*!< Configuration Register 4 */
+	__I uint32_t RESERVED2;
+	__I uint32_t CREG1; /*!< Configuration Register 1 */
+	__I uint32_t CREG2; /*!< Configuration Register 2 */
+	__I uint32_t CREG3; /*!< Configuration Register 3 */
+	__I uint32_t CREG4; /*!< Configuration Register 4 */
 #endif
-	__IO uint32_t  CREG5;				/*!< Chip configuration register 5. Controls JTAG access. */
-	__IO uint32_t  DMAMUX;				/*!< DMA muxing control     */
-	__IO uint32_t  FLASHCFGA;			/*!< Flash accelerator configuration register for flash bank A */
-	__IO uint32_t  FLASHCFGB;			/*!< Flash accelerator configuration register for flash bank B */
-	__IO uint32_t  ETBCFG;				/*!< ETB RAM configuration  */
-	__IO uint32_t  CREG6;				/*!< Chip configuration register 6. */
+	__IO uint32_t CREG5; /*!< Chip configuration register 5. Controls JTAG access. */
+	__IO uint32_t DMAMUX; /*!< DMA muxing control     */
+	__IO uint32_t FLASHCFGA; /*!< Flash accelerator configuration register for flash bank A */
+	__IO uint32_t FLASHCFGB; /*!< Flash accelerator configuration register for flash bank B */
+	__IO uint32_t ETBCFG; /*!< ETB RAM configuration  */
+	__IO uint32_t CREG6; /*!< Chip configuration register 6. */
 #if defined(CHIP_LPC18XX)
-	__I  uint32_t  RESERVED4[52];
+	__I uint32_t RESERVED4[52];
 #else
-	__IO uint32_t  M4TXEVENT;			/*!< M4 IPC event register */
-	__I  uint32_t  RESERVED4[51];
+	__IO uint32_t M4TXEVENT; /*!< M4 IPC event register */
+	__I uint32_t RESERVED4[51];
 #endif
-	__I  uint32_t  CHIPID;				/*!< Part ID                */
+	__I uint32_t CHIPID; /*!< Part ID                */
 #if defined(CHIP_LPC18XX)
-	__I  uint32_t  RESERVED5[191];
+	__I uint32_t RESERVED5[191];
 #else
-	__I  uint32_t  RESERVED5[65];
-	__IO uint32_t  M0SUBMEMMAP;         /*!< M0SUB IPC Event memory mapping */
-	__I  uint32_t  RESERVED6[2];
-	__IO uint32_t  M0SUBTXEVENT;        /*!< M0SUB IPC Event register */
-	__I  uint32_t  RESERVED7[58];
-	__IO uint32_t  M0APPTXEVENT;		/*!< M0APP IPC Event register */
-	__IO uint32_t  M0APPMEMMAP;			/*!< ARM Cortex M0APP memory mapping */
-	__I  uint32_t  RESERVED8[62];
+	__I uint32_t RESERVED5[65];
+	__IO uint32_t M0SUBMEMMAP; /*!< M0SUB IPC Event memory mapping */
+	__I uint32_t RESERVED6[2];
+	__IO uint32_t M0SUBTXEVENT; /*!< M0SUB IPC Event register */
+	__I uint32_t RESERVED7[58];
+	__IO uint32_t M0APPTXEVENT; /*!< M0APP IPC Event register */
+	__IO uint32_t M0APPMEMMAP; /*!< ARM Cortex M0APP memory mapping */
+	__I uint32_t RESERVED8[62];
 #endif
-	__IO uint32_t  USB0FLADJ;			/*!< USB0 frame length adjust register */
-	__I  uint32_t  RESERVED9[63];
-	__IO uint32_t  USB1FLADJ;			/*!< USB1 frame length adjust register */
+	__IO uint32_t USB0FLADJ; /*!< USB0 frame length adjust register */
+	__I uint32_t RESERVED9[63];
+	__IO uint32_t USB1FLADJ; /*!< USB1 frame length adjust register */
 } LPC_CREG_T;
 
 /**
  * @brief	Identifies whether on-chip flash is present
  * @return	true if on chip flash is available, otherwise false
  */
-STATIC INLINE uint32_t Chip_CREG_OnChipFlashIsPresent(void)
+STATIC INLINE uint32_t Chip_CREG_OnChipFlashIsPresent (void)
 {
 	return LPC_CREG->CHIPID != 0x3284E02B;
 }
@@ -105,7 +107,7 @@ STATIC INLINE uint32_t Chip_CREG_OnChipFlashIsPresent(void)
  * increased and it should be called with the new lower value after the clock frequency is
  * decreased.
  */
-STATIC INLINE void Chip_CREG_SetFlashAcceleration(uint32_t Hz)
+STATIC INLINE void Chip_CREG_SetFlashAcceleration (uint32_t Hz)
 {
 	uint32_t FAValue = Hz / 21510000;
 
@@ -116,17 +118,18 @@ STATIC INLINE void Chip_CREG_SetFlashAcceleration(uint32_t Hz)
 /**
  * @brief FLASH Access time definitions
  */
-typedef enum {
-	FLASHTIM_20MHZ_CPU = 0,		/*!< Flash accesses use 1 CPU clocks. Use for up to 20 MHz CPU clock */
-	FLASHTIM_40MHZ_CPU = 1,		/*!< Flash accesses use 2 CPU clocks. Use for up to 40 MHz CPU clock */
-	FLASHTIM_60MHZ_CPU = 2,		/*!< Flash accesses use 3 CPU clocks. Use for up to 60 MHz CPU clock */
-	FLASHTIM_80MHZ_CPU = 3,		/*!< Flash accesses use 4 CPU clocks. Use for up to 80 MHz CPU clock */
-	FLASHTIM_100MHZ_CPU = 4,	/*!< Flash accesses use 5 CPU clocks. Use for up to 100 MHz CPU clock */
-	FLASHTIM_120MHZ_CPU = 5,	/*!< Flash accesses use 6 CPU clocks. Use for up to 120 MHz CPU clock */
-	FLASHTIM_150MHZ_CPU = 6,	/*!< Flash accesses use 7 CPU clocks. Use for up to 150 Mhz CPU clock */
-	FLASHTIM_170MHZ_CPU = 7,		/*!< Flash accesses use 8 CPU clocks. Use for up to 170 MHz CPU clock */
-	FLASHTIM_190MHZ_CPU = 8,		/*!< Flash accesses use 9 CPU clocks. Use for up to 190 MHz CPU clock */
-	FLASHTIM_SAFE_SETTING = 9,		/*!< Flash accesses use 10 CPU clocks. Safe setting for any allowed conditions */
+typedef enum
+{
+	FLASHTIM_20MHZ_CPU = 0, /*!< Flash accesses use 1 CPU clocks. Use for up to 20 MHz CPU clock */
+	FLASHTIM_40MHZ_CPU = 1, /*!< Flash accesses use 2 CPU clocks. Use for up to 40 MHz CPU clock */
+	FLASHTIM_60MHZ_CPU = 2, /*!< Flash accesses use 3 CPU clocks. Use for up to 60 MHz CPU clock */
+	FLASHTIM_80MHZ_CPU = 3, /*!< Flash accesses use 4 CPU clocks. Use for up to 80 MHz CPU clock */
+	FLASHTIM_100MHZ_CPU = 4, /*!< Flash accesses use 5 CPU clocks. Use for up to 100 MHz CPU clock */
+	FLASHTIM_120MHZ_CPU = 5, /*!< Flash accesses use 6 CPU clocks. Use for up to 120 MHz CPU clock */
+	FLASHTIM_150MHZ_CPU = 6, /*!< Flash accesses use 7 CPU clocks. Use for up to 150 Mhz CPU clock */
+	FLASHTIM_170MHZ_CPU = 7, /*!< Flash accesses use 8 CPU clocks. Use for up to 170 MHz CPU clock */
+	FLASHTIM_190MHZ_CPU = 8, /*!< Flash accesses use 9 CPU clocks. Use for up to 190 MHz CPU clock */
+	FLASHTIM_SAFE_SETTING = 9, /*!< Flash accesses use 10 CPU clocks. Safe setting for any allowed conditions */
 } CREG_FLASHTIM_T;
 
 /**
@@ -134,15 +137,15 @@ typedef enum {
  * @param	clks	: FLASH access speed rating
  * @return	Nothing
  */
-STATIC INLINE void Chip_CREG_SetFLASHAccess(CREG_FLASHTIM_T clks)
+STATIC INLINE void Chip_CREG_SetFLASHAccess (CREG_FLASHTIM_T clks)
 {
 	uint32_t tmpA, tmpB;
 
 	/* Don't alter lower bits */
 	tmpA = LPC_CREG->FLASHCFGA & ~(0xF << 12);
-	LPC_CREG->FLASHCFGA = tmpA | ((uint32_t) clks << 12);
+	LPC_CREG->FLASHCFGA = tmpA | ((uint32_t)clks << 12);
 	tmpB = LPC_CREG->FLASHCFGB & ~(0xF << 12);
-	LPC_CREG->FLASHCFGB = tmpB | ((uint32_t) clks << 12);
+	LPC_CREG->FLASHCFGB = tmpB | ((uint32_t)clks << 12);
 }
 
 /**
@@ -151,7 +154,7 @@ STATIC INLINE void Chip_CREG_SetFLASHAccess(CREG_FLASHTIM_T clks)
  * @note	The USB0 PLL & clock should be configured before calling this function. This function
  * should be called before the USB0 registers are accessed.
  */
-STATIC INLINE void Chip_CREG_EnableUSB0Phy(void)
+STATIC INLINE void Chip_CREG_EnableUSB0Phy (void)
 {
 	LPC_CREG->CREG0 &= ~(1 << 5);
 }
@@ -162,7 +165,7 @@ STATIC INLINE void Chip_CREG_EnableUSB0Phy(void)
  * @note	The USB0 PLL & clock should be configured before calling this function. This function
  * should be called before the USB0 registers are accessed.
  */
-STATIC INLINE void Chip_CREG_DisableUSB0Phy(void)
+STATIC INLINE void Chip_CREG_DisableUSB0Phy (void)
 {
 	LPC_CREG->CREG0 |= (1 << 5);
 }
@@ -173,7 +176,7 @@ STATIC INLINE void Chip_CREG_DisableUSB0Phy(void)
  * @param	BORVL	: Brown-Out Reset voltage level (0-3)
  * @return	Nothing
  */
-STATIC INLINE void Chip_CREG_ConfigureBODaR(uint32_t BODVL, uint32_t BORVL)
+STATIC INLINE void Chip_CREG_ConfigureBODaR (uint32_t BODVL, uint32_t BORVL)
 {
 	LPC_CREG->CREG0 = (LPC_CREG->CREG0 & ~((3 << 8) | (3 << 10))) | (BODVL << 8) | (BORVL << 10);
 }

@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   isobus_core Include File
-* Filename              :   isobus_core.h
-* Author                :   Henrique Reis
-* Origin Date           :   01 de jul de 2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   isobus_core Include File
+ * Filename              :   isobus_core.h
+ * Author                :   Henrique Reis
+ * Origin Date           :   01 de jul de 2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version     Author         				Description
-*  01/07/16   1.0.0  Henrique Reis     isobus_core.h created
-*
-*****************************************************************************/
+ *
+ *    Date    Version     Author         				Description
+ *  01/07/16   1.0.0  Henrique Reis     isobus_core.h created
+ *
+ *****************************************************************************/
 /** @file
  *  @brief
  *
@@ -36,8 +36,8 @@
 #define ISOBUS_SRC_ISOBUS_CORE_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include <M2G_app.h>
 #if defined (UNITY_TEST)
 #include "../isobus/inc/interface_isobus.h"
@@ -45,25 +45,57 @@
 #include "interface_isobus.h"
 #endif
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
-#define N_NUMBER_VARIABLE_OBJECTS 7
-#define N_INPUT_LIST_OBJECTS 9
-#define N_FILL_ATTRIBUTES_OBJECTS 72
-#define N_BAR_GRAPH_OBJECTS 36
+ * Preprocessor Constants
+ *******************************************************************************/
+#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 8
+#define ISO_NUM_INPUT_LIST_OBJECTS 9
+#define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 72
+#define ISO_NUM_BAR_GRAPH_OBJECTS 72
+
+#define ISO_NUM_LARGURA_IMPLEMENTO_INDEX 7
+
+#define ISO_BUTTON_REPEAT_TEST_ID			0x6005
+#define ISO_BUTTON_ERASE_INSTALLATION_ID	0x6006
+
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
+#define ISO_OBJECT_WORKING_SET_ID	  0x0000
+#define ISO_OBJECT_PICTURE_GRAPHIC_ID 0x1000
+#define ISO_OBJECT_SOFT_KEY_MASK_ID	  0x2000
+#define ISO_OBJECT_POINTER_ID		  0x2100
+#define ISO_OBJECT_KEY_ID			  0x3000
+#define ISO_OBJECT_CONTAINER_ID		  0x4000
+#define ISO_OBJECT_OUTPUT_STRING_ID	  0x4500
+#define ISO_OBJECT_STRING_VARIABLE_ID 0x4700
+#define ISO_OBJECT_DATA_MASK_ID		  0x5000
+#define ISO_OBJECT_OUTPUT_NUMBER_ID   0x5500
+#define ISO_OBJECT_BUTTON_ID		  0x6000
+#define ISO_OBJECT_FONT_ID			  0x6500
+#define ISO_OBJECT_BAR_GRAPH_ID		  0x7000
+#define ISO_OBJECT_NUMBER_VARIABLE_ID 0x8000
+#define ISO_OBJECT_INPUT_NUMBER_ID	  0x8200
+#define ISO_OBJECT_INPUT_BOOLEAN_ID	  0x8500
+#define ISO_OBJECT_OUTPUT_LINE_ID	  0x8900
+#define ISO_OBJECT_INPUT_LIST_ID	  0x9000
+#define ISO_OBJECT_RECTANGLE_ID		  0x9500
+#define ISO_OBJECT_FILL_ATTRIBUTES_ID 0x9600
+#define ISO_OBJECT_LINE_ID			  0x9900
+#define ISO_OBJECT_LARGURA_IMPLEMENTO_ID			  0x812D
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
+#define GET_INDEX_FROM_ID(id) (id & 0x0FFF)
+#define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
+#define GET_UNSIGNED_INT_VALUE(value) ((uint32_t)(value*10))
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
-typedef enum {
+ * Typedefs
+ *******************************************************************************/
+typedef enum
+{
 	WAIT_GLOBAL_VT_STATUS,
 	WAIT_VT_STATUS,
 	WAIT_LOAD_VERSION,
@@ -73,104 +105,59 @@ typedef enum {
 	BOOT_COMPLETED
 } eBootStates;
 
-typedef enum {
+typedef enum
+{
 	BOOT,
 	RUNNING
 } eModuleStates;
 
-typedef enum {
-	STATUS_INSTALL_INSTALLING 	 = 0x0E,
-	STATUS_INSTALL_INSTALLED 	 = 0x0A,
-	STATUS_INSTALL_INSTALL_ERROR = 0x0C,
-	STATUS_INSTALL_NONE			 = 0xE6,
-	STATUS_INSTALL_INVALID
-} eInstallationStatus;
-
-typedef enum {
+typedef enum
+{
 	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
-	STATUS_TRIMMING_TRIMMED		= 0x0C,
-	STATUS_TRIMMING_NONE	    = 0xFF,
+	STATUS_TRIMMING_TRIMMED = 0x0C,
+	STATUS_TRIMMING_NONE = 0xFF,
 	STATUS_TRIMMING_INVALID,
 } eTrimmingStatus;
 
-typedef enum {
-	LANGUAGE_PORTUGUESE,
-	LANGUAGE_ENGLISH,
-	LANGUAGE_SPANISH,
-	LANGUAGE_RUSSIAN,
-	LANGUAGE_INVALID
-} eSelectedLanguage;
-
-typedef enum {
-	UNIT_INTERNATIONAL_SYSTEM,
-	UNIT_IMPERIAL_SYSTEM,
-	UNIT_SYSTEM_INVALID
-} eSelectedUnitMeasurement;
-
-typedef enum {
-	AREA_MONITOR_DISABLED,
-	AREA_MONITOR_ENABLED,
-	AREA_MONITOR_INVALID
-} eAreaMonitor;
-
-typedef enum {
-	ALTERNATE_ROWS_DISABLED,
-	ALTERNATE_ROWS_ENABLED,
-	ALTERNATE_ROWS_INVALID
-} eAlternateRows;
-
-typedef enum {
-	ALTERNATED_ROWS_ODD,
-	ALTERNATED_ROWS_EVEN,
-	ALTERNATED_ROWS_INVALID
-} eAlternatedRowsType;
-
-typedef struct sNumberVariableObj {
+typedef struct sNumberVariableObj
+{
 	uint16_t wObjID;
 	uint32_t dValue;
+	uint64_t lValue;
 	float fValue;
 } sNumberVariableObj;
 
-typedef struct sInputListObj {
+typedef struct sInputListObj
+{
 	uint16_t wObjID;
 	uint8_t bSelectedIndex;
 } sInputListObj;
 
-typedef struct sFillAtributtesObj {
+typedef struct sFillAtributtesObj
+{
 	uint16_t wObjID;
 	uint8_t bColor;
 } sFillAttributesObj;
 
-typedef struct sConfigurationDataMask {
-	eSelectedLanguage* eLanguage;
-	eSelectedUnitMeasurement* eUnit;
-	uint32_t* dVehicleID;
-	eAreaMonitor eMonitor;
-	float* fSeedsPerMeter;
-	uint8_t* bNumOfRows;
-	float* fImplementWidth;
-	float* fEvaluationDistance;
-	uint8_t* bTolerance;
-	float* fMaxSpeed;
-	eAlternateRows eAlterRows;
-	eAlternatedRowsType eAltType;
-} sConfigurationDataMask;
-
-typedef struct sInstallSensorStatus {
+typedef struct sInstallSensorStatus
+{
 	sFillAttributesObj* pFillAttribute;
 	uint8_t bNumOfSensors;
 } sInstallSensorStatus;
 
-typedef struct sInstallationDataMask {
+typedef struct sInstallationDataMask
+{
 	sInstallSensorStatus* psLinesInstallStatus;
 } sInstallationDataMask;
 
-typedef struct sPlantingVariables {
+typedef struct sPlantingVariables
+{
 	sNumberVariableObj* const psNumberVariable;
 	uint8_t bNumOfVariables;
 } sPlantingVariables;
 
-typedef struct sBarGraphStatus {
+typedef struct sBarGraphStatus
+{
 	uint16_t wIncBarID;
 	uint16_t wDecBarID;
 	uint16_t wIncOutputNumID;
@@ -178,7 +165,8 @@ typedef struct sBarGraphStatus {
 	int8_t bValue;
 } sBarGraphStatus;
 
-typedef struct sPlanterDataMask {
+typedef struct sPlanterDataMask
+{
 	sBarGraphStatus* psLinesStatus;
 	sBarGraphStatus* psIndividualLineStatus;
 	uint32_t* pdPartPopSemPerMt;
@@ -192,40 +180,44 @@ typedef struct sPlanterDataMask {
 	uint32_t* pdTotalSeeds;
 } sPlanterDataMask;
 
-typedef struct sLineCountVariables {
+typedef struct sLineCountVariables
+{
 	sNumberVariableObj* psNumberVariable;
 	uint8_t bNumOfSensors;
 	uint8_t bNumOfVariables;
 } sLineCountVariables;
 
-typedef struct sTestModeDataMask {
+typedef struct sTestModeDataMask
+{
 	sLineCountVariables* psSeedsCount;
 	uint32_t* pdInstalledSensors;
 	uint32_t* pdConfiguredSensors;
 } sTestModeDataMask;
 
-typedef struct sTrimmingStatus {
+typedef struct sTrimmingStatus
+{
 	sFillAttributesObj* pFillAtributte;
 	uint8_t bNumOfSensor;
 } sTrimmingStatus;
 
-typedef struct sTrimmingDataMask {
+typedef struct sTrimmingDataMask
+{
 	sTrimmingStatus* psTrimmedLines;
 } sTrimmingDataMask;
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
-void ISO_vTimerCallbackWSMaintenance(void const *arg);
+ * Function Prototypes
+ *******************************************************************************/
+void ISO_vTimerCallbackWSMaintenance (void const *arg);
 
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
-
 
 #ifdef __cplusplus
 } // extern "C"

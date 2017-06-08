@@ -48,24 +48,24 @@
  ****************************************************************************/
 
 /* Initialize the RIT */
-void Chip_RIT_Init(LPC_RITIMER_T *pRITimer)
+void Chip_RIT_Init (LPC_RITIMER_T *pRITimer)
 {
 	Chip_Clock_EnableOpts(CLK_MX_RITIMER, true, true, 1);
 	pRITimer->COMPVAL = 0xFFFFFFFF;
-	pRITimer->MASK  = 0x00000000;
-	pRITimer->CTRL  = 0x0C;
-	pRITimer->COUNTER   = 0x00000000;
+	pRITimer->MASK = 0x00000000;
+	pRITimer->CTRL = 0x0C;
+	pRITimer->COUNTER = 0x00000000;
 }
 
 /* DeInitialize the RIT */
-void Chip_RIT_DeInit(LPC_RITIMER_T *pRITimer)
+void Chip_RIT_DeInit (LPC_RITIMER_T *pRITimer)
 {
 	Chip_RIT_Init(pRITimer);
 	Chip_Clock_Disable(CLK_MX_RITIMER);
 }
 
 /* Set timer interval value */
-void Chip_RIT_SetTimerInterval(LPC_RITIMER_T *pRITimer, uint32_t time_interval)
+void Chip_RIT_SetTimerInterval (LPC_RITIMER_T *pRITimer, uint32_t time_interval)
 {
 	uint32_t cmp_value;
 
@@ -76,22 +76,24 @@ void Chip_RIT_SetTimerInterval(LPC_RITIMER_T *pRITimer, uint32_t time_interval)
 	Chip_RIT_SetCOMPVAL(pRITimer, cmp_value);
 
 	/* Set timer enable clear bit to clear timer to 0 whenever
-	   counter value equals the contents of RICOMPVAL */
+	 counter value equals the contents of RICOMPVAL */
 	Chip_RIT_EnableCTRL(pRITimer, RIT_CTRL_ENCLR);
 }
 
 /* Check whether interrupt is pending */
-IntStatus Chip_RIT_GetIntStatus(LPC_RITIMER_T *pRITimer)
+IntStatus Chip_RIT_GetIntStatus (LPC_RITIMER_T *pRITimer)
 {
 	uint8_t result;
 
-	if ((pRITimer->CTRL & RIT_CTRL_INT) == 1) {
+	if ((pRITimer->CTRL & RIT_CTRL_INT) == 1)
+	{
 		result = SET;
 	}
-	else {
+	else
+	{
 		return RESET;
 	}
 
-	return (IntStatus) result;
+	return (IntStatus)result;
 }
 
