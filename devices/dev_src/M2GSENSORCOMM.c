@@ -313,7 +313,7 @@ eDEVError_s M2GSEN_eSetActive (uint32_t wRequest, void * vpValue)
 	/* Validation */
 	if (vpValue == NULL)
 	{
-		return DEV_ERROR_TERMDEV_SETTING_ERROR;
+		return DEV_ERROR_M2GSENSORCOMM_SETTING_ERROR;
 	}
 
 	uint32_t wActiveIface = *(uint32_t*)vpValue;
@@ -385,7 +385,7 @@ eDEVError_s M2GSEN_eDisable (uint32_t wRequest, void * vpValue)
 	/* Validation */
 	if (vpValue == NULL)
 	{
-		return DEV_ERROR_TERMDEV_SETTING_ERROR;
+		return DEV_ERROR_M2GSENSORCOMM_SETTING_ERROR;
 	}
 
 	uint32_t wActiveIface = *(uint32_t*)vpValue;

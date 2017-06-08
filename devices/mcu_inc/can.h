@@ -90,6 +90,14 @@
  */
 typedef enum eCANStatus_s
 {
+	CAN_STAT_NOERROR = 0x00,
+	CAN_STAT_STUFFERROR = 0x01,
+	CAN_STAT_FORMERROR = 0x02,
+	CAN_STAT_ACKERROR = 0x03,
+	CAN_STAT_BIT1ERROR = 0x04,
+	CAN_STAT_BIT0ERROR = 0x05,
+	CAN_STAT_CRCERROR = 0x06,
+	CAN_STAT_UNUSED = 0x07,
 	CAN_STAT_TXOK = (1 << 3),   //!< CAN Transmited message successfully
 	CAN_STAT_RXOK = (1 << 4),   //!< CAN Received a message successfully
 	CAN_STAT_EPASS = (1 << 5),   //!< CAN controller is in the error passive state
