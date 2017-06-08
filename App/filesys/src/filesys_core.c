@@ -65,7 +65,7 @@ extern osFlagsGroupId UOS_sFlagSis;
 static eAPPError_s eError;                          //!< Error variable
 
 DECLARE_QUEUE(FileSysQueue, QUEUE_SIZEOFFILESYS);    //!< Declaration of Interface Queue
-CREATE_SIGNATURE(FileSys);//!< Signature Declarations
+CREATE_SIGNATURE(FileSysControl);//!< Signature Declarations
 CREATE_SIGNATURE(FileSysDiag);//!< Signature Declarations
 CREATE_CONTRACT(FileSys);//!< Create contract for buzzer msg publication
 
@@ -353,19 +353,20 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 
 void FFS_vIdentifyEvent (contract_s* contract)
 {
-	osStatus status;
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);;
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_CONTROL:
-		case MODULE_GUI:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
+			if (ePubEvt == EVENT_CTL_UPDATE_SAVE_CONFIG)
 			{
-				memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-					sizeof(UOS_tsConfiguracao));
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
+				memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
+					sizeof(UOS_tsConfiguracao));
+
 					eAPPError_s error = FFS_vSaveConfigFile();
 					ASSERT(error == APP_ERROR_SUCCESS);
 				}
@@ -384,10 +385,10 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_STATIC_REG)
+			if (ePubEvt == EVENT_FFS_STATIC_REG)
 			{
 				memcpy(&FFS_sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
-					sizeof(AQR_tsRegEstaticoCRC));
+							sizeof(AQR_tsRegEstaticoCRC));
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
 					eAPPError_s error = FFS_vSaveStaticReg();
@@ -402,6 +403,8 @@ void FFS_vIdentifyEvent (contract_s* contract)
 	}
 }
 /* ************************* Main thread ************************************ */
+
+extern UOS_tsConfiguracao UOS_sConfiguracaoDefault;
 #ifndef UNITY_TEST
 void FSM_vFileSysThread (void const *argument)
 {
@@ -414,6 +417,9 @@ void FSM_vFileSysThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(FileSysQueue);
+
+	SIGNATURE_HEADER(FileSysControl, THIS_MODULE, TOPIC_CONTROL, FileSysQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(FileSysControl), 0) == osOK);
 
 	osFlagGroupCreate(&FFS_sFlagSis);
 	error = FSM_vInitDeviceLayer();
@@ -435,10 +441,6 @@ void FSM_vFileSysThread (void const *argument)
 	error = FFS_vLoadConfigFile();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_CFG);
-
-	error = FFS_vLoadInterfaceCfgFile();
-	ASSERT(error == APP_ERROR_SUCCESS);
-	osSignalSet(xPbulishThreadID, FFS_FLAG_INTERFACE_CFG);
 
 	error = FFS_vLoadStaticReg();
 	ASSERT(error == APP_ERROR_SUCCESS);

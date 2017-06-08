@@ -2850,6 +2850,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 2:
 		(void)f_dirtest();
 		if (t)
@@ -2858,6 +2859,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 3:
 		(void)f_findingtest();
 		if (t)
@@ -2866,6 +2868,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 4:
 		(void)f_powerfail();
 		if (t)
@@ -2874,6 +2877,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 5:
 		(void)f_seeking(128);
 		if (t)
@@ -2884,6 +2888,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 128 )
 
 		/* fall through */
+		//No break;
 		case 6:
 		(void)f_seeking(256);
 		if (t)
@@ -2895,6 +2900,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 256 )
 
 		/* fall through */
+		//No break;
 		case 7:
 		(void)f_seeking(512);
 		if (t)
@@ -2906,6 +2912,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 512 )
 
 		/* fall through */
+		//No break;
 		case 8:
 		(void)f_seeking(1024);
 		if (t)
@@ -2917,6 +2924,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 1024 )
 
 		/* fall through */
+		//No break;
 		case 9:
 		(void)f_seeking(2048);
 		if (t)
@@ -2928,6 +2936,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 2048 )
 
 		/* fall through */
+		//No break;
 		case 10:
 		(void)f_seeking(4096);
 		if (t)
@@ -2939,6 +2948,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 4096 )
 
 		/* fall through */
+		//No break;
 		case 11:
 		(void)f_seeking(8192);
 		if (t)
@@ -2950,6 +2960,7 @@ void f_dotest (unsigned char t)
 #if ( F_MAX_SEEK_TEST > 8192 )
 
 		/* fall through */
+		//No break;
 		case 12:
 		(void)f_seeking(16384);
 		if (t)
@@ -2971,6 +2982,7 @@ void f_dotest (unsigned char t)
 #endif
 
 		/* fall through */
+		//No break;
 		case 14:
 		(void)f_opening();
 		if (t)
@@ -2979,6 +2991,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 15:
 		(void)f_appending();
 		if (t)
@@ -2987,6 +3000,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 16:
 		(void)f_writing();
 		if (t)
@@ -2995,6 +3009,7 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 17:
 		(void)f_dots();
 		if (t)
@@ -3003,13 +3018,14 @@ void f_dotest (unsigned char t)
 		}
 
 		/* fall through */
+		//No break;
 		case 18:
 		(void)f_rit();
 		if (t)
 		{
 			break;
 		}
-
+		//No break;
 		case 19:
 		(void)f_truncating();
 		if (t)

@@ -1159,8 +1159,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
-				| AQR_APL_FLAG_CONFIRM_INSTALLATION,
-			true, false, osWaitForever);
+			| AQR_APL_FLAG_CONFIRM_INSTALLATION, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -3069,10 +3068,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//--------------------------------------------------------------------------
 		//Trata o Auto Desligamento do MPA2500
 		WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
-		uint32_t dValorFlagREG = osFlagWait(AQR_sFlagREG, (AQR_FLAG_DESLIGA |
-		AQR_FLAG_RESET_DESLIGA |
-		AQR_FLAG_IMP_PARADO),
-		true, false, 0);
+		uint32_t dValorFlagREG = osFlagWait(AQR_sFlagREG,
+			(AQR_FLAG_DESLIGA | AQR_FLAG_RESET_DESLIGA | AQR_FLAG_IMP_PARADO), true, false, 0);
 		WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
 
 		if (dValorFlagREG != AQR_FLAG_NENHUM)
@@ -3118,9 +3115,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		dValorFlag = osFlagGet(AQR_sFlagREG);
 
-		if (((dValorFlag & AQR_FLAG_PAUSA) == 0)
-			&&
-			//( psStatus->bImplemento == false                          ) &&
+		if (((dValorFlag & AQR_FLAG_PAUSA) == 0) && //( psStatus->bImplemento == false) &&
 			(psStatus->bVelZero == false) && ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) > 0)
 			&& ((psStatus->bErroGPS == false) || (CAN_bSensorSimulador != false)))
 		{

@@ -51,9 +51,11 @@
  * Module Variable Definitions
  *******************************************************************************/
 DECLARE_QUEUE(GuiQueue, QUEUE_SIZEOFGUI);      //!< Declaration of Interface Queue
-CREATE_SIGNATURE(Gui);//!< Signature Declarations
-CREATE_SIGNATURE(GuiAcquireg);//!< Signature Declarations
-CREATE_CONTRACT(Gui);//!< Create contract for sensor msg publication
+CREATE_SIGNATURE(GuiIsobus);//!< Signature Declarations
+CREATE_SIGNATURE(GuiAcquireg);
+CREATE_SIGNATURE(GuiControl);
+
+CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 
 CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 16);
 
@@ -63,6 +65,8 @@ extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
 
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
+sConfigurationData GUIConfigurationData;
+UOS_tsConfiguracao SISConfiguration;
 
 /******************************************************************************
  * Module typedef
@@ -211,7 +215,6 @@ void GUI_vGuiPublishThread (void const *argument)
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
-					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
 				{
@@ -220,7 +223,6 @@ void GUI_vGuiPublishThread (void const *argument)
 					sGUIPubMessage.vPayload = NULL;		//TODO: incorrect payload
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
-					break;
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_REPEAT_TEST:
@@ -231,7 +233,6 @@ void GUI_vGuiPublishThread (void const *argument)
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
-					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
@@ -240,7 +241,6 @@ void GUI_vGuiPublishThread (void const *argument)
 					sGUIPubMessage.vPayload = NULL;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
-					break;
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK:
@@ -251,14 +251,100 @@ void GUI_vGuiPublishThread (void const *argument)
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
+				}
+				case EVENT_GUI_UPDATE_CONFIG:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = (void*)&GUIConfigurationData;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYS_CONFIG:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = (void*)&SISConfiguration;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
 					break;
 				}
 				default:
 					break;
 			}
 		}
+
 	}
 	osThreadTerminate(NULL);
+}
+
+void GUI_SetGuiConfiguration(void)
+{
+	event_e ePublish;
+
+	GUIConfigurationData.bNumOfRows = SISConfiguration.sMonitor.bNumLinhas;
+	GUIConfigurationData.bTolerance = SISConfiguration.sMonitor.bTolerancia;
+	GUIConfigurationData.dVehicleID = SISConfiguration.dVeiculo;
+	GUIConfigurationData.eAltType = (eAlternatedRowsType)SISConfiguration.sMonitor.eIntercala;
+	GUIConfigurationData.eAlterRows =
+			(SISConfiguration.sMonitor.eIntercala == Sem_Intercalacao) ? ALTERNATE_ROWS_DISABLED : ALTERNATE_ROWS_ENABLED;
+
+	GUIConfigurationData.eMonitorArea = (eAreaMonitor)SISConfiguration.sMonitor.bMonitorArea;
+	GUIConfigurationData.eLanguage = SISConfiguration.sIHM.eLanguage;
+	GUIConfigurationData.eUnit = SISConfiguration.sIHM.eUnit;
+
+	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+	{
+		GUIConfigurationData.wEvaluationDistance = SISConfiguration.sMonitor.wAvalia;
+		GUIConfigurationData.fMaxSpeed = SISConfiguration.sMonitor.fLimVel;
+		GUIConfigurationData.wSeedRate = SISConfiguration.sMonitor.wSementesPorMetro;
+		GUIConfigurationData.wImplementWidth = SISConfiguration.sMonitor.wLargImpl;
+		GUIConfigurationData.wDistBetweenLines = SISConfiguration.sMonitor.wDistLinhas;
+	}
+	else
+	{
+		GUIConfigurationData.wEvaluationDistance = DM2IN(SISConfiguration.sMonitor.wAvalia);
+		GUIConfigurationData.fMaxSpeed = KMH2MLH(SISConfiguration.sMonitor.fLimVel);
+		GUIConfigurationData.wSeedRate = SDM2SP(SISConfiguration.sMonitor.wSementesPorMetro);
+		GUIConfigurationData.wImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
+		GUIConfigurationData.wDistBetweenLines = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
+	}
+	ePublish = EVENT_GUI_UPDATE_CONFIG;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
+}
+
+void GUI_SetSisConfiguration(void)
+{
+	event_e ePublish;
+
+	SISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
+	SISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
+	SISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
+	SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+
+	SISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
+	SISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
+	SISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;
+
+	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+	{
+		SISConfiguration.sMonitor.wAvalia = GUIConfigurationData.wEvaluationDistance;
+		SISConfiguration.sMonitor.fLimVel = GUIConfigurationData.fMaxSpeed;
+		SISConfiguration.sMonitor.wSementesPorMetro = GUIConfigurationData.wSeedRate;
+		SISConfiguration.sMonitor.wLargImpl = GUIConfigurationData.wImplementWidth;
+		SISConfiguration.sMonitor.wDistLinhas = GUIConfigurationData.wDistBetweenLines;
+	}
+	else
+	{
+		SISConfiguration.sMonitor.wAvalia = IN2DM(GUIConfigurationData.wEvaluationDistance);
+		SISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
+		SISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
+		SISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
+		SISConfiguration.sMonitor.wDistLinhas = IN2MM(GUIConfigurationData.wDistBetweenLines);
+	}
+	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 
 void GUI_InitSensorStatus (void)
@@ -270,51 +356,59 @@ void GUI_InitSensorStatus (void)
 	}
 }
 
-void GUI_UpdatSensorsStatus (CAN_tsLista * pSensorStatus)
+void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 {
 	event_e ePubEvt;
 	uint8_t bConta;
+	uint8_t bSensor = 0;
 
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
-		// se o sensor for par, ele é de semente
-		CAN_tsLista *pSensor = &pSensorStatus[bConta * 2];
-		switch (pSensor->eEstado)
+		if (bSensor++ < GUIConfigurationData.bNumOfRows)
 		{
-			case Novo:
+			// se o sensor for par, ele é de semente
+			CAN_tsLista *pSensor = &pSensorStatus[bConta * 2];
+
+			switch (pSensor->eEstado)
 			{
-				eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
-				break;
-			}
-			case Verificando:
-			{
-				eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
-				break;
-			}
-			case Conectado:
-			{
-				if ((pSensor->eResultadoAutoTeste == Aprovado) ||
-					(pSensor->eResultadoAutoTeste == Nenhum))
+				case Novo:
 				{
-					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
+					eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+					break;
 				}
-				else
+				case Verificando:
+				{
+					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
+					break;
+				}
+				case Conectado:
+				{
+					if ((pSensor->eResultadoAutoTeste == Aprovado) ||
+						(pSensor->eResultadoAutoTeste == Nenhum))
+					{
+						eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
+					}
+					else
+					{
+						eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+					}
+					break;
+				}
+				case Desconectado:
 				{
 					eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+					break;
 				}
-				break;
+				default:
+				{
+					eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+					break;
+				}
 			}
-			case Desconectado:
-			{
-				eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
-				break;
-			}
-
-			default:
-			{
-				eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
-				break;
-			}
+		}
+		else
+		{
+			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
 		}
 	}
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
@@ -324,16 +418,13 @@ void GUI_UpdatSensorsStatus (CAN_tsLista * pSensorStatus)
 
 void GUI_vIdentifyEvent (contract_s* contract)
 {
-	osFlags dFlags;
-	event_e ePubEvt;
-
-	dFlags = GET_PUBLISHED_EVENT(contract);
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_ISOBUS:
 		{
-			if (dFlags == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
+			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
 				eCurrMask = *((eIsobusMask*)GET_PUBLISHED_PAYLOAD(contract));
 
@@ -347,34 +438,42 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				}
 			}
 
-			if (dFlags == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
+			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
-
+				memcpy(&GUIConfigurationData, (sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract), sizeof(sConfigurationData));
+				GUI_SetSisConfiguration();
 			}
 
-			if (dFlags == EVENT_ISO_INSTALLATION_REPEAT_TEST)
+			if (ePubEvt == EVENT_ISO_INSTALLATION_REPEAT_TEST)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 
-			if (dFlags == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
+			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
-				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
-			}
 
+			}
+			break;
+		}
+		case MODULE_CONTROL:
+		{
+			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
+			{
+				memcpy(&SISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
+				GUI_SetGuiConfiguration();
+			}
 			break;
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (dFlags == EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_UPDATE_INSTALLATION)
 			{
-				GUI_UpdatSensorsStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
+				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 
 			}
 
-			if (dFlags == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
@@ -389,11 +488,14 @@ void GUI_vIdentifyEvent (contract_s* contract)
 eAPPError_s GUI_eInitGuiSubs (void)
 {
 	/* Prepare the signature - struture that notify the broker about subscribers */
-	SIGNATURE_HEADER(Gui, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(Gui), 0) == osOK);
+	SIGNATURE_HEADER(GuiIsobus, THIS_MODULE, TOPIC_ISOBUS, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiIsobus), 0) == osOK);
 
 	SIGNATURE_HEADER(GuiAcquireg, THIS_MODULE, TOPIC_ACQUIREG, GuiQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
+
+	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_CONTROL, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK);
 
 	return APP_ERROR_SUCCESS;
 }

@@ -53,6 +53,7 @@ DECLARE_QUEUE(ControlQueue, QUEUE_SIZEOFCONTROL);      //!< Declaration of Inter
 CREATE_SIGNATURE(ControlAcquireg);//!< Signature Declarations
 CREATE_SIGNATURE(ControlSensor);//!< Signature Declarations
 CREATE_SIGNATURE(ControlFileSys);
+CREATE_SIGNATURE(ControlGui);
 CREATE_CONTRACT(Control);                              //!< Create contract for sensor msg publication
 
 osThreadId xCtlEmyThreadId;                            // Holds the control emergency thread id
@@ -109,6 +110,7 @@ osFlagsGroupId UOS_sFlagFase;
 
 //Flags para indicar o status do sistema:
 osFlagsGroupId UOS_sFlagSis;
+osFlagsGroupId CTL_sFlagSis;
 
 // mutex para a hora
 CREATE_MUTEX(UOS_MTX_sDataHora);
@@ -118,6 +120,7 @@ CREATE_MUTEX(UOS_MTX_sDataHora);
 CREATE_SEMAPHORE(UOS_sSemSincronismo);
 //Semáforo para controle de acesso à exibicao de mensagens de alerta:
 CREATE_SEMAPHORE(UOS_sSemAlerta);
+
 
 uint8_t bMem = 1;
 
@@ -131,10 +134,12 @@ extern uint16_t AQR_wAlarmes;
 /****************************************************************************
  Variáveis locais
  *****************************************************************************/
+PubMessage sControlPubMsg;
 
 const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 	{
-		//------------------------------------------------------------------------------
+
+	//------------------------------------------------------------------------------
 //UOS_tsCfgMonitor
 		/*FP32   fLimVel;*/20.0f,//Limite de velocidade km/h.
 		/*INT16U wSementesPorMetro;*/15, //Meta de Sementes por Metro. (sementes/m)*10
@@ -143,7 +148,7 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*INT16U wDistLinhas;*/0, //Distância entre linhas. (centímetros)*10
 		/*INT16U wLargImpl;*/10, //Largura do implemento. (centímetros)*10
 		/*uint8_t  bMonitorArea;*/false, //Se está em modo monitor de área. (0 = false, 1 = true )
-		/*uint8_t  bNumLinhas;*/2, //No. Linhas (1-36)
+		/*uint8_t  bNumLinhas;*/36, //No. Linhas (1-36)
 		/*uint8_t  bDivLinhas;*/0, //Divisão da plantadeira (bNumLinhas/2 ou bNumLinhas/2+1)
 		/*uint8_t  bSensorAdubo;*/false, //Indica presença de sensor de adubo. (bSensorAdubo = 1)
 		/*uint8_t  bTolerancia;*/20, //Tolerância ao espaçamento entre sementes. (porcentagem)
@@ -153,7 +158,6 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*uint8_t  bLinhasFalhaPausaAuto;*/0, //Número de linhas em falha para pausa automática. (1-32)
 		/*uint8_t  bNumSensorAdicionais;*/0, //Número de sensores adicionais (0-6)
 
-//------------------------------------------------------------------------------
 //tsCfgGPS
 		/*INT32S      lFusoHorario;*/-10800, //Usa fuso horário padrão (Brasília -03:00 )
 		/*INT16U      wDistanciaEntreFixos;*/0,
@@ -161,18 +165,16 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*uint8_t       bHorarioVerao;*/false, //Indica se está em horário de verão (bHorarioVerao = 1)
 		/*uint8_t       bSalvaRegistro;*/false, //Indica se gravacao de registros está ativada
 
-//------------------------------------------------------------------------------
-//tsCfgBluetooth
-		/*uint8_t bInstalado;*/false,
-		/*uint8_t bTamPIN;*/0,
-		/*uint8_t abNomeDispositivo[30];*/0,
-		/*uint8_t abPIN[16];*/0,
+		//------------------------------------------------------------------------------
+//tsCfgIHM
+		/*uint32_t abSenha*/0,
+		/*eSelectedLanguage eLanguage;*/LANGUAGE_PORTUGUESE,
+		/*eSelectedUnitMeasurement eUnit;*/UNIT_INTERNATIONAL_SYSTEM,
 
-//------------------------------------------------------------------------------
-//tsCfgVeiculo
-		/*uint8_t abCodigo[6];*/0,
+		//------------------------------------------------------------------------------
+		/*uint32_t dVeiculo;*/2500,
 
-//------------------------------------------------------------------------------
+		//------------------------------------------------------------------------------
 		/*INT16U wCRC16;*/0
 	};
 
@@ -234,7 +236,39 @@ static void CTL_vCreateThread (const Threads_t sThread)
 	}
 }
 
-PubMessage sControlPubMsg;
+/******************************************************************************
+ * Function : CTL_eInitPublisher(void)
+ *//**
+ * \b Description:
+ *
+ * This routine prepares the contract and message that the ISO_vIsobusPublishThread thread
+ * will publish to the broker.
+ *
+ * PRE-CONDITION: none
+ *
+ * POST-CONDITION: none
+ *
+ * @return     void
+ *
+ * \b Example
+ ~~~~~~~~~~~~~~~{.c}
+ * //Called from
+ ~~~~~~~~~~~~~~~
+ *
+ * @see ISO_vIsobusThread, ISO_vIsobusPublishThread
+ *
+ * <br><b> - HISTORY OF CHANGES - </b>
+ *
+ *
+ *******************************************************************************/
+eAPPError_s CTL_eInitPublisher (void)
+{
+	//Prepare Default Contract/Message
+	MESSAGE_HEADER(Control, CONTROL_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
+	CONTRACT_HEADER(Control, 1, THIS_MODULE, TOPIC_CONTROL);
+
+	return APP_ERROR_SUCCESS;
+}
 
 void CTL_vControlPublishThread (void const *argument)
 {
@@ -253,76 +287,41 @@ void CTL_vControlPublishThread (void const *argument)
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLPUBThreadArrayPosition)); //Task created, inform core
 	osThreadSetPriority(NULL, osPriorityLow);
 
+	CTL_eInitPublisher();
+
 	while (1)
 	{
-//        WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-//        flags = osFlagWait(UOS_sFlagSis, (UOS_SIS_FLAG_SEND_FLAG_STATUS | UOS_SIS_FLAG_SIS_OK), true, false, 100);
-//        WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
-//
-//        if(flags != UOS_SIS_FLAG_NENHUM)
-//        {
-//            if((flags & UOS_SIS_FLAG_SEND_FLAG_STATUS) > 0)
-//            {
-//                osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_SEND_FLAG_STATUS);
-//
-//                sControlPubMsg.eEvtType = EVENT_UPDATE;
-//                sControlPubMsg.dEvent = osFlagGet(UOS_sFlagSis);
-//                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
-//                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
-//                PUBLISH(CONTRACT(Control), 0);
-//            }
-//
-//            if((flags & UOS_SIS_FLAG_SIS_OK) > 0)
-//            {
-//                sControlPubMsg.eEvtType = EVENT_SET;
-//                sControlPubMsg.dEvent = UOS_SIS_FLAG_SIS_OK;
-//                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
-//                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
-//                PUBLISH(CONTRACT(Control), 0);
-//            }
-//        }
+        WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
+        flags = osFlagWait(CTL_sFlagSis, CTL_SAVE_CONFIG_DATA | CTL_UPDATE_CONFIG_DATA, true, false, osWaitForever);
+        WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
-		/* Pool the device waiting for */
-		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-		//      evt = osSignalWait ((UOS_BUZZER_ON | UOS_BUZZER_OFF), 100);
-		osDelay(2000);
-		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
-
-		/*       if(evt.status == osEventSignal)
-		 {
-		 switch(evt.value.signals)
-		 {
-		 case UOS_BUZZER_ON:
-
-		 *dPayload = 'A';
-
-		 Publish the array at the CONTROL topic
-		 MESSAGE_HEADER(Control, 1, 1, MT_ARRAYBYTE);
-		 MESSAGE_PAYLOAD(Control) = (void*) dPayload;
-		 PUBLISH(CONTRACT(Control), 0);
-
-		 break;
-		 case UOS_BUZZER_OFF:
-
-		 *dPayload = 'B';
-
-		 Publish the array at the CONTROL topic
-		 MESSAGE_HEADER(Control, 1, 1, MT_ARRAYBYTE);
-		 MESSAGE_PAYLOAD(Control) = (void*) dPayload;
-		 PUBLISH(CONTRACT(Control), 0);
-
-		 break;
-		 default:
-		 break;
-		 }
-		 }*/
+        if(flags != UOS_SIS_FLAG_NENHUM)
+        {
+            if((flags & CTL_SAVE_CONFIG_DATA) > 0)
+            {
+                sControlPubMsg.dEvent = EVENT_CTL_UPDATE_SAVE_CONFIG;
+                sControlPubMsg.eEvtType = EVENT_SET;
+                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
+                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
+                PUBLISH(CONTRACT(Control), 0);
+            }
+            if((flags & CTL_UPDATE_CONFIG_DATA) > 0)
+            {
+                sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
+                sControlPubMsg.eEvtType = EVENT_SET;
+                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
+                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
+                PUBLISH(CONTRACT(Control), 0);
+            }
+        }
 	}
 	osThreadTerminate(NULL);
 }
 
 void CTL_vIdentifyEvent (contract_s* contract)
 {
-	osStatus status;
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
 
 	switch (contract->eOrigin)
 	{
@@ -336,9 +335,9 @@ void CTL_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_FILESYS:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_CFG)
+			if (ePubEvt == EVENT_FFS_CFG)
 			{
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				if (ePubEvType == EVENT_SET)
 				{
 					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
 						sizeof(UOS_tsConfiguracao));
@@ -348,13 +347,24 @@ void CTL_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
 				}
+				osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
 			}
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
+			if (ePubEvt == EVENT_FFS_INTERFACE_CFG)
 			{
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				if (ePubEvType == EVENT_SET)
 				{
 					memcpy(&IHM_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_sConfig));
 				}
+			}
+			break;
+		}
+		case MODULE_GUI:
+		{
+			if (ePubEvt == EVENT_GUI_UPDATE_SYS_CONFIG)
+			{
+				memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
+					sizeof(UOS_tsConfiguracao));
+				osFlagSet(CTL_sFlagSis, CTL_SAVE_CONFIG_DATA);
 			}
 			break;
 		}
@@ -379,11 +389,12 @@ void CTL_vControlThread (void const *argument)
 	// TODO: This is executed after file system initialization
 	// Copy default configurations to start; because we don't have file system
 	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
-	uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
-	memcpy(UOS_sConfiguracao.sVeiculo.abCodigo, abCodigo, sizeof(UOS_sConfiguracao.sVeiculo.abCodigo));
 
 	// Create an flag to indicate the system status...
 	status = osFlagGroupCreate(&UOS_sFlagSis);
+	ASSERT(status == osOK);
+
+	status = osFlagGroupCreate(&CTL_sFlagSis);
 	ASSERT(status == osOK);
 
 	SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
@@ -394,6 +405,9 @@ void CTL_vControlThread (void const *argument)
 
 	SIGNATURE_HEADER(ControlFileSys, THIS_MODULE, TOPIC_FILESYS, ControlQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(ControlFileSys), 0) == osOK);
+
+	SIGNATURE_HEADER(ControlGui, THIS_MODULE, TOPIC_GUI, ControlQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(ControlGui), 0) == osOK);
 
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;

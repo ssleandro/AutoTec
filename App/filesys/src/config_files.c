@@ -132,8 +132,6 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	if (bErroCfg == true)
 	{
 		memcpy(&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
-		uint8_t abCodigo[] = { 0x25, 0x00, 0xA0, 0x00, 0x00, 0x00 };
-		memcpy(FFS_sConfiguracao.sVeiculo.abCodigo, abCodigo, sizeof(FFS_sConfiguracao.sVeiculo.abCodigo));
 
 		osFlagClear(FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_ERROR;
@@ -462,17 +460,6 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	{
 		//Limpa a estrutura do registro estático:
 		memset(&FFS_sRegEstaticoCRC, 0x00, sizeof(FFS_sRegEstaticoCRC));
-
-		//Calcula o crc da estrutura do registro estático:
-		TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sRegEstaticoCRC,
-			(sizeof(FFS_sRegEstaticoCRC) - sizeof(FFS_sRegEstaticoCRC.wCRC16)));
-
-		//Atualiza o valor do crc na estrutura combinada:
-		FFS_sRegEstaticoCRC.wCRC16 = wCRC16;
-
-		//Recria o arquivo
-		xFileHandle = f_open(FFS_abStaticRegCfgName, "w+");
-		ASSERT(xFileHandle != NULL);
 
 		ret = APP_ERROR_ERROR;
 	}

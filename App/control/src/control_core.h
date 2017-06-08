@@ -110,6 +110,10 @@
 #define UOS_BUZZER_OFF 0x00
 #define UOS_BUZZER_ON  0x01
 
+
+#define CTL_SAVE_CONFIG_DATA	 		0x000001
+#define CTL_UPDATE_CONFIG_DATA	 	0x000002
+
 /******************************************************************************
  * Typedefs
  *******************************************************************************/

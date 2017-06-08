@@ -314,7 +314,9 @@ static CAN_teEstadoSensor SEN_vSearchSensorsInQueue (CAN_tsIDAuteq* psIDAuteq)
 					sizeof(CAN_sCtrlLista.sNovoSensor.abEnderecoFisico));
 
 				//Informa resultado do auto-teste dos sensores
+                CAN_sCtrlLista.sNovoSensor.eResultadoAutoTeste = ( CAN_teAutoTeste ) ( psMessage.data[1] >> 24 );
 				CAN_sCtrlLista.sNovoSensor.eResultadoAutoTeste = (CAN_teAutoTeste)psMessage.data[7];
+				CAN_sCtrlLista.sNovoSensor.eResultadoAutoTeste = (CAN_teAutoTeste)(psMessage.data[1] >> 24);
 
 				osFlagSet(*(psCtrlApl->psFlagApl), CAN_APL_FLAG_DET_NOVO_SENSOR);
 

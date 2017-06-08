@@ -47,20 +47,12 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 7
+#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 8
 #define ISO_NUM_INPUT_LIST_OBJECTS 9
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 72
 #define ISO_NUM_BAR_GRAPH_OBJECTS 72
 
-#define ISO_UPDATE_CURRENT_DATA_MASK 		0x00000001
-#define ISO_UPDATE_CURRENT_CONFIGURATION    0x00000002
-#define ISO_UPDATE_INSTALLATION_INTERFACE	0x00000004
-#define ISO_UPDATE_PLANTER_INTERFACE		0x00000008
-#define ISO_UPDATE_TEST_MODE_INTERFACE		0x00000010
-#define ISO_UPDATE_TRIMMING_INTERFACE		0x00000020
-#define ISO_UPDATE_SYSTEM_INTERFACE			0x00000040
-#define ISO_INSTALLATION_REPEAT_TEST		0x00000080
-#define ISO_INSTALLATION_ERASE_INSTALLATION	0x00000100
+#define ISO_NUM_LARGURA_IMPLEMENTO_INDEX 7
 
 #define ISO_SOFT_KEY_PLANTER_ID					0x3000
 #define ISO_SOFT_KEY_CONFIG_ID					0x3001
@@ -77,6 +69,7 @@
 
 #define ISO_BUTTON_REPEAT_TEST_ID			0x6005
 #define ISO_BUTTON_ERASE_INSTALLATION_ID	0x6006
+
 
 /******************************************************************************
  * Configuration Constants
@@ -102,6 +95,7 @@
 #define ISO_OBJECT_RECTANGLE_ID		  0x9500
 #define ISO_OBJECT_FILL_ATTRIBUTES_ID 0x9600
 #define ISO_OBJECT_LINE_ID			  0x9900
+#define ISO_OBJECT_LARGURA_IMPLEMENTO_ID			  0x812D
 
 /******************************************************************************
  * Macros
@@ -138,47 +132,11 @@ typedef enum
 	STATUS_TRIMMING_INVALID,
 } eTrimmingStatus;
 
-typedef enum
-{
-	LANGUAGE_PORTUGUESE,
-	LANGUAGE_ENGLISH,
-	LANGUAGE_SPANISH,
-	LANGUAGE_RUSSIAN,
-	LANGUAGE_INVALID
-} eSelectedLanguage;
-
-typedef enum
-{
-	UNIT_INTERNATIONAL_SYSTEM,
-	UNIT_IMPERIAL_SYSTEM,
-	UNIT_SYSTEM_INVALID
-} eSelectedUnitMeasurement;
-
-typedef enum
-{
-	AREA_MONITOR_DISABLED,
-	AREA_MONITOR_ENABLED,
-	AREA_MONITOR_INVALID
-} eAreaMonitor;
-
-typedef enum
-{
-	ALTERNATE_ROWS_DISABLED,
-	ALTERNATE_ROWS_ENABLED,
-	ALTERNATE_ROWS_INVALID
-} eAlternateRows;
-
-typedef enum
-{
-	ALTERNATED_ROWS_ODD,
-	ALTERNATED_ROWS_EVEN,
-	ALTERNATED_ROWS_INVALID
-} eAlternatedRowsType;
-
 typedef struct sNumberVariableObj
 {
 	uint16_t wObjID;
 	uint32_t dValue;
+	uint64_t lValue;
 	float fValue;
 } sNumberVariableObj;
 
@@ -193,22 +151,6 @@ typedef struct sFillAtributtesObj
 	uint16_t wObjID;
 	uint8_t bColor;
 } sFillAttributesObj;
-
-typedef struct sConfigurationDataMask
-{
-	eSelectedLanguage* eLanguage;
-	eSelectedUnitMeasurement* eUnit;
-	uint32_t* dVehicleID;
-	eAreaMonitor eMonitor;
-	float* fSeedsPerMeter;
-	uint8_t* bNumOfRows;
-	float* fImplementWidth;
-	float* fEvaluationDistance;
-	uint8_t* bTolerance;
-	float* fMaxSpeed;
-	eAlternateRows eAlterRows;
-	eAlternatedRowsType eAltType;
-} sConfigurationDataMask;
 
 typedef struct sInstallSensorStatus
 {

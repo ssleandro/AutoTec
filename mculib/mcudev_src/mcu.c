@@ -39,6 +39,7 @@
 #include "mcu.h"
 #include "board.h"
 #include "chip.h"
+#include "fat_sl.h"
 
 /******************************************************************************
  * Module Preprocessor Constants

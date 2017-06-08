@@ -468,9 +468,11 @@ eAPPError_s SEN_vInitDeviceLayer (uint32_t wSelectedInterface)
 	// Initialize enable PS9 structure
 	GPIO_eInit(&sEnablePS9);
 
+	DISABLE_PS9;
 	// Enable power source 9V3
 	ENABLE_PS9;
 
+	ENABLE_PS9;
 	/*Prepare the device */
 	pSENSORHandle = DEV_open(PERIPHERAL_M2GSENSORCOMM);
 	ASSERT(pSENSORHandle != NULL);

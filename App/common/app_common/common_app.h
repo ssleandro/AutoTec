@@ -170,6 +170,19 @@
 #define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
 #define GET_PUBLISHED_PAYLOAD(contract) ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->vPayload
 
+
+// Converter Macros
+#define MM2IN(value) 	((value) * 0.0393701)
+#define IN2MM(value) 	((uint16_t)(value * 25.41))
+#define DM2IN(value) 	((value) * 3.93701)
+#define IN2DM(value) 	((uint16_t)(value * 0.2541))
+
+#define KMH2MLH(value) 	(value * 0.621371)
+#define MLH2KMH(value) 	(value * 1.60934)
+
+#define SDM2SP(value) 	((value) / 3.93701)
+#define SP2SDM(value) 	((uint16_t)(value * 3.93701))
+
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
@@ -285,6 +298,7 @@ typedef enum event_e
 	EVENT_AQR_INSTALLATION_FINISH_INSTALLATION,
 	EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION,
 	EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION,
+	EVENT_AQR_UPDATE_INSTALLATION,
 	EVENT_GUI_UPDATE_CONFIGURATION_INTERFACE,
 	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
 	EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
@@ -296,11 +310,17 @@ typedef enum event_e
 	EVENT_GUI_INSTALLATION_ERASE_INSTALLATION,
 	EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION,
 	EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK,
+	EVENT_GUI_UPDATE_CONFIG,
+	EVENT_GUI_UPDATE_SYS_CONFIG,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
 	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION,
 	EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION,
+	EVENT_ISO_CONFIG_UPDATE_DATA,
+	EVENT_CTL_UPDATE_CONFIG,        					//!< EVENT FILE CFG STATUS CHANGED
+	EVENT_CTL_UPDATE_INTERFACE_CFG,
+	EVENT_CTL_UPDATE_SAVE_CONFIG,
 } event_e;
 
 typedef struct
@@ -313,6 +333,13 @@ typedef struct
 /******************************************************************************
  * Conversion from MPA
  *******************************************************************************/
+// TODO: This variables is just for test
+// TODO: common from GPS
+
+extern gpio_config_s sEnablePS9;
+#define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
+#define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
+
 /* CAN sensor core */
 #define CAN_ALTA_PRIOR            0x00
 
@@ -458,6 +485,21 @@ typedef struct
 
 } UOS_tsCfgMonitor;
 
+typedef struct
+{
+	//Senha para operacoes de seguranca:
+	uint32_t abSenha;
+
+	//Idioma:
+	eSelectedLanguage eLanguage;
+
+	// Se egit  sistema imperial ou internacional
+	eSelectedUnitMeasurement eUnit;
+
+	//uint8_t alinhamento[2];
+
+} tsCfgIHM;
+
 //Receptor GPS interno:
 typedef struct
 {
@@ -468,13 +510,9 @@ typedef struct
 
 	uint8_t bHorarioVerao;       //Indica se estao em horario de verao (bHorarioVerao = 1)
 	uint8_t bSalvaRegistro;      //Indica se gravacao de registros esta ativada
+
 } tsCfgGPS;
 
-//Identificacao do vei�culo:
-typedef struct
-{
-	uint8_t abCodigo[6];
-} tsCfgVeiculo;
 
 typedef struct
 {
@@ -484,13 +522,17 @@ typedef struct
 	//Receptor GPS interno:
 	tsCfgGPS sGPS;
 
-	//Identificacao do vei�culo:
-	tsCfgVeiculo sVeiculo;
+	//Configuracao IHM
+	tsCfgIHM sIHM;
+
+	//Identificacao do veiculo:
+	uint32_t dVeiculo;
 
 	//CRC16 desta estrutura:
 	uint16_t wCRC16;
 
-} UOS_tsConfiguracao;
+} __attribute__((aligned(1), packed)) UOS_tsConfiguracao;
+
 
 /******************************************************************************
  * Variables from Control module... Just for test...
@@ -684,6 +726,8 @@ typedef struct
 	uint8_t bContraste;
 	//Brilho do LCD:
 	uint8_t bBrilho;
+
+
 	//Idioma:
 	uint8_t bIdioma;
 
@@ -712,8 +756,7 @@ typedef struct
 
 	// CRC da estrutura
 	uint16_t wCRC16;
-}
-IHM_tsConfig;
+} __attribute__((aligned(1), packed)) IHM_tsConfig;
 
 //Estrutura do registro estático:
 typedef struct
@@ -751,7 +794,7 @@ typedef struct
 	//no momento do cálculo do CRC.
 	uint32_t wCRC16;         //CRC desta estrutura.
 
-} AQR_tsRegEstaticoCRC;
+} __attribute__((aligned(1), packed)) AQR_tsRegEstaticoCRC;
 
 #define LCD_bBRILHO_MAX        99
 
