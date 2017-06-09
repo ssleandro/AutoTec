@@ -66,6 +66,7 @@ static eAPPError_s eError;                          //!< Error variable
 
 DECLARE_QUEUE(FileSysQueue, QUEUE_SIZEOFFILESYS);    //!< Declaration of Interface Queue
 CREATE_SIGNATURE(FileSysControl);//!< Signature Declarations
+CREATE_SIGNATURE(FileSysAcqureg);
 CREATE_SIGNATURE(FileSysDiag);//!< Signature Declarations
 CREATE_CONTRACT(FileSys);//!< Create contract for buzzer msg publication
 
@@ -95,9 +96,9 @@ PubMessage sFileSysPubMsg;
  * Module Internal DATABASE
  *******************************************************************************/
 
-UOS_tsConfiguracao FFS_sConfiguracao;
-IHM_tsConfig FFS_sConfig;
+AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
+UOS_tsConfiguracao FFS_sConfiguracao;
 
 /******************************************************************************
  * Function Prototypes
@@ -276,13 +277,6 @@ void FSM_vFileSysPublishThread (void const *argument)
 			else
 				FSM_ePublishEvent(EVENT_FFS_CFG, EVENT_CLEAR, NULL);
 		}
-		if (tSignalBit & FFS_FLAG_INTERFACE_CFG)
-		{
-			if (dFlags & FFS_FLAG_INTERFACE_CFG)
-				FSM_ePublishEvent(EVENT_FFS_INTERFACE_CFG, EVENT_SET, (void*)&FFS_sConfig);
-			else
-				FSM_ePublishEvent(EVENT_FFS_INTERFACE_CFG, EVENT_CLEAR, NULL);
-		}
 		if (tSignalBit & FFS_FLAG_STATIC_REG)
 		{
 			if (dFlags & FFS_FLAG_STATIC_REG)
@@ -290,6 +284,11 @@ void FSM_vFileSysPublishThread (void const *argument)
 			else
 				FSM_ePublishEvent(EVENT_FFS_STATIC_REG, EVENT_CLEAR, NULL);
 		}
+		if (tSignalBit & FFS_FLAG_SENSOR_CFG)
+		{
+				FSM_ePublishEvent(EVENT_FFS_SENSOR_CFG, EVENT_SET, (void*)&FFS_sCtrlListaSens.CAN_sCtrlListaSens);
+		}
+
 
 	}
 
@@ -355,6 +354,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 {
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);;
+	eAPPError_s error;
 
 	switch (contract->eOrigin)
 	{
@@ -362,24 +362,15 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_SAVE_CONFIG)
 			{
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				if (ePubEvType == EVENT_SET)
 				{
-				memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-					sizeof(UOS_tsConfiguracao));
+					memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
+								sizeof(UOS_tsConfiguracao));
 
-					eAPPError_s error = FFS_vSaveConfigFile();
+					error = FFS_vSaveConfigFile();
 					ASSERT(error == APP_ERROR_SUCCESS);
 				}
 
-			}
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_FFS_INTERFACE_CFG)
-			{
-				memcpy(&FFS_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_tsConfig));
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
-				{
-					eAPPError_s error = FFS_vSaveInterfaceCfgFile();
-					ASSERT(error == APP_ERROR_SUCCESS);
-				}
 			}
 			break;
 		}
@@ -392,6 +383,23 @@ void FFS_vIdentifyEvent (contract_s* contract)
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
 					eAPPError_s error = FFS_vSaveStaticReg();
+					ASSERT(error == APP_ERROR_SUCCESS);
+				}
+			}
+
+			if (ePubEvt == EVENT_FFS_SENSOR_CFG)
+			{
+				if (ePubEvType == EVENT_SET)
+				{
+					memcpy(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, (CAN_tsCtrlListaSens*)(GET_PUBLISHED_PAYLOAD(contract)),
+												sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens));
+
+					error = FFS_vSaveSensorCfg();
+					ASSERT(error == APP_ERROR_SUCCESS);
+				}
+				else
+				{
+					error = FFS_vRemoveSensorCfg();
 					ASSERT(error == APP_ERROR_SUCCESS);
 				}
 			}
@@ -421,6 +429,9 @@ void FSM_vFileSysThread (void const *argument)
 	SIGNATURE_HEADER(FileSysControl, THIS_MODULE, TOPIC_CONTROL, FileSysQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(FileSysControl), 0) == osOK);
 
+	SIGNATURE_HEADER(FileSysAcqureg, THIS_MODULE, TOPIC_ACQUIREG, FileSysQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(FileSysAcqureg), 0) == osOK);
+
 	osFlagGroupCreate(&FFS_sFlagSis);
 	error = FSM_vInitDeviceLayer();
 	ASSERT(error == APP_ERROR_SUCCESS);
@@ -441,6 +452,10 @@ void FSM_vFileSysThread (void const *argument)
 	error = FFS_vLoadConfigFile();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_CFG);
+
+	error = FFS_vLoadSensorCfg();
+	ASSERT(error == APP_ERROR_SUCCESS);
+	osSignalSet(xPbulishThreadID, FFS_FLAG_SENSOR_CFG);
 
 	error = FFS_vLoadStaticReg();
 	ASSERT(error == APP_ERROR_SUCCESS);

@@ -1728,8 +1728,8 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					{
 						ISO_vChangeActiveMask(ALARM_MASK_CONFIRM_INSTALLATION);
 					}
-//					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
-//					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_CONFIG:

@@ -997,22 +997,24 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 void AQR_vApagaListaSensores (void)
 {
 	uint8_t bErr;
+	osStatus status;
 
 	//Mutex para acesso exclusivo ao arquivo da lista de sensores na rede CAN
-	//    OSMutexPend( CAN_MTX_sArquivoListaSensores, 0, &bErr );
-	//    __assert( bErr == OS_NO_ERR );
+	//Pega o mutex antes acessar dados compartilhados:
+	status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
+	ASSERT(status == osOK);
 
 	//Limpa a lista armazenada em buffer
-	//    memset( &CAN_sCtrlLista.asLista, 0x00, sizeof( CAN_sCtrlLista.asLista ) );
+	memset( &CAN_sCtrlLista.asLista, 0x00, sizeof( CAN_sCtrlLista.asLista ) );
 
 	//Prepara a cópia de trabalho da estrutura com dados CAN:
-	//    memcpy( &AQR_sDadosCAN, &CAN_sCtrlLista, sizeof( AQR_sDadosCAN ) );
+	memcpy( &AQR_sDadosCAN, &CAN_sCtrlLista, sizeof( AQR_sDadosCAN ) );
 
-	//Libera Mutex para acesso exclusivo ao arquivo da lista de sensores na rede CAN
-	//    OSMutexPost( CAN_MTX_sArquivoListaSensores );
-	//    __assert( bErr == OS_NO_ERR );
+	//Devolve o mutex:
+	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
+	ASSERT(status == osOK);
 
-	//    CAN_vApagaLista();
+	osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_ERASE_LIST);
 }
 
 /******************************************************************************
@@ -1159,7 +1161,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
-			| AQR_APL_FLAG_CONFIRM_INSTALLATION, true, false, osWaitForever);
+			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1194,6 +1196,23 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
+		if ((dFlags & AQR_APL_FLAG_SAVE_LIST) > 0)
+		{
+			sArqRegPubMsg.dEvent = EVENT_FFS_SENSOR_CFG;
+			sArqRegPubMsg.eEvtType = EVENT_SET;
+			sArqRegPubMsg.vPayload = (void*)&CAN_sCtrlLista;
+			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
+			PUBLISH(CONTRACT(Acquireg), 0);
+		}
+		if ((dFlags & AQR_APL_FLAG_ERASE_LIST) > 0)
+		{
+			sArqRegPubMsg.dEvent = EVENT_FFS_SENSOR_CFG;
+			sArqRegPubMsg.eEvtType = EVENT_CLEAR;
+			sArqRegPubMsg.vPayload = NULL;
+			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
+			PUBLISH(CONTRACT(Acquireg), 0);
+		}
+
 	}
 	osThreadTerminate(NULL);
 }
@@ -1251,6 +1270,13 @@ void AQR_vIdentifyEvent (contract_s* contract)
 					osFlagClear(AQR_sFlagREG, AQR_FLAG_ESTATICO_REG);
 				}
 			}
+			if (ePubEvt == EVENT_FFS_SENSOR_CFG)
+			{
+					memcpy(&CAN_sCtrlLista, (CAN_tsCtrlListaSens*)(GET_PUBLISHED_PAYLOAD(contract)),
+						sizeof(CAN_tsCtrlListaSens));
+					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_VERIFICANDO);
+			}
+
 			break;
 		}
 		case MODULE_GUI:
@@ -1264,6 +1290,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			{
 				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_LIST);
 			}
 			break;
 		}
@@ -3833,11 +3860,18 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		//--------------------------------------------------------------------------
 		//Registro Estático:
+		{
+			static uint16_t dDataHoraSalvo = 0xfffffff0;
+			//Salva Registro
+			AQR_SetStaticRegData();
+			if ((AQR_sAcumulado.sTotalReg.dSegundos > dDataHoraSalvo + 60) || // A cada minuto
+				 (AQR_sAcumulado.sTotalReg.dSegundos < dDataHoraSalvo))
+			{
+				dDataHoraSalvo = AQR_sAcumulado.sTotalReg.dSegundos;
+				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
+			}
 
-		//Salva Registro
-		AQR_SetStaticRegData();
-		osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
-
+		}
 		//--------------------------------------------------------------------------
 		// Tratamento do parâmetro Alarmes:
 

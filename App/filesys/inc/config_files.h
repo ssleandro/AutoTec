@@ -49,6 +49,11 @@
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
+typedef struct
+{
+   CAN_tsCtrlListaSens CAN_sCtrlListaSens;
+   uint16_t wCRC16;
+}AQR_tsCtrlListaSens;
 
 /******************************************************************************
  * Variables
@@ -65,8 +70,9 @@
 eAPPError_s FFS_vLoadConfigFile (void);
 eAPPError_s FFS_vSaveConfigFile (void);
 
-eAPPError_s FFS_vLoadInterfaceCfgFile (void);
-eAPPError_s FFS_vSaveInterfaceCfgFile (void);
+eAPPError_s FFS_vLoadSensorCfg (void);
+eAPPError_s FFS_vSaveSensorCfg (void);
+eAPPError_s FFS_vRemoveSensorCfg (void);
 
 eAPPError_s FFS_vLoadStaticReg (void);
 eAPPError_s FFS_vSaveStaticReg (void);

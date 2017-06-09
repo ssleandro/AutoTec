@@ -459,6 +459,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
+
 				}
 			}
 
@@ -477,7 +478,8 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
-
+				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
 		}
