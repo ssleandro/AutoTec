@@ -314,7 +314,7 @@ void GUI_SetGuiConfiguration(void)
 		GUIConfigurationData.wImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
 		GUIConfigurationData.wDistBetweenLines = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
 	}
-	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
+	ePublish = EVENT_GUI_UPDATE_CONFIG;;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 
@@ -325,7 +325,16 @@ void GUI_SetSisConfiguration(void)
 	SISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
 	SISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
 	SISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
-	SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+
+	GUIConfigurationData.eAltType = (eAlternatedRowsType)SISConfiguration.sMonitor.eIntercala;
+	if (GUIConfigurationData.eAlterRows == ALTERNATE_ROWS_DISABLED)
+	{
+		SISConfiguration.sMonitor.eIntercala = Sem_Intercalacao;
+	}
+	else
+	{
+		SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+	}
 
 	SISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
 	SISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;

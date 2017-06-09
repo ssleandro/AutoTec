@@ -568,7 +568,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
-				case EVENT_GUI_UPDATE_SYS_CONFIG:
+				case EVENT_GUI_UPDATE_CONFIG:
 				{
 					ISO_vUpdateConfigData((sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract));
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
@@ -1562,7 +1562,7 @@ void ISO_vUpdateConfigurationDataMask (void)
 	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.wDistBetweenLines);
 	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.wEvaluationDistance);
 	ISO_vUpdateNumberVariableValue(0x8005, *sConfigDataMask.bTolerance);
-	ISO_vUpdateNumberVariableValue(0x8006, *sConfigDataMask.fMaxSpeed);
+	ISO_vUpdateNumberVariableValue(0x8006, GET_UNSIGNED_INT_VALUE(*sConfigDataMask.fMaxSpeed));
 }
 
 void ISO_vUpdateInstallationDataMask (void)
@@ -1612,7 +1612,7 @@ void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
 	psCfgDataMask->wImplementWidth = *sConfigDataMask.wImplementWidth;
 	psCfgDataMask->wEvaluationDistance = *sConfigDataMask.wEvaluationDistance;
 	psCfgDataMask->bTolerance = *sConfigDataMask.bTolerance;
-	psCfgDataMask->fMaxSpeed = GET_FLOAT_VALUE(*sConfigDataMask.fMaxSpeed);
+	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
 	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
 }
 
@@ -1628,7 +1628,7 @@ void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
 	*sConfigDataMask.wImplementWidth = psCfgDataMask->wImplementWidth;
 	*sConfigDataMask.wEvaluationDistance = psCfgDataMask->wEvaluationDistance;
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
-	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(psCfgDataMask->fMaxSpeed);
+	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
 	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
 }
 
@@ -1732,7 +1732,7 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 //					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;
 				}
-				case EVENT_GUI_UPDATE_SYS_CONFIG:
+				case EVENT_GUI_UPDATE_CONFIG:
 				{
 					ISO_vUpdateConfigurationDataMask();
 					break;
