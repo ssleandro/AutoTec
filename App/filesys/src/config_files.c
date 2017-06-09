@@ -175,7 +175,7 @@ eAPPError_s FFS_vSaveConfigFile (void)
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
-		xFileHandle = f_open(FFS_abConfigName, "w");
+		xFileHandle = f_open(FFS_abConfigName, "w+");
 		ASSERT(xFileHandle != NULL);
 
 		if (xFileHandle != NULL)

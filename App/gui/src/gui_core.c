@@ -162,6 +162,10 @@ void GUI_vGuiPublishThread (void const *argument)
 
 	GUI_eInitGuiPublisher();
 
+	WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 	START_TIMER(Gui_UptTimer, 750);
 
 	while (1)
@@ -310,7 +314,7 @@ void GUI_SetGuiConfiguration(void)
 		GUIConfigurationData.wImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
 		GUIConfigurationData.wDistBetweenLines = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
 	}
-	ePublish = EVENT_GUI_UPDATE_CONFIG;
+	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 

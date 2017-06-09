@@ -1706,6 +1706,14 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 	INITIALIZE_MUTEX(AQR_MTX_sBufferListaSensores);
 
+	osThreadId xDiagMainID = (osThreadId)argument;
+	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRMGTThreadArrayPosition)); //Task created, inform core
+
+	//Aguarda o fim da inicialização do sistema:
+	WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
+
 	// TODO: extern variable
 	//    UOS_sVersaoCod.wFlag = 0xFFFF;
 
@@ -1836,14 +1844,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	//UOS_vAjustaTimer( bTimerDesliga, AQR_TIMEOUT_30MIN, true );
 
 	CAN_bNumRespostasPNP = 0;
-
-	osThreadId xDiagMainID = (osThreadId)argument;
-	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRMGTThreadArrayPosition)); //Task created, inform core
-
-	//Aguarda o fim da inicialização do sistema:
-	WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
-	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-	WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -2378,8 +2378,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 						//Faz um auto-teste dos sensores:
 						osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
-						//Publish Event Update Installation
-						osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 
 						bTentativas = 0;
 					}
@@ -2558,9 +2556,9 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						if (bAdiciona != false)
 						{
 							bConta = (AQR_vAdicionaSensor(bConta, psAQR_Sensor[psStatus->bSensorAdicionado].eEstado));
+							osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 						}
 
-						osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 					}
 
 				} //fim do for(...)
@@ -2579,7 +2577,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						//Limpa o flag de fim de instalação
 						osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 						osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
-						osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 
 						//Limpa flag de sensor instalado
 						//                        IHM_bConfirmaInstSensores = eSensoresNaoInstalados;

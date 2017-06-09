@@ -568,7 +568,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
-				case EVENT_GUI_UPDATE_CONFIG:
+				case EVENT_GUI_UPDATE_SYS_CONFIG:
 				{
 					ISO_vUpdateConfigData((sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract));
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
@@ -1732,7 +1732,7 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 //					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;
 				}
-				case EVENT_GUI_UPDATE_CONFIG:
+				case EVENT_GUI_UPDATE_SYS_CONFIG:
 				{
 					ISO_vUpdateConfigurationDataMask();
 					break;
