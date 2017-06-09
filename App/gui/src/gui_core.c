@@ -349,11 +349,22 @@ void GUI_SetSisConfiguration(void)
 
 void GUI_InitSensorStatus (void)
 {
+	event_e ePubEvt;
 	uint8_t bConta;
+
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
-		eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+		if (bConta < GUIConfigurationData.bNumOfRows)
+		{
+			eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+		}
+		else
+		{
+			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+		}
 	}
+	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
 void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
@@ -448,6 +459,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_InitSensorStatus();
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
@@ -462,12 +474,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				memcpy(&SISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
 				GUI_SetGuiConfiguration();
+				GUI_InitSensorStatus();
 			}
 			break;
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (ePubEvt == EVENT_AQR_UPDATE_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION)
 			{
 				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 

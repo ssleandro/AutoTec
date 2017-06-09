@@ -1612,7 +1612,7 @@ void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
 	psCfgDataMask->wImplementWidth = *sConfigDataMask.wImplementWidth;
 	psCfgDataMask->wEvaluationDistance = *sConfigDataMask.wEvaluationDistance;
 	psCfgDataMask->bTolerance = *sConfigDataMask.bTolerance;
-	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
+	psCfgDataMask->fMaxSpeed = GET_FLOAT_VALUE(*sConfigDataMask.fMaxSpeed);
 	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
 }
 
@@ -1628,7 +1628,7 @@ void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
 	*sConfigDataMask.wImplementWidth = psCfgDataMask->wImplementWidth;
 	*sConfigDataMask.wEvaluationDistance = psCfgDataMask->wEvaluationDistance;
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
-	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
+	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(psCfgDataMask->fMaxSpeed);
 	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
 }
 

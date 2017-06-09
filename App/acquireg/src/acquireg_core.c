@@ -2443,8 +2443,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			{
 
 				uint8_t bAdiciona = false;
-				//Publish Event Update Installation
-				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 
 				//Varre a lista de sensores...
 				for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
@@ -2561,6 +2559,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						{
 							bConta = (AQR_vAdicionaSensor(bConta, psAQR_Sensor[psStatus->bSensorAdicionado].eEstado));
 						}
+
+						osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 					}
 
 				} //fim do for(...)
@@ -2579,6 +2579,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 						//Limpa o flag de fim de instalação
 						osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 						osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
+						osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_UPDATE_INSTALLATION);
 
 						//Limpa flag de sensor instalado
 						//                        IHM_bConfirmaInstSensores = eSensoresNaoInstalados;
