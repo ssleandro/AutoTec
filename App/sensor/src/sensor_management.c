@@ -1484,8 +1484,7 @@ void SEN_vManagementNetwork (void)
 			if (psCtrlApl->bTodosSensSemRspVersao &&
 				psCtrlApl->bTodosSensAduRspVersao &&
 				psCtrlApl->bTodosSensSemRspVersaoExt &&
-				psCtrlApl->bTodosSensAduRspVersaoExt &&
-				psCtrlApl->bTodosSensDigRspVersao)
+				psCtrlApl->bTodosSensAduRspVersaoExt)
 			{
 				osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP);
 			}

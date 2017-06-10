@@ -33,6 +33,7 @@
 /******************************************************************************
  * Includes
  *******************************************************************************/
+#include "acquireg_app.h"
 
 /******************************************************************************
  * Preprocessor Constants
@@ -142,6 +143,100 @@ typedef struct sConfigurationDataMask
 	eAlternateRows eAlterRows;
 	eAlternatedRowsType eAltType;
 } sConfigurationDataMask;
+
+typedef enum
+{
+	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
+	STATUS_TRIMMING_TRIMMED = 0x0C,
+	STATUS_TRIMMING_NONE = 0xFF,
+	STATUS_TRIMMING_INVALID,
+} eTrimmingStatus;
+
+typedef struct sNumberVariableObj
+{
+	uint16_t wObjID;
+	uint32_t dValue;
+	uint64_t lValue;
+	float fValue;
+} sNumberVariableObj;
+
+typedef struct sInputListObj
+{
+	uint16_t wObjID;
+	uint8_t bSelectedIndex;
+} sInputListObj;
+
+typedef struct sFillAtributtesObj
+{
+	uint16_t wObjID;
+	uint8_t bColor;
+} sFillAttributesObj;
+
+typedef struct sInstallSensorStatus
+{
+	sFillAttributesObj* pFillAttribute;
+	uint8_t bNumOfSensors;
+} sInstallSensorStatus;
+
+typedef struct sInstallationDataMask
+{
+	sInstallSensorStatus* psLinesInstallStatus;
+} sInstallationDataMask;
+
+typedef struct sPlantingVariables
+{
+	sNumberVariableObj* const psNumberVariable;
+	uint8_t bNumOfVariables;
+} sPlantingVariables;
+
+typedef struct sBarGraphStatus
+{
+	uint16_t wIncBarID;
+	uint16_t wDecBarID;
+	uint16_t wIncOutputNumID;
+	uint16_t wDecOutputNumID;
+	int8_t bValue;
+} sBarGraphStatus;
+
+typedef struct sPlanterDataMask
+{
+	sBarGraphStatus* psLinesStatus;
+	sBarGraphStatus* psIndividualLineStatus;
+	uint32_t* pdPartPopSemPerMt;
+	uint32_t* pdPartPopSemPetHa;
+	uint32_t* pdWorkedAreaMt;
+	uint32_t* pdWorkedAreaHa;
+	uint32_t* pdTotalMt;
+	uint32_t* pdTotalHa;
+	uint32_t* pdProductivity;
+	uint32_t* pdWorkedTime;
+	uint32_t* pdTotalSeeds;
+} sPlanterDataMask;
+
+typedef struct sTrimmingStatus
+{
+	sFillAttributesObj* pFillAtributte;
+	uint8_t bNumOfSensor;
+} sTrimmingStatus;
+
+typedef struct sTrimmingDataMask
+{
+	sTrimmingStatus* psTrimmedLines;
+} sTrimmingDataMask;
+
+typedef struct sTestModeDataMaskData
+{
+	tsAcumulados sAccumulated;
+	uint32_t dInstalledSensors;
+	uint32_t dConfiguredSensors;
+} sTestModeDataMaskData;
+
+typedef struct sTestModeDataMask
+{
+	sNumberVariableObj* psSeedsCount;
+	sNumberVariableObj* pdInstalledSensors;
+	sNumberVariableObj* pdConfiguredSensors;
+} sTestModeDataMask;
 
 /******************************************************************************
  * Variables

@@ -297,15 +297,8 @@ void CTL_vControlPublishThread (void const *argument)
 
         if(flags != UOS_SIS_FLAG_NENHUM)
         {
-            if((flags & CTL_SAVE_CONFIG_DATA) > 0)
-            {
-                sControlPubMsg.dEvent = EVENT_CTL_UPDATE_SAVE_CONFIG;
-                sControlPubMsg.eEvtType = EVENT_SET;
-                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
-                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
-                PUBLISH(CONTRACT(Control), 0);
-            }
-            if((flags & CTL_UPDATE_CONFIG_DATA) > 0)
+
+            if(((flags & CTL_UPDATE_CONFIG_DATA) > 0) ||((flags & CTL_SAVE_CONFIG_DATA) > 0))
             {
                 sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
                 sControlPubMsg.eEvtType = EVENT_SET;

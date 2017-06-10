@@ -667,7 +667,7 @@ void GPS_vGPSPublishThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSPUB, WDT_SLEEP);
 		dValorGPS = osFlagWait(GPS_sFlagGPS, (GPS_FLAG_METRO | GPS_FLAG_SEGUNDO | GPS_FLAG_TIMEOUT_MTR), true, false,
-			osWaitForever);
+		osWaitForever);
 		WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
 
 		status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);

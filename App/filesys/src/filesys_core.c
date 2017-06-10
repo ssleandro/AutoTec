@@ -360,7 +360,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 	{
 		case MODULE_CONTROL:
 		{
-			if (ePubEvt == EVENT_CTL_UPDATE_SAVE_CONFIG)
+			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{

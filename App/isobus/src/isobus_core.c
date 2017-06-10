@@ -58,8 +58,6 @@
  *******************************************************************************/
 static eAPPError_s eError;                   		//!< Error variable
 
-tsAcumulados* psAccumulated;
-
 extern osFlagsGroupId UOS_sFlagSis;
 
 static sNumberVariableObj asNumVarObjects[ISO_NUM_NUMBER_VARIABLE_OBJECTS];
@@ -72,8 +70,6 @@ static sBarGraphStatus asIndividualLineStatus[ISO_NUM_BAR_GRAPH_OBJECTS];
 static eInstallationStatus eSensorsIntallStatus[36];
 static sInstallSensorStatus sInstallStatus;
 static sTrimmingStatus sLinesTrimmingStatus;
-
-static sLineCountVariables sSeedsCountVar;
 
 static sConfigurationDataMask sConfigDataMask =
 	{
@@ -91,6 +87,13 @@ static sConfigurationDataMask sConfigDataMask =
 		.eAlterRows = ALTERNATE_ROWS_DISABLED,
 		.eAltType = ALTERNATED_ROWS_ODD
 	};
+
+static sTestModeDataMask sTestDataMask =
+{
+	.psSeedsCount = &(asNumVarObjects[0x5C]),
+	.pdInstalledSensors = &(asNumVarObjects[0x80]),
+	.pdConfiguredSensors = &(asNumVarObjects[0x81])
+};
 
 const sPlantingVariables sPlantingVar =
 	{
@@ -180,14 +183,9 @@ PubMessage sISOPubMessage;
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
-void ISO_vUpdateConfigurationDataMask (void);
-void ISO_vUpdateInstallationDataMask (void);
-void ISO_vUpdatePlanterDataMask (void);
-void ISO_vUpdateTestModeDataMask (void);
-void ISO_vUpdateTrimmingDataMask (void);
-void ISO_vUpdateSystemDataMask (void);
-void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask);
-void ISO_vTreatUpdateDataEvent(event_e ePubEvt);
+void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask);
+void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload);
+void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
 
 /******************************************************************************
  * Function Definitions
@@ -541,10 +539,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
-					if (psAccumulated == NULL)
-					{
-						psAccumulated = (tsAcumulados*)GET_PUBLISHED_PAYLOAD(contract);
-					}
+					ISO_vUpdateTestModeData(eEvt, GET_PUBLISHED_PAYLOAD(contract));
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -565,6 +560,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
+					ISO_vUpdateTestModeData(eEvt, GET_PUBLISHED_PAYLOAD(contract));
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -1579,15 +1575,28 @@ void ISO_vUpdatePlanterDataMask (void)
 
 }
 
-void ISO_vUpdateTestModeDataMask (void)
+void ISO_vUpdateTestModeDataMask (event_e eEvt)
 {
-	if (psAccumulated == NULL)
-		return;
-
-	for (int i = 0; i < *sConfigDataMask.bNumOfRows; i++)
-	{
-		ISO_vUpdateNumberVariableValue((0x805C + i), psAccumulated->sTotalReg.adSementes[i]);
+	switch (eEvt) {
+		case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
+		{
+			ISO_vUpdateNumberVariableValue(sTestDataMask.pdInstalledSensors->wObjID, sTestDataMask.pdInstalledSensors->dValue);
+			ISO_vUpdateNumberVariableValue(sTestDataMask.pdConfiguredSensors->wObjID, sTestDataMask.pdConfiguredSensors->dValue);
+			break;
+		}
+		case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
+		{
+			for (int i = 0; i < (*sConfigDataMask.bNumOfRows); i++)
+			{
+				ISO_vUpdateNumberVariableValue(sTestDataMask.psSeedsCount[i].wObjID, sTestDataMask.psSeedsCount[i].dValue);
+		//		ISO_vUpdateNumberVariableValue((0x805C + i), psAccumulated->sTotalReg.adSementes[i]);
+			}
+			break;
+		}
+		default:
+			break;
 	}
+
 }
 
 void ISO_vUpdateTrimmingDataMask (void)
@@ -1630,6 +1639,35 @@ void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
 	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
 	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
+}
+
+void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
+{
+	sTestModeDataMaskData sTestUpdate;
+
+	if(vPayload == NULL)
+		return;
+
+	switch (eEvt)
+	{
+		case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
+		{
+			sTestUpdate = *((sTestModeDataMaskData*)vPayload);
+			sTestDataMask.pdInstalledSensors->dValue = sTestUpdate.dInstalledSensors;
+			sTestDataMask.pdConfiguredSensors->dValue = sTestUpdate.dConfiguredSensors;
+			break;
+		}
+		case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
+		{
+			sTestUpdate = *((sTestModeDataMaskData*)vPayload);
+			for (int i = 0; i < 36; i++) {
+				sTestDataMask.psSeedsCount[i].dValue = sTestUpdate.sAccumulated.sTotalReg.adSementes[i];
+			}
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 /******************************************************************************
@@ -1709,7 +1747,7 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
-					ISO_vUpdateTestModeDataMask();
+					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
@@ -1724,6 +1762,7 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
+					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
 					if(eCurrentMask != ALARM_MASK_CONFIRM_INSTALLATION)
 					{
 						ISO_vChangeActiveMask(ALARM_MASK_CONFIRM_INSTALLATION);
