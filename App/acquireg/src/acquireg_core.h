@@ -60,6 +60,8 @@
 #define AQR_APL_FLAG_SAVE_STATIC_REG 		0x0002
 #define AQR_APL_FLAG_UPDATE_INSTALLATION	0x0004
 #define AQR_APL_FLAG_CONFIRM_INSTALLATION	0x0008
+#define AQR_APL_FLAG_SAVE_LIST				0x0010
+#define AQR_APL_FLAG_ERASE_LIST				0x0020
 
 /******************************************************************************
  * Configuration Constants

@@ -349,13 +349,6 @@ void CTL_vIdentifyEvent (contract_s* contract)
 				}
 				osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
 			}
-			if (ePubEvt == EVENT_FFS_INTERFACE_CFG)
-			{
-				if (ePubEvType == EVENT_SET)
-				{
-					memcpy(&IHM_sConfig, (IHM_tsConfig*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(IHM_sConfig));
-				}
-			}
 			break;
 		}
 		case MODULE_GUI:

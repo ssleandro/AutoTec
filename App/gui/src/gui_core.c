@@ -162,6 +162,10 @@ void GUI_vGuiPublishThread (void const *argument)
 
 	GUI_eInitGuiPublisher();
 
+	WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 	START_TIMER(Gui_UptTimer, 750);
 
 	while (1)
@@ -226,6 +230,15 @@ void GUI_vGuiPublishThread (void const *argument)
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_REPEAT_TEST:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_ERASE_INSTALLATION:
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
@@ -310,7 +323,7 @@ void GUI_SetGuiConfiguration(void)
 		GUIConfigurationData.wImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
 		GUIConfigurationData.wDistBetweenLines = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
 	}
-	ePublish = EVENT_GUI_UPDATE_CONFIG;
+	ePublish = EVENT_GUI_UPDATE_CONFIG;;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 
@@ -321,7 +334,16 @@ void GUI_SetSisConfiguration(void)
 	SISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
 	SISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
 	SISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
-	SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+
+	GUIConfigurationData.eAltType = (eAlternatedRowsType)SISConfiguration.sMonitor.eIntercala;
+	if (GUIConfigurationData.eAlterRows == ALTERNATE_ROWS_DISABLED)
+	{
+		SISConfiguration.sMonitor.eIntercala = Sem_Intercalacao;
+	}
+	else
+	{
+		SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+	}
 
 	SISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
 	SISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
@@ -349,11 +371,22 @@ void GUI_SetSisConfiguration(void)
 
 void GUI_InitSensorStatus (void)
 {
+	event_e ePubEvt;
 	uint8_t bConta;
+
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
-		eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+		if (bConta < GUIConfigurationData.bNumOfRows)
+		{
+			eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+		}
+		else
+		{
+			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+		}
 	}
+	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
 void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
@@ -435,6 +468,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
+
 				}
 			}
 
@@ -448,11 +482,21 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_InitSensorStatus();
 			}
+
+			if (ePubEvt == EVENT_ISO_INSTALLATION_ERASE_INSTALLATION)
+			{
+				ePubEvt = EVENT_GUI_INSTALLATION_ERASE_INSTALLATION;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_InitSensorStatus();
+			}
+
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
-
+				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
 		}
@@ -462,12 +506,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				memcpy(&SISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
 				GUI_SetGuiConfiguration();
+				GUI_InitSensorStatus();
 			}
 			break;
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (ePubEvt == EVENT_AQR_UPDATE_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION)
 			{
 				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 

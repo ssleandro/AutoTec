@@ -1250,7 +1250,59 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 				switch (sRcvMsg->B1)
 				{
 					case FUNC_SOFT_KEY_ACTIVATION:
+					{
+						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B4));
+						switch (dAux)
+						{
+							case ISO_SOFT_KEY_PLANTER_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_CONFIG_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_BACK_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_TEST_MODE_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_FINISH_TEST_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_REPEAT_TEST_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_REPLACE_SENSORS_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_ERASE_INSTALLATION_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_OK_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_TRIMMING_ID:
+							{
+								break;
+							}
+							case ISO_SOFT_KEY_SYSTEM_ID:
+							{
+								break;
+							}
+							default:
+								break;
+						}
 						break;
+					}
 					case FUNC_BUTTON_ACTIVATION:
 					{
 						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B4));
@@ -1510,7 +1562,7 @@ void ISO_vUpdateConfigurationDataMask (void)
 	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.wDistBetweenLines);
 	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.wEvaluationDistance);
 	ISO_vUpdateNumberVariableValue(0x8005, *sConfigDataMask.bTolerance);
-	ISO_vUpdateNumberVariableValue(0x8006, *sConfigDataMask.fMaxSpeed);
+	ISO_vUpdateNumberVariableValue(0x8006, GET_UNSIGNED_INT_VALUE(*sConfigDataMask.fMaxSpeed));
 }
 
 void ISO_vUpdateInstallationDataMask (void)
@@ -1556,9 +1608,9 @@ void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
 	psCfgDataMask->eMonitorArea = sConfigDataMask.eMonitor;
 	psCfgDataMask->wSeedRate = *sConfigDataMask.wSeedRate;
 	psCfgDataMask->bNumOfRows = *sConfigDataMask.bNumOfRows;
-	psCfgDataMask->wDistBetweenLines = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wDistBetweenLines);
-	psCfgDataMask->wImplementWidth = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wImplementWidth);
-	psCfgDataMask->wEvaluationDistance = GET_UNSIGNED_INT_VALUE(*sConfigDataMask.wEvaluationDistance);
+	psCfgDataMask->wDistBetweenLines = *sConfigDataMask.wDistBetweenLines;
+	psCfgDataMask->wImplementWidth = *sConfigDataMask.wImplementWidth;
+	psCfgDataMask->wEvaluationDistance = *sConfigDataMask.wEvaluationDistance;
 	psCfgDataMask->bTolerance = *sConfigDataMask.bTolerance;
 	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
 	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
@@ -1572,11 +1624,11 @@ void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
 	sConfigDataMask.eMonitor = psCfgDataMask->eMonitorArea;
 	*sConfigDataMask.wSeedRate = psCfgDataMask->wSeedRate;
 	*sConfigDataMask.bNumOfRows = psCfgDataMask->bNumOfRows;
-	*sConfigDataMask.wDistBetweenLines = GET_FLOAT_VALUE(psCfgDataMask->wDistBetweenLines);
-	*sConfigDataMask.wImplementWidth = GET_FLOAT_VALUE(psCfgDataMask->wImplementWidth);
-	*sConfigDataMask.wEvaluationDistance = GET_FLOAT_VALUE(psCfgDataMask->wEvaluationDistance);
+	*sConfigDataMask.wDistBetweenLines = psCfgDataMask->wDistBetweenLines;
+	*sConfigDataMask.wImplementWidth = psCfgDataMask->wImplementWidth;
+	*sConfigDataMask.wEvaluationDistance = psCfgDataMask->wEvaluationDistance;
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
-	*sConfigDataMask.fMaxSpeed = GET_UNSIGNED_INT_VALUE(psCfgDataMask->fMaxSpeed);
+	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
 	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
 }
 
@@ -1676,8 +1728,8 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					{
 						ISO_vChangeActiveMask(ALARM_MASK_CONFIRM_INSTALLATION);
 					}
-//					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
-//					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
