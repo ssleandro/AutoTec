@@ -199,6 +199,7 @@ uint8_t abTimeoutAlarme[CAN_bNUM_DE_LINHAS];
 void AQR_vTimerCallbackTurnOff (void const*);
 void AQR_vTimerCallbackImpStopped (void const*);
 void AQR_vRepeteTesteSensores (void);
+void AQR_vApagaInstalacao (void);
 
 /******************************************************************************
  * Module timers
@@ -1004,6 +1005,9 @@ void AQR_vApagaListaSensores (void)
 	status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
 	ASSERT(status == osOK);
 
+	//Limpa a estrutura de novo sensor
+	memset(&CAN_sCtrlLista.sNovoSensor, 0,	sizeof(CAN_sCtrlLista.sNovoSensor));
+
 	//Limpa a lista armazenada em buffer
 	memset( &CAN_sCtrlLista.asLista, 0x00, sizeof( CAN_sCtrlLista.asLista ) );
 
@@ -1284,6 +1288,11 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_GUI_INSTALLATION_REPEAT_TEST)
 			{
 				AQR_vRepeteTesteSensores();
+			}
+
+			if (ePubEvt == EVENT_GUI_INSTALLATION_ERASE_INSTALLATION)
+			{
+				AQR_vApagaInstalacao();
 			}
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK)
@@ -1643,6 +1652,19 @@ void AQR_vRepeteTesteSensores (void)
 	osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 }
 
+void AQR_vApagaInstalacao(void)
+{
+	AQR_vApagaListaSensores();
+
+	osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
+
+	osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST | UOS_SIS_FLAG_ERRO_INST_SENSOR |
+		UOS_SIS_FLAG_PARAMETROS_OK | UOS_SIS_FLAG_VERSAO_SW_OK | UOS_SIS_FLAG_ALARME_TOLERANCIA |
+		UOS_SIS_FLAG_MODO_TESTE | UOS_SIS_FLAG_MODO_TRABALHO);
+
+	osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_VERIFICANDO);
+
+}
 /******************************************************************************
  * Function : AQR_vAcquiregManagementThread(void const *argument)
  *//**
