@@ -116,6 +116,7 @@ GPS_tsDadosGPS AQR_sDadosGPS;
 CAN_tsCtrlListaSens AQR_sDadosCAN;
 //Estrutura de Status do Monitor
 tsStatus AQR_sStatus;
+tsStatus AQR_sPubStatus;
 //Estrutura de valores Acumulados
 tsAcumulados AQR_sAcumulado;
 //Estrutura de valores relativos à velocidade
@@ -1190,7 +1191,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		{
 			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)&AQR_sStatus;
+			sArqRegPubMsg.vPayload = (void*)&AQR_sPubStatus;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
@@ -2245,6 +2246,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 //                    {
 //                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
 //                    }
+
+					AQR_sPubStatus = AQR_sStatus;
 
 					for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 					{

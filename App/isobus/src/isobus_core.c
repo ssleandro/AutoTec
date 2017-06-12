@@ -1526,6 +1526,25 @@ void ISO_vUpdateFillAttributesValue (uint16_t wFillAttrID, uint8_t bColor)
 	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
+void ISO_vControlAudioSignalCommand (uint8_t bNumActivations, uint16_t wFrequency, uint16_t wOnTimeMs, uint16_t wOffTimeMs)
+{
+	ISOBUSMsg sSendMsg;
+
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.dlc = 8;
+
+	sSendMsg.frame.data[0] = FUNC_CONTROL_AUDIO_SIGNAL;
+	sSendMsg.frame.data[1] = bNumActivations;
+	sSendMsg.frame.data[2] = wFrequency & 0xFF;
+	sSendMsg.frame.data[3] = (wFrequency & 0xFF00) >> 8;
+	sSendMsg.frame.data[4] = wOnTimeMs & 0xFF;
+	sSendMsg.frame.data[5] = (wOnTimeMs & 0xFF00) >> 8;
+	sSendMsg.frame.data[6] = wOffTimeMs & 0xFF;
+	sSendMsg.frame.data[7] = (wOffTimeMs & 0xFF00) >> 8;
+
+	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+}
+
 void ISO_vChangeActiveMask(eIsobusMask eNewMask)
 {
 	ISOBUSMsg sSendMsg;
@@ -1539,6 +1558,25 @@ void ISO_vChangeActiveMask(eIsobusMask eNewMask)
 	sSendMsg.frame.data[3] = (eNewMask & 0xFF00) >> 8;
 	sSendMsg.frame.data[4] = eNewMask & 0xFF;
 	sSendMsg.frame.data[5] = 0xFF;
+	sSendMsg.frame.data[6] = 0xFF;
+	sSendMsg.frame.data[7] = 0xFF;
+
+	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+}
+
+void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask)
+{
+	ISOBUSMsg sSendMsg;
+
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.dlc = 8;
+
+	sSendMsg.frame.data[0] = FUNC_CHANGE_SOFT_KEY_MASK;
+	sSendMsg.frame.data[1] = eMaskType;
+	sSendMsg.frame.data[2] = (eMask & 0xFF00) >> 8;
+	sSendMsg.frame.data[3] = eMask & 0xFF;
+	sSendMsg.frame.data[4] = (eNewSoftKeyMask & 0xFF00) >> 8;
+	sSendMsg.frame.data[5] = eNewSoftKeyMask & 0xFF;
 	sSendMsg.frame.data[6] = 0xFF;
 	sSendMsg.frame.data[7] = 0xFF;
 
@@ -1589,7 +1627,6 @@ void ISO_vUpdateTestModeDataMask (event_e eEvt)
 			for (int i = 0; i < (*sConfigDataMask.bNumOfRows); i++)
 			{
 				ISO_vUpdateNumberVariableValue(sTestDataMask.psSeedsCount[i].wObjID, sTestDataMask.psSeedsCount[i].dValue);
-		//		ISO_vUpdateNumberVariableValue((0x805C + i), psAccumulated->sTotalReg.adSementes[i]);
 			}
 			break;
 		}
@@ -1763,10 +1800,8 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
-					if(eCurrentMask != ALARM_MASK_CONFIRM_INSTALLATION)
-					{
-						ISO_vChangeActiveMask(ALARM_MASK_CONFIRM_INSTALLATION);
-					}
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION_FINISH);
+					ISO_vControlAudioSignalCommand(3, 210, 250, 250);
 //					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
 //					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;

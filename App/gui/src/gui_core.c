@@ -204,11 +204,12 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
+					GUI_vSetGuiTestData(EVENT_GUI_UPDATE_TEST_MODE_INTERFACE, (void*)&AQR_sAcumulado);
 					if ((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
 					{
 						sGUIPubMessage.dEvent = ePubEvt;
 						sGUIPubMessage.eEvtType = EVENT_UPDATE;
-						sGUIPubMessage.vPayload = (void*)&AQR_sAcumulado;
+						sGUIPubMessage.vPayload = (void*)&sGUITestModeData;
 						MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 						PUBLISH(CONTRACT(Gui), 0);
 					}
@@ -296,11 +297,13 @@ void GUI_vSetGuiTestData(event_e eEvt, void* vPayload)
 			sGUITestModeData.dConfiguredSensors = sStatus.bNumSensores;
 			break;
 		}
-		default:
+		case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 		{
 			sGUITestModeData.sAccumulated = *((tsAcumulados*)vPayload);
 			break;
 		}
+		default:
+			break;
 	}
 }
 

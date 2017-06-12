@@ -405,6 +405,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 /* ************************* Main thread ************************************ */
 
 extern UOS_tsConfiguracao UOS_sConfiguracaoDefault;
+
 #ifndef UNITY_TEST
 void FSM_vFileSysThread (void const *argument)
 {
