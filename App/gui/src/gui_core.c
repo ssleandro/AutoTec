@@ -93,6 +93,7 @@ uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position 
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
+void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
 void GUI_vUpdateInterfaceTimerCallback (void const *argument);
 
 CREATE_TIMER(Gui_UptTimer, GUI_vUpdateInterfaceTimerCallback);
