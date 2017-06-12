@@ -44,7 +44,7 @@
  *******************************************************************************/
 //Nome do arquivo de configuração:
 const uint8_t FFS_abConfigName[] = "MPA2500.CFG";
-const uint8_t FFS_abInterfaceCfgName[] = "INTERFACE.CFG";
+const uint8_t FFS_abSensorCfgName[] = "SENSORES.CAN";
 //Nome do arquivo de registro estático:
 const uint8_t FFS_abStaticRegCfgName[] = "ESTATICO.REG";
 //Nome do arquivo de registros combinados (estáticos e dinâmicos):
@@ -57,7 +57,7 @@ extern osFlagsGroupId FFS_sFlagSis;
 extern UOS_tsConfiguracao FFS_sConfiguracao;
 extern const UOS_tsConfiguracao UOS_sConfiguracaoDefault;
 
-extern IHM_tsConfig FFS_sConfig;
+extern AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 
 extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 
@@ -198,25 +198,49 @@ eAPPError_s FFS_vSaveConfigFile (void)
 	return ErroReturn;
 }
 
-/*
- ================================================================================
- GRAVA CONFIG IHM
-
- Descrição : Grava a configuração do IHM no arquivo INTERFACE.CFG
- Parâmetros: nenhum
- Retorno   : nenhum
- ================================================================================
- */
 /*****************************************************************************
 
- void FFS_vSaveInterfaceCfgFile( void )
+ void FFS_vRemoveSensorCfg( void )
 
- Descricao : funcao para salvar arquivo de configuracao do sistema.
+ Descricao : funcao para apagar arquivo de configuracao dos sensores.
  Parametros: nenhum
  Retorno   : nenhum
 
  ******************************************************************************/
-eAPPError_s FFS_vSaveInterfaceCfgFile (void)
+eAPPError_s FFS_vRemoveSensorCfg (void)
+{
+	uint8_t bNumTotalSensores, bCount;
+
+	f_delete(FFS_abSensorCfgName);
+
+	//Limpa a estrutura de novo sensor
+	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
+				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
+
+	// Inicia parâmetros default:
+	//Numero total de sensores na rede CAN
+	bNumTotalSensores = ARRAY_SIZE(FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista);
+
+	//Ajusta todos os registros da lista com o estado "Novo",
+	//uma lista anteriormente gravada no sistema de arquivos
+	for (bCount = 0; bCount < bNumTotalSensores; bCount++)
+	{
+		FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista[bCount].eEstado = Novo;
+	}
+
+	return APP_ERROR_SUCCESS;
+}
+
+/*****************************************************************************
+
+ void FFS_vSaveSensorCfg( void )
+
+ Descricao : funcao para salvar arquivo de configuracao dos sensores.
+ Parametros: nenhum
+ Retorno   : nenhum
+
+ ******************************************************************************/
+eAPPError_s FFS_vSaveSensorCfg (void)
 {
 	osFlags dFlagsSis;
 	uint16_t wCRC16;
@@ -226,19 +250,23 @@ eAPPError_s FFS_vSaveInterfaceCfgFile (void)
 	F_FILE *xFileHandle;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
+	//Limpa a estrutura de novo sensor
+	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
+				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
+
 	//Confere o CRC da configuracao:
-	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sConfig,
-		(sizeof(FFS_sConfig) - sizeof(FFS_sConfig.wCRC16)));
+	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sCtrlListaSens,
+		(sizeof(FFS_sCtrlListaSens) - sizeof(FFS_sCtrlListaSens.wCRC16)));
 
 	//Atualiza o valor do crc na estrutura:
-	FFS_sConfig.wCRC16 = wCRC16;
+	FFS_sCtrlListaSens.wCRC16 = wCRC16;
 
 	//Verifica se o sistema de arquivo foi inicializado:
 	dFlagsSis = osFlagGet(FFS_sFlagSis);
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
-		xFileHandle = f_open(FFS_abInterfaceCfgName, "w");
+		xFileHandle = f_open(FFS_abSensorCfgName, "w+");
 		ASSERT(xFileHandle != NULL);
 
 		if (xFileHandle != NULL)
@@ -246,7 +274,7 @@ eAPPError_s FFS_vSaveInterfaceCfgFile (void)
 			bErr = f_rewind(xFileHandle);
 			ASSERT(bErr == F_NO_ERROR);
 
-			bErr = f_write((uint8_t* )&FFS_sConfig, sizeof(FFS_sConfig), 1, xFileHandle);
+			bErr = f_write((uint8_t* )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens), 1, xFileHandle);
 			ASSERT(bErr == 1);
 
 			f_close(xFileHandle);
@@ -271,7 +299,7 @@ eAPPError_s FFS_vSaveInterfaceCfgFile (void)
  Obs.:         Nenhuma
  ================================================================================
  */
-eAPPError_s FFS_vLoadInterfaceCfgFile (void)
+eAPPError_s FFS_vLoadSensorCfg (void)
 {
 	osFlags dFlagsSis;
 	uint16_t wCRC16_C;
@@ -287,23 +315,23 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
 		//Procura pelo arquivo de configuracao:
-		bErr = f_findfirst(FFS_abInterfaceCfgName, &xFindStruct);
+		bErr = f_findfirst(FFS_abSensorCfgName, &xFindStruct);
 		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
 
 		if (bErr == F_NO_ERROR)
 		{
-			xFileHandle = f_open(FFS_abInterfaceCfgName, "r");
+			xFileHandle = f_open(FFS_abSensorCfgName, "r");
 			ASSERT(xFileHandle != NULL);
 
 			//Verifica se o tamanho consiste:
-			if (xFindStruct.filesize == sizeof(IHM_tsConfig) && (xFileHandle != NULL))
+			if (xFindStruct.filesize == sizeof(FFS_sCtrlListaSens) && (xFileHandle != NULL))
 			{
 				//Le o arquivo de configuracao do sistema de arquivos:
-				bErr = f_read((uint8_t * )&FFS_sConfig, sizeof(FFS_sConfig), 1, xFileHandle);
+				bErr = f_read((uint8_t * )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens), 1, xFileHandle);
 				ASSERT(bErr == 1);
 
 				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfig, sizeof(FFS_sConfig));
+				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
 				//Se o CRC esta OK:
 				if (wCRC16_C == 0)
 				{
@@ -315,31 +343,29 @@ eAPPError_s FFS_vLoadInterfaceCfgFile (void)
 			ASSERT(bErr == F_NO_ERROR);
 		}
 	}
+	//Limpa a estrutura de novo sensor
+	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
+				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
 
 	if (bErroCfg == true)
 	{
+		uint8_t bNumTotalSensores, bCount;
+
 		// Inicia parâmetros default:
-		memset(&FFS_sConfig, 0, sizeof(FFS_sConfig));
-		FFS_sConfig.bBrilho = LCD_bBRILHO_MAX;
-		FFS_sConfig.bContraste = LCD_bCONTRASTE_MAX / 2;
-		memcpy(FFS_sConfig.abSenha, "\x1\x2\x3\x4", 4);
-		FFS_sConfig.bIdioma = 0;
-		FFS_sConfig.bSistImperial = false;
-		ret = FFS_vSaveInterfaceCfgFile();
-		ASSERT(ret == APP_ERROR_SUCCESS);
-		if (ret == APP_ERROR_SUCCESS)
+		//Numero total de sensores na rede CAN
+		bNumTotalSensores = ARRAY_SIZE(FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista);
+
+		//Ajusta todos os registros da lista com o estado "Novo",
+		//uma lista anteriormente gravada no sistema de arquivos
+		for (bCount = 0; bCount < bNumTotalSensores; bCount++)
 		{
-			bErroCfg = false;
+			FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista[bCount].eEstado = Novo;
 		}
-	}
-	if (bErroCfg == true)
-	{
-		osFlagClear(FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
+
 		ret = APP_ERROR_ERROR;
 	}
 	else
 	{
-		osFlagSet(FFS_sFlagSis, FFS_FLAG_INTERFACE_CFG);
 		ret = APP_ERROR_SUCCESS;
 	}
 	return ret;

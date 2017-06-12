@@ -1009,7 +1009,7 @@ void ISO_vIsobusBootThread (void const *argument)
 					ISO_vSendEndObjectPool();
 					ISO_vSendWSMaintenancePoolSent();
 					ISO_vSendLoadVersion(0xAAAAAAABAAAAAA);
-//					ISO_vSendStoreVersion(0xAAAAAAABAAAAAA);
+					ISO_vSendStoreVersion(0xAAAAAAABAAAAAA);
 
 					eCurrState = OBJECT_POOL_LOADED;
 					osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
@@ -1802,8 +1802,8 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION_FINISH);
 					ISO_vControlAudioSignalCommand(3, 210, 250, 250);
-//					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
-//					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_CONFIG:

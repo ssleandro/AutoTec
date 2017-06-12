@@ -974,7 +974,7 @@ void SEN_vSensorNetworkManagementThread (void const *argument)
 	// Wait for IHM start...
 	// Wait for receive an configuration flag
 	WATCHDOG_STATE(SENMGT, WDT_SLEEP);
-	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK | UOS_SIS_FLAG_VERIFICANDO, false, false, osWaitForever);
 	WATCHDOG_STATE(SENMGT, WDT_ACTIVE);
 
 	while (1)

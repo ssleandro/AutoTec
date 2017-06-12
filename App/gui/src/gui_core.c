@@ -242,6 +242,15 @@ void GUI_vGuiPublishThread (void const *argument)
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
 				}
+				case EVENT_GUI_INSTALLATION_ERASE_INSTALLATION:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
@@ -479,10 +488,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				if (eCurrMask == DATA_MASK_TEST_MODE)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				}
 			}
 
@@ -499,9 +510,18 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				GUI_InitSensorStatus();
 			}
 
+			if (ePubEvt == EVENT_ISO_INSTALLATION_ERASE_INSTALLATION)
+			{
+				ePubEvt = EVENT_GUI_INSTALLATION_ERASE_INSTALLATION;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_InitSensorStatus();
+			}
+
+
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
-
+				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
 		}
