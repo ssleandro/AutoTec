@@ -66,7 +66,7 @@
 void ISO_vUpdateConfigurationDataMask (void);
 void ISO_vUpdateInstallationDataMask (void);
 void ISO_vUpdatePlanterDataMask (void);
-void ISO_vUpdateTestModeDataMask (void);
+void ISO_vUpdateTestModeDataMask (event_e);
 void ISO_vUpdateTrimmingDataMask (void);
 void ISO_vUpdateSystemDataMask (void);
 void ISO_vChangeActiveMask(eIsobusMask eNewMask);

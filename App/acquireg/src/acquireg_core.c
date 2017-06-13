@@ -116,6 +116,7 @@ GPS_tsDadosGPS AQR_sDadosGPS;
 CAN_tsCtrlListaSens AQR_sDadosCAN;
 //Estrutura de Status do Monitor
 tsStatus AQR_sStatus;
+tsStatus AQR_sPubStatus;
 //Estrutura de valores Acumulados
 tsAcumulados AQR_sAcumulado;
 //Estrutura de valores relativos à velocidade
@@ -1196,7 +1197,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		{
 			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = NULL;
+			sArqRegPubMsg.vPayload = (void*)&AQR_sPubStatus;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
@@ -1236,6 +1237,25 @@ void AQR_vIdentifyEvent (contract_s* contract)
 	{
 		case MODULE_CONTROL:
 		{
+			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
+			{
+				//Se não está em modo monitor de área
+				if (UOS_sConfiguracao.sMonitor.bMonitorArea == false)
+				{
+					//Se tiver sensor de Adubo Configurado
+					if (UOS_sConfiguracao.sMonitor.bSensorAdubo != false)
+					{
+						//O número de sensores é duas vezes o número de linhas + sensores adicionais
+						AQR_sStatus.bNumSensores = (UOS_sConfiguracao.sMonitor.bNumLinhas * 2);
+
+					}
+					else    //Se não tiver sensor de adubo
+					{
+						//O número de sensores é o número de linhas + sensores adicionais
+						AQR_sStatus.bNumSensores = UOS_sConfiguracao.sMonitor.bNumLinhas;
+					}
+				}
+			}
 			break;
 		}
 		case MODULE_SENSOR:
@@ -1298,7 +1318,6 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK)
 			{
 				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
-				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_LIST);
 			}
 			break;
@@ -1313,9 +1332,6 @@ void AQR_vIdentifyEvent (contract_s* contract)
 void AQR_vAcquiregThread (void const *argument)
 {
 	osStatus status;
-	uint8_t pRecvBuffer[3];
-	messageType_e eMsgType;
-	uint16_t hMsgSize;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Acquireg Thread Created");
@@ -1325,8 +1341,6 @@ void AQR_vAcquiregThread (void const *argument)
 	INITIALIZE_QUEUE(AcquiregQueue);
 
 	/* Prepare the signature - struture that notify the broker about subscribers */
-//    SIGNATURE_HEADER(Acquireg, THIS_MODULE, TOPIC_DIAGNOSTIC, AcquiregQueue);
-//    ASSERT(SUBSCRIBE(SIGNATURE(Acquireg), 0) == osOK);
 	SIGNATURE_HEADER(AcquiregControl, THIS_MODULE, TOPIC_CONTROL, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregControl), 0) == osOK);
 
@@ -1374,13 +1388,7 @@ void AQR_vAcquiregThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
-			//            eMsgType = GET_MESSAGE(GET_CONTRACT(evt))->eMessageType;
-			//            hMsgSize = GET_MESSAGE(GET_CONTRACT(evt))->hMessageSize;
-			//            pRecvBuffer = (uint8_t *)GET_MESSAGE(GET_CONTRACT(evt))->pvMessage;
-
-			// memcpy(pRecvBuffer, (uint8_t *)GET_MESSAGE(GET_CONTRACT(evt))->pvMessage, GET_MESSAGE(GET_CONTRACT(evt))->hMessageSize);
 			AQR_vIdentifyEvent(GET_CONTRACT(evt));
-
 		}
 	}
 	/* Unreachable */
@@ -1438,7 +1446,6 @@ void AQR_vAcquiregTimeThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRTIMThreadArrayPosition)); //Task created, inform core
-//    osThreadSetPriority(NULL, osPriorityLow);
 
 	WATCHDOG_STATE(AQRTIM, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
@@ -1448,8 +1455,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 	{
 		/* Wait a flag sent on each second */
 		WATCHDOG_STATE(AQRTIM, WDT_SLEEP);
-		osFlagWait(xGPS_sFlagGPS, GPS_FLAG_SEGUNDO, true, false,
-		osWaitForever);
+		osFlagWait(xGPS_sFlagGPS, GPS_FLAG_SEGUNDO, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRTIM, WDT_ACTIVE);
 
 		//Contador de Segundos Total
@@ -1838,12 +1844,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			psStatus->bNumSensores = psMonitor->bNumLinhas;
 		}
 	}
-	/*else //Se estiver em modo monitor de área
-	 //considera apenas os sensores adicionais
-	 {
-	 //O número de sensores é o número de  sensores adicionais
-	 psStatus->bNumSensores = ;
-	 }*/
 
 	//Seta variáveis
 	bTentativas = 0;
@@ -2295,6 +2295,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 //                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
 //                    }
 
+					AQR_sPubStatus = AQR_sStatus;
+
 					for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 					{
 						//Conecta sensores
@@ -2367,7 +2369,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 							status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
 							ASSERT(status == osOK);
 
-							// TODO: CAN_sCtrlLista. This should be done using broker.
 							memset(&CAN_sCtrlLista.asLista[psStatus->bSensorAdicionado], 0x00,
 								sizeof(CAN_sCtrlLista.asLista[psStatus->bSensorAdicionado]));
 							memset(&AQR_sDadosCAN.asLista[psStatus->bSensorAdicionado], 0x00,
@@ -3065,7 +3066,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				psStatus->bVelZero = false;
 
 				//Ajusta o timer com timeout de 10 segundo
-				//                UOS_vAjustaTimer( bTimerImpParado, AQR_TIMEOUT_10SEGS, true );
 				status = START_TIMER(AQR_bTimerImpStopped, AQR_TIMEOUT_10SEGS);
 				ASSERT(status == osOK);
 

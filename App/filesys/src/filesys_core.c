@@ -360,7 +360,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 	{
 		case MODULE_CONTROL:
 		{
-			if (ePubEvt == EVENT_CTL_UPDATE_SAVE_CONFIG)
+			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
@@ -413,6 +413,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 /* ************************* Main thread ************************************ */
 
 extern UOS_tsConfiguracao UOS_sConfiguracaoDefault;
+
 #ifndef UNITY_TEST
 void FSM_vFileSysThread (void const *argument)
 {

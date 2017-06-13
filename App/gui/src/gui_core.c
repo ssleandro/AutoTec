@@ -65,6 +65,9 @@ extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
 
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
+
+sTestModeDataMaskData sGUITestModeData;
+
 sConfigurationData GUIConfigurationData;
 UOS_tsConfiguracao SISConfiguration;
 
@@ -90,6 +93,7 @@ uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position 
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
+void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
 void GUI_vUpdateInterfaceTimerCallback (void const *argument);
 
 CREATE_TIMER(Gui_UptTimer, GUI_vUpdateInterfaceTimerCallback);
@@ -201,11 +205,12 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
+					GUI_vSetGuiTestData(EVENT_GUI_UPDATE_TEST_MODE_INTERFACE, (void*)&AQR_sAcumulado);
 					if ((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
 					{
 						sGUIPubMessage.dEvent = ePubEvt;
 						sGUIPubMessage.eEvtType = EVENT_UPDATE;
-						sGUIPubMessage.vPayload = (void*)&AQR_sAcumulado;
+						sGUIPubMessage.vPayload = (void*)&sGUITestModeData;
 						MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 						PUBLISH(CONTRACT(Gui), 0);
 					}
@@ -251,7 +256,7 @@ void GUI_vGuiPublishThread (void const *argument)
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
-					sGUIPubMessage.vPayload = NULL;
+					sGUIPubMessage.vPayload = (void*)&sGUITestModeData;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
@@ -290,6 +295,26 @@ void GUI_vGuiPublishThread (void const *argument)
 
 	}
 	osThreadTerminate(NULL);
+}
+
+void GUI_vSetGuiTestData(event_e eEvt, void* vPayload)
+{
+	switch (eEvt) {
+		case EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION:
+		{
+			tsStatus sStatus = *((tsStatus*)vPayload);
+			sGUITestModeData.dInstalledSensors = sStatus.bSementeInstalados + sStatus.bAduboInstalados + sStatus.bAdicionalInstalados + sStatus.bSensorNaoEsperado;
+			sGUITestModeData.dConfiguredSensors = sStatus.bNumSensores;
+			break;
+		}
+		case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
+		{
+			sGUITestModeData.sAccumulated = *((tsAcumulados*)vPayload);
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 void GUI_SetGuiConfiguration(void)
@@ -464,11 +489,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				if (eCurrMask == DATA_MASK_TEST_MODE)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
-
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				}
 			}
 
@@ -520,9 +546,19 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
 			{
+				// Update test mode data mask number of sensors installed, number of sensors configured
+				GUI_vSetGuiTestData(ePubEvt, GET_PUBLISHED_PAYLOAD(contract));
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
+
+//			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
+//			{
+//				// Update test mode data mask number of sensors installed, number of sensors configured
+//				GUI_vSetGuiTestData(ePubEvt, GET_PUBLISHED_PAYLOAD(contract));
+//				ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
+//				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+//			}
 			break;
 		}
 		default:
