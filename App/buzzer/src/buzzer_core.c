@@ -217,7 +217,6 @@ void BUZ_vBuzzerPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bBUZPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	BUZ_eInitBuzzerPublisher();
 

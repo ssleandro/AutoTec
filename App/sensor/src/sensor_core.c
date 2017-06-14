@@ -329,9 +329,12 @@ void SEN_vSensorPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bSENPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	SEN_eInitSensorPublisher();
+
+	WATCHDOG_STATE(SENPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
 
 	while (1)
 	{

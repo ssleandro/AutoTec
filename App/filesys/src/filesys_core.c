@@ -249,9 +249,12 @@ void FSM_vFileSysPublishThread (void const *argument)
 	xPbulishThreadID = osThreadGetId();
 
 	osSignalSet((osThreadId)argument, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	FSM_eInitFileSysPublisher();
+
+	WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -410,10 +413,8 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			break;
 	}
 }
+
 /* ************************* Main thread ************************************ */
-
-extern UOS_tsConfiguracao UOS_sConfiguracaoDefault;
-
 #ifndef UNITY_TEST
 void FSM_vFileSysThread (void const *argument)
 {
@@ -482,25 +483,3 @@ void FSM_vFileSysThread (void const *argument)
 void FSM_vFileSysThread (void const *argument)
 {}
 #endif
-
-/* ************************* Management thread ************************************ */
-void FSM_vFileSysManagementThread (void const *argument)
-{
-	eAPPError_s error;
-
-#ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-	SEGGER_SYSVIEW_Print("FileSys Thread Created");
-#endif
-
-	FSM_vDetectThread(&WATCHDOG(FSMPUB), &bFSMPUBThreadArrayPosition, (void*)FSM_vFileSysManagementThread);
-	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
-
-	osThreadId xDiagMainID = (osThreadId)argument;
-	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
-
-	while (1)
-	{
-
-	}
-}

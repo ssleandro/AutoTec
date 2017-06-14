@@ -1156,9 +1156,12 @@ void AQR_vAcquiregPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	AQR_eInitAcquiregPublisher();
+
+	WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -3883,7 +3886,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//--------------------------------------------------------------------------
 		//Registro Estático:
 		{
-			static uint16_t dDataHoraSalvo = 0xfffffff0;
+			static uint16_t dDataHoraSalvo = 0xfff0;
 			//Salva Registro
 			AQR_SetStaticRegData();
 			if ((AQR_sAcumulado.sTotalReg.dSegundos > dDataHoraSalvo + 60) || // A cada minuto

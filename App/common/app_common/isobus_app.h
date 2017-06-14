@@ -129,6 +129,14 @@ typedef enum
 	ALTERNATED_ROWS_INVALID
 } eAlternatedRowsType;
 
+typedef enum
+{
+	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
+	STATUS_TRIMMING_TRIMMED = 0x0C,
+	STATUS_TRIMMING_NONE = 0xFF,
+	STATUS_TRIMMING_INVALID,
+} eTrimmingStatus;
+
 typedef struct sConfigurationData
 {
 	eSelectedLanguage eLanguage;
@@ -163,14 +171,6 @@ typedef struct sConfigurationDataMask
 	eAlternatedRowsType eAltType;
 } sConfigurationDataMask;
 
-typedef enum
-{
-	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
-	STATUS_TRIMMING_TRIMMED = 0x0C,
-	STATUS_TRIMMING_NONE = 0xFF,
-	STATUS_TRIMMING_INVALID,
-} eTrimmingStatus;
-
 typedef struct sNumberVariableObj
 {
 	uint16_t wObjID;
@@ -201,12 +201,6 @@ typedef struct sInstallationDataMask
 {
 	sInstallSensorStatus* psLinesInstallStatus;
 } sInstallationDataMask;
-
-typedef struct sPlantingVariables
-{
-	sNumberVariableObj* const psNumberVariable;
-	uint8_t bNumOfVariables;
-} sPlantingVariables;
 
 typedef struct sBarGraphStatus
 {

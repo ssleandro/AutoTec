@@ -39,11 +39,11 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define GPS_MODULES \
-    X("GPSPublish"      , 150 , osPriorityNormal      , GPS_vGPSPublishThread     , (1 << 0) , 1 ) \
-    X("GPSRecv"         , 300 , osPriorityAboveNormal , GPS_vGPSRecvThread        , (1 << 1) , 2 ) \
-    X("GPSManagement"   , 350 , osPriorityAboveNormal , GPS_vGPSManagementThread  , (1 << 2) , 3 ) \
-    X("GPSTimePulse"    , 150 , osPriorityAboveNormal , GPS_vGPSTimePulseThread   , (1 << 3) , 4 ) \
-    X(NULL              ,   0 , 0                     , NULL                      , 0        , 5 )
+    X("GPSPublish"      , 150 , osPriorityNormal , GPS_vGPSPublishThread     , (1 << 0) , 1 ) \
+    X("GPSRecv"         , 300 , osPriorityNormal , GPS_vGPSRecvThread        , (1 << 1) , 2 ) \
+    X("GPSManagement"   , 350 , osPriorityNormal , GPS_vGPSManagementThread  , (1 << 2) , 3 ) \
+    X("GPSTimePulse"    , 150 , osPriorityNormal , GPS_vGPSTimePulseThread   , (1 << 3) , 4 ) \
+    X(NULL              ,   0 , 0					 , NULL                      , 0        , 5 )
 
 /******************************************************************************
  * Configuration Constants

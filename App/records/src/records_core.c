@@ -117,7 +117,6 @@ void REC_vRecordsPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bRECPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	while (1)
 	{

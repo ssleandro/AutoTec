@@ -95,12 +95,6 @@ static sTestModeDataMask sTestDataMask =
 	.pdConfiguredSensors = &(asNumVarObjects[0x81])
 };
 
-const sPlantingVariables sPlantingVar =
-	{
-		.psNumberVariable = &asNumVarObjects[0],
-		.bNumOfVariables = 9
-	};
-
 static sInstallationDataMask sInstallDataMask =
 	{
 		.psLinesInstallStatus = &sInstallStatus
@@ -385,9 +379,12 @@ void ISO_vIsobusPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bISOPUBThreadArrayPosition));           //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	ISO_eInitIsobusPublisher();
+
+	WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -677,9 +674,13 @@ void ISO_vIsobusDispatcher (ISOBUSMsg* RcvMsg)
 					case ADDRESS_CLAIM_PGN:
 					case PROPRIETARY_A_PGN:
 					case PROPRIETARY_A2_PGN:
-					// Send message to BootThread
-					PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
+					{
+						// Send message to BootThread
+						WATCHDOG_STATE(ISORCV, WDT_SLEEP);
+						PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
+						WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
 						break;
+					}
 					default:
 						break;
 				}
@@ -695,9 +696,13 @@ void ISO_vIsobusDispatcher (ISOBUSMsg* RcvMsg)
 				switch (wRcvMsgPGN)
 				{
 					case VT_TO_ECU_PGN:
-					// Send message to BootThread
-					PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
+					{
+						// Send message to BootThread
+						WATCHDOG_STATE(ISORCV, WDT_SLEEP);
+						PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
+						WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
 						break;
+					}
 					case ECU_TO_GLOBAL_PGN:
 						break;
 					default:
@@ -769,16 +774,16 @@ void ISO_vIsobusRecvThread (void const *argument)
 
 	osThreadId xIsoMainID = (osThreadId)argument;
 	osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISORCVThreadArrayPosition));   //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	dTicks = osKernelSysTick();
 
 	while (1)
 	{
 		/* Pool the device waiting for */
-		WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
+		WATCHDOG_STATE(ISORCV, WDT_SLEEP);
 		osDelayUntil(&dTicks, 50);
 		bRecvMessages = DEV_read(pISOHandle, &asPayload[0].frame, ARRAY_SIZE(asPayload));
+		WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
 
 		if (bRecvMessages)
 		{
@@ -1009,7 +1014,7 @@ void ISO_vIsobusBootThread (void const *argument)
 					ISO_vSendEndObjectPool();
 					ISO_vSendWSMaintenancePoolSent();
 					ISO_vSendLoadVersion(0xAAAAAAABAAAAAA);
-					ISO_vSendStoreVersion(0xAAAAAAABAAAAAA);
+//					ISO_vSendStoreVersion(0xAAAAAAABAAAAAA);
 
 					eCurrState = OBJECT_POOL_LOADED;
 					osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
@@ -1116,14 +1121,18 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 		if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 		{
 			osSignalSet(xAuxBootThreadId, WAIT_SEND_POOL);
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 			PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 		}
 			break;
 		case ETP_CONN_MANAGE_PGN:
 		if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 		{
 			osSignalSet(xAuxBootThreadId, WAIT_SEND_POOL);
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 			PUT_LOCAL_QUEUE(BootQ, *sRcvMsg, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 		}
 			break;
 		default:
@@ -1307,13 +1316,17 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							case ISO_BUTTON_REPEAT_TEST_ID:
 							{
 								ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							case ISO_BUTTON_ERASE_INSTALLATION_ID:
 							{
 								ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							default:
@@ -1331,7 +1344,9 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 					{
 						ISO_vTreatChangeNumericValueEvent(sRcvMsg);
 						ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
+						WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 						PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+						WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 						break;
 					}
 					case FUNC_VT_CHANGE_ACTIVE_MASK:
@@ -1341,7 +1356,9 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 						{
 							eCurrentMask = (eIsobusMask)dAux;
 							ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
+							WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 							PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+							WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 						}
 						break;
 					}
@@ -1750,7 +1767,6 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 
 	osThreadId xIsoMainID = (osThreadId)argument;
 	osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOUPDTThreadArrayPosition));   //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
 	// Waiting for RUNNING module state
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);

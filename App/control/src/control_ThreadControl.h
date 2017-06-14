@@ -43,9 +43,6 @@
     X("ControlPublish"     , 256 , osPriorityNormal , CTL_vControlPublishThread     , (1 << 1) , 2 ) \
     X(NULL                 ,   0 , 0                , NULL                          , 0        , 3 ) \
 
-//    X("ControlManagement"  , 150 , osPriorityNormal , CTL_vControlManagementThread  , (1 << 0) , 1 )
-//    X("ControlEmergency"   , 150 , osPriorityNormal , CTL_vControlEmergencyThread   , (1 << 1) , 2 )
-
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/

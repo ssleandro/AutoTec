@@ -421,8 +421,6 @@ peripheral_descriptor_p pGPSHandle;
 
 gpio_config_s sTimePulseInt;
 
-gpio_config_s sDebugLed;
-
 /*******************************************************************************
  Variáveis públicas deste módulo:
  *******************************************************************************/
@@ -645,6 +643,9 @@ PubMessage sGPSPubMsg;
 #ifndef UNITY_TEST
 void GPS_vGPSPublishThread (void const *argument)
 {
+	osFlags dValorGPS;
+	osStatus status;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Buzzer Publish Thread Created");
 #endif
@@ -655,10 +656,6 @@ void GPS_vGPSPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGPSPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
-
-	osFlags dValorGPS;
-	osStatus status;
 
 	GPS_eInitGPSPublisher();
 
@@ -864,19 +861,8 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.bMPort = EXTINT_TIMEPULSE_PORT;
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
 
-	sDebugLed.vpPrivateData = NULL;
-	sDebugLed.bDefaultOutputHigh = false;
-	sDebugLed.eDirection = GPIO_OUTPUT;
-	sDebugLed.ePull = GPIO_PULLDOWN;
-	sDebugLed.fpCallBack = NULL;
-	sDebugLed.bMPort = LED_DEBUG_GREEN_PORT;
-	sDebugLed.bMPin = LED_DEBUG_GREEN_PIN;
-
 	// Initialize time pulse external interrupt
 	GPIO_eInit(&sTimePulseInt);
-
-	// Initialize debug LED
-	GPIO_eInit(&sDebugLed);
 }
 
 /*******************************************************************************
@@ -2903,10 +2889,7 @@ void GPS_vGPSThread (void const *argument)
 		GPS_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_GPS);
-
-	uint8_t* pRecvBuffer;
+	osSignalSet((osThreadId)argument, MODULE_GPS);
 
 	/* Start the main functions of the application */
 	while (1)
@@ -2918,10 +2901,6 @@ void GPS_vGPSThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
-			pRecvBuffer = (uint8_t*) GET_MESSAGE(GET_CONTRACT(evt))->pvMessage;
-
-			(void)pRecvBuffer;
-			(void)evt;
 		}
 		osDelay(500);
 	}
@@ -3132,18 +3111,6 @@ void GPS_vGPSManagementThread (void const *argument)
 				GPS_sGerenciaTimeoutMsg.dMonVer = 0;
 				GPS_sGerenciaTimeoutMsg.dMonHw = 0;
 				GPS_sGerenciaTimeoutMsg.dConfiguracao = 0;
-
-				//Desliga o Modulo GPS
-//                UOS_DISABLE_GPS;
-
-				//Aguarda 1 segundo
-//                OSTimeDly( TICK );
-
-				//Liga o Módulo GPS
-//                UOS_ENABLE_GPS;
-
-				//Aguarda 1 segundo
-//                OSTimeDly( TICK );
 
 				//Inicia variáveis de configuração
 				GPS_eConfigura = VerificaPort;
