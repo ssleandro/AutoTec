@@ -1411,8 +1411,6 @@ osStatus osMailFree (osMailQId queue_id, void *mail)
  * @retval none.
  */
 
-extern osSemaphoreId UOS_sSemSincronismo;
-
 void osSystickHandler (void)
 {
 
@@ -1421,12 +1419,6 @@ void osSystickHandler (void)
 	{
 #endif  /* INCLUDE_xTaskGetSchedulerState */
 		xPortSysTickHandler();
-
-		// Semaphore to sync task from control module
-		if (UOS_sSemSincronismo != NULL)
-		{
-			osSemaphoreRelease(UOS_sSemSincronismo);
-		}
 #if (INCLUDE_xTaskGetSchedulerState  == 1 )
 	}
 #endif  /* INCLUDE_xTaskGetSchedulerState */

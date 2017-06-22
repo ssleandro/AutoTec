@@ -1972,6 +1972,8 @@ void vTaskStepTick( const TickType_t xTicksToJump )
 #endif /* configUSE_TICKLESS_IDLE */
 /*----------------------------------------------------------*/
 
+extern volatile unsigned long ulHighFrequencyTimerTicks;
+
 BaseType_t xTaskIncrementTick (void)
 {
 	TCB_t * pxTCB;
@@ -1987,6 +1989,7 @@ BaseType_t xTaskIncrementTick (void)
 		/* Increment the RTOS tick, switching the delayed and overflowed
 		 delayed lists if it wraps to 0. */
 		++xTickCount;
+		++ulHighFrequencyTimerTicks;
 
 		{
 			/* Minor optimisation.  The tick count cannot change in this

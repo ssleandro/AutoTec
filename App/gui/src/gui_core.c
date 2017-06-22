@@ -63,13 +63,18 @@ eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
 
 extern osFlagsGroupId UOS_sFlagSis;
 extern tsAcumulados AQR_sAcumulado;
+extern tsStatus AQR_sStatus;
+extern uint16_t AQR_wEspacamento;
 
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
 
 sTestModeDataMaskData sGUITestModeData;
+sPlanterDataMaskData  sGUIPlanterData;
 
 sConfigurationData GUIConfigurationData;
-UOS_tsConfiguracao SISConfiguration;
+UOS_tsConfiguracao sSISConfiguration;
+
+GUI_tsConfig GUI_sConfig;
 
 /******************************************************************************
  * Module typedef
@@ -95,6 +100,10 @@ uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position 
  *******************************************************************************/
 void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
 void GUI_vUpdateInterfaceTimerCallback (void const *argument);
+void GUI_vUpdateWorkedArea (void);
+void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds);
+void GUI_vUptTestModeTimerCallback (void const *argument);
+void GUI_vUptPlanterTimerCallback (void const *argument);
 
 CREATE_TIMER(Gui_UptTimer, GUI_vUpdateInterfaceTimerCallback);
 
@@ -139,10 +148,58 @@ eAPPError_s GUI_eInitGuiPublisher (void)
 
 void GUI_vUpdateInterfaceTimerCallback (void const *argument)
 {
-	event_e ePubEvt;
+	event_e eEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
+	PUT_LOCAL_QUEUE(GuiPublishQ, eEvt, osWaitForever);
+}
 
-	ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+void GUI_vRandomValuesToPlanterDataMask (void)
+{
+	for (int i = 0; i < 36; i++) {
+		sGUIPlanterData.asLineStatus[i].dsLineAverage = (sGUIPlanterData.asLineStatus[i].dsLineAverage++ % 100);
+	}
+
+	sGUIPlanterData.dProductivity++;
+	sGUIPlanterData.dWorkedTime++;
+	sGUIPlanterData.dTotalSeeds++;
+	sGUIPlanterData.dPartPopSemPerUnit++;
+	sGUIPlanterData.dPartPopSemPerHa++;
+	sGUIPlanterData.dWorkedAreaMt++;
+	sGUIPlanterData.dWorkedAreaHa++;
+	sGUIPlanterData.dTotalMt++;
+	sGUIPlanterData.dTotalHa++;
+}
+
+#define ALL_LINES 0
+
+void GUI_vGetValuesToPlanterDataMask (void)
+{
+	for (uint8_t dNumSensor = 0; dNumSensor < CAN_bNUM_DE_LINHAS; dNumSensor++)
+	{
+		GUI_vLinesPartialPopulation(dNumSensor, &sGUIPlanterData.asLineStatus[dNumSensor].dsLineAverage,
+			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerUnit,
+			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerHa,
+			&sGUIPlanterData.asLineStatus[dNumSensor].dLineTotalSeeds);
+	}
+
+	sGUIPlanterData.dProductivity++;
+	sGUIPlanterData.dWorkedTime++;
+
+	GUI_vLinesPartialPopulation(ALL_LINES, NULL, &sGUIPlanterData.dPartPopSemPerUnit, &sGUIPlanterData.dPartPopSemPerHa,
+		&sGUIPlanterData.dTotalSeeds);
+	GUI_vUpdateWorkedArea();
+}
+
+#define RANDOM_VALUES
+
+void GUI_vUptPlanterTimerCallback (void const *argument)
+{
+	event_e eEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
+#if defined (RANDOM_VALUES)
+	GUI_vRandomValuesToPlanterDataMask();
+#else
+	GUI_vGetValuesToPlanterDataMask();
+#endif
+	PUT_LOCAL_QUEUE(GuiPublishQ, eEvt, osWaitForever);
 }
 
 void GUI_vGuiPublishThread (void const *argument)
@@ -283,7 +340,7 @@ void GUI_vGuiPublishThread (void const *argument)
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
-					sGUIPubMessage.vPayload = (void*)&SISConfiguration;
+					sGUIPubMessage.vPayload = (void*)&sSISConfiguration;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
@@ -321,32 +378,32 @@ void GUI_SetGuiConfiguration(void)
 {
 	event_e ePublish;
 
-	GUIConfigurationData.bNumOfRows = SISConfiguration.sMonitor.bNumLinhas;
-	GUIConfigurationData.bTolerance = SISConfiguration.sMonitor.bTolerancia;
-	GUIConfigurationData.dVehicleID = SISConfiguration.dVeiculo;
-	GUIConfigurationData.eAltType = (eAlternatedRowsType)SISConfiguration.sMonitor.eIntercala;
+	GUIConfigurationData.bNumOfRows = sSISConfiguration.sMonitor.bNumLinhas;
+	GUIConfigurationData.bTolerance = sSISConfiguration.sMonitor.bTolerancia;
+	GUIConfigurationData.dVehicleID = sSISConfiguration.dVeiculo;
+	GUIConfigurationData.eAltType = (eAlternatedRowsType)sSISConfiguration.sMonitor.eIntercala;
 	GUIConfigurationData.eAlterRows =
-			(SISConfiguration.sMonitor.eIntercala == Sem_Intercalacao) ? ALTERNATE_ROWS_DISABLED : ALTERNATE_ROWS_ENABLED;
+			(sSISConfiguration.sMonitor.eIntercala == Sem_Intercalacao) ? ALTERNATE_ROWS_DISABLED : ALTERNATE_ROWS_ENABLED;
 
-	GUIConfigurationData.eMonitorArea = (eAreaMonitor)SISConfiguration.sMonitor.bMonitorArea;
-	GUIConfigurationData.eLanguage = SISConfiguration.sIHM.eLanguage;
-	GUIConfigurationData.eUnit = SISConfiguration.sIHM.eUnit;
+	GUIConfigurationData.eMonitorArea = (eAreaMonitor)sSISConfiguration.sMonitor.bMonitorArea;
+	GUIConfigurationData.eLanguage = sSISConfiguration.sIHM.eLanguage;
+	GUIConfigurationData.eUnit = sSISConfiguration.sIHM.eUnit;
 
 	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 	{
-		GUIConfigurationData.wEvaluationDistance = SISConfiguration.sMonitor.wAvalia;
-		GUIConfigurationData.fMaxSpeed = SISConfiguration.sMonitor.fLimVel;
-		GUIConfigurationData.wSeedRate = SISConfiguration.sMonitor.wSementesPorMetro;
-		GUIConfigurationData.wImplementWidth = SISConfiguration.sMonitor.wLargImpl;
-		GUIConfigurationData.wDistBetweenLines = SISConfiguration.sMonitor.wDistLinhas;
+		GUIConfigurationData.wEvaluationDistance = sSISConfiguration.sMonitor.wAvalia;
+		GUIConfigurationData.fMaxSpeed = sSISConfiguration.sMonitor.fLimVel;
+		GUIConfigurationData.wSeedRate = sSISConfiguration.sMonitor.wSementesPorMetro;
+		GUIConfigurationData.wImplementWidth = sSISConfiguration.sMonitor.wLargImpl;
+		GUIConfigurationData.wDistBetweenLines = sSISConfiguration.sMonitor.wDistLinhas;
 	}
 	else
 	{
-		GUIConfigurationData.wEvaluationDistance = DM2IN(SISConfiguration.sMonitor.wAvalia);
-		GUIConfigurationData.fMaxSpeed = KMH2MLH(SISConfiguration.sMonitor.fLimVel);
-		GUIConfigurationData.wSeedRate = SDM2SP(SISConfiguration.sMonitor.wSementesPorMetro);
-		GUIConfigurationData.wImplementWidth = MM2IN(SISConfiguration.sMonitor.wLargImpl);
-		GUIConfigurationData.wDistBetweenLines = MM2IN(SISConfiguration.sMonitor.wDistLinhas);
+		GUIConfigurationData.wEvaluationDistance = DM2IN(sSISConfiguration.sMonitor.wAvalia);
+		GUIConfigurationData.fMaxSpeed = KMH2MLH(sSISConfiguration.sMonitor.fLimVel);
+		GUIConfigurationData.wSeedRate = SDM2SP(sSISConfiguration.sMonitor.wSementesPorMetro);
+		GUIConfigurationData.wImplementWidth = MM2IN(sSISConfiguration.sMonitor.wLargImpl);
+		GUIConfigurationData.wDistBetweenLines = MM2IN(sSISConfiguration.sMonitor.wDistLinhas);
 	}
 	ePublish = EVENT_GUI_UPDATE_CONFIG;;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
@@ -356,39 +413,39 @@ void GUI_SetSisConfiguration(void)
 {
 	event_e ePublish;
 
-	SISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
-	SISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
-	SISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
+	sSISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
+	sSISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
+	sSISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
 
-	GUIConfigurationData.eAltType = (eAlternatedRowsType)SISConfiguration.sMonitor.eIntercala;
+	GUIConfigurationData.eAltType = (eAlternatedRowsType)sSISConfiguration.sMonitor.eIntercala;
 	if (GUIConfigurationData.eAlterRows == ALTERNATE_ROWS_DISABLED)
 	{
-		SISConfiguration.sMonitor.eIntercala = Sem_Intercalacao;
+		sSISConfiguration.sMonitor.eIntercala = Sem_Intercalacao;
 	}
 	else
 	{
-		SISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+		sSISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
 	}
 
-	SISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
-	SISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
-	SISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;
+	sSISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
+	sSISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
+	sSISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;
 
 	if (GUIConfigurationData.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 	{
-		SISConfiguration.sMonitor.wAvalia = GUIConfigurationData.wEvaluationDistance;
-		SISConfiguration.sMonitor.fLimVel = GUIConfigurationData.fMaxSpeed;
-		SISConfiguration.sMonitor.wSementesPorMetro = GUIConfigurationData.wSeedRate;
-		SISConfiguration.sMonitor.wLargImpl = GUIConfigurationData.wImplementWidth;
-		SISConfiguration.sMonitor.wDistLinhas = GUIConfigurationData.wDistBetweenLines;
+		sSISConfiguration.sMonitor.wAvalia = GUIConfigurationData.wEvaluationDistance;
+		sSISConfiguration.sMonitor.fLimVel = GUIConfigurationData.fMaxSpeed;
+		sSISConfiguration.sMonitor.wSementesPorMetro = GUIConfigurationData.wSeedRate;
+		sSISConfiguration.sMonitor.wLargImpl = GUIConfigurationData.wImplementWidth;
+		sSISConfiguration.sMonitor.wDistLinhas = GUIConfigurationData.wDistBetweenLines;
 	}
 	else
 	{
-		SISConfiguration.sMonitor.wAvalia = IN2DM(GUIConfigurationData.wEvaluationDistance);
-		SISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
-		SISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
-		SISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
-		SISConfiguration.sMonitor.wDistLinhas = IN2MM(GUIConfigurationData.wDistBetweenLines);
+		sSISConfiguration.sMonitor.wAvalia = IN2DM(GUIConfigurationData.wEvaluationDistance);
+		sSISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
+		sSISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
+		sSISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
+		sSISConfiguration.sMonitor.wDistLinhas = IN2MM(GUIConfigurationData.wDistBetweenLines);
 	}
 	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
@@ -530,7 +587,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-				memcpy(&SISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
+				memcpy(&sSISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
 				GUI_SetGuiConfiguration();
 				GUI_InitSensorStatus();
 			}
@@ -625,4 +682,597 @@ void GUI_vGuiThread (void const *argument)
 	}
 	/* Unreachable */
 	osThreadSuspend(NULL);
+}
+
+double GUI_fConvertUnit (double gValue, uint32_t dFlags)
+{
+	static const double agTabToMeters[] =
+		{
+			0.001,          // mm = 1/1000 m
+			0.01,           // cm = 1/100 m
+			1.0,            // 1 m
+			1000.0,         // km = 1000 m
+			10000.0,        // ha = 10000 m�
+			4046.93,        // acre = 4046.93 m�
+			1609.30,        // mi = 1,60930 km = 1609,30 m
+			0.3048,         // p�s = 30,48 cm = 0,3048 m
+			0.0254,         // pol = 2,54 cm = 0,0254 m
+		};
+
+	const uint32_t dInput = (dFlags >> 16) - 1;
+	const uint32_t dOutput = (dFlags & 0xffff) - 1;
+
+	if ((dInput >= GUI_dUNITS_QUANT) ||
+		(dOutput >= GUI_dUNITS_QUANT))
+	{
+		return 0.0;
+	}
+	if (dInput == dOutput)
+	{
+		return gValue;
+	}
+
+	// Converte medida de entrada em metros:
+	gValue *= agTabToMeters[dInput];
+
+	// Converte de metros para medida de sa�da:
+	gValue /= agTabToMeters[dOutput];
+
+	return gValue;
+}
+
+void GUI_vUpdateWorkedArea (void)
+{
+	float fAreaTrab;
+
+	tsLinhas* const psAcum = &AQR_sAcumulado.sTrabTotal;
+	tsLinhas* const psAcumDir = &AQR_sAcumulado.sTrabTotalDir;
+	tsLinhas* const psAcumEsq = &AQR_sAcumulado.sTrabTotalEsq;
+
+	tsLinhas* const psParcial = &AQR_sAcumulado.sTrabParcial;
+	tsLinhas* const psParcDir = &AQR_sAcumulado.sTrabParcDir;
+	tsLinhas* const psParcEsq = &AQR_sAcumulado.sTrabParcEsq;
+
+	tsDistanciaTrab* const psAcumDis = &AQR_sAcumulado.sDistTrabTotal;
+	tsDistanciaTrab* const psAcumDisDir = &AQR_sAcumulado.sDistTrabTotalDir;
+	tsDistanciaTrab* const psAcumDisEsq = &AQR_sAcumulado.sDistTrabTotalEsq;
+
+	tsDistanciaTrab* const psParcDis = &AQR_sAcumulado.sDistTrabParcial;
+	tsDistanciaTrab* const psParcDisDir = &AQR_sAcumulado.sDistTrabParcialDir;
+	tsDistanciaTrab* const psParcDisEsq = &AQR_sAcumulado.sDistTrabParcialEsq;
+
+	tsStatus *psStatus = &AQR_sStatus;
+	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
+
+	//Divide por 10 porque AQR_wEspacamento esta em cm*10
+	float fAreaTrabalhada = ((float)AQR_wEspacamento * (float)psParcDis->dDistancia) * 0.1f;
+	float fAreaTrabalhadaDir = ((float)AQR_wEspacamento * (float)psParcDisDir->dDistancia) * 0.1f;
+	float fAreaTrabalhadaEsq = ((float)AQR_wEspacamento * (float)psParcDisEsq->dDistancia) * 0.1f;
+
+	//Converte de cm� para m�
+	fAreaTrabalhada *= (1.0f / 10000.0f);
+	fAreaTrabalhadaDir *= (1.0f / 10000.0f);
+	fAreaTrabalhadaEsq *= (1.0f / 10000.0f);
+
+	if (psMonitor->bMonitorArea == false)
+	{
+		if (psMonitor->eIntercala != Sem_Intercalacao)
+		{
+			fAreaTrabalhada *= psStatus->bNumLinhasSemIntercalar;
+		}
+		else
+		{
+			fAreaTrabalhada *= psMonitor->bNumLinhas;
+		}
+
+		fAreaTrabalhadaDir *= psStatus->bNumLinhasDir;
+		fAreaTrabalhadaEsq *= psStatus->bNumLinhasEsq;
+	}
+
+	//Soma area calculada acima e a acumulada
+	fAreaTrabalhada +=
+		(fAreaTrabalhadaDir + fAreaTrabalhadaEsq + psParcial->fArea + psParcDir->fArea + psParcEsq->fArea);
+
+	// Converte de centimetros para ha/acre:
+	fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada,
+		GUI_dCONV(GUI_dMETERS,
+			GUI_dHECTARES));
+
+	// Partial population Ha
+	sGUIPlanterData.dWorkedAreaHa = fAreaTrab * 10;
+
+	// Converte de cent�metros para km/mi:
+	fAreaTrab = (float)GUI_fConvertUnit(
+		(psParcial->dDistancia +
+			psParcDir->dDistancia +
+			psParcEsq->dDistancia),
+		GUI_dCONV( GUI_dCENTIMETERS, GUI_dMETERS));
+
+	sGUIPlanterData.dWorkedAreaMt = fAreaTrab * 10;
+
+	// Totals
+	//--------------------------------------------------------------------------
+	// Quantidade acumulada, em km/mi:
+
+	//Divide por 10 porque AQR_wEspacamento est� em cm*10
+	fAreaTrabalhada = ((float)AQR_wEspacamento * (float)psAcumDis->dDistancia) * 0.1f;
+	fAreaTrabalhadaDir = ((float)AQR_wEspacamento * (float)psAcumDisDir->dDistancia) * 0.1f;
+	fAreaTrabalhadaEsq = ((float)AQR_wEspacamento * (float)psAcumDisEsq->dDistancia) * 0.1f;
+
+	//Converte de cm� para m�
+	fAreaTrabalhada *= (1.0f / 10000.0f);
+	fAreaTrabalhadaDir *= (1.0f / 10000.0f);
+	fAreaTrabalhadaEsq *= (1.0f / 10000.0f);
+
+	if (psMonitor->bMonitorArea == false)
+	{
+		if (psMonitor->eIntercala != Sem_Intercalacao)
+		{
+			fAreaTrabalhada *= psStatus->bNumLinhasSemIntercalar;
+		}
+		else
+		{
+			fAreaTrabalhada *= psMonitor->bNumLinhas;
+		}
+
+		fAreaTrabalhadaDir *= psStatus->bNumLinhasDir;
+		fAreaTrabalhadaEsq *= psStatus->bNumLinhasEsq;
+	}
+	//Soma area calaculada acima e a acumulada
+	fAreaTrabalhada += (fAreaTrabalhadaDir + fAreaTrabalhadaEsq + psAcum->fArea + psAcumDir->fArea + psAcumEsq->fArea);
+
+	// Converte de cent�metros para ha/acre:
+	fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada,
+		GUI_dCONV(GUI_dMETERS,
+			GUI_dHECTARES));
+
+	sGUIPlanterData.dTotalHa = fAreaTrab * 10;
+
+	// Converte de cent�metros para km/mi:
+	fAreaTrab = (float)GUI_fConvertUnit(
+		(psAcum->dDistancia + psAcumDir->dDistancia + psAcumEsq->dDistancia),
+		GUI_dCONV(GUI_dCENTIMETERS,
+			GUI_dMETERS));
+
+	sGUIPlanterData.dTotalMt = fAreaTrab * 10;
+}
+
+void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds)
+{
+	uint32_t dSem = 0;
+	uint8_t bLinhaLevantada;
+	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
+	tsLinhas* const psParcial = &AQR_sAcumulado.sTrabParcial;
+	tsLinhas* const psParcDir = &AQR_sAcumulado.sTrabParcDir;
+	tsLinhas* const psParcEsq = &AQR_sAcumulado.sTrabParcEsq;
+	//Apontador para estrutura de distancia
+	tsDistanciaTrab* const psDistParc = &AQR_sAcumulado.sDistTrabParcial;
+	tsDistanciaTrab* const psDistParcDir = &AQR_sAcumulado.sDistTrabParcialDir;
+	tsDistanciaTrab* const psDistParcEsq = &AQR_sAcumulado.sDistTrabParcialEsq;
+
+	tsStatus *psStatus = &AQR_sStatus;
+
+	uint32_t dFlagSis = osFlagGet(UOS_sFlagSis);
+
+	//verificacao das linhas levantadas
+	if (dNumSensor < 33)
+	{
+		bLinhaLevantada = ((dNumSensor > 0) && ((psStatus->dLinhasLevantadas & (1 << (dNumSensor - 1))) != 0));
+	}
+	else
+	{
+		bLinhaLevantada = ((dNumSensor > 0) && ((psStatus->dLinhasLevantadasExt & (1 << (dNumSensor - 33))) != 0));
+	}
+	ASSERT(dNumSensor < 37);
+
+	//Painel de popula��o deve exibir:
+	//___________________________
+	//|Populacao     |  |  |  |  |
+	//|(ou Linha XX) |  |  |  |  |
+	//|--------------------------|
+	//| |--|   <destaque>        |
+	//| |  |                     |
+	//| |  |+   xx,x   sem/m     |
+	//| |##|                     |
+	//| |##|- </destaque>        |
+	//| |  |                     |
+	//| |  |_   xx,x   sem/ha    |
+	//| |  |    xx,x   sementes  |
+	//| |__|                     |
+	//|__________________________|
+
+	//Painel de linha em modo teste deve exibir:
+	//___________________________
+	//|Linha     /XX\|  |  |  |  |
+	//|          \XX/|  |  |  |  |
+	//|--------------------------|
+	//|<status>  TESTE           |
+	//|                          |
+	//|       </destaque>        |
+	//|                          |
+	//|           xxxx  sem      |
+	//|                          |
+	//|       </destaque>        |
+	//|                          |
+	//|                          |
+	//|__________________________|
+
+	// sensor 0 indica que as informa��es que ser�o exibidas s�o
+	// o acumulado de todos os sensores
+	float fSem = 0.0f;
+	float fAux = 0.0f;
+	float fFator1 = 0.0f;
+	float fFator2 = 0.0f;
+
+	if (psMonitor->bMonitorArea == false)
+	{
+		if (dNumSensor == 0)
+		{
+			// Queremos n�mero de sementes por metros
+			// Divide o acumulado da soma das sementes pelo n�mero de
+			// linhas e multiplica pela dist�ncia para achar
+			// a m�dia de sementes por metro
+
+			// NOTA:
+			// A dist�ncia percorrida est� em cent�metros, por isso
+			// dividimos pelo n�mero de linhas e multiplicamos o resultado por 100
+
+			if (psMonitor->eIntercala != Sem_Intercalacao)
+			{
+				fSem = ((float)psDistParc->dSomaSem / psStatus->bNumLinhasSemIntercalar);
+			}
+			else
+			{
+				fSem = ((float)psDistParc->dSomaSem / psMonitor->bNumLinhas);
+			}
+
+			if (psStatus->bNumLinhasDir > 0)
+			{
+				fSem += ((float)psDistParcDir->dSomaSem / psStatus->bNumLinhasDir);
+			}
+			if (psStatus->bNumLinhasEsq > 0)
+			{
+				fSem += ((float)psDistParcEsq->dSomaSem / psStatus->bNumLinhasEsq);
+			}
+
+			if ((psDistParc->dDistancia + psDistParcDir->dDistancia + psDistParcEsq->dDistancia) > 0)
+			{
+				fSem = (fSem / (psDistParc->dDistancia + psDistParcDir->dDistancia + psDistParcEsq->dDistancia) * 100.0f);
+				//Calcula o fator para cada dist�ncia percorrida
+				fFator1 = (psDistParc->dDistancia + psDistParcDir->dDistancia + psDistParcEsq->dDistancia);
+				fFator1 /= (psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia);
+				fSem *= fFator1;
+			}
+			else
+			{
+				fSem = 0;
+			}
+			//Calcula o n�mero de sementes do trecho apenas
+			fAux = psParcial->dSomaSem + psParcDir->dSomaSem + psParcEsq->dSomaSem - psDistParc->dSomaSem
+				- psDistParcDir->dSomaSem - psDistParcEsq->dSomaSem;
+
+			if ((psParcial->fArea + psParcDir->fArea + psParcEsq->fArea) > 0)
+			{ //Calcula o fator para cada dist�ncia percorrida
+				fAux /= (psParcial->fArea + psParcDir->fArea + psParcEsq->fArea);
+				fAux *= (float)psMonitor->wDistLinhas * 0.001f;
+				fFator2 = (psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia - psDistParc->dDistancia
+					- psDistParcDir->dDistancia - psDistParcEsq->dDistancia);
+				fFator2 /= (psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia);
+				fAux *= fFator2;
+			}
+			else
+			{
+				fAux = 0;
+			}
+			fSem += fAux;
+		}
+		else
+		{
+			// NOTA:
+			// Media de sementes instantanea esta em sem/m * 100
+			fSem = (float)(AQR_sStatus.awMediaSementes[dNumSensor - 1]);
+			fSem /= 100.0f;
+		}
+	}
+
+	// If imperial mode, convert to seeds per feet:
+	if (GUI_sConfig.bSistImperial != false)
+	{
+		dSem = (uint32_t)(GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f);
+	}
+	else
+	{
+		dSem = (uint32_t)(fSem * 100.0f);
+	}
+
+	//--------------------------------------------------------------------------
+	// Barra lateral:
+	if ((dFlagSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0)
+	{
+		float fMedia = 0.0f;
+		uint32_t dMetaPop = psMonitor->wSementesPorMetro;
+
+		//Arredonda
+		fSem *= 100.0f;
+		fSem = (((uint32_t)fSem + 5) / 10) * 10;
+
+		if (dMetaPop > 0)
+		{
+			// multiplica fSem por 10 para compensar dMetaPop ser sem/m * 10
+			fMedia = fSem * 10.0f;
+			fMedia = (fMedia / dMetaPop) - 100.0f;
+			if (psMonitor->bTolerancia > 0)
+			{
+				fMedia = (fMedia / (float)psMonitor->bTolerancia * 20.0f);
+			}
+		}
+
+		//Se nao tiver iniciado a avaliacao nao indica falha
+		if ((psParcial->dDistancia +
+			psParcDir->dDistancia +
+			psParcEsq->dDistancia) == 0)
+		{
+			fMedia = 0;
+		}
+
+		if (bLinhaLevantada == 1)
+		{
+			fMedia = 0;
+		}
+
+		if(dsAverage != NULL)
+		{
+			*dsAverage = (int32_t) fMedia;
+		}
+
+		if (dNumSensor > 0)
+		{
+			const uint32_t dBits = (AQR_sStatus.dMemLinhaDesconectada | AQR_sStatus.dSementeFalhaIHM
+				| AQR_sStatus.dAduboFalha | AQR_sStatus.dSementeZeroIHM);
+			const uint32_t dBitsExt = (AQR_sStatus.dMemLinhaDesconectadaExt | AQR_sStatus.dSementeFalhaIHMExt
+				| AQR_sStatus.dAduboFalhaExt | AQR_sStatus.dSementeZeroIHMExt);
+
+			if (((dBits & (1 << (dNumSensor - 1))) && (dNumSensor < 33)) ||
+				((dBitsExt & (1 << (dNumSensor - 33))) && (dNumSensor >= 33)))
+			{
+//        LCD_vRetanguloPreenchido( pabBuffer, 1, 32, 1 + 17, 32 + 86, DISPLAY_wXOR );
+			}
+		}
+	}
+
+  //--------------------------------------------------------------------------
+  // Seeds per meter/feets:
+  if( ( dFlagSis & UOS_SIS_FLAG_MODO_TRABALHO ) != 0 )
+  {
+    if( bLinhaLevantada == false )
+    {
+      // Arredonda unidade:
+      dSem += 5;
+      dSem /= 10;
+
+      *dSeedsPerUnit = dSem;
+    }
+  }
+
+  //--------------------------------------------------------------------------
+  // Seeds per ha/acre:
+  if( ( dFlagSis & UOS_SIS_FLAG_MODO_TRABALHO ) != 0 )
+  {
+    if( bLinhaLevantada == false )
+    {
+      // Quant Sementes
+      float   fSem = 0.0f;
+      float   fCm2 = 0.0f; //Alterado de uint32_t para float por solicita��o do Alexandre,
+      //para n�o limitar a dist�ncia m�xima trabalhada
+      //que considerando uma dist�ncia entre linhas de 1 metro
+      //a dist�ncia m�xima trabalhada ficaria limitada � aprox. 43km
+      float fAux = 0.0f;
+      float fFator1 = 0.0f;
+      float fFator2 = 0.0f;
+      float fSemHa = 0.0f;
+
+      float  fPopulTot = 0.0f;
+      float  fPopulDir = 0.0f;
+      float  fPopulEsq = 0.0f;
+      uint8_t bNumLinhasEsq = 0;
+      uint32_t dDistTotal;
+
+      if( dNumSensor == 0 )
+      {
+        //Divide a soma das sementes pelo n�mero de linhas
+        if( psMonitor->eIntercala != Sem_Intercalacao )
+        {
+          fSem = ( ( float )psDistParc->dSomaSem / psStatus->bNumLinhasSemIntercalar   );
+        }
+        else
+        {
+          fSem = ( ( float )psDistParc->dSomaSem / psMonitor->bNumLinhas   );
+        }
+
+        if( psStatus->bNumLinhasDir > 0 )
+        {
+          fSem += ( ( float )psDistParcDir->dSomaSem / psStatus->bNumLinhasDir );
+        }
+        if( psStatus->bNumLinhasEsq > 0 )
+        {
+          fSem += ( ( float )psDistParcEsq->dSomaSem / psStatus->bNumLinhasEsq );
+        }
+
+        fCm2 = ( ( float )( psDistParc->dDistancia +
+                           psDistParcDir->dDistancia +
+                           psDistParcEsq->dDistancia   ) * ( float )AQR_wEspacamento );
+
+        if(fCm2 > 0)
+        {
+          fSemHa = (fSem / fCm2);
+        }
+        else
+        {
+          fSemHa = 0;
+        }
+        //Calcula o fator do trecho trabalhado
+        fFator1 = ( psDistParc->dDistancia + psDistParcDir->dDistancia + psDistParcEsq->dDistancia);
+
+        if((psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia) > 0)
+        {
+          fFator1 /= ( psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia);
+        }
+        else
+        {
+          fFator1 = 0;
+        }
+        fSemHa *= fFator1;
+
+        fSem = psParcial->dSomaSem + psParcDir->dSomaSem + psParcEsq->dSomaSem - psDistParc->dSomaSem - psDistParcDir->dSomaSem - psDistParcEsq->dSomaSem;
+
+        if((psParcial->fArea + psParcDir->fArea + psParcEsq->fArea) > 0)
+        {
+          fAux  = (psParcial->fArea + psParcDir->fArea + psParcEsq->fArea);
+          fAux *= 100000.0f;
+          if(fAux > 0)
+          {
+            fAux = fSem / fAux;
+          }
+          //Calcula o fator do trecho trabalhado
+          fFator2  = (psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia - psDistParc->dDistancia - psDistParcDir->dDistancia  - psDistParcEsq->dDistancia);
+          fFator2 /= (psParcial->dDistancia + psParcDir->dDistancia + psParcEsq->dDistancia);
+
+          fAux *= fFator2;
+        }
+        else
+        {
+          fAux  = 0;
+        }
+
+        fSemHa += fAux;
+
+        //Multiplica por 10 porque AQR_wEspacamento est� em cm*10
+        fSem = (fSemHa * 10.0f );
+
+        // mant�m a convers�o para metros por �ltimo para n�o perder precis�o
+        // na quantidade de sementes
+        // Sem/m�
+        fSem *= 10000.0f;
+      }
+      else
+      {
+        // ATEN��O:
+        // M�dia de sementes est� em sem/m * 100 e dist�ncia entre linhas
+        // est� em mil�metros, ent�o:
+        // sem/m� = ( sem/m / 100 ) / ( dist_entre_linhas / 1000 )
+        // simplificando,
+        // sem/m� = ( sem/m  / ( dist_entre_linhas / 10 ) )  ou
+        // sem/m� = ( sem/m  /  dist_entre_linhas * 10 )
+        //fSem = ( float )( AQR_sStatus.awMediaSementes[ dNumSensor - 1 ] );
+        //fSem = ( fSem / AQR_wEspacamento * 10.0f );
+
+         //Se a divis�o da plantadeira est� no lado esquerdo
+        if( psMonitor->bDivLinhas == 0 )
+        {
+            //O n�mero de linhas do lado esq � o maior lado da plantadeira
+            bNumLinhasEsq = ( psMonitor->bNumLinhas + 1 ) >> 1;
+        }
+        else //Se a divis�o da plantadeira est� no lado direito
+        {
+            //O n�mero de linhas do lado esq � o menor lado da plantadeira
+            bNumLinhasEsq = ( psMonitor->bNumLinhas  >> 1 );
+        }
+
+        if(dNumSensor > bNumLinhasEsq)
+        {
+          dDistTotal = psParcial->dDistancia + psParcDir->dDistancia;
+        }
+        else
+        {
+          dDistTotal = psParcial->dDistancia + psParcEsq->dDistancia;
+        }
+
+        if(dDistTotal > 0)
+        {
+          if(psParcial->dDistancia > 0)
+          {
+            fPopulTot  = (( float )psParcial->adSementes[ dNumSensor - 1 ] * 100000.0f) /(( float )psParcial->dDistancia *( float )AQR_wEspacamento);
+            fPopulTot *= ((float)psParcial->dDistancia /(float)dDistTotal);
+          }
+          else
+          {
+            fPopulTot = 0;
+          }
+          //Se a linha estiver do lado direito
+          if(dNumSensor > bNumLinhasEsq)
+          {
+            if(psParcDir->dDistancia > 0)
+            {
+              fPopulDir  = (( float )psParcDir->adSementes[ dNumSensor - 1 ] * 100000.0f) /(( float )psParcDir->dDistancia *( float )AQR_wEspacamento);
+              fPopulDir *= ((float)psParcDir->dDistancia / (float)dDistTotal);
+            }
+            else
+            {
+              fPopulDir = 0;
+            }
+          }
+          else
+          {
+            if(psParcEsq->dDistancia > 0)
+            {
+              fPopulEsq  = (( float )psParcEsq->adSementes[ dNumSensor - 1 ]* 100000.0f) /(( float )psParcEsq->dDistancia *( float )AQR_wEspacamento);
+              fPopulEsq *= ((float)psParcEsq->dDistancia / (float)dDistTotal);
+            }
+            else
+            {
+              fPopulEsq = 0;
+            }
+
+          }
+        }
+        // Quant Sementes/cm�
+        fSem = fPopulTot + fPopulDir + fPopulEsq;
+
+      }
+      // Calcula invertendo os parametros de entrada e saida para calcular 1/medida
+      fSem = ( float )GUI_fConvertUnit(fSem,
+                                          GUI_dCONV(GUI_dHECTARES,
+                                                    GUI_dMETERS ) );
+      fSem *= 0.001f;
+      *dSeedsPerHa = fSem;
+    }
+  }
+
+  //--------------------------------------------------------------------------
+  // Seeds planted:
+  if( ( dFlagSis & UOS_SIS_FLAG_MODO_TRABALHO ) != 0 )
+  {
+    if( bLinhaLevantada == false )
+    {
+      if( dNumSensor == 0 )
+      {
+        dSem = psParcial->dSomaSem +
+          psParcDir->dSomaSem +
+            psParcEsq->dSomaSem;
+      }
+      else
+      {
+        dSem = psParcial->adSementes[ dNumSensor - 1 ] +
+          psParcDir->adSementes[ dNumSensor - 1 ] +
+            psParcEsq->adSementes[ dNumSensor - 1 ];
+      }
+      *dTotalSeeds = dSem;
+    }
+  }
+  /*else
+  {
+    if( bLinhaLevantada == false )
+    {
+      if( dNumSensor == 0 )
+      {
+        dSem = AQR_sAcumulado.sManobra.dSomaSem; //TESTE BANCADA
+      }
+      else
+      {
+        dSem = AQR_sAcumulado.sManobra.adSementes[ dNumSensor - 1 ]; //TESTE BANCADA
+      }
+      // Test mode value
+      *dTotalSeeds = dSem % 10000;
+    }
+  }*/
 }

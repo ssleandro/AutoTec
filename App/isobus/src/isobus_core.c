@@ -64,10 +64,8 @@ static sNumberVariableObj asNumVarObjects[ISO_NUM_NUMBER_VARIABLE_OBJECTS];
 static sFillAttributesObj asNumFillAttributesObjects[ISO_NUM_FILL_ATTRIBUTES_OBJECTS];
 static sInputListObj asConfigInputList[ISO_NUM_INPUT_LIST_OBJECTS];
 
-static sBarGraphStatus asLinesStatus[ISO_NUM_BAR_GRAPH_OBJECTS];
-static sBarGraphStatus asIndividualLineStatus[ISO_NUM_BAR_GRAPH_OBJECTS];
+static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
 
-static eInstallationStatus eSensorsIntallStatus[36];
 static sInstallSensorStatus sInstallStatus;
 static sTrimmingStatus sLinesTrimmingStatus;
 
@@ -94,6 +92,28 @@ static sTestModeDataMask sTestDataMask =
 	.pdInstalledSensors = &(asNumVarObjects[0x80]),
 	.pdConfiguredSensors = &(asNumVarObjects[0x81])
 };
+
+static sPlanterIndividualLines sPlanterLines =
+{
+	.psLineAverage = &(asNumVarObjects[0x0B]),
+	.psLineSemPerUnit = &(asNumVarObjects[0x77]),
+	.psLineSemPerHa = &(asNumVarObjects[0x9B]),
+	.psLineTotalSeeds = &(asNumVarObjects[0xBF]),
+};
+
+const sPlanterDataMask sPlanterMask =
+	{
+		.psLineStatus = &sPlanterLines,
+		.psProductivity = &(asNumVarObjects[0x53]),
+		.psWorkedTime = &(asNumVarObjects[0x54]),
+		.psTotalSeeds = &(asNumVarObjects[0x55]),
+		.psPartPopSemPerUnit = &(asNumVarObjects[0x56]),
+		.psPartPopSemPerHa = &(asNumVarObjects[0x57]),
+		.psWorkedAreaMt = &(asNumVarObjects[0x58]),
+		.psWorkedAreaHa = &(asNumVarObjects[0x59]),
+		.psTotalMt = &(asNumVarObjects[0x5A]),
+		.psTotalHa = &(asNumVarObjects[0x5B]),
+	};
 
 static sInstallationDataMask sInstallDataMask =
 	{
@@ -857,7 +877,9 @@ void ISO_vIsobusWriteThread (void const *argument)
 
 			if (eError == APP_ERROR_SUCCESS)     // wSendCANID changed
 			{
+				WATCHDOG_STATE(ISOWRT, WDT_SLEEP);
 				DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
+				WATCHDOG_STATE(ISOWRT, WDT_ACTIVE);
 			}
 		}
 	}
@@ -1022,8 +1044,8 @@ void ISO_vIsobusBootThread (void const *argument)
 				}
 				case OBJECT_POOL_LOADED:
 				{
-					STOP_TIMER(WSMaintenanceTimer);
-					START_TIMER(WSMaintenanceTimer, 400);
+//					STOP_TIMER(WSMaintenanceTimer);
+					START_TIMER(WSMaintenanceTimer, 300);
 
 					// The boot process are completed, so terminate this thread
 					eCurrState = BOOT_COMPLETED;
@@ -1462,7 +1484,7 @@ void ISO_vIsobusManagementThread (void const *argument)
 	osThreadTerminate(NULL);
 }
 #else
-void ISO_vIsobusWriteThread(void const *argument)
+void ISO_vIsobusManagementThread(void const *argument)
 {}
 #endif
 
@@ -1600,7 +1622,6 @@ void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType
 	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
-
 void ISO_vUpdateConfigurationDataMask (void)
 {
 	ISO_vUpdateNumberVariableValue(0x81E3, *sConfigDataMask.eLanguage);
@@ -1627,7 +1648,18 @@ void ISO_vUpdateInstallationDataMask (void)
 
 void ISO_vUpdatePlanterDataMask (void)
 {
-
+	for (int i = 0; i < (CAN_bNUM_DE_LINHAS*2); i++) {
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID, sPlanterMask.psLineStatus->psLineAverage[i].dValue);
+	}
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
 }
 
 void ISO_vUpdateTestModeDataMask (event_e eEvt)
@@ -1722,6 +1754,41 @@ void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
 		default:
 			break;
 	}
+}
+
+void ISO_vUpdatePlanterMaskData(sPlanterDataMaskData *psPlanterData)
+{
+	uint8_t bI, bJ;
+
+	for (bI = 0, bJ = 0; bI < CAN_bNUM_DE_LINHAS; bI++, bJ += 2) {
+
+		if (psPlanterData->asLineStatus[bI].dsLineAverage == 0)
+		{
+			sPlanterMask.psLineStatus->psLineAverage[bJ].dValue = 0;
+			sPlanterMask.psLineStatus->psLineAverage[bJ + 1].dValue = 0;
+		}
+		else if (psPlanterData->asLineStatus[bI].dsLineAverage > 0)
+		{
+			sPlanterMask.psLineStatus->psLineAverage[bJ].dValue = psPlanterData->asLineStatus[bI].dsLineAverage;
+			sPlanterMask.psLineStatus->psLineAverage[bJ + 1].dValue = 0;
+		}
+		else if (psPlanterData->asLineStatus[bI].dsLineAverage < 0)
+		{
+			sPlanterMask.psLineStatus->psLineAverage[bJ].dValue = 0;
+			sPlanterMask.psLineStatus->psLineAverage[bJ + 1].dValue = (psPlanterData->asLineStatus[bI].dsLineAverage * (-1));
+		}
+
+	}
+
+	sPlanterMask.psProductivity->dValue = psPlanterData->dProductivity;
+	sPlanterMask.psWorkedTime->dValue = psPlanterData->dWorkedTime;
+	sPlanterMask.psTotalSeeds->dValue = psPlanterData->dTotalSeeds;
+	sPlanterMask.psPartPopSemPerUnit->dValue = psPlanterData->dPartPopSemPerUnit;
+	sPlanterMask.psPartPopSemPerHa->dValue = psPlanterData->dPartPopSemPerHa;
+	sPlanterMask.psWorkedAreaMt->dValue = psPlanterData->dWorkedAreaMt;
+	sPlanterMask.psWorkedAreaHa->dValue = psPlanterData->dWorkedAreaHa;
+	sPlanterMask.psTotalMt->dValue = psPlanterData->dTotalMt;
+	sPlanterMask.psTotalHa->dValue = psPlanterData->dTotalHa;
 }
 
 /******************************************************************************

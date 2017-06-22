@@ -43,7 +43,7 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define FILESYS_MODULES \
-    X("FileSysPublish"  , 150 , osPriorityNormal 	, FSM_vFileSysPublishThread  , (1 << 0) , 1 ) \
+    X("FileSysPublish"  , 512 , osPriorityNormal 	, FSM_vFileSysPublishThread  , (1 << 0) , 1 ) \
     X(NULL              ,   0 , 0                   , NULL                       , 0        , 2 )
 
 /******************************************************************************

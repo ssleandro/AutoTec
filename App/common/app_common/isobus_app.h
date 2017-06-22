@@ -202,28 +202,49 @@ typedef struct sInstallationDataMask
 	sInstallSensorStatus* psLinesInstallStatus;
 } sInstallationDataMask;
 
-typedef struct sBarGraphStatus
+
+typedef struct sPlanterIndividualLinesData
 {
-	uint16_t wIncBarID;
-	uint16_t wDecBarID;
-	uint16_t wIncOutputNumID;
-	uint16_t wDecOutputNumID;
-	int8_t bValue;
-} sBarGraphStatus;
+	int32_t dsLineAverage;
+	uint32_t dLineSemPerUnit;
+	uint32_t dLineSemPerHa;
+	uint32_t dLineTotalSeeds;
+} sPlanterIndividualLinesData;
+
+typedef struct sPlanterDataMaskData
+{
+	sPlanterIndividualLinesData asLineStatus[CAN_bNUM_DE_LINHAS];
+	uint32_t dProductivity;
+	uint32_t dWorkedTime;
+	uint32_t dTotalSeeds;
+	uint32_t dPartPopSemPerUnit;
+	uint32_t dPartPopSemPerHa;
+	uint32_t dWorkedAreaMt;
+	uint32_t dWorkedAreaHa;
+	uint32_t dTotalMt;
+	uint32_t dTotalHa;
+} sPlanterDataMaskData;
+
+typedef struct sPlanterIndividualLines
+{
+	sNumberVariableObj* psLineAverage;
+	sNumberVariableObj* psLineSemPerUnit;
+	sNumberVariableObj* psLineSemPerHa;
+	sNumberVariableObj* psLineTotalSeeds;
+} sPlanterIndividualLines;
 
 typedef struct sPlanterDataMask
 {
-	sBarGraphStatus* psLinesStatus;
-	sBarGraphStatus* psIndividualLineStatus;
-	uint32_t* pdPartPopSemPerMt;
-	uint32_t* pdPartPopSemPetHa;
-	uint32_t* pdWorkedAreaMt;
-	uint32_t* pdWorkedAreaHa;
-	uint32_t* pdTotalMt;
-	uint32_t* pdTotalHa;
-	uint32_t* pdProductivity;
-	uint32_t* pdWorkedTime;
-	uint32_t* pdTotalSeeds;
+	sPlanterIndividualLines* psLineStatus;
+	sNumberVariableObj* psProductivity;
+	sNumberVariableObj* psWorkedTime;
+	sNumberVariableObj* psTotalSeeds;
+	sNumberVariableObj* psPartPopSemPerUnit;
+	sNumberVariableObj* psPartPopSemPerHa;
+	sNumberVariableObj* psWorkedAreaMt;
+	sNumberVariableObj* psWorkedAreaHa;
+	sNumberVariableObj* psTotalMt;
+	sNumberVariableObj* psTotalHa;
 } sPlanterDataMask;
 
 typedef struct sTrimmingStatus

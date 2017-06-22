@@ -892,7 +892,9 @@ void SEN_vSensorWriteThread (void const *argument)
 
 			if (eError == APP_ERROR_SUCCESS)
 			{
+				WATCHDOG_STATE(SENWRT, WDT_SLEEP);
 				DEV_write(pSENSORHandle, &(sRecv.data[0]), sRecv.dlc);
+				WATCHDOG_STATE(SENWRT, WDT_ACTIVE);
 			}
 		}
 	}

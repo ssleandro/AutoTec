@@ -7,8 +7,13 @@
 
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
-//#define xPortSysTickHandler SysTick_Handler
-#define osSystickHandler SysTick_Handler
+#define xPortSysTickHandler SysTick_Handler
+
+extern volatile unsigned long ulHighFrequencyTimerTicks;
+/* ulHighFrequencyTimerTicks is already being incremented at 20KHz.  Just set
+its value back to 0. */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ( ulHighFrequencyTimerTicks = 0UL )
+#define portGET_RUN_TIME_COUNTER_VALUE()	ulHighFrequencyTimerTicks
 
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
@@ -16,9 +21,9 @@
 #define configCPU_CLOCK_HZ                      120000000 //204000000
 #define configTICK_RATE_HZ                      ( ( TickType_t ) 1000 ) //250
 #define configMAX_PRIORITIES                    10
-#define configMINIMAL_STACK_SIZE                128
+#define configMINIMAL_STACK_SIZE                256
 #define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 1024 * 1024 ) ) //40k
-#define configMAX_TASK_NAME_LEN                 16
+#define configMAX_TASK_NAME_LEN                 15
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1
 #define configUSE_TASK_NOTIFICATIONS            1
@@ -26,7 +31,7 @@
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configUSE_ALTERNATIVE_API               0 /* Deprecated! */
-#define configQUEUE_REGISTRY_SIZE               10
+#define configQUEUE_REGISTRY_SIZE               64
 #define configUSE_QUEUE_SETS                    0
 #define configUSE_TIME_SLICING                  1
 #define configUSE_NEWLIB_REENTRANT              0
@@ -40,10 +45,10 @@
 #define configUSE_MALLOC_FAILED_HOOK            1
 
 /* Run time and task stats gathering related definitions. */
-#define configGENERATE_RUN_TIME_STATS           0
+#define configGENERATE_RUN_TIME_STATS				1
 #define configUSE_TRACE_FACILITY                1
-#define configUSE_STATS_FORMATTING_FUNCTIONS    0
-//#define configUSE_SEGGER_SYSTEM_VIEWER_HOOKS    1
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1
+#define configGENERATE_RUN_TIME_STATS_USE_TICKS   1
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                   0
@@ -52,8 +57,8 @@
 /* Software timer related definitions. */
 #define configUSE_TIMERS                        1
 #define configTIMER_TASK_PRIORITY               3
-#define configTIMER_QUEUE_LENGTH                10
-#define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
+#define configTIMER_QUEUE_LENGTH                32
+#define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE * 8
 
 // Cortex-M specific definitions.
 #ifdef __NVIC_PRIO_BITS

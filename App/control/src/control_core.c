@@ -56,9 +56,6 @@ CREATE_SIGNATURE(ControlFileSys);
 CREATE_SIGNATURE(ControlGui);
 CREATE_CONTRACT(Control);                              //!< Create contract for sensor msg publication
 
-osThreadId xCtlEmyThreadId;                            // Holds the control emergency thread id
-osThreadId xCtlPubThreadId;                            // Holds the control publish thread id
-
 //!< From MPA2500
 /******************************************************************************
  Versão deste software com 4 campos de 8 caracteres na seguinte ordem:
@@ -89,9 +86,6 @@ const UOS_tsVersaoCod UOS_sVersaoCodDef = {
 //Nome do arquivo de configuracao da interface:
 const uint8_t UOS_abNomeConfigIHM[] = "INTERFACE.CFG";
 
-//Contador de tick do sistema:
-volatile uint32_t UOS_dTicks;
-
 //Estrutura com o código númerico desta versão:
 UOS_tsVersaoCod UOS_sVersaoCod;
 
@@ -101,13 +95,6 @@ UOS_tsConfiguracao UOS_sConfiguracao;
 //Estrutura da configuracao IHM:
 IHM_tsConfig IHM_sConfig;
 
-//Flags que representas os bits do contador de ticks:
-osFlagsGroupId UOS_sFlagTicks;
-
-//Flags que representam a diferença de fase entre o início de um ciclo de um
-//segundo e o momento atual, de 2 em dois ticks (0 a 62):
-osFlagsGroupId UOS_sFlagFase;
-
 //Flags para indicar o status do sistema:
 osFlagsGroupId UOS_sFlagSis;
 osFlagsGroupId CTL_sFlagSis;
@@ -115,21 +102,12 @@ osFlagsGroupId CTL_sFlagSis;
 // mutex para a hora
 CREATE_MUTEX(UOS_MTX_sDataHora);
 
-// Semaphores
-//Semáforo para sincronizar a tarefa UOS_vTrfSincronismo com o tick:
-CREATE_SEMAPHORE(UOS_sSemSincronismo);
-//Semáforo para controle de acesso à exibicao de mensagens de alerta:
-CREATE_SEMAPHORE(UOS_sSemAlerta);
-
-
 uint8_t bMem = 1;
 
 //Variáveis para indicar modo de utilizacao da Serial
 uint8_t UOS_bGPSAtivo;
 uint8_t UOS_bEstadoUART0;
 uint8_t UOS_bSilenciaAlarme;
-
-extern uint16_t AQR_wAlarmes;
 
 /****************************************************************************
  Variáveis locais
@@ -196,10 +174,8 @@ volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS
 
 //Thread Control
 WATCHDOG_CREATE(CONTROLPUB);//!< WDT pointer flag
-WATCHDOG_CREATE(CONTROLMGT);//!< WDT pointer flag
 WATCHDOG_CREATE(CONTROLEMY);//!< WDT pointer flag
 uint8_t bCONTROLPUBThreadArrayPosition = 0;                    //!< Thread position in array
-uint8_t bCONTROLMGTThreadArrayPosition = 0;                    //!< Thread position in array
 uint8_t bCONTROLEMYThreadArrayPosition = 0;                    //!< Thread position in array
 
 /******************************************************************************
@@ -369,7 +345,7 @@ void CTL_vControlThread (void const *argument)
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(ControlQueue);
 
-	xCtlPubThreadId = osThreadGetId();
+	INITIALIZE_MUTEX(UOS_MTX_sDataHora);
 
 	// TODO: This is executed after file system initialization
 	// Copy default configurations to start; because we don't have file system
@@ -430,8 +406,6 @@ void CTL_vControlEmergencyThread (void const *argument)
 	SEGGER_SYSVIEW_Print("Control Emergency Thread Created");
 #endif
 
-	xCtlEmyThreadId = osThreadGetId();
-
 	CTL_vDetectThread(&WATCHDOG(CONTROLEMY), &bCONTROLEMYThreadArrayPosition, (void*)CTL_vControlEmergencyThread);
 	WATCHDOG_STATE(CONTROLEMY, WDT_ACTIVE);
 
@@ -487,367 +461,6 @@ void CTL_vControlEmergencyThread (void const *argument)
 		WATCHDOG_STATE(CONTROLEMY, WDT_SLEEP);
 		osDelay(2000);
 		WATCHDOG_STATE(CONTROLEMY, WDT_ACTIVE);
-	}
-	osThreadTerminate(NULL);
-}
-
-void CTL_vControlManagementThread (void const *argument)
-{
-#define EI_BOOT       0    //Interface no estado inicial.
-#define EI_ERRO_FFS   1    //Interface no estado memoria cheia.
-#define EI_COMUNICA   2    //Interface no estado comunicacao em andamento.
-#define EI_ERRO_CFG   3    //Interface no estado erro na configuracao.
-#define EI_NOVO_REG   4    //Interface no estado novo registro.
-#define EI_MEMO_CHEIA 5    //Interface no estado memoria cheia.
-#define EI_EMERGENCIA 6    //Interface no estado de emergencia.
-#define EI_ALARME     7    //Interface no estado de alarme.
-#define EI_IHM        8    //Interface no estado de alerta.
-#define EI_TOLERANCIA 9    //Interface no estado de alarme por falha na tolerancia
-#define EI_NORMAL     0xFF //Interface no estado normal.
-
-	osStatus status;
-	osFlags dFlagSis;
-	uint8_t bAlarme;
-	uint8_t bEstadoInterface;
-	uint8_t bI;
-
-#ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-	SEGGER_SYSVIEW_Print("Control Management Thread Created");
-#endif
-
-	CTL_vDetectThread(&WATCHDOG(CONTROLMGT), &bCONTROLMGTThreadArrayPosition, (void*)CTL_vControlManagementThread);
-	WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-
-	osThreadId xDiagMainID = (osThreadId)argument;
-	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLMGTThreadArrayPosition));    //Task created, inform core
-
-	//Semaforo para sincronizar esta tarefa com o tick:
-	INITIALIZE_SEMAPHORE(UOS_sSemSincronismo, 1);
-
-	//Semaforo para controle de acesso a� exibicao de mensagens de alerta:
-	INITIALIZE_SEMAPHORE(UOS_sSemAlerta, 1);
-
-	// Initialize flag group to indicate events
-	//Flags que representam os bits do contador de ticks:
-	status = osFlagGroupCreate(&UOS_sFlagTicks);
-	ASSERT(status == osOK);
-
-	//Flags que a diferenca de fase entre o inicio de um ciclo de um
-	//segundo e o momento atual, de 2 em dois ticks (0 a 62):
-	status = osFlagGroupCreate(&UOS_sFlagFase);
-	ASSERT(status == osOK);
-
-	// cria um mutex para a data e hora
-	INITIALIZE_MUTEX(UOS_MTX_sDataHora);
-
-	//Inicia o contador de ticks:
-	UOS_dTicks = 0;
-
-//    //Verifica pino que seleciona GPS ou Serial
-//    if( GPS_ATIVO > 0 )
-//    {
-//      //Inicia o estado da UART0 como GPS
-//      UOS_bEstadoUART0 = UOS_GPS;
-//    }
-//    else
-//    {
-//      //Inicia o estado da UART0 como SERIAL
-//      UOS_bEstadoUART0 = UOS_SERIAL;
-//    }
-
-	while (1)
-	{
-		/* Pool the device waiting for */
-//        WATCHDOG_STATE(CONTROLMGT, WDT_SLEEP);
-//        osDelay(2000);
-//        WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-		//        //Verifica pino que seleciona GPS ou Serial
-		//        if( GPS_ATIVO > 0 )
-		//        {
-		//            UOS_bGPSAtivo = true;
-		//        }
-		//        else
-		//        {
-		//            UOS_bGPSAtivo = false;
-		//        }
-		//--------------------------------------------------------------------------
-		//Define o estado da interface em funcao dos flags de status:
-		//Flags de status:
-		WATCHDOG_STATE(CONTROLMGT, WDT_SLEEP);
-		dFlagSis = osFlagGet(UOS_sFlagSis);
-		WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-
-		//Atualizacao da variável de controle da interface
-		//Se o sistema já está iniciado:
-		if ((dFlagSis & UOS_SIS_FLAG_SIS_OK) > 0)
-		{
-			if ((dFlagSis & UOS_SIS_FLAG_FFS_OK) == 0) //Erro no sistema de arquivos tem a prioridade mais alta.
-			{
-				bEstadoInterface = EI_ERRO_FFS;
-			}
-			else
-			{
-				if ((dFlagSis & UOS_SIS_FLAG_REGISTRO) > 0)  //Seguido da criacao de registro.
-				{
-					//Este flag deve ser reconhecido aqui:
-					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_REGISTRO);
-
-					bEstadoInterface = EI_NOVO_REG;
-				}
-				else
-				{
-					if ((dFlagSis & UOS_SIS_FLAG_COMUNICA) > 0) //Seguido de comunicaçao em andamento
-					{
-						//Este flag deve ser reconhecido aqui:
-						osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_COMUNICA);
-
-						bEstadoInterface = EI_COMUNICA;
-					}
-					else
-					{
-						if ((dFlagSis & UOS_SIS_FLAG_CFG_OK) == 0) //Seguido do erro na configuracao.
-						{
-							if (UOS_bSilenciaAlarme == false)
-							{
-								bEstadoInterface = EI_ERRO_CFG;
-							}
-							else
-							{
-								bEstadoInterface = EI_NORMAL;
-							}
-
-						}
-						else
-						{
-							if ((dFlagSis & UOS_SIS_FLAG_MEM_OK) == 0) //Seguido de memoria cheia.
-							{
-								bEstadoInterface = EI_MEMO_CHEIA;
-							}
-							else
-							{
-								if ((dFlagSis & UOS_SIS_FLAG_EMERGENCIA) > 0) //Seguido das emergenncias.
-								{
-									bEstadoInterface = EI_EMERGENCIA;
-								}
-								else
-								{
-									if ((dFlagSis & UOS_SIS_FLAG_ALARME) > 0) //Seguido dos alarmes.
-									{
-										bEstadoInterface = EI_ALARME;
-									}
-									else
-									{
-										if ((dFlagSis & UOS_SIS_FLAG_ALARME_TOLERANCIA) > 0)
-										{
-											//Este flag deve ser reconhecido aqui:
-											osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ALARME_TOLERANCIA);
-
-											bEstadoInterface = EI_TOLERANCIA;
-										}
-										else
-										{
-											bEstadoInterface = EI_NORMAL;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		else //Senão, não completou a inicializacao:
-		{
-			//Verifica se ainda está aguardando estabilizacao da fonte de energia:
-			if ((dFlagSis & UOS_SIS_FLAG_BOOT) > 0)
-			{
-				bEstadoInterface = EI_BOOT;
-			}
-			else
-			{
-				bEstadoInterface = EI_NORMAL;
-			}
-		}
-
-		WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-		//--------------------------------------------------------------------------
-		//Todas as sinalizações devem ter um ciclo mínimo de 1 segundo.
-		//Para tanto, a variavel bEstadoInterface é atualizada acima, fora do
-		//loop abaixo que dura 1/64 segundo * 64 = 1 segundo;
-		for (bI = 0; bI < TICK; bI++)
-		{
-
-			//------------------------------------------------------------------------
-			//Atualiza os flags de ticks e fases:
-
-			//Atualiza os flags de frequência de acordo com os bits do tick:
-//            osFlagClear(UOS_sFlagTicks, UOS_SINC_FLAG_TODOS);  // TODO: verify this line
-			osFlagSet(UOS_sFlagTicks, UOS_dTicks);
-
-			//Só nos ticks pares:
-			if ((UOS_dTicks & 0x01) == 0)
-			{
-				//Atualiza os flags de fase de acordo com os bits do tick:
-//                osFlagClear(UOS_sFlagFase, UOS_FASE_FLAG_TODOS);  // TODO: verify this line
-//                osFlagSet(UOS_sFlagFase, ( 1UL << ( ( UOS_dTicks >> 1 ) & 0x1F ) ));  // TODO: verify this line
-			}
-
-			//------------------------------------------------------------------------
-			//Define o estado do led vermelho e da buzina:
-
-			/*
-			 Bit 0 = UOS_SINC_FLAG_32HZ 0101010101010101010101010101010101010101010101010101010101010101
-			 Bit 1 = UOS_SINC_FLAG_16HZ 0011001100110011001100110011001100110011001100110011001100110011
-			 Bit 2 = UOS_SINC_FLAG_8HZ  0000111100001111000011110000111100001111000011110000111100001111
-			 Bit 3 = UOS_SINC_FLAG_4HZ  0000000011111111000000001111111100000000111111110000000011111111
-			 Bit 4 = UOS_SINC_FLAG_2HZ  0000000000000000111111111111111100000000000000001111111111111111
-			 Bit 5 = UOS_SINC_FLAG_1HZ  0000000000000000000000000000000011111111111111111111111111111111
-			 */
-			//Inicialmente sem alarme:
-			bAlarme = false;
-
-			//Controle do LED Vermelho e do Buzzer:
-			switch (bEstadoInterface)
-			{
-				case EI_BOOT: //Se o sistema está iniciando:
-				if ((UOS_dTicks & 0x0038) == 0)
-				{
-					bAlarme = true;
-				}
-					break;
-				case EI_ERRO_FFS:
-				//Sem alarme e led sempre aceso.
-				bAlarme = false;
-					break;
-				case EI_NOVO_REG: //Se um novo registro de viagem está sendo criado:
-				if ((UOS_dTicks & 0x0024) == 0)
-				{
-					bAlarme = true;
-				}
-					break;
-				case EI_COMUNICA: //Se temos comunicacao em andamento:
-				if ((UOS_dTicks & 0x000F) == 0)
-				{
-					bAlarme = true;
-
-				}
-					break;
-				case EI_ERRO_CFG: //Se o sistema está com erro nos configuracao:
-				if ((UOS_dTicks & 0x0034) == 0)
-				{
-					bAlarme = true;
-
-				}
-					break;
-				case EI_MEMO_CHEIA: //Se está com a memória cheia:
-				//Sem alarme
-				bAlarme = false;
-
-					break;
-				case EI_EMERGENCIA: //Se existe uma situacao de emergência:
-				if ((UOS_dTicks & 0x0004) == 0)
-				{
-					bAlarme = true;
-				}
-					break;
-
-				case EI_ALARME: //Se existe uma situacao de alarme:
-				if ((AQR_wAlarmes & AQR_NOVO_SENSOR) > 0)
-				{
-
-					if ((UOS_dTicks & 0x0004) == 0)
-					{
-						bAlarme = true;
-					}
-				}
-				else
-				{
-					if (((AQR_wAlarmes & AQR_SENSOR_DESCONECTADO) > 0) ||
-						((AQR_wAlarmes & AQR_FALHA_LINHA) > 0) ||
-						((AQR_wAlarmes & AQR_FALHA_INSTALACAO) > 0))
-					{
-						if ((UOS_dTicks & 0x0000) == 0)
-						{
-							bAlarme = true;
-						}
-					}
-					else
-					{
-						if (((AQR_wAlarmes & AQR_EXC_VELOCIDADE) > 0) ||
-							((AQR_wAlarmes & AQR_FALHA_GPS) > 0))
-
-						{
-							if ((UOS_dTicks & 0x0010) == 0) // 2 Hz
-							{
-								bAlarme = true;
-							}
-						}
-					}
-				}
-					break;
-
-				case EI_TOLERANCIA: //Se existe uma falha na tolerancia da linha
-				if ((UOS_dTicks & 0x0028) == 0) //Apenas 2 beeps
-				{
-					bAlarme = true;
-				}
-					break;
-
-				default:
-				{
-					//Sem alarme.
-					bAlarme = false;
-
-					break;
-				}
-			} //Fim switch ( bEstadoInterface )
-
-			//------------------------------------------------------------------------
-			//            //Realimentacao acústica do teclado:
-			//
-			//            //Realimentacao acústica do teclado:
-			//            if ( KBD_bIHM > 0 )
-			//            {
-			//                KBD_bIHM--;
-			//                bAlarme = true;
-			//            }
-
-			//------------------------------------------------------------------------
-			//Atua na buzina:
-
-			//Controle da saída de alarme (buzzer):
-			if (bAlarme != false)
-			{
-				// Send buffer on to buzzer module
-				osSignalSet(xCtlPubThreadId, UOS_BUZZER_ON);
-			}
-			else
-			{
-				// Send buffer off to buzzer module
-				osSignalSet(xCtlPubThreadId, UOS_BUZZER_OFF);
-			}
-
-			//------------------------------------------------------------------------
-			//Fim do ciclo. Até o próximo tick:
-
-			//Aguarda a ocorrência de um tick:
-			WATCHDOG_STATE(CONTROLMGT, WDT_SLEEP);
-			status = WAIT_SEMAPHORE(UOS_sSemSincronismo, osWaitForever);
-			ASSERT(status == osOK);
-			WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-
-			//            //Se está em meio a um acesso à memória:
-			//            if ( FFS_SPI_bWatchdogTimer > 0 )
-			//            {
-			//                //Decrementa o contador do watchdog timer:
-			//                FFS_SPI_bWatchdogTimer--;
-			//            }
-
-			//Incrementa contador de ticks:
-			UOS_dTicks++;
-
-		}            //Fim do loop de 1 segundo.
-
 	}
 	osThreadTerminate(NULL);
 }

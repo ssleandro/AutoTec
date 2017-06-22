@@ -58,7 +58,7 @@
 		  X("Control"    , 512  , osPriorityNormal		, CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
 		  X("Filesys"    , 1024 , osPriorityNormal		, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
 		  X("GPS"        , 512  , osPriorityAboveNormal , GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
-        X("Isobus"     , 512  , osPriorityHigh       	, ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
+        X("Isobus"     , 1024 , osPriorityHigh       	, ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
         X("Gui"        , 512  , osPriorityNormal    	, GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
         X("Sensor"     , 512  , osPriorityHigh    		, SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
         X("Acquireg"   , 512  , osPriorityHigh    		, AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
@@ -86,6 +86,9 @@ startingThreads_t sThreads[] = {
 STARTING_MODULES
 	};  //!< Array used to hold Initial threads definition for each module
 #undef X
+
+volatile unsigned long ulHighFrequencyTimerTicks;
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/

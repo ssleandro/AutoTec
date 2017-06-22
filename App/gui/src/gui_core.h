@@ -43,8 +43,6 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-
-
 #define GUI_FLGAS_ALL_FLAGS			  	  0x00FFFFFF
 #define GUI_UPDATE_INSTALLATION_INTERFACE 0x00000001
 #define GUI_UPDATE_PLANTER_INTERFACE 	  0x00000002
@@ -55,6 +53,19 @@
 #define GUI_CHANGE_CURRENT_CONFIGURATION  0x00000040
 #define GUI_CHANGE_INSTAL_REPEAT_TEST     0x00000080
 #define GUI_INSTALL_CONFIRM_INSTALLATION	0x00000100
+
+// Flags usados para converter unidades de medidas:
+#define GUI_dMILIMETERS       1
+#define GUI_dCENTIMETERS      2
+#define GUI_dMETERS           3
+#define GUI_dKILOMETERS       4
+#define GUI_dHECTARES         5
+#define GUI_dACRES            6
+#define GUI_dMILES            7
+#define GUI_dFEETS            8
+#define GUI_dINCHES	         9
+#define GUI_dUNITS_QUANT	   9
+#define GUI_dCONV(from,to)  (((from)<<16)|(to))
 
 /******************************************************************************
  * Configuration Constants
@@ -68,6 +79,37 @@
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
+typedef struct
+{
+	//Idioma:
+	uint8_t bIdioma;
+
+	// Se sistema imperial ou internacional
+	uint8_t bSistImperial;
+
+	// Tipo de medida para velocidade do veiculo
+	uint8_t bVelocidade;
+	uint8_t bTxtVel;
+	uint8_t bTxtVelPorHora;
+	// Medida da superficie trabalhada
+	uint8_t bAreaTrabalhada;
+	uint8_t bTxtAreaTrab;
+	uint8_t bTxtAreaTrabPorHora;
+	// Sementes por cm/pol..
+	uint8_t bSementes;
+	uint8_t bTxtSementes;
+	uint8_t bTxtSemPorDist;
+	uint8_t bImgSemPorDist;
+	// distancia em km/mi..
+	uint8_t bDistPerc;
+	uint8_t bTxtDistPerc;
+	// caractere usado para fracao e milhar:
+	uint8_t bCharFrac;
+	uint8_t bCharMilhar;
+
+	// CRC da estrutura
+	uint16_t wCRC16;
+} GUI_tsConfig;
 
 /******************************************************************************
  * Variables
