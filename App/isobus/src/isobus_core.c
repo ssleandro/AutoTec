@@ -53,6 +53,8 @@
 
 #define ISO_FLAG_STATE_RUNNING 0x00800000
 
+#define TO_UPPER_INDEX(index) ((0x8100 + index) - 0x8000)
+
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
@@ -96,9 +98,9 @@ static sTestModeDataMask sTestDataMask =
 static sPlanterIndividualLines sPlanterLines =
 {
 	.psLineAverage = &(asNumVarObjects[0x0B]),
-	.psLineSemPerUnit = &(asNumVarObjects[0x77]),
-	.psLineSemPerHa = &(asNumVarObjects[0x9B]),
-	.psLineTotalSeeds = &(asNumVarObjects[0xBF]),
+	.psLineSemPerUnit = &(asNumVarObjects[TO_UPPER_INDEX(0x77)]),
+	.psLineSemPerHa = &(asNumVarObjects[TO_UPPER_INDEX(0x9B)]),
+	.psLineTotalSeeds = &(asNumVarObjects[TO_UPPER_INDEX(0xBF)]),
 };
 
 const sPlanterDataMask sPlanterMask =
@@ -199,6 +201,7 @@ PubMessage sISOPubMessage;
  *******************************************************************************/
 void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask);
 void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload);
+void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData);
 void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
 
 /******************************************************************************
@@ -551,6 +554,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
+					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)GET_PUBLISHED_PAYLOAD(contract));
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -1044,8 +1048,7 @@ void ISO_vIsobusBootThread (void const *argument)
 				}
 				case OBJECT_POOL_LOADED:
 				{
-//					STOP_TIMER(WSMaintenanceTimer);
-					START_TIMER(WSMaintenanceTimer, 300);
+					START_TIMER(WSMaintenanceTimer, 700);
 
 					// The boot process are completed, so terminate this thread
 					eCurrState = BOOT_COMPLETED;
@@ -1650,7 +1653,11 @@ void ISO_vUpdatePlanterDataMask (void)
 {
 	for (int i = 0; i < (CAN_bNUM_DE_LINHAS*2); i++) {
 		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID, sPlanterMask.psLineStatus->psLineAverage[i].dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID, sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID, sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID, sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
 	}
+
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
@@ -1778,7 +1785,13 @@ void ISO_vUpdatePlanterMaskData(sPlanterDataMaskData *psPlanterData)
 			sPlanterMask.psLineStatus->psLineAverage[bJ + 1].dValue = (psPlanterData->asLineStatus[bI].dsLineAverage * (-1));
 		}
 
+		sPlanterMask.psLineStatus->psLineSemPerUnit[bI].dValue = psPlanterData->asLineStatus[bI].dLineSemPerUnit;
+		sPlanterMask.psLineStatus->psLineSemPerHa[bI].dValue = psPlanterData->asLineStatus[bI].dLineSemPerHa;
+		sPlanterMask.psLineStatus->psLineTotalSeeds[bI].dValue = psPlanterData->asLineStatus[bI].dLineTotalSeeds;
+
 	}
+
+
 
 	sPlanterMask.psProductivity->dValue = psPlanterData->dProductivity;
 	sPlanterMask.psWorkedTime->dValue = psPlanterData->dWorkedTime;

@@ -99,13 +99,13 @@ uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position 
  * Function Prototypes
  *******************************************************************************/
 void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
-void GUI_vUpdateInterfaceTimerCallback (void const *argument);
 void GUI_vUpdateWorkedArea (void);
 void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds);
 void GUI_vUptTestModeTimerCallback (void const *argument);
 void GUI_vUptPlanterTimerCallback (void const *argument);
 
-CREATE_TIMER(Gui_UptTimer, GUI_vUpdateInterfaceTimerCallback);
+CREATE_TIMER(Gui_UptTestModeTimer, GUI_vUptTestModeTimerCallback);
+CREATE_TIMER(Gui_UptPlanterTimer, GUI_vUptPlanterTimerCallback);
 
 /******************************************************************************
  * Function Definitions
@@ -146,16 +146,40 @@ eAPPError_s GUI_eInitGuiPublisher (void)
 	return APP_ERROR_SUCCESS;
 }
 
-void GUI_vUpdateInterfaceTimerCallback (void const *argument)
+void GUI_vUptTestModeTimerCallback (void const *argument)
 {
-	event_e eEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-	PUT_LOCAL_QUEUE(GuiPublishQ, eEvt, osWaitForever);
+	event_e ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
 void GUI_vRandomValuesToPlanterDataMask (void)
 {
-	for (int i = 0; i < 36; i++) {
-		sGUIPlanterData.asLineStatus[i].dsLineAverage = (sGUIPlanterData.asLineStatus[i].dsLineAverage++ % 100);
+	uint8_t i, j;
+
+	for ( i = 0, j = 1; i < 36, j < 36; i = i + 2, j = j + 2) {
+		if (sGUIPlanterData.asLineStatus[i].dsLineAverage > 100)
+		{
+			sGUIPlanterData.asLineStatus[i].dsLineAverage = -100;
+		}
+		else
+		{
+			sGUIPlanterData.asLineStatus[i].dsLineAverage++;
+			sGUIPlanterData.asLineStatus[i].dLineSemPerUnit++;
+			sGUIPlanterData.asLineStatus[i].dLineSemPerHa++;
+			sGUIPlanterData.asLineStatus[i].dLineTotalSeeds++;
+		}
+
+		if (sGUIPlanterData.asLineStatus[j].dsLineAverage < -100)
+		{
+			sGUIPlanterData.asLineStatus[j].dsLineAverage = 100;
+		}
+		else
+		{
+			sGUIPlanterData.asLineStatus[j].dsLineAverage--;
+			sGUIPlanterData.asLineStatus[j].dLineSemPerUnit++;
+			sGUIPlanterData.asLineStatus[j].dLineSemPerHa++;
+			sGUIPlanterData.asLineStatus[j].dLineTotalSeeds++;
+		}
 	}
 
 	sGUIPlanterData.dProductivity++;
@@ -193,13 +217,13 @@ void GUI_vGetValuesToPlanterDataMask (void)
 
 void GUI_vUptPlanterTimerCallback (void const *argument)
 {
-	event_e eEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
+	event_e ePubEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
 #if defined (RANDOM_VALUES)
 	GUI_vRandomValuesToPlanterDataMask();
 #else
 	GUI_vGetValuesToPlanterDataMask();
 #endif
-	PUT_LOCAL_QUEUE(GuiPublishQ, eEvt, osWaitForever);
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
 void GUI_vGuiPublishThread (void const *argument)
@@ -227,8 +251,6 @@ void GUI_vGuiPublishThread (void const *argument)
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
-	START_TIMER(Gui_UptTimer, 750);
-
 	while (1)
 	{
 		/* Pool the device waiting for */
@@ -255,7 +277,7 @@ void GUI_vGuiPublishThread (void const *argument)
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_UPDATE;
-					sGUIPubMessage.vPayload = NULL;		//TODO: incorrect payload
+					sGUIPubMessage.vPayload = (void*)&sGUIPlanterData;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
@@ -547,11 +569,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+					START_TIMER(Gui_UptTestModeTimer, 750);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+					START_TIMER(Gui_UptPlanterTimer, 750);
 				}
 			}
 
@@ -650,7 +674,8 @@ void GUI_vGuiThread (void const *argument)
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(GuiQueue);
 
-	INITIALIZE_TIMER(Gui_UptTimer, osTimerPeriodic);
+	INITIALIZE_TIMER(Gui_UptTestModeTimer, osTimerPeriodic);
+	INITIALIZE_TIMER(Gui_UptPlanterTimer, osTimerPeriodic);
 
 	GUI_eInitGuiSubs();
 

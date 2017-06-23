@@ -845,7 +845,7 @@ void GPS_vAcumulaDistancia (void)
 void GPS_vTimePulseIntCallback (void)
 {
 	// Set time pulse flag
-	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
+//	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
 
 	START_TIMER(GPS_bTimerTimeout, 125);
 }
@@ -2877,10 +2877,6 @@ void GPS_vGPSThread (void const *argument)
 	GPS_sTimeoutMsg.bNavTimeGps = 4;
 	GPS_sTimeoutMsg.bMonVer = false;
 	GPS_sTimeoutMsg.bMonHw = 10;
-
-	/* Prepare the signature - struture that notify the broker about subscribers */
-	SIGNATURE_HEADER(GPS, THIS_MODULE, TOPIC_GPS, GPSQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(GPS), 0) == osOK);
 
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;
