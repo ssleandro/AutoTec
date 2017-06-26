@@ -54,7 +54,7 @@
 #define NULL (void*)0
 #endif
 
-#define RECV_ISOBUFSIZE		32      // 512 bytes on 32 CAN messages
+#define RECV_ISOBUFSIZE		128      // 512 bytes on 32 CAN messages
 
 #ifndef UNITY_TEST
 #define DEFAULT_TIMEOUT		500

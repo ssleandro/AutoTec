@@ -181,7 +181,7 @@ int main (void)
 	osThreadDef_t sMainThread;
 
 	sMainThread.name = "Main";
-	sMainThread.stacksize = 300;
+	sMainThread.stacksize = 500;
 	sMainThread.tpriority = osPriorityRealtime;
 	sMainThread.pthread = MAI_M2GMainThread;
 

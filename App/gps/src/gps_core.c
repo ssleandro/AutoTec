@@ -645,7 +645,7 @@ void GPS_vGPSPublishThread (void const *argument)
 {
 	osFlags dValorGPS;
 	osStatus status;
-
+	static GPS_tsDadosGPS GPS_sPublishDadosGPS;
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Buzzer Publish Thread Created");
 #endif
@@ -657,7 +657,6 @@ void GPS_vGPSPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGPSPUBThreadArrayPosition)); //Task created, inform core
 
-	GPS_eInitGPSPublisher();
 
 	while (1)
 	{
@@ -670,7 +669,8 @@ void GPS_vGPSPublishThread (void const *argument)
 		status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
 		ASSERT(status == osOK);
 
-		sGPSPubMsg.vPayload = (void*)&GPS_sDadosGPS;
+		memcpy(&GPS_sPublishDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
+		sGPSPubMsg.vPayload = (void*)&GPS_sPublishDadosGPS;
 
 		status = RELEASE_MUTEX(GPS_MTX_sEntradas);
 		ASSERT(status == osOK);
@@ -845,8 +845,9 @@ void GPS_vAcumulaDistancia (void)
 void GPS_vTimePulseIntCallback (void)
 {
 	// Set time pulse flag
-//	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
+	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
 
+	STOP_TIMER(GPS_bTimerTimeout);
 	START_TIMER(GPS_bTimerTimeout, 125);
 }
 
@@ -862,7 +863,7 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
 
 	// Initialize time pulse external interrupt
-	GPIO_eInit(&sTimePulseInt);
+	//GPIO_eInit(&sTimePulseInt);
 }
 
 /*******************************************************************************
@@ -890,6 +891,12 @@ void GPS_vGPSTimePulseThread (void const *argument)
 
 	// Configure external interrupt 2 - Module GPS TIMEPULSE
 	GPS_vConfigExtInterrupt();
+
+	CREATE_TIMER(WSGPSTimer, GPS_vTimePulseIntCallback);
+	INITIALIZE_TIMER(WSGPSTimer, osTimerPeriodic);
+
+	STOP_TIMER(WSGPSTimer);
+	START_TIMER(WSGPSTimer, 250);
 
 	//Loop infinito da tarefa:
 	while (1)
@@ -2863,6 +2870,15 @@ void GPS_vGPSThread (void const *argument)
 	//      OSFlagPend( UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, OS_FLAG_WAIT_SET_ALL, 0, &bErr );
 	//      __assert( bErr == OS_NO_ERR );
 
+
+	GPS_eInitGPSPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osSignalSet((osThreadId)argument, MODULE_GPS);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
+
 	//Timer sempre ligado:
 	START_TIMER(GPS_bTimerTimeoutEnl, GPS_sCtrlCBASRL.dTicksIDLE);
 
@@ -2884,8 +2900,6 @@ void GPS_vGPSThread (void const *argument)
 	{
 		GPS_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
-	/* Inform Main thread that initialization was a success */
-	osSignalSet((osThreadId)argument, MODULE_GPS);
 
 	/* Start the main functions of the application */
 	while (1)

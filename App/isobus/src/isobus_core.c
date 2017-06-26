@@ -403,8 +403,6 @@ void ISO_vIsobusPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bISOPUBThreadArrayPosition));           //Task created, inform core
 
-	ISO_eInitIsobusPublisher();
-
 	WATCHDOG_STATE(ISOPUB, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(ISOPUB, WDT_ACTIVE);
@@ -621,12 +619,18 @@ void ISO_vIsobusThread (void const *argument)
 	status = osFlagGroupCreate(&ISO_sFlags);
 	ASSERT(status == osOK);
 
-	/* Prepare the signature - struture that notify the broker about subscribers */
-	SIGNATURE_HEADER(Isobus, THIS_MODULE, TOPIC_GUI, IsobusQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(Isobus), 0) == osOK);
-
 	/* Init M2GISOCOMM device for output */
 	ISO_vInitDeviceLayer(ISO_INITIAL_IO_IFACE);
+
+	ISO_eInitIsobusPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromIsobusID = (osThreadId)argument;
+	osSignalSet(xMainFromIsobusID, MODULE_ISOBUS);
+
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
 
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;
@@ -635,9 +639,9 @@ void ISO_vIsobusThread (void const *argument)
 		ISO_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_ISOBUS);
+	/* Prepare the signature - struture that notify the broker about subscribers */
+	SIGNATURE_HEADER(Isobus, THIS_MODULE, TOPIC_GUI, IsobusQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(Isobus), 0) == osOK);
 
 	/* Start the main functions of the application */
 	while (1)
@@ -787,7 +791,7 @@ void ISO_vIsobusRecvThread (void const *argument)
 	uint8_t bIterator;
 	uint8_t bRecvMessages = 0;      //!< Lenght (messages) received
 	uint32_t dTicks;
-	ISOBUSMsg asPayload[32];   //!< Buffer to hold the contract and message data
+	ISOBUSMsg asPayload[64];   //!< Buffer to hold the contract and message data
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Isobus Recv Thread Created");

@@ -245,11 +245,6 @@ void GUI_vGuiPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGUIPUBThreadArrayPosition)); //Task created, inform core
 
-	GUI_eInitGuiPublisher();
-
-	WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-	WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -599,7 +594,6 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				GUI_InitSensorStatus();
 			}
 
-
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
@@ -611,9 +605,20 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-				memcpy(&sSISConfiguration, (UOS_tsConfiguracao *)GET_PUBLISHED_PAYLOAD(contract), sizeof(UOS_tsConfiguracao));
-				GUI_SetGuiConfiguration();
-				GUI_InitSensorStatus();
+				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
+				if (psConfig != NULL)
+				{
+					if (memcmp(&sSISConfiguration, psConfig, sizeof(UOS_tsConfiguracao)) != 0)
+					{
+						memcpy(&sSISConfiguration, psConfig, sizeof(UOS_tsConfiguracao));
+						GUI_SetGuiConfiguration();
+						GUI_InitSensorStatus();
+						if (GET_PUBLISHED_TYPE(contract) == EVENT_CLEAR)
+						{
+							// Setar a PAGINA PARA CONFIGURAÇÃO POIS SUBIU A CONFIGURAÇÃO DEFAULT
+						}
+					}
+				}
 			}
 			break;
 		}
@@ -677,7 +682,14 @@ void GUI_vGuiThread (void const *argument)
 	INITIALIZE_TIMER(Gui_UptTestModeTimer, osTimerPeriodic);
 	INITIALIZE_TIMER(Gui_UptPlanterTimer, osTimerPeriodic);
 
-	GUI_eInitGuiSubs();
+	GUI_eInitGuiPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromIsobusID = (osThreadId)argument;
+	osSignalSet(xMainFromIsobusID, MODULE_GUI);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
 
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;
@@ -686,9 +698,7 @@ void GUI_vGuiThread (void const *argument)
 		GUI_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_GUI);
+	GUI_eInitGuiSubs();
 
 	GUI_InitSensorStatus();
 

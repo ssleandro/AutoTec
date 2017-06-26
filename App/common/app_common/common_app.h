@@ -318,7 +318,6 @@ typedef enum event_e
 	EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION,
 	EVENT_ISO_CONFIG_UPDATE_DATA,
 	EVENT_CTL_UPDATE_CONFIG,        					//!< EVENT FILE CFG STATUS CHANGED
-	EVENT_CTL_UPDATE_INTERFACE_CFG,
 } event_e;
 
 typedef struct
@@ -542,7 +541,7 @@ typedef struct
 #define UOS_SIS_FLAG_MEM_OK             0x00000004
 #define UOS_SIS_FLAG_CFG_OK             0x00000008
 #define UOS_SIS_FLAG_AQR_OK             0x00000010
-#define UOS_SIS_FLAG_BTH_OK             0x00000020
+#define UOS_SIS_FLAG_SIS_UP             0x00000020
 #define UOS_SIS_FLAG_SIS_OK             0x00000040
 #define UOS_SIS_FLAG_REINICIO           0x00000080
 #define UOS_SIS_FLAG_COMUNICA           0x00000100

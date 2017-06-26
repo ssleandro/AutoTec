@@ -96,7 +96,7 @@ UOS_tsConfiguracao UOS_sConfiguracao;
 IHM_tsConfig IHM_sConfig;
 
 //Flags para indicar o status do sistema:
-osFlagsGroupId UOS_sFlagSis;
+extern osFlagsGroupId UOS_sFlagSis;
 osFlagsGroupId CTL_sFlagSis;
 
 // mutex para a hora
@@ -250,6 +250,7 @@ void CTL_vControlPublishThread (void const *argument)
 {
 	osEvent evt;
 	osFlags flags;
+	osFlags UOSflags;
 	uint32_t* dPayload;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
@@ -262,25 +263,27 @@ void CTL_vControlPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLPUBThreadArrayPosition)); //Task created, inform core
 
-	CTL_eInitPublisher();
+	//CTL_eInitPublisher();
 
 	while (1)
 	{
         WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-        flags = osFlagWait(CTL_sFlagSis, CTL_SAVE_CONFIG_DATA | CTL_UPDATE_CONFIG_DATA, true, false, osWaitForever);
+        flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA, true, false, osWaitForever);
         WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
-        if(flags != UOS_SIS_FLAG_NENHUM)
-        {
+        UOSflags = osFlagGet(UOS_sFlagSis);
 
-            if(((flags & CTL_UPDATE_CONFIG_DATA) > 0) ||((flags & CTL_SAVE_CONFIG_DATA) > 0))
-            {
-                sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
-                sControlPubMsg.eEvtType = EVENT_SET;
-                sControlPubMsg.vPayload = (void*) &UOS_sConfiguracao;
-                MESSAGE_PAYLOAD(Control) = (void*) &sControlPubMsg;
-                PUBLISH(CONTRACT(Control), 0);
-            }
+			if ((flags & CTL_UPDATE_CONFIG_DATA) > 0)
+			{
+				sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
+
+				if (UOSflags & UOS_SIS_FLAG_FFS_OK)
+					sControlPubMsg.eEvtType = EVENT_SET;
+				else
+					sControlPubMsg.eEvtType = EVENT_CLEAR;
+				sControlPubMsg.vPayload = (void*)&UOS_sConfiguracao;
+				MESSAGE_PAYLOAD(Control) = (void*)&sControlPubMsg;
+				PUBLISH(CONTRACT(Control), 0);
         }
 	}
 	osThreadTerminate(NULL);
@@ -307,9 +310,14 @@ void CTL_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
+					if (GET_PUBLISHED_PAYLOAD(contract) != NULL)
+					{
 					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
 						sizeof(UOS_tsConfiguracao));
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+					}
+					else
+						ePubEvt = EVENT_FFS_CFG;
 				}
 				else
 				{
@@ -323,9 +331,12 @@ void CTL_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_GUI_UPDATE_SYS_CONFIG)
 			{
-				memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-					sizeof(UOS_tsConfiguracao));
-				osFlagSet(CTL_sFlagSis, CTL_SAVE_CONFIG_DATA);
+				if (GET_PUBLISHED_PAYLOAD(contract) != NULL)
+				{
+					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
+								sizeof(UOS_tsConfiguracao));
+					osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
+				}
 			}
 			break;
 		}
@@ -351,12 +362,26 @@ void CTL_vControlThread (void const *argument)
 	// Copy default configurations to start; because we don't have file system
 	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
 
-	// Create an flag to indicate the system status...
-	status = osFlagGroupCreate(&UOS_sFlagSis);
-	ASSERT(status == osOK);
-
 	status = osFlagGroupCreate(&CTL_sFlagSis);
 	ASSERT(status == osOK);
+
+
+	CTL_eInitPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromIsobusID = (osThreadId)argument;
+	osSignalSet(xMainFromIsobusID, MODULE_CONTROL);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
+
+	//Create subthreads
+	uint8_t bNumberOfThreads = 0;
+	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
+	{
+		CTL_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
+	}
+
 
 	SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(ControlAcquireg), 0) == osOK);
@@ -369,17 +394,6 @@ void CTL_vControlThread (void const *argument)
 
 	SIGNATURE_HEADER(ControlGui, THIS_MODULE, TOPIC_GUI, ControlQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(ControlGui), 0) == osOK);
-
-	//Create subthreads
-	uint8_t bNumberOfThreads = 0;
-	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
-	{
-		CTL_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
-	}
-
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_CONTROL);
 
 	/* Start the main functions of the application */
 	while (1)

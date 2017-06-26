@@ -1157,8 +1157,6 @@ void AQR_vAcquiregPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRPUBThreadArrayPosition)); //Task created, inform core
 
-	AQR_eInitAcquiregPublisher();
-
 	WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
@@ -1269,17 +1267,23 @@ void AQR_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_GPS:
 		{
+			GPS_tsDadosGPS *psGPSDados = GET_PUBLISHED_PAYLOAD(contract);
+
 			// Treat an event receive from MODULE_GPS
 			osFlagSet(xGPS_sFlagGPS, GET_PUBLISHED_EVENT(contract));
 
-			status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
-			ASSERT(status == osOK);
-
-			memcpy(&AQR_sDadosGPS, (GPS_tsDadosGPS*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(GPS_tsDadosGPS));
-
-			status = RELEASE_MUTEX(AQR_MTX_sEntradas);
-			ASSERT(status == osOK);
-
+			if (psGPSDados != NULL)
+			{
+				status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
+				ASSERT(status == osOK);
+				memcpy(&AQR_sDadosGPS, psGPSDados, sizeof(GPS_tsDadosGPS));
+				status = RELEASE_MUTEX(AQR_MTX_sEntradas);
+				ASSERT(status == osOK);
+			}
+			else
+			{
+				psGPSDados = NULL;
+			}
 			break;
 		}
 		case MODULE_FILESYS:
@@ -1288,9 +1292,12 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					memcpy(&sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
-						sizeof(AQR_tsRegEstaticoCRC));
-					osFlagSet(AQR_sFlagREG, AQR_FLAG_ESTATICO_REG);
+					AQR_tsRegEstaticoCRC *pAQRRegData = GET_PUBLISHED_PAYLOAD(contract);
+					if (pAQRRegData != NULL)
+					{
+						memcpy(&sRegEstaticoCRC, pAQRRegData, sizeof(AQR_tsRegEstaticoCRC));
+						osFlagSet(AQR_sFlagREG, AQR_FLAG_ESTATICO_REG);
+					}
 				}
 				else
 				{
@@ -1343,6 +1350,32 @@ void AQR_vAcquiregThread (void const *argument)
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(AcquiregQueue);
 
+	// Internal flags
+	status = osFlagGroupCreate(&xSEN_sFlagApl);
+	ASSERT(status == osOK);
+
+	status = osFlagGroupCreate(&xGPS_sFlagGPS);
+	ASSERT(status == osOK);
+
+	status = osFlagGroupCreate(&xAQR_sFlagSis);
+	ASSERT(status == osOK);
+
+	AQR_eInitAcquiregPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromIsobusID = (osThreadId)argument;
+	osSignalSet(xMainFromIsobusID, MODULE_ACQUIREG);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
+
+	//Create subthreads
+	uint8_t bNumberOfThreads = 0;
+	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
+	{
+		AQR_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
+	}
+
 	/* Prepare the signature - struture that notify the broker about subscribers */
 	SIGNATURE_HEADER(AcquiregControl, THIS_MODULE, TOPIC_CONTROL, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregControl), 0) == osOK);
@@ -1358,26 +1391,6 @@ void AQR_vAcquiregThread (void const *argument)
 
 	SIGNATURE_HEADER(AcquiregGUI, THIS_MODULE, TOPIC_GUI, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGUI), 0) == osOK);
-
-	// Internal flags
-	status = osFlagGroupCreate(&xSEN_sFlagApl);
-	ASSERT(status == osOK);
-
-	status = osFlagGroupCreate(&xGPS_sFlagGPS);
-	ASSERT(status == osOK);
-
-	status = osFlagGroupCreate(&xAQR_sFlagSis);
-	ASSERT(status == osOK);
-
-	//Create subthreads
-	uint8_t bNumberOfThreads = 0;
-	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
-	{
-		AQR_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
-	}
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_ACQUIREG);
 
 	// TODO: Wait for system is ready to work event
 
@@ -1459,6 +1472,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 		/* Wait a flag sent on each second */
 		WATCHDOG_STATE(AQRTIM, WDT_SLEEP);
 		osFlagWait(xGPS_sFlagGPS, GPS_FLAG_SEGUNDO, true, false, osWaitForever);
+		//osDelay(1000);
 		WATCHDOG_STATE(AQRTIM, WDT_ACTIVE);
 
 		//Contador de Segundos Total
@@ -3886,7 +3900,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//--------------------------------------------------------------------------
 		//Registro Estático:
 		{
-			static uint16_t dDataHoraSalvo = 0xfff0;
+			/*static uint16_t dDataHoraSalvo = 0xfff0;
 			//Salva Registro
 			AQR_SetStaticRegData();
 			if ((AQR_sAcumulado.sTotalReg.dSegundos > dDataHoraSalvo + 60) || // A cada minuto
@@ -3895,7 +3909,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				dDataHoraSalvo = AQR_sAcumulado.sTotalReg.dSegundos;
 				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 			}
-
+*/
 		}
 		//--------------------------------------------------------------------------
 		// Tratamento do parâmetro Alarmes:

@@ -1411,6 +1411,8 @@ osStatus osMailFree (osMailQId queue_id, void *mail)
  * @retval none.
  */
 
+extern osSemaphoreId UOS_sSemSincronismo;
+
 void osSystickHandler (void)
 {
 
@@ -1419,6 +1421,12 @@ void osSystickHandler (void)
 	{
 #endif  /* INCLUDE_xTaskGetSchedulerState */
 		xPortSysTickHandler();
+
+		// Semaphore to sync task from control module
+		if (UOS_sSemSincronismo != NULL)
+		{
+			osSemaphoreRelease(UOS_sSemSincronismo);
+		}
 #if (INCLUDE_xTaskGetSchedulerState  == 1 )
 	}
 #endif  /* INCLUDE_xTaskGetSchedulerState */
@@ -1771,6 +1779,26 @@ osFlags osFlagWait (const osFlagsGroupId flags_id,
 		xTicksToWait); /* Wait a maximum of 100ms for either bit to be set. */
 
 	return uxBits;
+}
+
+osStatus osFlagSetIrq (osFlagsGroupId flags_id,
+	const osFlags flagsToSet)
+{
+	portBASE_TYPE taskWoken;
+		osStatus status;
+
+		taskWoken = pdFALSE;
+
+	if (xEventGroupSetBitsFromISR(flags_id, flagsToSet, &taskWoken) != pdPASS)
+	{
+		status = osErrorOS;
+	}
+	else
+	{
+		portEND_SWITCHING_ISR(taskWoken);
+		status = osOK;
+	}
+	return status;
 }
 
 osStatus osFlagSet (osFlagsGroupId flags_id,
