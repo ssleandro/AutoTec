@@ -83,25 +83,25 @@ static sConfigurationDataMask sConfigDataMask =
 		.wEvaluationDistance = &(asNumVarObjects[4].dValue),
 		.bTolerance = (uint8_t*)(&asNumVarObjects[5].dValue),
 		.fMaxSpeed = &(asNumVarObjects[6].fValue),
-		.wImplementWidth =  &(asNumVarObjects[7].dValue),
+		.wImplementWidth = &(asNumVarObjects[7].dValue),
 		.eAlterRows = ALTERNATE_ROWS_DISABLED,
 		.eAltType = ALTERNATED_ROWS_ODD
 	};
 
 static sTestModeDataMask sTestDataMask =
-{
-	.psSeedsCount = &(asNumVarObjects[0x5C]),
-	.pdInstalledSensors = &(asNumVarObjects[0x80]),
-	.pdConfiguredSensors = &(asNumVarObjects[0x81])
-};
+	{
+		.psSeedsCount = &(asNumVarObjects[0x5C]),
+		.pdInstalledSensors = &(asNumVarObjects[0x80]),
+		.pdConfiguredSensors = &(asNumVarObjects[0x81])
+	};
 
 static sPlanterIndividualLines sPlanterLines =
-{
-	.psLineAverage = &(asNumVarObjects[0x0B]),
-	.psLineSemPerUnit = &(asNumVarObjects[TO_UPPER_INDEX(0x77)]),
-	.psLineSemPerHa = &(asNumVarObjects[TO_UPPER_INDEX(0x9B)]),
-	.psLineTotalSeeds = &(asNumVarObjects[TO_UPPER_INDEX(0xBF)]),
-};
+	{
+		.psLineAverage = &(asNumVarObjects[0x0B]),
+		.psLineSemPerUnit = &(asNumVarObjects[TO_UPPER_INDEX(0x77)]),
+		.psLineSemPerHa = &(asNumVarObjects[TO_UPPER_INDEX(0x9B)]),
+		.psLineTotalSeeds = &(asNumVarObjects[TO_UPPER_INDEX(0xBF)]),
+	};
 
 const sPlanterDataMask sPlanterMask =
 	{
@@ -182,6 +182,7 @@ eBootStates eCurrState;
 // Holds the current module state
 eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
+eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 
 VTStatus sVTCurrentStatus;                          //!< Holds the current VT status
 peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
@@ -360,6 +361,15 @@ eAPPError_s ISO_eInitIsobusPublisher (void)
 	return APP_ERROR_SUCCESS;
 }
 
+void ISO_vPublishMessage (uint32_t dEvent, eEventType eEvtType, void* vPayload)
+{
+	sISOPubMessage.dEvent = dEvent;
+	sISOPubMessage.eEvtType = eEvtType;
+	sISOPubMessage.vPayload = vPayload;
+	MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
+	PUBLISH(CONTRACT(Isobus), 0);
+}
+
 /******************************************************************************
  * Function : ISO_vIsobusPublishThread(void const *argument)
  *//**
@@ -420,43 +430,37 @@ void ISO_vIsobusPublishThread (void const *argument)
 			{
 				case EVENT_ISO_UPDATE_CURRENT_DATA_MASK:
 				{
-					sISOPubMessage.dEvent = ePubEvt;
-
-					sISOPubMessage.vPayload = (void*)&eCurrentMask;
-					MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-					PUBLISH(CONTRACT(Isobus), 0);
+					ISO_vPublishMessage(ePubEvt, EVENT_UPDATE, (void*)&eCurrentMask);
 					break;
 				}
 				case EVENT_ISO_INSTALLATION_REPEAT_TEST:
 				{
-					sISOPubMessage.dEvent = ePubEvt;
-					sISOPubMessage.eEvtType = EVENT_SET;
-					sISOPubMessage.vPayload = NULL;
-					MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-					PUBLISH(CONTRACT(Isobus), 0);
+					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
 					break;
 				}
 				case EVENT_ISO_INSTALLATION_ERASE_INSTALLATION:
 				{
-					sISOPubMessage.dEvent = ePubEvt;
-					sISOPubMessage.eEvtType = EVENT_SET;
-					sISOPubMessage.vPayload = NULL;
-					MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-					PUBLISH(CONTRACT(Isobus), 0);
+					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
 					break;
 				}
 				case EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION:
 				{
-					sISOPubMessage.dEvent = ePubEvt;
-					sISOPubMessage.eEvtType = EVENT_CLEAR;
-					sISOPubMessage.vPayload = NULL;
-					MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-					PUBLISH(CONTRACT(Isobus), 0);
+					ISO_vPublishMessage(ePubEvt, EVENT_CLEAR, NULL);
 					break;
 				}
 				case EVENT_ISO_CONFIG_UPDATE_DATA:
 				{
 					ISO_vTreatUpdateDataEvent(ePubEvt);
+					break;
+				}
+				case EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL:
+				{
+					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
+					break;
+				}
+				case EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL:
+				{
+					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
 					break;
 				}
 				default:
@@ -541,7 +545,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 			{
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
-					if(memcmp(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
+					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
 						sizeof(eSensorsIntallStatus)) != 0)
 					{
 						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
@@ -627,7 +631,6 @@ void ISO_vIsobusThread (void const *argument)
 	/* Inform Main thread that initialization was a success */
 	osThreadId xMainFromIsobusID = (osThreadId)argument;
 	osSignalSet(xMainFromIsobusID, MODULE_ISOBUS);
-
 
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
@@ -1021,7 +1024,7 @@ void ISO_vIsobusBootThread (void const *argument)
 									// Send DPO message
 									ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
 									ISO_vSendObjectPool(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
-										EXTENDED_TRANSPORT_PROTOCOL);
+									EXTENDED_TRANSPORT_PROTOCOL);
 										break;
 									case ETP_CM_EOMA:
 									eCurrState = OBJECT_POOL_SENDED;
@@ -1052,7 +1055,7 @@ void ISO_vIsobusBootThread (void const *argument)
 				}
 				case OBJECT_POOL_LOADED:
 				{
-					START_TIMER(WSMaintenanceTimer, 700);
+					START_TIMER(WSMaintenanceTimer, 450);
 
 					// The boot process are completed, so terminate this thread
 					eCurrState = BOOT_COMPLETED;
@@ -1288,47 +1291,61 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B4));
 						switch (dAux)
 						{
-							case ISO_SOFT_KEY_PLANTER_ID:
+							case ISO_KEY_PLANTER_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_CONFIG_ID:
+							case ISO_KEY_CONFIG_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_BACK_ID:
+							case ISO_KEY_INSTALLATION_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_TEST_MODE_ID:
+							case ISO_KEY_TEST_MODE_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_FINISH_TEST_ID:
+							case ISO_KEY_FINISH_TEST_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_REPEAT_TEST_ID:
+							case ISO_KEY_REPEAT_TEST_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_REPLACE_SENSORS_ID:
+							case ISO_KEY_REPLACE_SENSORS_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_ERASE_INSTALLATION_ID:
+							case ISO_KEY_ERASE_INSTALLATION_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_OK_ID:
+							case ISO_KEY_BACKTO_INSTALLATION_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_TRIMMING_ID:
+							case ISO_KEY_TRIMMING_ID:
 							{
 								break;
 							}
-							case ISO_SOFT_KEY_SYSTEM_ID:
+							case ISO_KEY_SYSTEM_ID:
+							{
+								break;
+							}
+							case ISO_KEY_CLEAR_TOTAL_ID:
+							{
+								ePlanterCounterCurrState = CLEAR_TOTAL_WAIT_CONFIRMATION;
+								break;
+							}
+							case ISO_KEY_CLEAR_SUBTOTAL_ID:
+							{
+								ePlanterCounterCurrState = CLEAR_SUBTOTAL_WAIT_CONFIRMATION;
+								break;
+							}
+							case ISO_KEY_BACKTO_PLANTER_ID:
 							{
 								break;
 							}
@@ -1356,6 +1373,35 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								break;
+							}
+							case ISO_BUTTON_CLEAR_COUNT_CANCEL_ID:
+							{
+								if ((ePlanterCounterCurrState == CLEAR_TOTAL_WAIT_CONFIRMATION)
+									|| (ePlanterCounterCurrState == CLEAR_SUBTOTAL_WAIT_CONFIRMATION))
+								{
+									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+								}
+								break;
+							}
+							case ISO_BUTTON_CLEAR_COUNT_ACCEPT_ID:
+							{
+								if (ePlanterCounterCurrState == CLEAR_TOTAL_WAIT_CONFIRMATION)
+								{
+									ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+								}
+								else if (ePlanterCounterCurrState == CLEAR_SUBTOTAL_WAIT_CONFIRMATION)
+								{
+									ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+								}
 								break;
 							}
 							default:
@@ -1495,7 +1541,6 @@ void ISO_vIsobusManagementThread(void const *argument)
 {}
 #endif
 
-
 void ISO_vUpdateNumberVariableValue (uint16_t wOutputNumberID, uint32_t dNumericValue)
 {
 	ISOBUSMsg sSendMsg;
@@ -1572,7 +1617,8 @@ void ISO_vUpdateFillAttributesValue (uint16_t wFillAttrID, uint8_t bColor)
 	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
-void ISO_vControlAudioSignalCommand (uint8_t bNumActivations, uint16_t wFrequency, uint16_t wOnTimeMs, uint16_t wOffTimeMs)
+void ISO_vControlAudioSignalCommand (uint8_t bNumActivations, uint16_t wFrequency, uint16_t wOnTimeMs,
+	uint16_t wOffTimeMs)
 {
 	ISOBUSMsg sSendMsg;
 
@@ -1591,7 +1637,7 @@ void ISO_vControlAudioSignalCommand (uint8_t bNumActivations, uint16_t wFrequenc
 	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
-void ISO_vChangeActiveMask(eIsobusMask eNewMask)
+void ISO_vChangeActiveMask (eIsobusMask eNewMask)
 {
 	ISOBUSMsg sSendMsg;
 
@@ -1655,11 +1701,16 @@ void ISO_vUpdateInstallationDataMask (void)
 
 void ISO_vUpdatePlanterDataMask (void)
 {
-	for (int i = 0; i < (CAN_bNUM_DE_LINHAS*2); i++) {
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID, sPlanterMask.psLineStatus->psLineAverage[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID, sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID, sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID, sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+	for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
+	{
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
+			sPlanterMask.psLineStatus->psLineAverage[i].dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
+			sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
+			sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
+			sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
 	}
 
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
@@ -1675,11 +1726,14 @@ void ISO_vUpdatePlanterDataMask (void)
 
 void ISO_vUpdateTestModeDataMask (event_e eEvt)
 {
-	switch (eEvt) {
+	switch (eEvt)
+	{
 		case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 		{
-			ISO_vUpdateNumberVariableValue(sTestDataMask.pdInstalledSensors->wObjID, sTestDataMask.pdInstalledSensors->dValue);
-			ISO_vUpdateNumberVariableValue(sTestDataMask.pdConfiguredSensors->wObjID, sTestDataMask.pdConfiguredSensors->dValue);
+			ISO_vUpdateNumberVariableValue(sTestDataMask.pdInstalledSensors->wObjID,
+				sTestDataMask.pdInstalledSensors->dValue);
+			ISO_vUpdateNumberVariableValue(sTestDataMask.pdConfiguredSensors->wObjID,
+				sTestDataMask.pdConfiguredSensors->dValue);
 			break;
 		}
 		case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
@@ -1706,7 +1760,7 @@ void ISO_vUpdateSystemDataMask (void)
 
 }
 
-void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
+void ISO_vUpdateSisConfigData (sConfigurationData *psCfgDataMask)
 {
 	psCfgDataMask->eLanguage = *sConfigDataMask.eLanguage;
 	psCfgDataMask->eUnit = *sConfigDataMask.eUnit;
@@ -1722,7 +1776,7 @@ void ISO_vUpdateSisConfigData(sConfigurationData *psCfgDataMask)
 	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
 }
 
-void ISO_vUpdateConfigData(sConfigurationData *psCfgDataMask)
+void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask)
 {
 	*sConfigDataMask.eLanguage = psCfgDataMask->eLanguage;
 	*sConfigDataMask.eUnit = psCfgDataMask->eUnit;
@@ -1742,7 +1796,7 @@ void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
 {
 	sTestModeDataMaskData sTestUpdate;
 
-	if(vPayload == NULL)
+	if (vPayload == NULL)
 		return;
 
 	switch (eEvt)
@@ -1757,7 +1811,8 @@ void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
 		case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 		{
 			sTestUpdate = *((sTestModeDataMaskData*)vPayload);
-			for (int i = 0; i < 36; i++) {
+			for (int i = 0; i < 36; i++)
+			{
 				sTestDataMask.psSeedsCount[i].dValue = sTestUpdate.sAccumulated.sTotalReg.adSementes[i];
 			}
 			break;
@@ -1767,11 +1822,12 @@ void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
 	}
 }
 
-void ISO_vUpdatePlanterMaskData(sPlanterDataMaskData *psPlanterData)
+void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData)
 {
 	uint8_t bI, bJ;
 
-	for (bI = 0, bJ = 0; bI < CAN_bNUM_DE_LINHAS; bI++, bJ += 2) {
+	for (bI = 0, bJ = 0; bI < CAN_bNUM_DE_LINHAS; bI++, bJ += 2)
+	{
 
 		if (psPlanterData->asLineStatus[bI].dsLineAverage == 0)
 		{
@@ -1786,7 +1842,8 @@ void ISO_vUpdatePlanterMaskData(sPlanterDataMaskData *psPlanterData)
 		else if (psPlanterData->asLineStatus[bI].dsLineAverage < 0)
 		{
 			sPlanterMask.psLineStatus->psLineAverage[bJ].dValue = 0;
-			sPlanterMask.psLineStatus->psLineAverage[bJ + 1].dValue = (psPlanterData->asLineStatus[bI].dsLineAverage * (-1));
+			sPlanterMask.psLineStatus->psLineAverage[bJ + 1].dValue =
+				(psPlanterData->asLineStatus[bI].dsLineAverage * (-1));
 		}
 
 		sPlanterMask.psLineStatus->psLineSemPerUnit[bI].dValue = psPlanterData->asLineStatus[bI].dLineSemPerUnit;
@@ -1794,8 +1851,6 @@ void ISO_vUpdatePlanterMaskData(sPlanterDataMaskData *psPlanterData)
 		sPlanterMask.psLineStatus->psLineTotalSeeds[bI].dValue = psPlanterData->asLineStatus[bI].dLineTotalSeeds;
 
 	}
-
-
 
 	sPlanterMask.psProductivity->dValue = psPlanterData->dProductivity;
 	sPlanterMask.psWorkedTime->dValue = psPlanterData->dWorkedTime;
@@ -1900,7 +1955,8 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
-					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION_FINISH);
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
+						SOFT_KEY_MASK_INSTALLATION_FINISH);
 					ISO_vControlAudioSignalCommand(3, 210, 250, 250);
 					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
 					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
@@ -1923,8 +1979,7 @@ void ISO_vIsobusUpdateOPThread(void const *argument)
 {}
 #endif
 
-
-void ISO_vTreatUpdateDataEvent(event_e ePubEvt)
+void ISO_vTreatUpdateDataEvent (event_e ePubEvt)
 {
 	static sConfigurationData GUIConfigurationData;
 	switch (eCurrentMask)

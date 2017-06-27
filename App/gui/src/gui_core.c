@@ -213,7 +213,7 @@ void GUI_vGetValuesToPlanterDataMask (void)
 	GUI_vUpdateWorkedArea();
 }
 
-#define RANDOM_VALUES
+//#define RANDOM_VALUES
 
 void GUI_vUptPlanterTimerCallback (void const *argument)
 {
@@ -358,6 +358,24 @@ void GUI_vGuiPublishThread (void const *argument)
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
 					sGUIPubMessage.vPayload = (void*)&sSISConfiguration;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
 					break;
@@ -597,6 +615,18 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL)
+			{
+				ePubEvt = EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL)
+			{
+				ePubEvt = EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;

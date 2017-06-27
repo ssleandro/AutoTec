@@ -500,6 +500,7 @@ uint8_t GPS_vGPSPackMsgTx (uint8_t bClass, uint8_t bId, uint8_t *pbDados,
 void GPS_vTimerCallbackMtr (void const*);
 void GPS_vTimerCallbackTimeout (void const*);
 void GPS_vTimerCallbackTimeoutEnl (void const*);
+void GPS_vTimePulseIntCallback (void const*);
 
 /******************************************************************************
  * Module timers
@@ -507,6 +508,7 @@ void GPS_vTimerCallbackTimeoutEnl (void const*);
 CREATE_TIMER(GPS_bTimerMtr, GPS_vTimerCallbackMtr);
 CREATE_TIMER(GPS_bTimerTimeout, GPS_vTimerCallbackTimeout);
 CREATE_TIMER(GPS_bTimerTimeoutEnl, GPS_vTimerCallbackTimeoutEnl);
+CREATE_TIMER(WSGPSTimer, GPS_vTimePulseIntCallback);
 
 /******************************************************************************
  * Function Definitions
@@ -842,7 +844,7 @@ void GPS_vAcumulaDistancia (void)
 
 }
 
-void GPS_vTimePulseIntCallback (void)
+void GPS_vTimePulseIntCallback (void const *arg)
 {
 	// Set time pulse flag
 	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
@@ -858,7 +860,7 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.eDirection = GPIO_INPUT;
 	sTimePulseInt.ePull = GPIO_PULLUP;
 	sTimePulseInt.eInterrupt = GPIO_INTERRUPT_ON_FALLING;
-	sTimePulseInt.fpCallBack = GPS_vTimePulseIntCallback;
+	sTimePulseInt.fpCallBack = NULL;
 	sTimePulseInt.bMPort = EXTINT_TIMEPULSE_PORT;
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
 
@@ -892,7 +894,6 @@ void GPS_vGPSTimePulseThread (void const *argument)
 	// Configure external interrupt 2 - Module GPS TIMEPULSE
 	GPS_vConfigExtInterrupt();
 
-	CREATE_TIMER(WSGPSTimer, GPS_vTimePulseIntCallback);
 	INITIALIZE_TIMER(WSGPSTimer, osTimerPeriodic);
 
 	STOP_TIMER(WSGPSTimer);
