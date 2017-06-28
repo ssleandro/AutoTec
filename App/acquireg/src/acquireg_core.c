@@ -1330,6 +1330,16 @@ void AQR_vIdentifyEvent (contract_s* contract)
 				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_LIST);
 			}
+
+			if (ePubEvt == EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL)
+			{
+				osFlagSet(AQR_sFlagREG, AQR_FLAG_ZERA_TOTAIS);
+			}
+
+			if (ePubEvt == EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL)
+			{
+				osFlagSet(AQR_sFlagREG, AQR_FLAG_ZERA_PARCIAIS);
+			}
 			break;
 		}
 		default:

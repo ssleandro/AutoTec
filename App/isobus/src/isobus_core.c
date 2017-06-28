@@ -593,6 +593,11 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
+				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
 				default:
 					break;
 			}
@@ -1965,6 +1970,11 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
 					ISO_vUpdateConfigurationDataMask();
+					break;
+				}
+				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
+				{
+					ISO_vChangeActiveMask(DATA_MASK_CONFIGURATION);
 					break;
 				}
 				default:

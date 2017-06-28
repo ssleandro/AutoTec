@@ -197,9 +197,9 @@ void GUI_vRandomValuesToPlanterDataMask (void)
 
 void GUI_vGetValuesToPlanterDataMask (void)
 {
-	for (uint8_t dNumSensor = 0; dNumSensor < CAN_bNUM_DE_LINHAS; dNumSensor++)
+	for (uint8_t dNumSensor = 0; dNumSensor < sSISConfiguration.sMonitor.bNumLinhas; dNumSensor++)
 	{
-		GUI_vLinesPartialPopulation(dNumSensor, &sGUIPlanterData.asLineStatus[dNumSensor].dsLineAverage,
+		GUI_vLinesPartialPopulation((dNumSensor + 1), &sGUIPlanterData.asLineStatus[dNumSensor].dsLineAverage,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerUnit,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerHa,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineTotalSeeds);
@@ -372,6 +372,15 @@ void GUI_vGuiPublishThread (void const *argument)
 					break;
 				}
 				case EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL:
+				{
+					sGUIPubMessage.dEvent = ePubEvt;
+					sGUIPubMessage.eEvtType = EVENT_SET;
+					sGUIPubMessage.vPayload = NULL;
+					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
+					PUBLISH(CONTRACT(Gui), 0);
+					break;
+				}
+				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
 				{
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
@@ -582,13 +591,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
-					START_TIMER(Gui_UptTestModeTimer, 750);
+					START_TIMER(Gui_UptTestModeTimer, 1500);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
-					START_TIMER(Gui_UptPlanterTimer, 750);
+					START_TIMER(Gui_UptPlanterTimer, 1500);
 				}
 			}
 
@@ -645,7 +654,8 @@ void GUI_vIdentifyEvent (contract_s* contract)
 						GUI_InitSensorStatus();
 						if (GET_PUBLISHED_TYPE(contract) == EVENT_CLEAR)
 						{
-							// Setar a PAGINA PARA CONFIGURAÇÃO POIS SUBIU A CONFIGURAÇÃO DEFAULT
+							ePubEvt = EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK;
+							PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 						}
 					}
 				}
