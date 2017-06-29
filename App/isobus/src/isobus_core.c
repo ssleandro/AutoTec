@@ -204,6 +204,8 @@ void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask);
 void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload);
 void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData);
 void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
+void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask);
+void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
 
 /******************************************************************************
  * Function Definitions
@@ -451,6 +453,11 @@ void ISO_vIsobusPublishThread (void const *argument)
 				case EVENT_ISO_CONFIG_UPDATE_DATA:
 				{
 					ISO_vTreatUpdateDataEvent(ePubEvt);
+					break;
+				}
+				case EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA:
+				{
+					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
 					break;
 				}
 				case EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL:
@@ -1270,10 +1277,18 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	if ((wObjectID >= 0x8000) && (wObjectID < 0x8200))
 	{
 		ISO_vInputNumberVariableValue(wObjectID, dValue);
+		if(eCurrentMask == DATA_MASK_CONFIGURATION)
+		{
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+		}
 	}
 	else if ((wObjectID >= 0x9000) && (wObjectID < 0x9500))
 	{
 		ISO_vInputIndexListValue(wObjectID, dValue);
+		if(eCurrentMask == DATA_MASK_CONFIGURATION)
+		{
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+		}
 	}
 	//EVETNTO()
 }
@@ -1409,6 +1424,39 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								}
 								break;
 							}
+							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_INSTALL_ID:
+							{
+								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION);
+								ISO_vHideShowContainerCommand(0x4085, false);
+								ISO_vHideShowContainerCommand(0x4084, true);
+								break;
+							}
+							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
+							{
+								ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION);
+								ISO_vHideShowContainerCommand(0x4085, false);
+								ISO_vHideShowContainerCommand(0x4084, true);
+								break;
+							}
+							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
+							{
+								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+								ISO_vHideShowContainerCommand(0x4085, true);
+								ISO_vHideShowContainerCommand(0x4084, false);
+								break;
+							}
 							default:
 								break;
 						}
@@ -1423,10 +1471,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 					case FUNC_VT_CHANGE_NUMERIC_VALUE:
 					{
 						ISO_vTreatChangeNumericValueEvent(sRcvMsg);
-						ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
-						WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-						PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-						WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 						break;
 					}
 					case FUNC_VT_CHANGE_ACTIVE_MASK:
@@ -1674,6 +1718,25 @@ void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType
 	sSendMsg.frame.data[3] = eMask & 0xFF;
 	sSendMsg.frame.data[4] = (eNewSoftKeyMask & 0xFF00) >> 8;
 	sSendMsg.frame.data[5] = eNewSoftKeyMask & 0xFF;
+	sSendMsg.frame.data[6] = 0xFF;
+	sSendMsg.frame.data[7] = 0xFF;
+
+	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+}
+
+void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow)
+{
+	ISOBUSMsg sSendMsg;
+
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.dlc = 8;
+
+	sSendMsg.frame.data[0] = FUNC_HIDE_SHOW_OBJECT;
+	sSendMsg.frame.data[1] = (wObjID & 0xFF00) >> 8;
+	sSendMsg.frame.data[2] = wObjID & 0xFF;
+	sSendMsg.frame.data[3] = bShow;
+	sSendMsg.frame.data[4] = 0xFF;
+	sSendMsg.frame.data[5] = 0xFF;
 	sSendMsg.frame.data[6] = 0xFF;
 	sSendMsg.frame.data[7] = 0xFF;
 
@@ -1975,6 +2038,10 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
 				{
 					ISO_vChangeActiveMask(DATA_MASK_CONFIGURATION);
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
+						SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+					ISO_vHideShowContainerCommand(0x4085, true);
+					ISO_vHideShowContainerCommand(0x4084, false);
 					break;
 				}
 				default:
@@ -1994,7 +2061,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt)
 	static sConfigurationData GUIConfigurationData;
 	switch (eCurrentMask)
 	{
-		case DATA_MASK_CONFIGURATION:
+		case DATA_MASK_CONFIRM_CONFIG_CHANGES:
 		{
 			ISO_vUpdateSisConfigData(&GUIConfigurationData);
 			sISOPubMessage.dEvent = EVENT_ISO_UPDATE_CURRENT_CONFIGURATION;

@@ -957,7 +957,8 @@ osStatus osFlagGroupCreate (osFlagsGroupId* flags_id);
 osFlags osFlagWait (const osFlagsGroupId flags_id, const osFlags flagsToWaitFor, const uint32_t consomeFlags,
 	const uint32_t waitForAllFlags, uint32_t millisec);
 
-osStatus osFlagSet (osFlagsGroupId flags_id,	const osFlags flagsToSet);
+osStatus osFlagSet (osFlagsGroupId flags_id, const osFlags flagsToSet);
+osStatus osFlagSetIrq (osFlagsGroupId flags_id, const osFlags flagsToSet);
 
 osStatus osFlagSet (const osFlagsGroupId flags_id, const osFlags flagsToSet);
 

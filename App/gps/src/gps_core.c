@@ -502,7 +502,7 @@ uint8_t GPS_vGPSPackMsgTx (uint8_t bClass, uint8_t bId, uint8_t *pbDados,
 void GPS_vTimerCallbackMtr (void const*);
 void GPS_vTimerCallbackTimeout (void const*);
 void GPS_vTimerCallbackTimeoutEnl (void const*);
-void GPS_vTimePulseIntCallback (void const*);
+void GPS_vTimePulseIntCallback (void);
 
 /******************************************************************************
  * Module timers

@@ -605,6 +605,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				memcpy(&GUIConfigurationData, (sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract), sizeof(sConfigurationData));
 				GUI_SetSisConfiguration();
+				GUI_InitSensorStatus();
+			}
+
+			if (ePubEvt == EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA)
+			{
+				ePubEvt = EVENT_GUI_UPDATE_CONFIG;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_REPEAT_TEST)
