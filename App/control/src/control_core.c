@@ -267,24 +267,24 @@ void CTL_vControlPublishThread (void const *argument)
 
 	while (1)
 	{
-        WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-        flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA, true, false, osWaitForever);
-        WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
+		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
+		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA, true, false, osWaitForever);
+		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
-        UOSflags = osFlagGet(UOS_sFlagSis);
+		UOSflags = osFlagGet(UOS_sFlagSis);
 
-			if ((flags & CTL_UPDATE_CONFIG_DATA) > 0)
-			{
-				sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
+		if ((flags & CTL_UPDATE_CONFIG_DATA) > 0)
+		{
+			sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
 
-				if (UOSflags & UOS_SIS_FLAG_FFS_OK)
-					sControlPubMsg.eEvtType = EVENT_SET;
-				else
-					sControlPubMsg.eEvtType = EVENT_CLEAR;
-				sControlPubMsg.vPayload = (void*)&UOS_sConfiguracao;
-				MESSAGE_PAYLOAD(Control) = (void*)&sControlPubMsg;
-				PUBLISH(CONTRACT(Control), 0);
-        }
+			if (UOSflags & UOS_SIS_FLAG_CFG_OK)
+				sControlPubMsg.eEvtType = EVENT_SET;
+			else
+				sControlPubMsg.eEvtType = EVENT_CLEAR;
+			sControlPubMsg.vPayload = (void*)&UOS_sConfiguracao;
+			MESSAGE_PAYLOAD(Control) = (void*)&sControlPubMsg;
+			PUBLISH(CONTRACT(Control), 0);
+		}
 	}
 	osThreadTerminate(NULL);
 }
@@ -306,22 +306,32 @@ void CTL_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_FILESYS:
 		{
-			if (ePubEvt == EVENT_FFS_CFG)
+			if (ePubEvt == EVENT_FFS_STATUS)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					if (GET_PUBLISHED_PAYLOAD(contract) != NULL)
-					{
-					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-						sizeof(UOS_tsConfiguracao));
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
-					}
-					else
-						ePubEvt = EVENT_FFS_CFG;
 				}
 				else
 				{
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				}
+			}
+
+			if (ePubEvt == EVENT_FFS_CFG)
+			{
+				if (ePubEvType == EVENT_SET)
+				{
+					UOS_tsConfiguracao *psConfig = GET_PUBLISHED_PAYLOAD(contract);
+					if (psConfig != NULL)
+					{
+						memcpy(&UOS_sConfiguracao, psConfig, sizeof(UOS_tsConfiguracao));
+						osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
+					}
+				}
+				else
+				{
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 				}
 				osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
 			}
@@ -336,6 +346,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
 								sizeof(UOS_tsConfiguracao));
 					osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
+					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 				}
 			}
 			break;
@@ -365,7 +376,6 @@ void CTL_vControlThread (void const *argument)
 	status = osFlagGroupCreate(&CTL_sFlagSis);
 	ASSERT(status == osOK);
 
-
 	CTL_eInitPublisher();
 
 	/* Inform Main thread that initialization was a success */
@@ -381,7 +391,6 @@ void CTL_vControlThread (void const *argument)
 	{
 		CTL_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
-
 
 	SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(ControlAcquireg), 0) == osOK);

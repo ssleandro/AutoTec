@@ -178,21 +178,19 @@ eAPPError_s FFS_vSaveConfigFile (void)
 		xFileHandle = f_open(FFS_abConfigName, "w+");
 		ASSERT(xFileHandle != NULL);
 
-		if (xFileHandle != NULL)
+		bErr = f_rewind(xFileHandle);
+		ASSERT(bErr == F_NO_ERROR);
+
+		bErr = f_write((uint8_t* )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao), 1, xFileHandle);
+		ASSERT(bErr == 1);
+
+		f_close(xFileHandle);
+
+		if (bErr == 1)
 		{
-			bErr = f_rewind(xFileHandle);
-			ASSERT(bErr == F_NO_ERROR);
-
-			bErr = f_write((uint8_t* )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao), 1, xFileHandle);
-			ASSERT(bErr == 1);
-
-			f_close(xFileHandle);
-
-			if (bErr == 1)
-			{
-				ErroReturn = APP_ERROR_SUCCESS;
-			}
+			ErroReturn = APP_ERROR_SUCCESS;
 		}
+
 	}
 
 	return ErroReturn;
@@ -269,21 +267,23 @@ eAPPError_s FFS_vSaveSensorCfg (void)
 		xFileHandle = f_open(FFS_abSensorCfgName, "w+");
 		ASSERT(xFileHandle != NULL);
 
-		if (xFileHandle != NULL)
+		bErr = f_rewind(xFileHandle);
+		ASSERT(bErr == F_NO_ERROR);
+
+		bErr = f_write((uint8_t* )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens), 1, xFileHandle);
+		ASSERT(bErr == 1);
+
+		f_close(xFileHandle);
+
+		if (bErr == 1)
 		{
-			bErr = f_rewind(xFileHandle);
-			ASSERT(bErr == F_NO_ERROR);
-
-			bErr = f_write((uint8_t* )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens), 1, xFileHandle);
-			ASSERT(bErr == 1);
-
-			f_close(xFileHandle);
-
-			if (bErr == 1)
-			{
-				ErroReturn = APP_ERROR_SUCCESS;
-			}
+			ErroReturn = APP_ERROR_SUCCESS;
 		}
+		else
+		{
+			ErroReturn = APP_ERROR_ERROR;
+		}
+
 	}
 
 	return ErroReturn;
@@ -407,21 +407,19 @@ eAPPError_s FFS_vSaveStaticReg (void)
 		xFileHandle = f_open(FFS_abStaticRegCfgName, "w");
 		ASSERT(xFileHandle != NULL);
 
-		if (xFileHandle != NULL)
+		bErr = f_rewind(xFileHandle);
+		ASSERT(bErr == F_NO_ERROR);
+
+		bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
+		ASSERT(bErr == 1);
+
+		f_close(xFileHandle);
+
+		if (bErr == 1)
 		{
-			bErr = f_rewind(xFileHandle);
-			ASSERT(bErr == F_NO_ERROR);
-
-			bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
-			ASSERT(bErr == 1);
-
-			f_close(xFileHandle);
-
-			if (bErr == 1)
-			{
-				ErroReturn = APP_ERROR_SUCCESS;
-			}
+			ErroReturn = APP_ERROR_SUCCESS;
 		}
+
 	}
 
 	return ErroReturn;

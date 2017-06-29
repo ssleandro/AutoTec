@@ -231,7 +231,7 @@ static void SEN_vCreateThread (const Threads_t sThread)
 uint32_t SEN_eReceivePooling (void)
 {
 	/* Check if the receive buffer has some data */
-	uint8_t abTempBuffer[256];
+	static uint8_t abTempBuffer[256];
 	uint32_t wReceiveLenght = DEV_read(pSENSORHandle, abTempBuffer, 256);
 
 	if (wReceiveLenght)
@@ -348,76 +348,64 @@ void SEN_vSensorPublishThread (void const *argument)
 		CAN_APL_FLAG_CFG_SENSOR_RESPONDEU),
 		true, false, osWaitForever);
 
-		status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
-		ASSERT(status == osOK);
 		WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
+
+		sSensorPubMsg.vPayload = NULL;
 
 		if ((dValorFlag & CAN_APL_FLAG_TODOS_SENS_RESP_PNP) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_TODOS_SENS_RESP_PNP;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_DET_NOVO_SENSOR) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_DET_NOVO_SENSOR;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_SENSOR_NAO_RESPONDEU) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_SENSOR_NAO_RESPONDEU;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_DET_SENSOR_RECONECTADO) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_DET_SENSOR_RECONECTADO;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_CFG_SENSOR_RESPONDEU) > 0)
 		{
 			sSensorPubMsg.dEvent = CAN_APL_FLAG_CFG_SENSOR_RESPONDEU;
-			sSensorPubMsg.vPayload = (void*)&CAN_sCtrlLista;
 			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
 			PUBLISH(CONTRACT(Sensor), 0);
 		}
-
-		status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
-		ASSERT(status == osOK);
 	}
 	osThreadTerminate(NULL);
 }

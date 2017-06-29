@@ -252,6 +252,7 @@ void FSM_vFileSysPublishThread (void const *argument)
 
 	WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	osDelay(100);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 	while (1)
@@ -267,9 +268,9 @@ void FSM_vFileSysPublishThread (void const *argument)
 		if (tSignalBit & FFS_FLAG_STATUS)
 		{
 			if (dFlags & FFS_FLAG_STATUS)
-				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				FSM_ePublishEvent(EVENT_FFS_STATUS, EVENT_SET, NULL);
 			else
-				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				FSM_ePublishEvent(EVENT_FFS_STATUS, EVENT_CLEAR, NULL);
 		}
 		if (tSignalBit & FFS_FLAG_CFG)
 		{
@@ -393,8 +394,12 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					memcpy(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, (CAN_tsCtrlListaSens*)(GET_PUBLISHED_PAYLOAD(contract)),
+					CAN_tsCtrlListaSens *psCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+					if (psCtrlListaSens != NULL)
+					{
+						memcpy(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, psCtrlListaSens,
 												sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens));
+					}
 
 					error = FFS_vSaveSensorCfg();
 					ASSERT(error == APP_ERROR_SUCCESS);

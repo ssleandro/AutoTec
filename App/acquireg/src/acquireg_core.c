@@ -141,6 +141,8 @@ uint8_t bLimpaFalhas = false;
 AQR_teArremate eMemArremate;
 
 PubMessage sArqRegPubMsg;
+CAN_tsCtrlListaSens AQR_sPubCtrlLista;
+
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
@@ -1041,6 +1043,37 @@ inline void AQR_vDetectThread (thisWDTFlag *flag, uint8_t *bPosition, void *pFun
 	*flag = (uint8_t *)&WATCHDOG_FLAGPOS(THREADS_WDT_POSITION(*bPosition));
 }
 
+
+void AQR_GetCANsCrtlLista(CAN_tsCtrlListaSens *sOut)
+{
+	osStatus status;
+//Pega o mutex antes acessar dados compartilhados:
+	status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
+	ASSERT(status == osOK);
+
+//Prepara a cópia de trabalho da estrutura com dados CAN:
+	memcpy(sOut, &CAN_sCtrlLista, sizeof(CAN_tsCtrlListaSens));
+
+//Devolve o mutex:
+	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
+	ASSERT(status == osOK);
+}
+
+void AQR_SetCANsCrtlLista(CAN_tsCtrlListaSens *sIn)
+{
+	osStatus status;
+//Pega o mutex antes acessar dados compartilhados:
+	status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
+	ASSERT(status == osOK);
+
+//Prepara a cópia de trabalho da estrutura com dados CAN:
+	memcpy(&CAN_sCtrlLista, sIn, sizeof(CAN_tsCtrlListaSens));
+
+//Devolve o mutex:
+	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
+	ASSERT(status == osOK);
+}
+
 #ifndef UNITY_TEST
 
 /******************************************************************************
@@ -1147,6 +1180,7 @@ eAPPError_s AQR_eInitAcquiregPublisher (void)
 #ifndef UNITY_TEST
 void AQR_vAcquiregPublishThread (void const *argument)
 {
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Acquireg Publish Thread Created");
 #endif
@@ -1204,9 +1238,11 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		}
 		if ((dFlags & AQR_APL_FLAG_SAVE_LIST) > 0)
 		{
+			AQR_GetCANsCrtlLista(&AQR_sPubCtrlLista);
+
 			sArqRegPubMsg.dEvent = EVENT_FFS_SENSOR_CFG;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)&CAN_sCtrlLista;
+			sArqRegPubMsg.vPayload = (void*)&AQR_sPubCtrlLista  ;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
@@ -1306,9 +1342,13 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			}
 			if (ePubEvt == EVENT_FFS_SENSOR_CFG)
 			{
-					memcpy(&CAN_sCtrlLista, (CAN_tsCtrlListaSens*)(GET_PUBLISHED_PAYLOAD(contract)),
-						sizeof(CAN_tsCtrlListaSens));
+				CAN_tsCtrlListaSens *pCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+				if (pCtrlListaSens != NULL)
+				{
+					AQR_SetCANsCrtlLista(pCtrlListaSens);
+
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_VERIFICANDO);
+				}
 			}
 
 			break;
@@ -2354,16 +2394,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		if (dFlagSensor != CAN_APL_FLAG_NENHUM)
 		{
-			//Pega o mutex antes acessar dados compartilhados:
-			status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
-			ASSERT(status == osOK);
 
-			//Prepara a cópia de trabalho da estrutura com dados CAN:
-			memcpy(&AQR_sDadosCAN, &CAN_sCtrlLista, sizeof(AQR_sDadosCAN));
-
-			//Devolve o mutex:
-			status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
-			ASSERT(status == osOK);
+			AQR_GetCANsCrtlLista(&AQR_sDadosCAN);
 
 			//------------------------------------------------------------------------
 			//Se algum sensor não respondeu ou e nenhum sensor respondeu...
