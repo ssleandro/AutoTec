@@ -487,6 +487,8 @@ extern UOS_tsConfiguracao UOS_sConfiguracao;
 extern uint32_t CAN_dLeituraSensor;
 extern uint8_t CAN_bSensorSimulador;
 
+GPS_tsDadosGPS GPS_sPublishDadosGPS;
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
@@ -508,7 +510,6 @@ void GPS_vTimePulseIntCallback (void const*);
 CREATE_TIMER(GPS_bTimerMtr, GPS_vTimerCallbackMtr);
 CREATE_TIMER(GPS_bTimerTimeout, GPS_vTimerCallbackTimeout);
 CREATE_TIMER(GPS_bTimerTimeoutEnl, GPS_vTimerCallbackTimeoutEnl);
-CREATE_TIMER(WSGPSTimer, GPS_vTimePulseIntCallback);
 
 /******************************************************************************
  * Function Definitions
@@ -647,7 +648,7 @@ void GPS_vGPSPublishThread (void const *argument)
 {
 	osFlags dValorGPS;
 	osStatus status;
-	static GPS_tsDadosGPS GPS_sPublishDadosGPS;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Buzzer Publish Thread Created");
 #endif
@@ -844,10 +845,10 @@ void GPS_vAcumulaDistancia (void)
 
 }
 
-void GPS_vTimePulseIntCallback (void const *arg)
+void GPS_vTimePulseIntCallback (void)
 {
 	// Set time pulse flag
-	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
+	osFlagSetIrq(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
 
 	STOP_TIMER(GPS_bTimerTimeout);
 	START_TIMER(GPS_bTimerTimeout, 125);
@@ -860,12 +861,12 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.eDirection = GPIO_INPUT;
 	sTimePulseInt.ePull = GPIO_PULLUP;
 	sTimePulseInt.eInterrupt = GPIO_INTERRUPT_ON_FALLING;
-	sTimePulseInt.fpCallBack = NULL;
+	sTimePulseInt.fpCallBack = GPS_vTimePulseIntCallback;
 	sTimePulseInt.bMPort = EXTINT_TIMEPULSE_PORT;
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
 
 	// Initialize time pulse external interrupt
-	//GPIO_eInit(&sTimePulseInt);
+	GPIO_eInit(&sTimePulseInt);
 }
 
 /*******************************************************************************
@@ -893,11 +894,6 @@ void GPS_vGPSTimePulseThread (void const *argument)
 
 	// Configure external interrupt 2 - Module GPS TIMEPULSE
 	GPS_vConfigExtInterrupt();
-
-	INITIALIZE_TIMER(WSGPSTimer, osTimerPeriodic);
-
-	STOP_TIMER(WSGPSTimer);
-	START_TIMER(WSGPSTimer, 250);
 
 	//Loop infinito da tarefa:
 	while (1)
