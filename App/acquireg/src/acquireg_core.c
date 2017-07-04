@@ -39,6 +39,7 @@
 #include "acquireg_ThreadControl.h"
 #include <stdlib.h>
 
+extern gpio_config_s sTimeTest;
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
@@ -142,6 +143,7 @@ AQR_teArremate eMemArremate;
 
 PubMessage sArqRegPubMsg;
 CAN_tsCtrlListaSens AQR_sPubCtrlLista;
+tsAcumulados AQR_sPubAcumulado;
 
 /******************************************************************************
  * Module Variable Definitions
@@ -1201,7 +1203,8 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
-			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST, true, false, osWaitForever);
+			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
+			| AQR_APL_FLAG_SEND_TOTAL, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1254,6 +1257,15 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
+		if ((dFlags & AQR_APL_FLAG_SEND_TOTAL) > 0)
+		{
+			sArqRegPubMsg.dEvent = EVENT_AQR_UPDATE_PLANT_DATA;
+			sArqRegPubMsg.eEvtType = EVENT_SET;
+			sArqRegPubMsg.vPayload = &AQR_sPubAcumulado;
+			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
+			PUBLISH(CONTRACT(Acquireg), 0);
+		}
+
 
 	}
 	osThreadTerminate(NULL);
@@ -1292,6 +1304,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 						AQR_sStatus.bNumSensores = UOS_sConfiguracao.sMonitor.bNumLinhas;
 					}
 				}
+				AQR_vParametros();
 			}
 			break;
 		}
@@ -1522,7 +1535,6 @@ void AQR_vAcquiregTimeThread (void const *argument)
 		/* Wait a flag sent on each second */
 		WATCHDOG_STATE(AQRTIM, WDT_SLEEP);
 		osFlagWait(xGPS_sFlagGPS, GPS_FLAG_SEGUNDO, true, false, osWaitForever);
-		//osDelay(1000);
 		WATCHDOG_STATE(AQRTIM, WDT_ACTIVE);
 
 		//Contador de Segundos Total
@@ -1585,6 +1597,10 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			//Máximo Tempo em Excesso de Velocidade em segundos
 			AQR_sVelocidade.dMTEV = dPEV;
 		}
+
+		memcpy(&AQR_sPubAcumulado, &AQR_sAcumulado, sizeof(tsAcumulados));
+		osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SEND_TOTAL);
+
 	}
 	osThreadTerminate(NULL);
 }
@@ -3716,6 +3732,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				//Se não passou 1 metro, desconsidera linhas para sair de pausa
 				if ((dValorGPS & GPS_FLAG_METRO) > 0) // Se passou 1 metro
 				{
+
 					//Se está em pausa automática e vai sair da pausa
 					if ((psStatus->bNumLinhasZero < bLinhasFalhaPausaAuto) && (psStatus->bPausaAuto != false))
 					{
@@ -3941,18 +3958,9 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		//--------------------------------------------------------------------------
 		//Registro Estático:
-		{
-			/*static uint16_t dDataHoraSalvo = 0xfff0;
-			//Salva Registro
-			AQR_SetStaticRegData();
-			if ((AQR_sAcumulado.sTotalReg.dSegundos > dDataHoraSalvo + 60) || // A cada minuto
-				 (AQR_sAcumulado.sTotalReg.dSegundos < dDataHoraSalvo))
-			{
-				dDataHoraSalvo = AQR_sAcumulado.sTotalReg.dSegundos;
-				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
-			}
-*/
-		}
+		//Salva Registro
+		AQR_SetStaticRegData();
+		osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 		//--------------------------------------------------------------------------
 		// Tratamento do parâmetro Alarmes:
 

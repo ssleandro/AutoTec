@@ -500,7 +500,6 @@ uint8_t GPS_vGPSPackMsgTx (uint8_t bClass, uint8_t bId, uint8_t *pbDados,
 	uint8_t bLength);
 
 void GPS_vTimerCallbackMtr (void const*);
-void GPS_vTimerCallbackTimeout (void const*);
 void GPS_vTimerCallbackTimeoutEnl (void const*);
 void GPS_vTimePulseIntCallback (void);
 
@@ -508,7 +507,6 @@ void GPS_vTimePulseIntCallback (void);
  * Module timers
  *******************************************************************************/
 CREATE_TIMER(GPS_bTimerMtr, GPS_vTimerCallbackMtr);
-CREATE_TIMER(GPS_bTimerTimeout, GPS_vTimerCallbackTimeout);
 CREATE_TIMER(GPS_bTimerTimeoutEnl, GPS_vTimerCallbackTimeoutEnl);
 
 /******************************************************************************
@@ -710,6 +708,8 @@ void GPS_vGPSPublishThread(void const *argument)
 {}
 #endif
 
+gpio_config_s sTimeTest;
+
 /*******************************************************************************
 
  void GPS_vAcumulaDistancia( void )
@@ -745,7 +745,8 @@ void GPS_vAcumulaDistancia (void)
 		{
 			//Acumula a distância percorrida
 			fAux = GPS_sDadosGPS.dGroundSpeed;
-			fAux = (fAux / (float) NUM_AM_INT);
+//			fAux = (fAux / (float) NUM_AM_INT);
+			fAux = (fAux / (float) 8);
 
 			//Acumula distância total percorrida
 			//GPS_sDadosGPS.fDistancia = ( fAux + GPS_sDadosGPS.fDistancia );
@@ -849,9 +850,6 @@ void GPS_vTimePulseIntCallback (void)
 {
 	// Set time pulse flag
 	osFlagSetIrq(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
-
-	STOP_TIMER(GPS_bTimerTimeout);
-	START_TIMER(GPS_bTimerTimeout, 125);
 }
 
 void GPS_vConfigExtInterrupt (void)
@@ -864,6 +862,16 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.fpCallBack = GPS_vTimePulseIntCallback;
 	sTimePulseInt.bMPort = EXTINT_TIMEPULSE_PORT;
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
+
+	sTimeTest.vpPrivateData = NULL;
+	sTimeTest.bDefaultOutputHigh = false;
+	sTimeTest.eDirection = GPIO_OUTPUT;
+	sTimeTest.ePull = GPIO_PULLDOWN;
+	sTimeTest.bMPort = 5;
+	sTimeTest.bMPin = 4;
+
+	// Initialize enable PS9 structure
+	GPIO_eInit(&sTimeTest);
 
 	// Initialize time pulse external interrupt
 	GPIO_eInit(&sTimePulseInt);
@@ -910,13 +918,14 @@ void GPS_vGPSTimePulseThread (void const *argument)
 			{
 				bContaSegundo++;
 
-				if (bContaSegundo > 3)
+				if (bContaSegundo > 7)
 				{
 					bContaSegundo = 0;
 
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
 				}
 			}
+			//GPIO_vToggle(&sTimeTest);
 			//Acumula a distância percorrida.
 			GPS_vAcumulaDistancia();
 		}
@@ -1159,9 +1168,9 @@ void GPS_vGPSConfig (void)
 				GPS_sConfigTP5.tpIdx = TIMEPULSE2;
 				GPS_sConfigTP5.version = TIMEPULSE_MESSAGE_VERSION;
 				GPS_sConfigTP5.antCableDelay = 50;
-				GPS_sConfigTP5.freqPeriod = 250000;
-				GPS_sConfigTP5.freqPeriodLock = 250000;
-				GPS_sConfigTP5.pulseLenRatio = 25000;
+				GPS_sConfigTP5.freqPeriod = 125000;
+				GPS_sConfigTP5.freqPeriodLock = 125000;
+				GPS_sConfigTP5.pulseLenRatio = 12500;
 
 				GPS_sConfigTP5.flags = (TP5_FLAG_ENABLE | TP5_FLAG_LOCKGPSFREQ
 					| TP5_FLAG_ISLENGTH | TP5_FLAG_ALIGNTOTOW
@@ -2764,11 +2773,6 @@ void GPS_vTimerCallbackMtr (void const *arg)
 	osFlagSet(GPS_sFlagGPS, GPS_FLAG_TIMEOUT_MTR);
 }
 
-void GPS_vTimerCallbackTimeout (void const *arg)
-{
-	osFlagSet(GPS_sFlagGPS, GPS_FLAG_TIME_OUT);
-}
-
 void GPS_vTimerCallbackTimeoutEnl (void const *arg)
 {
 	osFlagSet(GPS_sFlagEnl, GPS_ENL_FLAG_TIME_OUT);
@@ -2838,9 +2842,6 @@ void GPS_vGPSThread (void const *argument)
 
 	//Aloca um timer de sistema para aguardar 5s:
 	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerPeriodic);
-
-	// Used to count 125ms after an timepulse interrupt
-	INITIALIZE_TIMER(GPS_bTimerTimeout, osTimerPeriodic);
 
 	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
 	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
@@ -3182,7 +3183,7 @@ void GPS_vGPSRecvThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSRCV, WDT_SLEEP);
-		osDelayUntil(&wTicks, 150);
+		osDelayUntil(&wTicks, 100);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));

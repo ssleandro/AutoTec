@@ -19,7 +19,7 @@ its value back to 0. */
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_TICKLESS_IDLE                 0
 #define configCPU_CLOCK_HZ                      120000000 //204000000
-#define configTICK_RATE_HZ                      ( ( TickType_t ) 1000 ) //250
+#define configTICK_RATE_HZ                      ( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES                    10
 #define configMINIMAL_STACK_SIZE                256
 #define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 1024 * 1024 ) ) //40k
@@ -56,7 +56,7 @@ its value back to 0. */
 
 /* Software timer related definitions. */
 #define configUSE_TIMERS                        1
-#define configTIMER_TASK_PRIORITY               2
+#define configTIMER_TASK_PRIORITY               5
 #define configTIMER_QUEUE_LENGTH                16
 #define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE * 8
 

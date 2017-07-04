@@ -417,6 +417,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			break;
 	}
 }
+extern gpio_config_s sTimeTest;
 
 /* ************************* Main thread ************************************ */
 #ifndef UNITY_TEST
@@ -484,7 +485,8 @@ void FSM_vFileSysThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
-			FFS_vIdentifyEvent(GET_CONTRACT(evt));
+			GPIO_vToggle(&sTimeTest);
+//			FFS_vIdentifyEvent(GET_CONTRACT(evt));
 		}
 	}
 	/* Unreachable */

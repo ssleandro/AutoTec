@@ -59,10 +59,14 @@ CREATE_CONTRACT(Gui);                              //!< Create contract for sens
 
 CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 16);
 
+CREATE_MUTEX(GUI_UpdateMask);
+
 eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
 
+tsAcumulados GUI_sAcumulado;
+
 extern osFlagsGroupId UOS_sFlagSis;
-extern tsAcumulados AQR_sAcumulado;
+
 extern tsStatus AQR_sStatus;
 extern uint16_t AQR_wEspacamento;
 
@@ -101,6 +105,7 @@ uint8_t bGUIPUBThreadArrayPosition = 0;                    //!< Thread position 
 void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
 void GUI_vUpdateWorkedArea (void);
 void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds);
+void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds);
 void GUI_vUptTestModeTimerCallback (void const *argument);
 void GUI_vUptPlanterTimerCallback (void const *argument);
 
@@ -205,8 +210,7 @@ void GUI_vGetValuesToPlanterDataMask (void)
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineTotalSeeds);
 	}
 
-	sGUIPlanterData.dProductivity++;
-	sGUIPlanterData.dWorkedTime++;
+	GUI_vGetProductivity(&sGUIPlanterData.dProductivity, &sGUIPlanterData.dWorkedTime);
 
 	GUI_vLinesPartialPopulation(ALL_LINES, NULL, &sGUIPlanterData.dPartPopSemPerUnit, &sGUIPlanterData.dPartPopSemPerHa,
 		&sGUIPlanterData.dTotalSeeds);
@@ -228,6 +232,7 @@ void GUI_vUptPlanterTimerCallback (void const *argument)
 
 void GUI_vGuiPublishThread (void const *argument)
 {
+	osStatus status;
 	osEvent evt;
 	osFlags dFlagsSis;
 	event_e ePubEvt;
@@ -261,25 +266,50 @@ void GUI_vGuiPublishThread (void const *argument)
 			{
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_UPDATE;
 					sGUIPubMessage.vPayload = (void*)&eSensorStatus;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
+
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = RELEASE_MUTEX(GUI_UpdateMask);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_UPDATE;
 					sGUIPubMessage.vPayload = (void*)&sGUIPlanterData;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
+
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = RELEASE_MUTEX(GUI_UpdateMask);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
-					GUI_vSetGuiTestData(EVENT_GUI_UPDATE_TEST_MODE_INTERFACE, (void*)&AQR_sAcumulado);
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
+					GUI_vSetGuiTestData(EVENT_GUI_UPDATE_TEST_MODE_INTERFACE, (void*)&GUI_sAcumulado);
 					if ((dFlagsSis & UOS_SIS_FLAG_MODO_TESTE) > 0)
 					{
 						sGUIPubMessage.dEvent = ePubEvt;
@@ -288,6 +318,11 @@ void GUI_vGuiPublishThread (void const *argument)
 						MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 						PUBLISH(CONTRACT(Gui), 0);
 					}
+
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = RELEASE_MUTEX(GUI_UpdateMask);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
@@ -328,11 +363,21 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
 					sGUIPubMessage.vPayload = (void*)&sGUITestModeData;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
+
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = RELEASE_MUTEX(GUI_UpdateMask);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK:
@@ -346,20 +391,40 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
 					sGUIPubMessage.vPayload = (void*)&GUIConfigurationData;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
+
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = RELEASE_MUTEX(GUI_UpdateMask);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYS_CONFIG:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
 					sGUIPubMessage.dEvent = ePubEvt;
 					sGUIPubMessage.eEvtType = EVENT_SET;
 					sGUIPubMessage.vPayload = (void*)&sSISConfiguration;
 					MESSAGE_PAYLOAD(Gui) = (void*)&sGUIPubMessage;
 					PUBLISH(CONTRACT(Gui), 0);
+
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					status = RELEASE_MUTEX(GUI_UpdateMask);
+					ASSERT(status == osOK);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL:
@@ -577,6 +642,7 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 
 void GUI_vIdentifyEvent (contract_s* contract)
 {
+	osStatus status;
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 
 	switch (contract->eOrigin)
@@ -585,6 +651,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				eCurrMask = *((eIsobusMask*)GET_PUBLISHED_PAYLOAD(contract));
 
 				if (eCurrMask == DATA_MASK_TEST_MODE)
@@ -597,15 +668,28 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
-					START_TIMER(Gui_UptPlanterTimer, 1500);
 				}
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				memcpy(&GUIConfigurationData, (sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract), sizeof(sConfigurationData));
 				GUI_SetSisConfiguration();
 				GUI_InitSensorStatus();
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA)
@@ -618,14 +702,36 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				GUI_InitSensorStatus();
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_ERASE_INSTALLATION)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_ERASE_INSTALLATION;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				GUI_InitSensorStatus();
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
@@ -651,6 +757,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
 				if (psConfig != NULL)
 				{
@@ -666,6 +777,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 						}
 					}
 				}
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 			break;
 		}
@@ -673,16 +789,55 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
 
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 				// Update test mode data mask number of sensors installed, number of sensors configured
 				GUI_vSetGuiTestData(ePubEvt, GET_PUBLISHED_PAYLOAD(contract));
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+			}
+
+			if (ePubEvt == EVENT_AQR_UPDATE_PLANT_DATA)
+			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
+				tsAcumulados *psPlantAcumulado = GET_PUBLISHED_PAYLOAD(contract);
+				if ((psPlantAcumulado != NULL) && (eCurrMask == DATA_MASK_PLANTER))
+				{
+					memcpy(&GUI_sAcumulado, psPlantAcumulado, sizeof(tsAcumulados));
+					GUI_vUptPlanterTimerCallback(NULL);
+				}
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 //			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
@@ -725,6 +880,8 @@ void GUI_vGuiThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(GuiQueue);
+
+	INITIALIZE_MUTEX(GUI_UpdateMask);
 
 	INITIALIZE_TIMER(Gui_UptTestModeTimer, osTimerPeriodic);
 	INITIALIZE_TIMER(Gui_UptPlanterTimer, osTimerPeriodic);
@@ -807,21 +964,21 @@ void GUI_vUpdateWorkedArea (void)
 {
 	float fAreaTrab;
 
-	tsLinhas* const psAcum = &AQR_sAcumulado.sTrabTotal;
-	tsLinhas* const psAcumDir = &AQR_sAcumulado.sTrabTotalDir;
-	tsLinhas* const psAcumEsq = &AQR_sAcumulado.sTrabTotalEsq;
+	tsLinhas* const psAcum = &GUI_sAcumulado.sTrabTotal;
+	tsLinhas* const psAcumDir = &GUI_sAcumulado.sTrabTotalDir;
+	tsLinhas* const psAcumEsq = &GUI_sAcumulado.sTrabTotalEsq;
 
-	tsLinhas* const psParcial = &AQR_sAcumulado.sTrabParcial;
-	tsLinhas* const psParcDir = &AQR_sAcumulado.sTrabParcDir;
-	tsLinhas* const psParcEsq = &AQR_sAcumulado.sTrabParcEsq;
+	tsLinhas* const psParcial = &GUI_sAcumulado.sTrabParcial;
+	tsLinhas* const psParcDir = &GUI_sAcumulado.sTrabParcDir;
+	tsLinhas* const psParcEsq = &GUI_sAcumulado.sTrabParcEsq;
 
-	tsDistanciaTrab* const psAcumDis = &AQR_sAcumulado.sDistTrabTotal;
-	tsDistanciaTrab* const psAcumDisDir = &AQR_sAcumulado.sDistTrabTotalDir;
-	tsDistanciaTrab* const psAcumDisEsq = &AQR_sAcumulado.sDistTrabTotalEsq;
+	tsDistanciaTrab* const psAcumDis = &GUI_sAcumulado.sDistTrabTotal;
+	tsDistanciaTrab* const psAcumDisDir = &GUI_sAcumulado.sDistTrabTotalDir;
+	tsDistanciaTrab* const psAcumDisEsq = &GUI_sAcumulado.sDistTrabTotalEsq;
 
-	tsDistanciaTrab* const psParcDis = &AQR_sAcumulado.sDistTrabParcial;
-	tsDistanciaTrab* const psParcDisDir = &AQR_sAcumulado.sDistTrabParcialDir;
-	tsDistanciaTrab* const psParcDisEsq = &AQR_sAcumulado.sDistTrabParcialEsq;
+	tsDistanciaTrab* const psParcDis = &GUI_sAcumulado.sDistTrabParcial;
+	tsDistanciaTrab* const psParcDisDir = &GUI_sAcumulado.sDistTrabParcialDir;
+	tsDistanciaTrab* const psParcDisEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
 
 	tsStatus *psStatus = &AQR_sStatus;
 	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
@@ -924,17 +1081,21 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 	uint32_t dSem = 0;
 	uint8_t bLinhaLevantada;
 	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
-	tsLinhas* const psParcial = &AQR_sAcumulado.sTrabParcial;
-	tsLinhas* const psParcDir = &AQR_sAcumulado.sTrabParcDir;
-	tsLinhas* const psParcEsq = &AQR_sAcumulado.sTrabParcEsq;
+	tsLinhas* const psParcial = &GUI_sAcumulado.sTrabParcial;
+	tsLinhas* const psParcDir = &GUI_sAcumulado.sTrabParcDir;
+	tsLinhas* const psParcEsq = &GUI_sAcumulado.sTrabParcEsq;
 	//Apontador para estrutura de distancia
-	tsDistanciaTrab* const psDistParc = &AQR_sAcumulado.sDistTrabParcial;
-	tsDistanciaTrab* const psDistParcDir = &AQR_sAcumulado.sDistTrabParcialDir;
-	tsDistanciaTrab* const psDistParcEsq = &AQR_sAcumulado.sDistTrabParcialEsq;
+	tsDistanciaTrab* const psDistParc = &GUI_sAcumulado.sDistTrabParcial;
+	tsDistanciaTrab* const psDistParcDir = &GUI_sAcumulado.sDistTrabParcialDir;
+	tsDistanciaTrab* const psDistParcEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
 
 	tsStatus *psStatus = &AQR_sStatus;
 
 	uint32_t dFlagSis = osFlagGet(UOS_sFlagSis);
+
+	if (((dsAverage == NULL) && (dNumSensor != 0)) || (dSeedsPerUnit == NULL) || (dSeedsPerHa == NULL)
+		|| (dTotalSeeds == NULL) || (dNumSensor > 36))
+		return;
 
 	//verificacao das linhas levantadas
 	if (dNumSensor < 33)
@@ -1347,14 +1508,94 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
     {
       if( dNumSensor == 0 )
       {
-        dSem = AQR_sAcumulado.sManobra.dSomaSem; //TESTE BANCADA
+        dSem = GUI_sAcumulado.sManobra.dSomaSem; //TESTE BANCADA
       }
       else
       {
-        dSem = AQR_sAcumulado.sManobra.adSementes[ dNumSensor - 1 ]; //TESTE BANCADA
+        dSem = GUI_sAcumulado.sManobra.adSementes[ dNumSensor - 1 ]; //TESTE BANCADA
       }
       // Test mode value
       *dTotalSeeds = dSem % 10000;
     }
   }*/
+}
+
+void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
+{
+	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
+	tsStatus *psStatus = &AQR_sStatus;
+
+	tsLinhas* const psParcial = &GUI_sAcumulado.sTrabParcial;
+	tsLinhas* const psParcDir = &GUI_sAcumulado.sTrabParcDir;
+	tsLinhas* const psParcEsq = &GUI_sAcumulado.sTrabParcEsq;
+
+	tsDistanciaTrab* const psParcDis = &GUI_sAcumulado.sDistTrabParcial;
+	tsDistanciaTrab* const psParcDisDir = &GUI_sAcumulado.sDistTrabParcialDir;
+	tsDistanciaTrab* const psParcDisEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
+
+	if ((pdProductivity == NULL) || (pdSeconds == NULL))
+		return;
+
+	//Painel de rendimento deve exibir:
+	//___________________________
+	//|Rendimento    |  |  |  |  |
+	//|______________|__|__|__|__|
+	//| <destaque>               |
+	//|            xxx,x   ha/h  |
+	//| </destaque>              |
+	//|                          |
+	//|         00h00m00s        |
+	//|                          |
+	//|   dd/mm/aa   hh:mm:ss    |
+	//|__________________________|
+
+	//Divide por 10 porque AQR_wEspacamento esta em cm*10
+	float fAreaTrabalhada = ((float)AQR_wEspacamento * (float)psParcDis->dDistancia) * 0.1f;
+	float fAreaTrabalhadaDir = ((float)AQR_wEspacamento * (float)psParcDisDir->dDistancia) * 0.1f;
+	float fAreaTrabalhadaEsq = ((float)AQR_wEspacamento * (float)psParcDisEsq->dDistancia) * 0.1f;
+
+	//Converte de cm� para m�
+	fAreaTrabalhada *= (1.0f / 10000.0f);
+	fAreaTrabalhadaDir *= (1.0f / 10000.0f);
+	fAreaTrabalhadaEsq *= (1.0f / 10000.0f);
+
+	if (psMonitor->bMonitorArea == false)
+	{
+		if (psMonitor->eIntercala != Sem_Intercalacao)
+		{
+			fAreaTrabalhada *= psStatus->bNumLinhasSemIntercalar;
+		}
+		else
+		{
+			fAreaTrabalhada *= psMonitor->bNumLinhas;
+		}
+
+		fAreaTrabalhadaDir *= psStatus->bNumLinhasDir;
+		fAreaTrabalhadaEsq *= psStatus->bNumLinhasEsq;
+	}
+
+	fAreaTrabalhada +=
+		(fAreaTrabalhadaDir + fAreaTrabalhadaEsq + psParcial->fArea + psParcDir->fArea + psParcEsq->fArea);
+
+	// Converte de m� para ha/acre:
+	float fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada, GUI_dCONV(GUI_dMETERS, GUI_dHECTARES));
+	{
+		if (GUI_sAcumulado.sTrabParcial.dSegundos > 0)
+		{
+			float fHoras = ((float)GUI_sAcumulado.sTrabParcial.dSegundos / 3600.0f);
+
+			fAreaTrab /= fHoras;
+		}
+	}
+
+	//Arredonda para exibir
+	fAreaTrab += 0.05f;
+
+	*pdProductivity = fAreaTrab;
+
+	//--------------------------------------------------------------------------
+	// Tempo trabalhando:
+
+	*pdSeconds = GUI_sAcumulado.sTrabParcial.dSegundos;
+
 }
