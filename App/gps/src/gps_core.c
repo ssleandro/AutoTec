@@ -3183,7 +3183,7 @@ void GPS_vGPSRecvThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSRCV, WDT_SLEEP);
-		osDelayUntil(&wTicks, 100);
+		osDelayUntil(&wTicks, 50);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));
