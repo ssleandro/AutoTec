@@ -40,6 +40,7 @@
 #include "board.h"
 #include "chip.h"
 #include "fat_sl.h"
+#include "api_mdriver_span.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
