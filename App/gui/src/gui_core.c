@@ -67,6 +67,7 @@ tsAcumulados GUI_sAcumulado;
 
 extern osFlagsGroupId UOS_sFlagSis;
 
+extern tsStatus AQR_sPubStatus;
 extern tsStatus AQR_sStatus;
 extern uint16_t AQR_wEspacamento;
 
@@ -250,6 +251,10 @@ void GUI_vGuiPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGUIPUBThreadArrayPosition)); //Task created, inform core
 
+	WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	osDelay(200);
+	WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -980,7 +985,7 @@ void GUI_vUpdateWorkedArea (void)
 	tsDistanciaTrab* const psParcDisDir = &GUI_sAcumulado.sDistTrabParcialDir;
 	tsDistanciaTrab* const psParcDisEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
 
-	tsStatus *psStatus = &AQR_sStatus;
+	tsStatus *psStatus = &AQR_sPubStatus;
 	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
 
 	//Divide por 10 porque AQR_wEspacamento esta em cm*10
@@ -1089,7 +1094,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 	tsDistanciaTrab* const psDistParcDir = &GUI_sAcumulado.sDistTrabParcialDir;
 	tsDistanciaTrab* const psDistParcEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
 
-	tsStatus *psStatus = &AQR_sStatus;
+	tsStatus *psStatus = &AQR_sPubStatus;
 
 	uint32_t dFlagSis = osFlagGet(UOS_sFlagSis);
 
@@ -1213,7 +1218,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 		{
 			// NOTA:
 			// Media de sementes instantanea esta em sem/m * 100
-			fSem = (float)(AQR_sStatus.awMediaSementes[dNumSensor - 1]);
+			fSem = (float)(AQR_sPubStatus.awMediaSementes[dNumSensor - 1]);
 			fSem /= 100.0f;
 		}
 	}
@@ -1270,10 +1275,10 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 
 		if (dNumSensor > 0)
 		{
-			const uint32_t dBits = (AQR_sStatus.dMemLinhaDesconectada | AQR_sStatus.dSementeFalhaIHM
-				| AQR_sStatus.dAduboFalha | AQR_sStatus.dSementeZeroIHM);
-			const uint32_t dBitsExt = (AQR_sStatus.dMemLinhaDesconectadaExt | AQR_sStatus.dSementeFalhaIHMExt
-				| AQR_sStatus.dAduboFalhaExt | AQR_sStatus.dSementeZeroIHMExt);
+			const uint32_t dBits = (AQR_sPubStatus.dMemLinhaDesconectada | AQR_sPubStatus.dSementeFalhaIHM
+				| AQR_sPubStatus.dAduboFalha | AQR_sPubStatus.dSementeZeroIHM);
+			const uint32_t dBitsExt = (AQR_sPubStatus.dMemLinhaDesconectadaExt | AQR_sPubStatus.dSementeFalhaIHMExt
+				| AQR_sPubStatus.dAduboFalhaExt | AQR_sPubStatus.dSementeZeroIHMExt);
 
 			if (((dBits & (1 << (dNumSensor - 1))) && (dNumSensor < 33)) ||
 				((dBitsExt & (1 << (dNumSensor - 33))) && (dNumSensor >= 33)))
@@ -1406,7 +1411,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
         // simplificando,
         // sem/m� = ( sem/m  / ( dist_entre_linhas / 10 ) )  ou
         // sem/m� = ( sem/m  /  dist_entre_linhas * 10 )
-        //fSem = ( float )( AQR_sStatus.awMediaSementes[ dNumSensor - 1 ] );
+        //fSem = ( float )( AQR_sPubStatus.awMediaSementes[ dNumSensor - 1 ] );
         //fSem = ( fSem / AQR_wEspacamento * 10.0f );
 
          //Se a divis�o da plantadeira est� no lado esquerdo
@@ -1523,7 +1528,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 {
 	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
-	tsStatus *psStatus = &AQR_sStatus;
+	tsStatus *psStatus = &AQR_sPubStatus;
 
 	tsLinhas* const psParcial = &GUI_sAcumulado.sTrabParcial;
 	tsLinhas* const psParcDir = &GUI_sAcumulado.sTrabParcDir;

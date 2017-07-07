@@ -320,7 +320,7 @@ void Chip_CCAN_Send (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, C
 		return;
 	}
 	Chip_CCAN_SetMsgObject(pCCAN, IFSel, CCAN_TX_DIR, remoteFrame, msgNum, pMsgObj);
-	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1) && !(wCount++ > 0x7FF))
+	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1) && (wCount++ < 0x57FF))
 	{	// blocking , wait for sending completed
 	}
 	if (!remoteFrame)

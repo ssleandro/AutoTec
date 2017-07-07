@@ -70,6 +70,8 @@ CREATE_SIGNATURE(FileSysAcqureg);
 CREATE_SIGNATURE(FileSysDiag);//!< Signature Declarations
 CREATE_CONTRACT(FileSys);//!< Create contract for buzzer msg publication
 
+CREATE_MUTEX(FFS_AccesControl);
+
 /**
  * Module Threads
  */
@@ -245,6 +247,7 @@ void FSM_vFileSysPublishThread (void const *argument)
 
 	FSM_vDetectThread(&WATCHDOG(FSMPUB), &bFSMPUBThreadArrayPosition, (void*)FSM_vFileSysPublishThread);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
+	INITIALIZE_MUTEX(FFS_AccesControl);
 
 	xPbulishThreadID = osThreadGetId();
 
@@ -252,7 +255,7 @@ void FSM_vFileSysPublishThread (void const *argument)
 
 	WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-	osDelay(100);
+	osDelay(200);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 	while (1)
@@ -328,6 +331,8 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 	uint8_t ucStatus;
 	eAPPError_s error = APP_ERROR_SUCCESS;
 	uint8_t retries = 3;
+	F_SPACE xSpace;
+	unsigned char ucReturned;
 
 	do
 	{
@@ -349,6 +354,9 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 		osFlagClear(FFS_sFlagSis, FFS_FLAG_STATUS);
 	}
 
+	/* Get space information on current embedded FAT file system drive. */
+	ucReturned = f_getfreespace(&xSpace);
+
 	return eError;
 }
 
@@ -367,9 +375,9 @@ void FFS_vIdentifyEvent (contract_s* contract)
 				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
 				if ((ePubEvType == EVENT_SET) && ( psConfig != NULL))
 				{
-					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(UOS_tsConfiguracao)) != 0)
+					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0)
 					{
-						memcpy(&FFS_sConfiguracao, psConfig, sizeof(UOS_tsConfiguracao));
+						FFS_sConfiguracao = *psConfig;
 						error = FFS_vSaveConfigFile();
 						ASSERT(error == APP_ERROR_SUCCESS);
 					}
@@ -381,12 +389,18 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_FFS_STATIC_REG)
 			{
-				memcpy(&FFS_sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
-							sizeof(AQR_tsRegEstaticoCRC));
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
-					eAPPError_s error = FFS_vSaveStaticReg();
-					ASSERT(error == APP_ERROR_SUCCESS);
+					uint32_t a = osKernelSysTick();
+					AQR_tsRegEstaticoCRC *pRegEstaticData = GET_PUBLISHED_PAYLOAD(contract);
+					if ((pRegEstaticData != NULL)
+						&& (memcmp(&FFS_sRegEstaticoCRC, pRegEstaticData, sizeof(FFS_sRegEstaticoCRC)) != 0))
+					{
+						FFS_sRegEstaticoCRC = *pRegEstaticData;
+
+						eAPPError_s error = FFS_vSaveStaticReg();
+						ASSERT(error == APP_ERROR_SUCCESS);
+					}
 				}
 			}
 
@@ -395,14 +409,12 @@ void FFS_vIdentifyEvent (contract_s* contract)
 				if (ePubEvType == EVENT_SET)
 				{
 					CAN_tsCtrlListaSens *psCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
-					if (psCtrlListaSens != NULL)
+					if ((psCtrlListaSens != NULL) && ( memcmp(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, psCtrlListaSens, sizeof(CAN_tsCtrlListaSens)) != 0))
 					{
-						memcpy(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, psCtrlListaSens,
-												sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens));
+							FFS_sCtrlListaSens.CAN_sCtrlListaSens =  *psCtrlListaSens;
+							error = FFS_vSaveSensorCfg();
+							ASSERT(error == APP_ERROR_SUCCESS);
 					}
-
-					error = FFS_vSaveSensorCfg();
-					ASSERT(error == APP_ERROR_SUCCESS);
 				}
 				else
 				{
@@ -417,7 +429,6 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			break;
 	}
 }
-extern gpio_config_s sTimeTest;
 
 /* ************************* Main thread ************************************ */
 #ifndef UNITY_TEST
@@ -485,8 +496,7 @@ void FSM_vFileSysThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
-			GPIO_vToggle(&sTimeTest);
-//			FFS_vIdentifyEvent(GET_CONTRACT(evt));
+			FFS_vIdentifyEvent(GET_CONTRACT(evt));
 		}
 	}
 	/* Unreachable */
