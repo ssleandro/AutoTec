@@ -263,8 +263,6 @@ void CTL_vControlPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLPUBThreadArrayPosition)); //Task created, inform core
 
-	//CTL_eInitPublisher();
-
 	while (1)
 	{
 		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
@@ -325,7 +323,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					UOS_tsConfiguracao *psConfig = GET_PUBLISHED_PAYLOAD(contract);
 					if (psConfig != NULL)
 					{
-						memcpy(&UOS_sConfiguracao, psConfig, sizeof(UOS_tsConfiguracao));
+						UOS_sConfiguracao =*psConfig;
 						osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 					}
 				}
@@ -341,10 +339,10 @@ void CTL_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_GUI_UPDATE_SYS_CONFIG)
 			{
-				if (GET_PUBLISHED_PAYLOAD(contract) != NULL)
+				UOS_tsConfiguracao *psConfig = GET_PUBLISHED_PAYLOAD(contract);
+				if (psConfig != NULL)
 				{
-					memcpy(&UOS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-								sizeof(UOS_tsConfiguracao));
+					UOS_sConfiguracao = *psConfig;
 					osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 				}

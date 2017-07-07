@@ -50,6 +50,8 @@ const uint8_t FFS_abStaticRegCfgName[] = "ESTATICO.REG";
 //Nome do arquivo de registros combinados (estáticos e dinâmicos):
 //const uint8_t abNomeRegDat[] = "REGISTRO.DAT";
 
+EXTERN_MUTEX(FFS_AccesControl);
+
 /******************************************************************************
  * Variables from others modules
  *******************************************************************************/
@@ -93,6 +95,8 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	eAPPError_s ret;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	//Verifica se o sistema de arquivo foi inicializado:
 	dFlagsSis = osFlagGet(FFS_sFlagSis);
@@ -141,6 +145,9 @@ eAPPError_s FFS_vLoadConfigFile (void)
 		osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
 		ret = APP_ERROR_SUCCESS;
 	}
+
+	RELEASE_MUTEX(FFS_AccesControl);
+
 	return ret;
 }
 
@@ -162,6 +169,8 @@ eAPPError_s FFS_vSaveConfigFile (void)
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sConfiguracao,
@@ -193,6 +202,8 @@ eAPPError_s FFS_vSaveConfigFile (void)
 
 	}
 
+	RELEASE_MUTEX(FFS_AccesControl);
+
 	return ErroReturn;
 }
 
@@ -208,6 +219,8 @@ eAPPError_s FFS_vSaveConfigFile (void)
 eAPPError_s FFS_vRemoveSensorCfg (void)
 {
 	uint8_t bNumTotalSensores, bCount;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	f_delete(FFS_abSensorCfgName);
 
@@ -225,6 +238,8 @@ eAPPError_s FFS_vRemoveSensorCfg (void)
 	{
 		FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista[bCount].eEstado = Novo;
 	}
+
+	RELEASE_MUTEX(FFS_AccesControl);
 
 	return APP_ERROR_SUCCESS;
 }
@@ -247,6 +262,8 @@ eAPPError_s FFS_vSaveSensorCfg (void)
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	//Limpa a estrutura de novo sensor
 	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
@@ -286,6 +303,8 @@ eAPPError_s FFS_vSaveSensorCfg (void)
 
 	}
 
+	RELEASE_MUTEX(FFS_AccesControl);
+
 	return ErroReturn;
 }
 
@@ -308,6 +327,8 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	eAPPError_s ret;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	//Verifica se o sistema de arquivo foi inicializado:
 	dFlagsSis = osFlagGet(FFS_sFlagSis);
@@ -368,6 +389,9 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 	{
 		ret = APP_ERROR_SUCCESS;
 	}
+
+	RELEASE_MUTEX(FFS_AccesControl);
+
 	return ret;
 }
 
@@ -386,11 +410,13 @@ eAPPError_s FFS_vSaveStaticReg (void)
 
 	osFlags dFlagsSis;
 	uint16_t wCRC16;
-	uint8_t bErr;
+	uint8_t bErr = 1;
 	uint8_t bErroCfg = true;
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sRegEstaticoCRC,
@@ -404,13 +430,14 @@ eAPPError_s FFS_vSaveStaticReg (void)
 
 	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
 	{
-		xFileHandle = f_open(FFS_abStaticRegCfgName, "w");
+
+		xFileHandle = f_open(FFS_abStaticRegCfgName, "w+");
 		ASSERT(xFileHandle != NULL);
 
-		bErr = f_rewind(xFileHandle);
-		ASSERT(bErr == F_NO_ERROR);
+		//bErr = f_rewind(xFileHandle);
+		//ASSERT(bErr == F_NO_ERROR);
 
-		bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
+				bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
 		ASSERT(bErr == 1);
 
 		f_close(xFileHandle);
@@ -419,8 +446,13 @@ eAPPError_s FFS_vSaveStaticReg (void)
 		{
 			ErroReturn = APP_ERROR_SUCCESS;
 		}
-
+		else
+		{
+			ErroReturn = APP_ERROR_ERROR;
+		}
 	}
+
+	RELEASE_MUTEX(FFS_AccesControl);
 
 	return ErroReturn;
 }
@@ -444,6 +476,8 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	eAPPError_s ret;
+
+	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	//Verifica se o sistema de arquivo foi inicializado:
 	dFlagsSis = osFlagGet(FFS_sFlagSis);
@@ -492,5 +526,8 @@ eAPPError_s FFS_vLoadStaticReg (void)
 		ret = APP_ERROR_SUCCESS;
 	}
 	osFlagSet(FFS_sFlagSis, FFS_FLAG_STATIC_REG);
+
+	RELEASE_MUTEX(FFS_AccesControl);
+
 	return ret;
 }
