@@ -162,7 +162,7 @@ typedef struct sConfigurationDataMask
 	eSelectedLanguage* eLanguage;
 	eSelectedUnitMeasurement* eUnit;
 	uint32_t* dVehicleID;
-	eAreaMonitor eMonitor;
+	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;
 	uint8_t* bNumOfRows;
 	uint32_t* wImplementWidth;
@@ -170,8 +170,8 @@ typedef struct sConfigurationDataMask
 	uint32_t* wDistBetweenLines;
 	uint8_t* bTolerance;
 	float* fMaxSpeed;
-	eAlternateRows eAlterRows;
-	eAlternatedRowsType eAltType;
+	eAlternateRows* eAlterRows;
+	eAlternatedRowsType* eAltType;
 } sConfigurationDataMask;
 
 typedef struct sNumberVariableObj

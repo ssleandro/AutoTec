@@ -76,7 +76,7 @@ static sConfigurationDataMask sConfigDataMask =
 		.eLanguage = (eSelectedLanguage*)(&asConfigInputList[0].bSelectedIndex),
 		.eUnit = (eSelectedUnitMeasurement*)(&asConfigInputList[1].bSelectedIndex),
 		.dVehicleID = &(asNumVarObjects[0].dValue),
-		.eMonitor = AREA_MONITOR_DISABLED,
+		.eMonitor = (eAreaMonitor*)(&asConfigInputList[2].bSelectedIndex),
 		.wSeedRate = &(asNumVarObjects[1].dValue),
 		.bNumOfRows = (uint8_t*)(&asNumVarObjects[2].dValue),
 		.wDistBetweenLines = &(asNumVarObjects[3].dValue),
@@ -84,8 +84,8 @@ static sConfigurationDataMask sConfigDataMask =
 		.bTolerance = (uint8_t*)(&asNumVarObjects[5].dValue),
 		.fMaxSpeed = &(asNumVarObjects[6].fValue),
 		.wImplementWidth = &(asNumVarObjects[7].dValue),
-		.eAlterRows = ALTERNATE_ROWS_DISABLED,
-		.eAltType = ALTERNATED_ROWS_ODD
+		.eAlterRows = (eAlternateRows*)(&asConfigInputList[4].bSelectedIndex),
+		.eAltType = (eAlternatedRowsType*)(&asConfigInputList[3].bSelectedIndex)
 	};
 
 static sTestModeDataMask sTestDataMask =
@@ -206,6 +206,8 @@ void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask);
 void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload);
 void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData);
 void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
+void ISO_vEnableDisableObjCommand (uint16_t wObjID, bool bIsEnable);
+void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNewValue);
 void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask);
 void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
 
@@ -1232,8 +1234,18 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	uint16_t wObjectID = (sRcvMsg->B3 | (sRcvMsg->B2 << 8));
 	uint32_t dValue = (sRcvMsg->B5 | (sRcvMsg->B6 << 8) | (sRcvMsg->B7 << 16) | (sRcvMsg->B8 << 24));
 
-	if ((wObjectID >= 0x8000) && (wObjectID < 0x8200))
+	if ((wObjectID >= 0x8000) && (wObjectID < 0x820A))
 	{
+		if (wObjectID == 0x8002)
+		{
+			if ((dValue % 2) != 0)
+			{
+				ISO_vEnableDisableObjCommand(0x9005, true);
+			} else
+			{
+				ISO_vEnableDisableObjCommand(0x9005, false);
+			}
+		}
 		ISO_vInputNumberVariableValue(wObjectID, dValue);
 		if(eCurrentMask == DATA_MASK_CONFIGURATION)
 		{
@@ -1242,7 +1254,51 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	}
 	else if ((wObjectID >= 0x9000) && (wObjectID < 0x9500))
 	{
-		ISO_vInputIndexListValue(wObjectID, dValue);
+		switch (wObjectID)
+		{
+			case ISO_INPUT_LIST_AREA_MONITOR_ID:
+			{
+				if (dValue)
+				{
+					ISO_vChangeAttributeCommand(0x8201, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vChangeAttributeCommand(0x8202, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vChangeAttributeCommand(0x8203, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vChangeAttributeCommand(0x8204, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vChangeAttributeCommand(0x8205, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vChangeAttributeCommand(0x8209, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+				}
+				else
+				{
+					ISO_vChangeAttributeCommand(0x8201, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vChangeAttributeCommand(0x8202, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vChangeAttributeCommand(0x8203, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vChangeAttributeCommand(0x8204, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vChangeAttributeCommand(0x8205, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vChangeAttributeCommand(0x8209, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+				}
+				ISO_vInputIndexListValue(wObjectID, dValue);
+				break;
+			}
+			case ISO_INPUT_LIST_ALTERNATE_ROW_ID:
+			{
+				if (dValue)
+				{
+					ISO_vEnableDisableObjCommand(0x9003, false);
+				}
+				else
+				{
+					ISO_vEnableDisableObjCommand(0x9003, true);
+				}
+				ISO_vInputIndexListValue(wObjectID, dValue);
+				break;
+			}
+			default:
+			{
+				ISO_vInputIndexListValue(wObjectID, dValue);
+				break;
+			}
+		}
+
 		if(eCurrentMask == DATA_MASK_CONFIGURATION)
 		{
 			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
@@ -1665,6 +1721,44 @@ void ISO_vChangeActiveMask (eIsobusMask eNewMask)
 	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
+void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNewValue)
+{
+	ISOBUSMsg sSendMsg;
+
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.dlc = 8;
+
+	sSendMsg.frame.data[0] = FUNC_CHANGE_ATTRIBUTE;
+	sSendMsg.frame.data[1] = (wObjID & 0xFF00) >> 8;
+	sSendMsg.frame.data[2] = wObjID & 0xFF;
+	sSendMsg.frame.data[3] = bObjAID;
+	sSendMsg.frame.data[4] = dNewValue & 0xFF;
+	sSendMsg.frame.data[5] = (dNewValue & 0xFF00) >> 8;
+	sSendMsg.frame.data[6] = (dNewValue & 0xFF0000) >> 16;
+	sSendMsg.frame.data[7] = (dNewValue & 0xFF000000) >> 24;
+
+	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+}
+
+void ISO_vEnableDisableObjCommand (uint16_t wObjID, bool bIsEnable)
+{
+	ISOBUSMsg sSendMsg;
+
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY);
+	sSendMsg.frame.dlc = 8;
+
+	sSendMsg.frame.data[0] = FUNC_ENABLE_DISABLE_OBJECT;
+	sSendMsg.frame.data[1] = (wObjID & 0xFF00) >> 8;
+	sSendMsg.frame.data[2] = wObjID & 0xFF;
+	sSendMsg.frame.data[3] = bIsEnable;
+	sSendMsg.frame.data[4] = 0xFF;
+	sSendMsg.frame.data[5] = 0xFF;
+	sSendMsg.frame.data[6] = 0xFF;
+	sSendMsg.frame.data[7] = 0xFF;
+
+	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+}
+
 void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask)
 {
 	ISOBUSMsg sSendMsg;
@@ -1713,12 +1807,20 @@ void ISO_vUpdateConfigurationDataMask (void)
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
 	ISO_vUpdateNumberVariableValue(0x81E3, *sConfigDataMask.eLanguage);
-//	ISO_vUpdateOutputNumberValue(0x9001, *sConfigDataMask.eUnit);
-
+	ISO_vUpdateNumberVariableValue(0x9001, *sConfigDataMask.eUnit);
 	ISO_vUpdateNumberVariableValue(0x812d, *sConfigDataMask.wImplementWidth);
 	ISO_vUpdateNumberVariableValue(0x8000, *sConfigDataMask.dVehicleID);
 	ISO_vUpdateNumberVariableValue(0x8001, *sConfigDataMask.wSeedRate);
 	ISO_vUpdateNumberVariableValue(0x8002, *sConfigDataMask.bNumOfRows);
+
+	if (((*sConfigDataMask.bNumOfRows) % 2) != 0)
+	{
+		ISO_vEnableDisableObjCommand(0x9005, true);
+	} else
+	{
+		ISO_vEnableDisableObjCommand(0x9005, false);
+	}
+
 	ISO_vUpdateNumberVariableValue(0x8003, *sConfigDataMask.wDistBetweenLines);
 	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.wEvaluationDistance);
 	ISO_vUpdateNumberVariableValue(0x8005, *sConfigDataMask.bTolerance);
@@ -1864,7 +1966,7 @@ void ISO_vUpdateSisConfigData (sConfigurationData *psCfgDataMask)
 	psCfgDataMask->eLanguage = *sConfigDataMask.eLanguage;
 	psCfgDataMask->eUnit = *sConfigDataMask.eUnit;
 	psCfgDataMask->dVehicleID = *sConfigDataMask.dVehicleID;
-	psCfgDataMask->eMonitorArea = sConfigDataMask.eMonitor;
+	psCfgDataMask->eMonitorArea = *sConfigDataMask.eMonitor;
 	psCfgDataMask->wSeedRate = *sConfigDataMask.wSeedRate;
 	psCfgDataMask->bNumOfRows = *sConfigDataMask.bNumOfRows;
 	psCfgDataMask->wDistBetweenLines = *sConfigDataMask.wDistBetweenLines;
@@ -1872,7 +1974,8 @@ void ISO_vUpdateSisConfigData (sConfigurationData *psCfgDataMask)
 	psCfgDataMask->wEvaluationDistance = *sConfigDataMask.wEvaluationDistance;
 	psCfgDataMask->bTolerance = *sConfigDataMask.bTolerance;
 	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
-	psCfgDataMask->eAlterRows = sConfigDataMask.eAlterRows;
+	psCfgDataMask->eAlterRows = *sConfigDataMask.eAlterRows;
+	psCfgDataMask->eAltType = *sConfigDataMask.eAltType;
 }
 
 void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask)
@@ -1890,7 +1993,7 @@ void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask)
 	*sConfigDataMask.eLanguage = psCfgDataMask->eLanguage;
 	*sConfigDataMask.eUnit = psCfgDataMask->eUnit;
 	*sConfigDataMask.dVehicleID = psCfgDataMask->dVehicleID;
-	sConfigDataMask.eMonitor = psCfgDataMask->eMonitorArea;
+	*sConfigDataMask.eMonitor = psCfgDataMask->eMonitorArea;
 	*sConfigDataMask.wSeedRate = psCfgDataMask->wSeedRate;
 	*sConfigDataMask.bNumOfRows = psCfgDataMask->bNumOfRows;
 	*sConfigDataMask.wDistBetweenLines = psCfgDataMask->wDistBetweenLines;
@@ -1898,7 +2001,8 @@ void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask)
 	*sConfigDataMask.wEvaluationDistance = psCfgDataMask->wEvaluationDistance;
 	*sConfigDataMask.bTolerance = psCfgDataMask->bTolerance;
 	*sConfigDataMask.fMaxSpeed = psCfgDataMask->fMaxSpeed;
-	sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
+	*sConfigDataMask.eAlterRows = psCfgDataMask->eAlterRows;
+	*sConfigDataMask.eAltType = psCfgDataMask->eAltType;
 
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	status = RELEASE_MUTEX(ISO_UpdateMask);
