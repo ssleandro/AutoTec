@@ -399,7 +399,6 @@ void FFS_vIdentifyEvent (contract_s* contract)
 						FFS_sRegEstaticoCRC = *pRegEstaticData;
 
 						eAPPError_s error = FFS_vSaveStaticReg();
-						//while (osKernelSysTick() - a < 50);
 						ASSERT(error == APP_ERROR_SUCCESS);
 					}
 				}
