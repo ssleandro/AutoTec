@@ -835,7 +835,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				tsAcumulados *psPlantAcumulado = GET_PUBLISHED_PAYLOAD(contract);
 				if ((psPlantAcumulado != NULL) && (eCurrMask == DATA_MASK_PLANTER))
 				{
-					memcpy(&GUI_sAcumulado, psPlantAcumulado, sizeof(tsAcumulados));
+					GUI_sAcumulado =  *psPlantAcumulado;
 					GUI_vUptPlanterTimerCallback(NULL);
 				}
 

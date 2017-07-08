@@ -1520,6 +1520,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 	tsLinhas *psTrabParcial = &AQR_sAcumulado.sTrabParcial;
 	tsLinhas *psTotalReg = &AQR_sAcumulado.sTotalReg;
 	tsStatus *psStatus = &AQR_sStatus;
+	osFlags dFlagsSis;
 
 	(void)argument;
 
@@ -1605,11 +1606,15 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			AQR_sVelocidade.dMTEV = dPEV;
 		}
 
-		WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
-		AQR_sPubStatus = AQR_sStatus;
-		AQR_sPubAcumulado = AQR_sAcumulado;
-		RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
-		osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SEND_TOTAL);
+		dFlagsSis = osFlagGet(UOS_sFlagSis);
+		if ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0)
+		{
+			WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
+			AQR_sPubStatus = AQR_sStatus;
+			AQR_sPubAcumulado = AQR_sAcumulado;
+			RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
+			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SEND_TOTAL);
+		}
 
 		if (bSaveEstaticData++ > ARQ_SAVE_ESTATIC_DATA_TIMEOUT)
 		{

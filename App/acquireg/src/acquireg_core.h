@@ -260,7 +260,7 @@ void AQR_vZeraRegs (uint8_t bTudo);
 void AQR_vApagaArquivos (void);
 void AQR_vParametros (void);
 void AQR_vAcumulaArea (void);
-
+void AQR_SetStaticRegData (void);
 #ifdef __cplusplus
 extern "C"
 {

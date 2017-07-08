@@ -745,7 +745,8 @@ typedef struct
 	// Medida da superficie trabalhada
 	uint8_t bAreaTrabalhada;
 	uint8_t bTxtAreaTrab;
-	uint8_t bTxtAreauint8_torHora;
+	uint8_t bTxtAreaTrabPorHora;
+
 	// Sementes por cm/pol..
 	uint8_t bSementes;
 	uint8_t bTxtSementes;
