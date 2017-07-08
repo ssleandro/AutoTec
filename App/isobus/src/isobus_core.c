@@ -1283,13 +1283,28 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 			{
 				if (dValue)
 				{
-					ISO_vEnableDisableObjCommand(0x9003, false);
+					ISO_vEnableDisableObjCommand(0x9003, true);
+					*sConfigDataMask.eAlterRows = ALTERNATE_ROWS_ENABLED;
+					*sConfigDataMask.eAltType = ALTERNATED_ROWS_EVEN;
 				}
 				else
 				{
-					ISO_vEnableDisableObjCommand(0x9003, true);
+					ISO_vEnableDisableObjCommand(0x9003, false);
+					*sConfigDataMask.eAlterRows = ALTERNATE_ROWS_DISABLED;
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
+				break;
+			}
+			case ISO_INPUT_LIST_ALTER_ROW_TYPE_ID:
+			{
+				if (dValue)
+				{
+					*sConfigDataMask.eAltType = ALTERNATED_ROWS_ODD;
+				}
+				else
+				{
+					*sConfigDataMask.eAltType = ALTERNATED_ROWS_EVEN;
+				}
 				break;
 			}
 			default:
@@ -1825,6 +1840,19 @@ void ISO_vUpdateConfigurationDataMask (void)
 	ISO_vUpdateNumberVariableValue(0x8004, *sConfigDataMask.wEvaluationDistance);
 	ISO_vUpdateNumberVariableValue(0x8005, *sConfigDataMask.bTolerance);
 	ISO_vUpdateNumberVariableValue(0x8006, GET_UNSIGNED_INT_VALUE(*sConfigDataMask.fMaxSpeed));
+
+	ISO_vUpdateNumberVariableValue(0x9004, *sConfigDataMask.eAlterRows);
+
+	if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_ENABLED)
+	{
+		ISO_vEnableDisableObjCommand(0x9003, true);
+	} else
+	{
+		ISO_vEnableDisableObjCommand(0x9003, false);
+	}
+
+	ISO_vUpdateNumberVariableValue(0x9003, *sConfigDataMask.eAltType);
+
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);
