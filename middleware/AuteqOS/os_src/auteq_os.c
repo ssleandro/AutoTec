@@ -617,6 +617,11 @@ osStatus osMutexRelease (osMutexId mutex_id)
 	osStatus result = osOK;
 	portBASE_TYPE taskWoken = pdFALSE;
 
+	if (mutex_id == NULL)
+	{
+		return osErrorParameter;
+	}
+
 	if (inHandlerMode())
 	{
 		if (xSemaphoreGiveFromISR(mutex_id, &taskWoken) != pdTRUE)
@@ -1781,8 +1786,26 @@ osFlags osFlagWait (const osFlagsGroupId flags_id,
 	return uxBits;
 }
 
-osStatus osFlagSet (osFlagsGroupId flags_id,
-	const osFlags flagsToSet)
+osStatus osFlagSetIrq (osFlagsGroupId flags_id,	const osFlags flagsToSet)
+{
+	portBASE_TYPE taskWoken;
+		osStatus status;
+
+		taskWoken = pdFALSE;
+
+	if (xEventGroupSetBitsFromISR(flags_id, flagsToSet, &taskWoken) != pdPASS)
+	{
+		status = osErrorOS;
+	}
+	else
+	{
+		portEND_SWITCHING_ISR(taskWoken);
+		status = osOK;
+	}
+	return status;
+}
+
+osStatus osFlagSet (osFlagsGroupId flags_id,	const osFlags flagsToSet)
 {
 	portBASE_TYPE taskWoken;
 	osStatus status;

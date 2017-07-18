@@ -43,14 +43,12 @@
 #include "interface_isobus.h"
 #include "interface_sensor.h"
 #include "interface_buzzer.h"
-#include "interface_test.h"
 #include "interface_filesys.h"
 #include "interface_gps.h"
 #include "interface_acquireg.h"
 #include "interface_control.h"
 #include "interface_gui.h"
 #include "interface_records.h"
-#include "interface_simulator.h"
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/

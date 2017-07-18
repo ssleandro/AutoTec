@@ -40,6 +40,7 @@
 #include "board.h"
 #include "chip.h"
 #include "fat_sl.h"
+#include "api_mdriver_span.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
@@ -89,5 +90,22 @@ uint32_t MCU_wReadPID (void)
 
 void MCU_vFFSInit (void)
 {
+	uint8_t bStatus;
+	uint8_t bRetries = 3;
+
 	fs_init();
+	do
+	{
+		bStatus = f_initvolume(initfunc_span);
+		if (bStatus == F_ERR_NOTFORMATTED)
+		{
+			f_format(F_FAT16_MEDIA);
+		}
+
+	} while ((bStatus != F_NO_ERROR) && (bStatus-- > 0));
+
+	if (bStatus != F_NO_ERROR)
+	{
+		span_format();
+	}
 }

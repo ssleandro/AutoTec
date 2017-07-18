@@ -39,6 +39,7 @@
 #include "acquireg_ThreadControl.h"
 #include <stdlib.h>
 
+extern gpio_config_s sTimeTest;
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
@@ -108,6 +109,8 @@ extern UOS_tsConfiguracao UOS_sConfiguracao;
 //da aquisição e registro:
 CREATE_MUTEX(AQR_MTX_sEntradas);
 CREATE_MUTEX(AQR_MTX_sBufferListaSensores);
+CREATE_MUTEX(AQR_MTX_sBufferAcumulado);
+
 //flag indicador da atualização das informações de Aquisição:
 osFlagsGroupId AQR_sFlagREG;
 //Estrutura de dados do GPS
@@ -141,6 +144,9 @@ uint8_t bLimpaFalhas = false;
 AQR_teArremate eMemArremate;
 
 PubMessage sArqRegPubMsg;
+CAN_tsCtrlListaSens AQR_sPubCtrlLista;
+tsAcumulados AQR_sPubAcumulado;
+
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
@@ -272,6 +278,8 @@ void AQR_vZeraRegs (uint8_t bTudo)
 	//----------------------------------------------------------------------------
 	//Zera valores parciais em trabalho:
 
+	WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
+
 	// Zera acumulados parciais
 	memset(&AQR_sAcumulado.sTrabParcial, 0, sizeof(AQR_sAcumulado.sTrabParcial));
 	memset(&AQR_sAcumulado.sTrabParcDir, 0, sizeof(AQR_sAcumulado.sTrabParcDir));
@@ -316,6 +324,9 @@ void AQR_vZeraRegs (uint8_t bTudo)
 		memset(&AQR_sAcumulado.sManobra, 0, sizeof(AQR_sAcumulado.sManobra)); // manobra
 
 	}
+
+	RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
+
 } //Fim da função AQR_vZeraRegs.
 
 /*******************************************************************************
@@ -446,6 +457,7 @@ void AQR_vAcumulaArea (void)
 	tsDistanciaTrab* const psParcDis = &AQR_sAcumulado.sDistTrabParcial;
 	tsDistanciaTrab* const psParcDisDir = &AQR_sAcumulado.sDistTrabParcialDir;
 	tsDistanciaTrab* const psParcDisEsq = &AQR_sAcumulado.sDistTrabParcialEsq;
+
 
 	//Acumula área parcial
 	//Divide por 10 porque AQR_wEspacamento está em cm*10
@@ -1013,7 +1025,7 @@ void AQR_vApagaListaSensores (void)
 	memset( &CAN_sCtrlLista.asLista, 0x00, sizeof( CAN_sCtrlLista.asLista ) );
 
 	//Prepara a cópia de trabalho da estrutura com dados CAN:
-	memcpy( &AQR_sDadosCAN, &CAN_sCtrlLista, sizeof( AQR_sDadosCAN ) );
+	AQR_sDadosCAN = CAN_sCtrlLista;
 
 	//Devolve o mutex:
 	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
@@ -1039,6 +1051,37 @@ inline void AQR_vDetectThread (thisWDTFlag *flag, uint8_t *bPosition, void *pFun
 		(*bPosition)++;
 	}
 	*flag = (uint8_t *)&WATCHDOG_FLAGPOS(THREADS_WDT_POSITION(*bPosition));
+}
+
+
+void AQR_GetCANsCrtlLista(CAN_tsCtrlListaSens *sOut)
+{
+	osStatus status;
+//Pega o mutex antes acessar dados compartilhados:
+	status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
+	ASSERT(status == osOK);
+
+//Prepara a cópia de trabalho da estrutura com dados CAN:
+	*sOut = CAN_sCtrlLista;
+
+//Devolve o mutex:
+	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
+	ASSERT(status == osOK);
+}
+
+void AQR_SetCANsCrtlLista(CAN_tsCtrlListaSens *sIn)
+{
+	osStatus status;
+//Pega o mutex antes acessar dados compartilhados:
+	status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
+	ASSERT(status == osOK);
+
+//Prepara a cópia de trabalho da estrutura com dados CAN:
+	CAN_sCtrlLista = *sIn;
+
+//Devolve o mutex:
+	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
+	ASSERT(status == osOK);
 }
 
 #ifndef UNITY_TEST
@@ -1147,6 +1190,7 @@ eAPPError_s AQR_eInitAcquiregPublisher (void)
 #ifndef UNITY_TEST
 void AQR_vAcquiregPublishThread (void const *argument)
 {
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Acquireg Publish Thread Created");
 #endif
@@ -1156,9 +1200,10 @@ void AQR_vAcquiregPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
-	AQR_eInitAcquiregPublisher();
+	WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 	while (1)
 	{
@@ -1166,7 +1211,8 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		WATCHDOG_STATE(AQRPUB, WDT_SLEEP);
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
-			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST, true, false, osWaitForever);
+			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
+			| AQR_APL_FLAG_SEND_TOTAL, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1203,9 +1249,11 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		}
 		if ((dFlags & AQR_APL_FLAG_SAVE_LIST) > 0)
 		{
+			AQR_GetCANsCrtlLista(&AQR_sPubCtrlLista);
+
 			sArqRegPubMsg.dEvent = EVENT_FFS_SENSOR_CFG;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)&CAN_sCtrlLista;
+			sArqRegPubMsg.vPayload = (void*)&AQR_sPubCtrlLista  ;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
@@ -1217,6 +1265,16 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
+		if ((dFlags & AQR_APL_FLAG_SEND_TOTAL) > 0)
+		{
+
+			sArqRegPubMsg.dEvent = EVENT_AQR_UPDATE_PLANT_DATA;
+			sArqRegPubMsg.eEvtType = EVENT_SET;
+			sArqRegPubMsg.vPayload = &AQR_sPubAcumulado;
+			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
+			PUBLISH(CONTRACT(Acquireg), 0);
+		}
+
 
 	}
 	osThreadTerminate(NULL);
@@ -1255,6 +1313,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 						AQR_sStatus.bNumSensores = UOS_sConfiguracao.sMonitor.bNumLinhas;
 					}
 				}
+				AQR_vParametros();
 			}
 			break;
 		}
@@ -1266,16 +1325,19 @@ void AQR_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_GPS:
 		{
+			GPS_tsDadosGPS *psGPSDados = GET_PUBLISHED_PAYLOAD(contract);
+
 			// Treat an event receive from MODULE_GPS
 			osFlagSet(xGPS_sFlagGPS, GET_PUBLISHED_EVENT(contract));
 
-			status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
-			ASSERT(status == osOK);
-
-			memcpy(&AQR_sDadosGPS, (GPS_tsDadosGPS*)(GET_PUBLISHED_PAYLOAD(contract)), sizeof(GPS_tsDadosGPS));
-
-			status = RELEASE_MUTEX(AQR_MTX_sEntradas);
-			ASSERT(status == osOK);
+			if (psGPSDados != NULL)
+			{
+				status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
+				ASSERT(status == osOK);
+				AQR_sDadosGPS = *psGPSDados;
+				status = RELEASE_MUTEX(AQR_MTX_sEntradas);
+				ASSERT(status == osOK);
+			}
 
 			break;
 		}
@@ -1285,9 +1347,12 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					memcpy(&sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
-						sizeof(AQR_tsRegEstaticoCRC));
-					osFlagSet(AQR_sFlagREG, AQR_FLAG_ESTATICO_REG);
+					AQR_tsRegEstaticoCRC *pAQRRegData = GET_PUBLISHED_PAYLOAD(contract);
+					if (pAQRRegData != NULL)
+					{
+						sRegEstaticoCRC = *pAQRRegData;
+						osFlagSet(AQR_sFlagREG, AQR_FLAG_ESTATICO_REG);
+					}
 				}
 				else
 				{
@@ -1296,9 +1361,13 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			}
 			if (ePubEvt == EVENT_FFS_SENSOR_CFG)
 			{
-					memcpy(&CAN_sCtrlLista, (CAN_tsCtrlListaSens*)(GET_PUBLISHED_PAYLOAD(contract)),
-						sizeof(CAN_tsCtrlListaSens));
+				CAN_tsCtrlListaSens *pCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+				if (pCtrlListaSens != NULL)
+				{
+					AQR_SetCANsCrtlLista(pCtrlListaSens);
+
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_VERIFICANDO);
+				}
 			}
 
 			break;
@@ -1320,6 +1389,16 @@ void AQR_vIdentifyEvent (contract_s* contract)
 				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
 				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_LIST);
 			}
+
+			if (ePubEvt == EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL)
+			{
+				osFlagSet(AQR_sFlagREG, AQR_FLAG_ZERA_TOTAIS);
+			}
+
+			if (ePubEvt == EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL)
+			{
+				osFlagSet(AQR_sFlagREG, AQR_FLAG_ZERA_PARCIAIS);
+			}
 			break;
 		}
 		default:
@@ -1340,6 +1419,32 @@ void AQR_vAcquiregThread (void const *argument)
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(AcquiregQueue);
 
+	// Internal flags
+	status = osFlagGroupCreate(&xSEN_sFlagApl);
+	ASSERT(status == osOK);
+
+	status = osFlagGroupCreate(&xGPS_sFlagGPS);
+	ASSERT(status == osOK);
+
+	status = osFlagGroupCreate(&xAQR_sFlagSis);
+	ASSERT(status == osOK);
+
+	AQR_eInitAcquiregPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromIsobusID = (osThreadId)argument;
+	osSignalSet(xMainFromIsobusID, MODULE_ACQUIREG);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
+
+	//Create subthreads
+	uint8_t bNumberOfThreads = 0;
+	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
+	{
+		AQR_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
+	}
+
 	/* Prepare the signature - struture that notify the broker about subscribers */
 	SIGNATURE_HEADER(AcquiregControl, THIS_MODULE, TOPIC_CONTROL, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregControl), 0) == osOK);
@@ -1355,26 +1460,6 @@ void AQR_vAcquiregThread (void const *argument)
 
 	SIGNATURE_HEADER(AcquiregGUI, THIS_MODULE, TOPIC_GUI, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGUI), 0) == osOK);
-
-	// Internal flags
-	status = osFlagGroupCreate(&xSEN_sFlagApl);
-	ASSERT(status == osOK);
-
-	status = osFlagGroupCreate(&xGPS_sFlagGPS);
-	ASSERT(status == osOK);
-
-	status = osFlagGroupCreate(&xAQR_sFlagSis);
-	ASSERT(status == osOK);
-
-	//Create subthreads
-	uint8_t bNumberOfThreads = 0;
-	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
-	{
-		AQR_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
-	}
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_ACQUIREG);
 
 	// TODO: Wait for system is ready to work event
 
@@ -1429,11 +1514,13 @@ void AQR_vAcquiregThread(void const *argument)
 void AQR_vAcquiregTimeThread (void const *argument)
 {
 	uint8_t bErr;
+	uint8_t bSaveEstaticData = 0;
 	float fVelocidade;
 	tsLinhas *psTrabTotal = &AQR_sAcumulado.sTrabTotal;
 	tsLinhas *psTrabParcial = &AQR_sAcumulado.sTrabParcial;
 	tsLinhas *psTotalReg = &AQR_sAcumulado.sTotalReg;
 	tsStatus *psStatus = &AQR_sStatus;
+	osFlags dFlagsSis;
 
 	(void)argument;
 
@@ -1518,6 +1605,23 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			//Máximo Tempo em Excesso de Velocidade em segundos
 			AQR_sVelocidade.dMTEV = dPEV;
 		}
+
+		dFlagsSis = osFlagGet(UOS_sFlagSis);
+		if ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0)
+		{
+			WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
+			AQR_sPubStatus = AQR_sStatus;
+			AQR_sPubAcumulado = AQR_sAcumulado;
+			RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
+			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SEND_TOTAL);
+		}
+
+		if (bSaveEstaticData++ > ARQ_SAVE_ESTATIC_DATA_TIMEOUT)
+		{
+			bSaveEstaticData = 0;
+			AQR_SetStaticRegData();
+			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
+		}
 	}
 	osThreadTerminate(NULL);
 }
@@ -1542,6 +1646,8 @@ uint8_t AQR_GetStaticRegData (void)
 	uint16_t wResult;
 	uint16_t wCRC16;        //Para calculo do CRC dos registros estáticos.
 	uint8_t sRet;
+
+	WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
 
 	//Verifica se o registro estático não está corrompido:
 	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&sRegEstaticoCRC,
@@ -1597,6 +1703,7 @@ uint8_t AQR_GetStaticRegData (void)
 		//Indica que vai criar um novo registro:
 		sRet = AQR_bSTS_NOVO_REG;
 	}
+	RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
 	return sRet;
 }
 
@@ -1608,6 +1715,8 @@ void AQR_SetStaticRegData (void)
 
 	//Ponteiro para o registro estático dentro da estrutura acima:
 	AQR_tsRegEstatico * const AQR_psReg = &sRegEstaticoCRC.sReg;
+
+	WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
 
 	//--------------------------------------------------------------------------
 	//Registro Estático:
@@ -1646,6 +1755,8 @@ void AQR_SetStaticRegData (void)
 	AQR_wTAM_REG_ESTATICO_CRC - sizeof(sRegEstaticoCRC.wCRC16));
 	//Atualiza o valor do crc na estrutura combinada:
 	sRegEstaticoCRC.wCRC16 = wCRC16;
+
+	RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
 }
 
 void AQR_vRepeteTesteSensores (void)
@@ -1758,8 +1869,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 	// Mutex to access control to input data structures, acquire variables and records
 	INITIALIZE_MUTEX(AQR_MTX_sEntradas);
-
 	INITIALIZE_MUTEX(AQR_MTX_sBufferListaSensores);
+	INITIALIZE_MUTEX(AQR_MTX_sBufferAcumulado);
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRMGTThreadArrayPosition)); //Task created, inform core
@@ -1862,7 +1973,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	ASSERT(status == osOK);
 
 	//Prepara a cópia de trabalho da estrutura com as entradas:
-	memcpy(&AQR_sDadosGPS, &GPS_sDadosGPS, sizeof(AQR_sDadosGPS));
+	AQR_sDadosGPS = GPS_sDadosGPS;
 
 	// Release mutex
 	status = RELEASE_MUTEX(GPS_MTX_sEntradas);
@@ -2295,8 +2406,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 //                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
 //                    }
 
-					AQR_sPubStatus = AQR_sStatus;
-
 					for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 					{
 						//Conecta sensores
@@ -2327,16 +2436,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		if (dFlagSensor != CAN_APL_FLAG_NENHUM)
 		{
-			//Pega o mutex antes acessar dados compartilhados:
-			status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
-			ASSERT(status == osOK);
 
-			//Prepara a cópia de trabalho da estrutura com dados CAN:
-			memcpy(&AQR_sDadosCAN, &CAN_sCtrlLista, sizeof(AQR_sDadosCAN));
-
-			//Devolve o mutex:
-			status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
-			ASSERT(status == osOK);
+			AQR_GetCANsCrtlLista(&AQR_sDadosCAN);
 
 			//------------------------------------------------------------------------
 			//Se algum sensor não respondeu ou e nenhum sensor respondeu...
@@ -2962,7 +3063,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					//no momento da pausa automática para manobra
 					sSegmentos.wPosIns = (sSegmentos.wPosIns - 1) & sSegmentos.wMskBufAnel;
 					sSegmentos.wPosRet = (sSegmentos.wPosRet - 1) & sSegmentos.wMskBufAnel;
-					;
 
 					psManobra->dDistancia += (uint32_t)((sSegmentos.awBufDis[sSegmentos.wPosIns] + 5) / 10);
 					psTrabTotal->dDistancia -= (uint32_t)((sSegmentos.awBufDis[sSegmentos.wPosIns] + 5) / 10);
@@ -3657,6 +3757,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				//Se não passou 1 metro, desconsidera linhas para sair de pausa
 				if ((dValorGPS & GPS_FLAG_METRO) > 0) // Se passou 1 metro
 				{
+
 					//Se está em pausa automática e vai sair da pausa
 					if ((psStatus->bNumLinhasZero < bLinhasFalhaPausaAuto) && (psStatus->bPausaAuto != false))
 					{
@@ -3882,18 +3983,12 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 		//--------------------------------------------------------------------------
 		//Registro Estático:
-		{
-			static uint16_t dDataHoraSalvo = 0xfffffff0;
-			//Salva Registro
-			AQR_SetStaticRegData();
-			if ((AQR_sAcumulado.sTotalReg.dSegundos > dDataHoraSalvo + 60) || // A cada minuto
-				 (AQR_sAcumulado.sTotalReg.dSegundos < dDataHoraSalvo))
-			{
-				dDataHoraSalvo = AQR_sAcumulado.sTotalReg.dSegundos;
-				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
-			}
+		//Salva Registro
+		//
+		//osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 
-		}
+		//GPIO_vToggle(&sTimeTest);
+
 		//--------------------------------------------------------------------------
 		// Tratamento do parâmetro Alarmes:
 

@@ -39,8 +39,8 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define GUI_MODULES \
-    X("GuiPublish"     , 1024 , osPriorityAboveNormal , GUI_vGuiPublishThread     , (1 << 0) , 1 ) \
-    X(NULL             ,   0 , 0                	 , NULL                      , 0        , 2 ) \
+    X("GuiPublish"     , 1024 , osPriorityNormal , GUI_vGuiPublishThread     , (1 << 0) , 1 ) \
+    X(NULL             ,   0 	, 0					 , NULL                      , 0        , 2 )
 
 /******************************************************************************
  * Configuration Constants

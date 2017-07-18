@@ -421,8 +421,6 @@ peripheral_descriptor_p pGPSHandle;
 
 gpio_config_s sTimePulseInt;
 
-gpio_config_s sDebugLed;
-
 /*******************************************************************************
  Variáveis públicas deste módulo:
  *******************************************************************************/
@@ -489,6 +487,8 @@ extern UOS_tsConfiguracao UOS_sConfiguracao;
 extern uint32_t CAN_dLeituraSensor;
 extern uint8_t CAN_bSensorSimulador;
 
+GPS_tsDadosGPS GPS_sPublishDadosGPS;
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
@@ -500,14 +500,13 @@ uint8_t GPS_vGPSPackMsgTx (uint8_t bClass, uint8_t bId, uint8_t *pbDados,
 	uint8_t bLength);
 
 void GPS_vTimerCallbackMtr (void const*);
-void GPS_vTimerCallbackTimeout (void const*);
 void GPS_vTimerCallbackTimeoutEnl (void const*);
+void GPS_vTimePulseIntCallback (void);
 
 /******************************************************************************
  * Module timers
  *******************************************************************************/
 CREATE_TIMER(GPS_bTimerMtr, GPS_vTimerCallbackMtr);
-CREATE_TIMER(GPS_bTimerTimeout, GPS_vTimerCallbackTimeout);
 CREATE_TIMER(GPS_bTimerTimeoutEnl, GPS_vTimerCallbackTimeoutEnl);
 
 /******************************************************************************
@@ -645,6 +644,9 @@ PubMessage sGPSPubMsg;
 #ifndef UNITY_TEST
 void GPS_vGPSPublishThread (void const *argument)
 {
+	osFlags dValorGPS;
+	osStatus status;
+
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Buzzer Publish Thread Created");
 #endif
@@ -655,12 +657,7 @@ void GPS_vGPSPublishThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGPSPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
-	osFlags dValorGPS;
-	osStatus status;
-
-	GPS_eInitGPSPublisher();
 
 	while (1)
 	{
@@ -673,7 +670,8 @@ void GPS_vGPSPublishThread (void const *argument)
 		status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
 		ASSERT(status == osOK);
 
-		sGPSPubMsg.vPayload = (void*)&GPS_sDadosGPS;
+		memcpy(&GPS_sPublishDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
+		sGPSPubMsg.vPayload = (void*)&GPS_sPublishDadosGPS;
 
 		status = RELEASE_MUTEX(GPS_MTX_sEntradas);
 		ASSERT(status == osOK);
@@ -710,6 +708,8 @@ void GPS_vGPSPublishThread(void const *argument)
 {}
 #endif
 
+gpio_config_s sTimeTest;
+
 /*******************************************************************************
 
  void GPS_vAcumulaDistancia( void )
@@ -745,7 +745,8 @@ void GPS_vAcumulaDistancia (void)
 		{
 			//Acumula a distância percorrida
 			fAux = GPS_sDadosGPS.dGroundSpeed;
-			fAux = (fAux / (float) NUM_AM_INT);
+//			fAux = (fAux / (float) NUM_AM_INT);
+			fAux = (fAux / (float) 8);
 
 			//Acumula distância total percorrida
 			//GPS_sDadosGPS.fDistancia = ( fAux + GPS_sDadosGPS.fDistancia );
@@ -848,9 +849,7 @@ void GPS_vAcumulaDistancia (void)
 void GPS_vTimePulseIntCallback (void)
 {
 	// Set time pulse flag
-	osFlagSet(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
-
-	START_TIMER(GPS_bTimerTimeout, 125);
+	osFlagSetIrq(GPS_sFlagGPS, GPS_FLAG_INT_TIMEPULSE);
 }
 
 void GPS_vConfigExtInterrupt (void)
@@ -864,19 +863,18 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.bMPort = EXTINT_TIMEPULSE_PORT;
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
 
-	sDebugLed.vpPrivateData = NULL;
-	sDebugLed.bDefaultOutputHigh = false;
-	sDebugLed.eDirection = GPIO_OUTPUT;
-	sDebugLed.ePull = GPIO_PULLDOWN;
-	sDebugLed.fpCallBack = NULL;
-	sDebugLed.bMPort = LED_DEBUG_GREEN_PORT;
-	sDebugLed.bMPin = LED_DEBUG_GREEN_PIN;
+	sTimeTest.vpPrivateData = NULL;
+	sTimeTest.bDefaultOutputHigh = false;
+	sTimeTest.eDirection = GPIO_OUTPUT;
+	sTimeTest.ePull = GPIO_PULLDOWN;
+	sTimeTest.bMPort = 5;
+	sTimeTest.bMPin = 4;
+
+	// Initialize enable PS9 structure
+	GPIO_eInit(&sTimeTest);
 
 	// Initialize time pulse external interrupt
 	GPIO_eInit(&sTimePulseInt);
-
-	// Initialize debug LED
-	GPIO_eInit(&sDebugLed);
 }
 
 /*******************************************************************************
@@ -920,13 +918,14 @@ void GPS_vGPSTimePulseThread (void const *argument)
 			{
 				bContaSegundo++;
 
-				if (bContaSegundo > 3)
+				if (bContaSegundo > 7)
 				{
 					bContaSegundo = 0;
 
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
 				}
 			}
+			//GPIO_vToggle(&sTimeTest);
 			//Acumula a distância percorrida.
 			GPS_vAcumulaDistancia();
 		}
@@ -1169,9 +1168,9 @@ void GPS_vGPSConfig (void)
 				GPS_sConfigTP5.tpIdx = TIMEPULSE2;
 				GPS_sConfigTP5.version = TIMEPULSE_MESSAGE_VERSION;
 				GPS_sConfigTP5.antCableDelay = 50;
-				GPS_sConfigTP5.freqPeriod = 250000;
-				GPS_sConfigTP5.freqPeriodLock = 250000;
-				GPS_sConfigTP5.pulseLenRatio = 25000;
+				GPS_sConfigTP5.freqPeriod = 125000;
+				GPS_sConfigTP5.freqPeriodLock = 125000;
+				GPS_sConfigTP5.pulseLenRatio = 12500;
 
 				GPS_sConfigTP5.flags = (TP5_FLAG_ENABLE | TP5_FLAG_LOCKGPSFREQ
 					| TP5_FLAG_ISLENGTH | TP5_FLAG_ALIGNTOTOW
@@ -2774,11 +2773,6 @@ void GPS_vTimerCallbackMtr (void const *arg)
 	osFlagSet(GPS_sFlagGPS, GPS_FLAG_TIMEOUT_MTR);
 }
 
-void GPS_vTimerCallbackTimeout (void const *arg)
-{
-	osFlagSet(GPS_sFlagGPS, GPS_FLAG_TIME_OUT);
-}
-
 void GPS_vTimerCallbackTimeoutEnl (void const *arg)
 {
 	osFlagSet(GPS_sFlagEnl, GPS_ENL_FLAG_TIME_OUT);
@@ -2849,9 +2843,6 @@ void GPS_vGPSThread (void const *argument)
 	//Aloca um timer de sistema para aguardar 5s:
 	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerPeriodic);
 
-	// Used to count 125ms after an timepulse interrupt
-	INITIALIZE_TIMER(GPS_bTimerTimeout, osTimerPeriodic);
-
 	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
 	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
 
@@ -2877,6 +2868,15 @@ void GPS_vGPSThread (void const *argument)
 	//      OSFlagPend( UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, OS_FLAG_WAIT_SET_ALL, 0, &bErr );
 	//      __assert( bErr == OS_NO_ERR );
 
+
+	GPS_eInitGPSPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osSignalSet((osThreadId)argument, MODULE_GPS);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
+
 	//Timer sempre ligado:
 	START_TIMER(GPS_bTimerTimeoutEnl, GPS_sCtrlCBASRL.dTicksIDLE);
 
@@ -2892,21 +2892,12 @@ void GPS_vGPSThread (void const *argument)
 	GPS_sTimeoutMsg.bMonVer = false;
 	GPS_sTimeoutMsg.bMonHw = 10;
 
-	/* Prepare the signature - struture that notify the broker about subscribers */
-	SIGNATURE_HEADER(GPS, THIS_MODULE, TOPIC_GPS, GPSQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(GPS), 0) == osOK);
-
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;
 	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
 	{
 		GPS_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromIsobusID = (osThreadId)argument;
-	osSignalSet(xMainFromIsobusID, MODULE_GPS);
-
-	uint8_t* pRecvBuffer;
 
 	/* Start the main functions of the application */
 	while (1)
@@ -2918,10 +2909,6 @@ void GPS_vGPSThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
-			pRecvBuffer = (uint8_t*) GET_MESSAGE(GET_CONTRACT(evt))->pvMessage;
-
-			(void)pRecvBuffer;
-			(void)evt;
 		}
 		osDelay(500);
 	}
@@ -3133,18 +3120,6 @@ void GPS_vGPSManagementThread (void const *argument)
 				GPS_sGerenciaTimeoutMsg.dMonHw = 0;
 				GPS_sGerenciaTimeoutMsg.dConfiguracao = 0;
 
-				//Desliga o Modulo GPS
-//                UOS_DISABLE_GPS;
-
-				//Aguarda 1 segundo
-//                OSTimeDly( TICK );
-
-				//Liga o Módulo GPS
-//                UOS_ENABLE_GPS;
-
-				//Aguarda 1 segundo
-//                OSTimeDly( TICK );
-
 				//Inicia variáveis de configuração
 				GPS_eConfigura = VerificaPort;
 				GPS_sDadosGPS.bConfigura_FIM = false;
@@ -3208,7 +3183,7 @@ void GPS_vGPSRecvThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSRCV, WDT_SLEEP);
-		osDelayUntil(&wTicks, 150);
+		osDelayUntil(&wTicks, 50);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));

@@ -39,12 +39,8 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define CONTROL_MODULES \
-    X("ControlManagement"  , 256 , osPriorityNormal , CTL_vControlManagementThread  , (1 << 0) , 1 ) \
-    X("ControlPublish"     , 256 , osPriorityNormal , CTL_vControlPublishThread     , (1 << 1) , 2 ) \
-    X(NULL                 ,   0 , 0                , NULL                          , 0        , 3 ) \
-
-//    X("ControlManagement"  , 150 , osPriorityNormal , CTL_vControlManagementThread  , (1 << 0) , 1 )
-//    X("ControlEmergency"   , 150 , osPriorityNormal , CTL_vControlEmergencyThread   , (1 << 1) , 2 )
+    X("ControlPublish"     , 256 , osPriorityNormal , CTL_vControlPublishThread     , (1 << 0) , 1 ) \
+    X(NULL                 ,   0 , 0                , NULL                          , 0        , 2 ) \
 
 /******************************************************************************
  * Configuration Constants
@@ -101,10 +97,6 @@ extern "C"
 #endif
 
 extern void CTL_vControlPublishThread (void const *argument);
-
-extern void CTL_vControlManagementThread (void const *argument);
-
-extern void CTL_vControlEmergencyThread (void const *argument);
 
 extern void CTL_vDetectThread (thisWDTFlag* flag, uint8_t* bCounter, void* pFunc);
 

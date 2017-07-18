@@ -62,6 +62,7 @@
 #define AQR_APL_FLAG_CONFIRM_INSTALLATION	0x0008
 #define AQR_APL_FLAG_SAVE_LIST				0x0010
 #define AQR_APL_FLAG_ERASE_LIST				0x0020
+#define AQR_APL_FLAG_SEND_TOTAL				0x0040
 
 /******************************************************************************
  * Configuration Constants
@@ -75,6 +76,7 @@
 #define AQR_bSTS_SALVA_REG              0x03
 #define AQR_bSTS_NOVO_REG               0x04
 
+#define ARQ_SAVE_ESTATIC_DATA_TIMEOUT	5
 /******************************************************************************
  * Macros
  *******************************************************************************/
@@ -258,7 +260,7 @@ void AQR_vZeraRegs (uint8_t bTudo);
 void AQR_vApagaArquivos (void);
 void AQR_vParametros (void);
 void AQR_vAcumulaArea (void);
-
+void AQR_SetStaticRegData (void);
 #ifdef __cplusplus
 extern "C"
 {

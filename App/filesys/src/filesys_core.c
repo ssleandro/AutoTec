@@ -70,6 +70,8 @@ CREATE_SIGNATURE(FileSysAcqureg);
 CREATE_SIGNATURE(FileSysDiag);//!< Signature Declarations
 CREATE_CONTRACT(FileSys);//!< Create contract for buzzer msg publication
 
+CREATE_MUTEX(FFS_AccesControl);
+
 /**
  * Module Threads
  */
@@ -245,19 +247,22 @@ void FSM_vFileSysPublishThread (void const *argument)
 
 	FSM_vDetectThread(&WATCHDOG(FSMPUB), &bFSMPUBThreadArrayPosition, (void*)FSM_vFileSysPublishThread);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
+	INITIALIZE_MUTEX(FFS_AccesControl);
 
 	xPbulishThreadID = osThreadGetId();
 
 	osSignalSet((osThreadId)argument, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
 
-	FSM_eInitFileSysPublisher();
+	WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	osDelay(200);
+	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 	while (1)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
-		osEvent sEvent = osSignalWait(FFS_FLAG_ALL, osWaitForever);
+		osEvent sEvent = osSignalWait(FFS_FLAG_STATUS | FFS_FLAG_CFG | FFS_FLAG_STATIC_REG | FFS_FLAG_SENSOR_CFG, osWaitForever);
 		WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 		osFlags dFlags = osFlagGet(FFS_sFlagSis);
@@ -266,9 +271,9 @@ void FSM_vFileSysPublishThread (void const *argument)
 		if (tSignalBit & FFS_FLAG_STATUS)
 		{
 			if (dFlags & FFS_FLAG_STATUS)
-				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				FSM_ePublishEvent(EVENT_FFS_STATUS, EVENT_SET, NULL);
 			else
-				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				FSM_ePublishEvent(EVENT_FFS_STATUS, EVENT_CLEAR, NULL);
 		}
 		if (tSignalBit & FFS_FLAG_CFG)
 		{
@@ -326,6 +331,8 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 	uint8_t ucStatus;
 	eAPPError_s error = APP_ERROR_SUCCESS;
 	uint8_t retries = 3;
+	F_SPACE xSpace;
+	unsigned char ucReturned;
 
 	do
 	{
@@ -347,6 +354,9 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 		osFlagClear(FFS_sFlagSis, FFS_FLAG_STATUS);
 	}
 
+	/* Get space information on current embedded FAT file system drive. */
+	ucReturned = f_getfreespace(&xSpace);
+
 	return eError;
 }
 
@@ -362,15 +372,16 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-				if (ePubEvType == EVENT_SET)
+				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
+				if ((ePubEvType == EVENT_SET) && ( psConfig != NULL))
 				{
-					memcpy(&FFS_sConfiguracao, (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract)),
-								sizeof(UOS_tsConfiguracao));
-
-					error = FFS_vSaveConfigFile();
-					ASSERT(error == APP_ERROR_SUCCESS);
+					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0)
+					{
+						FFS_sConfiguracao = *psConfig;
+						error = FFS_vSaveConfigFile();
+						ASSERT(error == APP_ERROR_SUCCESS);
+					}
 				}
-
 			}
 			break;
 		}
@@ -378,12 +389,18 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_FFS_STATIC_REG)
 			{
-				memcpy(&FFS_sRegEstaticoCRC, (AQR_tsRegEstaticoCRC*)(GET_PUBLISHED_PAYLOAD(contract)),
-							sizeof(AQR_tsRegEstaticoCRC));
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
-					eAPPError_s error = FFS_vSaveStaticReg();
-					ASSERT(error == APP_ERROR_SUCCESS);
+					uint32_t a = osKernelSysTick();
+					AQR_tsRegEstaticoCRC *pRegEstaticData = GET_PUBLISHED_PAYLOAD(contract);
+					if ((pRegEstaticData != NULL)
+						&& (memcmp(&FFS_sRegEstaticoCRC, pRegEstaticData, sizeof(FFS_sRegEstaticoCRC)) != 0))
+					{
+						FFS_sRegEstaticoCRC = *pRegEstaticData;
+
+						eAPPError_s error = FFS_vSaveStaticReg();
+						ASSERT(error == APP_ERROR_SUCCESS);
+					}
 				}
 			}
 
@@ -391,11 +408,13 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					memcpy(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, (CAN_tsCtrlListaSens*)(GET_PUBLISHED_PAYLOAD(contract)),
-												sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens));
-
-					error = FFS_vSaveSensorCfg();
-					ASSERT(error == APP_ERROR_SUCCESS);
+					CAN_tsCtrlListaSens *psCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+					if ((psCtrlListaSens != NULL) && ( memcmp(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, psCtrlListaSens, sizeof(CAN_tsCtrlListaSens)) != 0))
+					{
+							FFS_sCtrlListaSens.CAN_sCtrlListaSens =  *psCtrlListaSens;
+							error = FFS_vSaveSensorCfg();
+							ASSERT(error == APP_ERROR_SUCCESS);
+					}
 				}
 				else
 				{
@@ -410,10 +429,8 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			break;
 	}
 }
+
 /* ************************* Main thread ************************************ */
-
-extern UOS_tsConfiguracao UOS_sConfiguracaoDefault;
-
 #ifndef UNITY_TEST
 void FSM_vFileSysThread (void const *argument)
 {
@@ -427,6 +444,24 @@ void FSM_vFileSysThread (void const *argument)
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(FileSysQueue);
 
+
+	FSM_eInitFileSysPublisher();
+
+	/* Inform Main thread that initialization was a success */
+	osThreadId xMainFromID = (osThreadId)argument;
+	osSignalSet(xMainFromID, MODULE_FILESYS);
+
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
+
+	//Create subthreads
+	uint8_t bNumberOfThreads = 0;
+	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
+	{
+		FSM_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
+	}
+
+
 	SIGNATURE_HEADER(FileSysControl, THIS_MODULE, TOPIC_CONTROL, FileSysQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(FileSysControl), 0) == osOK);
 
@@ -436,17 +471,6 @@ void FSM_vFileSysThread (void const *argument)
 	osFlagGroupCreate(&FFS_sFlagSis);
 	error = FSM_vInitDeviceLayer();
 	ASSERT(error == APP_ERROR_SUCCESS);
-
-	//Create subthreads
-	uint8_t bNumberOfThreads = 0;
-	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
-	{
-		FSM_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
-	}
-
-	/* Inform Main thread that initialization was a success */
-	osThreadId xMainFromID = (osThreadId)argument;
-	osSignalSet(xMainFromID, MODULE_FILESYS);
 
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATUS);
 
@@ -482,25 +506,3 @@ void FSM_vFileSysThread (void const *argument)
 void FSM_vFileSysThread (void const *argument)
 {}
 #endif
-
-/* ************************* Management thread ************************************ */
-void FSM_vFileSysManagementThread (void const *argument)
-{
-	eAPPError_s error;
-
-#ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-	SEGGER_SYSVIEW_Print("FileSys Thread Created");
-#endif
-
-	FSM_vDetectThread(&WATCHDOG(FSMPUB), &bFSMPUBThreadArrayPosition, (void*)FSM_vFileSysManagementThread);
-	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
-
-	osThreadId xDiagMainID = (osThreadId)argument;
-	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition)); //Task created, inform core
-	osThreadSetPriority(NULL, osPriorityLow);
-
-	while (1)
-	{
-
-	}
-}

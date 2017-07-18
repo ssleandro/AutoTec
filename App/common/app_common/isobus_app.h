@@ -60,6 +60,7 @@ typedef enum
 	SOFT_KEY_MASK_TRIMMING,
 	SOFT_KEY_MASK_SYSTEM,
 	SOFT_KEY_MASK_INSTALLATION_FINISH,
+	SOFT_KEY_MASK_CONFIGURATION_CHANGES,
 	SOFT_KEY_MASK_INVALID
 } eIsobusSoftKeyMask;
 
@@ -78,6 +79,8 @@ typedef enum
 	DATA_MASK_TEST_MODE,
 	DATA_MASK_TRIMMING,
 	DATA_MASK_SYSTEM,
+	DATA_MASK_CONFIRM_CLEAR_COUNTER,
+	DATA_MASK_CONFIRM_CONFIG_CHANGES,
 	ALARM_MASK_CONFIRM_INSTALLATION = 0x50F0,
 	DATA_MASK_INVALID
 } eIsobusMask;
@@ -129,6 +132,14 @@ typedef enum
 	ALTERNATED_ROWS_INVALID
 } eAlternatedRowsType;
 
+typedef enum
+{
+	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
+	STATUS_TRIMMING_TRIMMED = 0x0C,
+	STATUS_TRIMMING_NONE = 0xFF,
+	STATUS_TRIMMING_INVALID,
+} eTrimmingStatus;
+
 typedef struct sConfigurationData
 {
 	eSelectedLanguage eLanguage;
@@ -151,7 +162,7 @@ typedef struct sConfigurationDataMask
 	eSelectedLanguage* eLanguage;
 	eSelectedUnitMeasurement* eUnit;
 	uint32_t* dVehicleID;
-	eAreaMonitor eMonitor;
+	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;
 	uint8_t* bNumOfRows;
 	uint32_t* wImplementWidth;
@@ -159,17 +170,9 @@ typedef struct sConfigurationDataMask
 	uint32_t* wDistBetweenLines;
 	uint8_t* bTolerance;
 	float* fMaxSpeed;
-	eAlternateRows eAlterRows;
-	eAlternatedRowsType eAltType;
+	eAlternateRows* eAlterRows;
+	eAlternatedRowsType* eAltType;
 } sConfigurationDataMask;
-
-typedef enum
-{
-	STATUS_TRIMMING_NOT_TRIMMED = 0x0A,
-	STATUS_TRIMMING_TRIMMED = 0x0C,
-	STATUS_TRIMMING_NONE = 0xFF,
-	STATUS_TRIMMING_INVALID,
-} eTrimmingStatus;
 
 typedef struct sNumberVariableObj
 {
@@ -202,34 +205,49 @@ typedef struct sInstallationDataMask
 	sInstallSensorStatus* psLinesInstallStatus;
 } sInstallationDataMask;
 
-typedef struct sPlantingVariables
-{
-	sNumberVariableObj* const psNumberVariable;
-	uint8_t bNumOfVariables;
-} sPlantingVariables;
 
-typedef struct sBarGraphStatus
+typedef struct sPlanterIndividualLinesData
 {
-	uint16_t wIncBarID;
-	uint16_t wDecBarID;
-	uint16_t wIncOutputNumID;
-	uint16_t wDecOutputNumID;
-	int8_t bValue;
-} sBarGraphStatus;
+	int32_t dsLineAverage;
+	uint32_t dLineSemPerUnit;
+	uint32_t dLineSemPerHa;
+	uint32_t dLineTotalSeeds;
+} sPlanterIndividualLinesData;
+
+typedef struct sPlanterDataMaskData
+{
+	sPlanterIndividualLinesData asLineStatus[CAN_bNUM_DE_LINHAS];
+	uint32_t dProductivity;
+	uint32_t dWorkedTime;
+	uint32_t dTotalSeeds;
+	uint32_t dPartPopSemPerUnit;
+	uint32_t dPartPopSemPerHa;
+	uint32_t dWorkedAreaMt;
+	uint32_t dWorkedAreaHa;
+	uint32_t dTotalMt;
+	uint32_t dTotalHa;
+} sPlanterDataMaskData;
+
+typedef struct sPlanterIndividualLines
+{
+	sNumberVariableObj* psLineAverage;
+	sNumberVariableObj* psLineSemPerUnit;
+	sNumberVariableObj* psLineSemPerHa;
+	sNumberVariableObj* psLineTotalSeeds;
+} sPlanterIndividualLines;
 
 typedef struct sPlanterDataMask
 {
-	sBarGraphStatus* psLinesStatus;
-	sBarGraphStatus* psIndividualLineStatus;
-	uint32_t* pdPartPopSemPerMt;
-	uint32_t* pdPartPopSemPetHa;
-	uint32_t* pdWorkedAreaMt;
-	uint32_t* pdWorkedAreaHa;
-	uint32_t* pdTotalMt;
-	uint32_t* pdTotalHa;
-	uint32_t* pdProductivity;
-	uint32_t* pdWorkedTime;
-	uint32_t* pdTotalSeeds;
+	sPlanterIndividualLines* psLineStatus;
+	sNumberVariableObj* psProductivity;
+	sNumberVariableObj* psWorkedTime;
+	sNumberVariableObj* psTotalSeeds;
+	sNumberVariableObj* psPartPopSemPerUnit;
+	sNumberVariableObj* psPartPopSemPerHa;
+	sNumberVariableObj* psWorkedAreaMt;
+	sNumberVariableObj* psWorkedAreaHa;
+	sNumberVariableObj* psTotalMt;
+	sNumberVariableObj* psTotalHa;
 } sPlanterDataMask;
 
 typedef struct sTrimmingStatus

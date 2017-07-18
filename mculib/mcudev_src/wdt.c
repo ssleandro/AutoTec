@@ -156,7 +156,7 @@ eMCUError_s WDT_eStart (const wdt_config_s * pWDT)
 	{
 		return MCU_ERROR_WDT_NOT_INITIALIZED;
 	}
-	Chip_WWDT_Start(LPC_WWDT);
+	//Chip_WWDT_Start(LPC_WWDT);
 	//NVIC_EnableIRQ(WWDT_IRQn);
 	if (pWDT->pfWDTCallBack != NULL)
 	{
