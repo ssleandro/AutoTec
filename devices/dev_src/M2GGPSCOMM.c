@@ -112,7 +112,7 @@ static uart_config_s sMCU_UARTGPS_Handle =
  * Function prototypes
  *****************************************/
 static void M2GGPS_vRBSafeInsert (uint8_t *pbData, uint32_t wNumItens);
-static uint32_t M2GGPS_wReadBufferProcedure (uint8_t *pbOutput);
+static uint32_t M2GGPS_wReadBufferProcedure (uint8_t *pbOutput, uint32_t wNumItens);
 static void M2GGPS_UARTCallback (uint8_t * bBuffer, uint32_t wLen);
 static eDEVError_s M2GGPS_eChangeBaudRate (uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GGPS_eChangeIntStatus (uint32_t wRequest, void * vpValue);
@@ -140,21 +140,16 @@ void M2GGPS_vRBSafeInsert (uint8_t *pbData, uint32_t wNumItens)
 	}
 }
 
-uint32_t M2GGPS_wReadBufferProcedure (uint8_t *pbOutput)
+uint32_t M2GGPS_wReadBufferProcedure (uint8_t *pbOutput, uint32_t dBufferSize)
 {
+	uint32_t wReturn = 0;
 	/* Wait until ISR callbacks are completed */
 	if (bM2GGPSCOMMDevStatus == M2GGPSCOMM_STATUS_BUSY)
 	{
 		return 0;
 	}
-	uint32_t wReturn = 0;
 
-	/* Loop until the end of ring buffer */
-	while (!RingBuffer_IsEmpty(&rbM2GGPSHandle))
-	{
-		RingBuffer_Pop(&rbM2GGPSHandle, &pbOutput[wReturn]);
-		wReturn++;
-	}
+	wReturn = RingBuffer_PopMult(&rbM2GGPSHandle, pbOutput, dBufferSize);
 	return wReturn;
 }
 
@@ -272,7 +267,7 @@ uint32_t M2GGPS_read (struct peripheral_descriptor_s* const this,
 	uint8_t *pbAuxPointer = (uint8_t*)vpBuffer;
 
 	/* The received data is on the ring buffer */
-	return M2GGPS_wReadBufferProcedure(pbAuxPointer);
+	return M2GGPS_wReadBufferProcedure(pbAuxPointer, tBufferSize);
 }
 
 uint32_t M2GGPS_write (struct peripheral_descriptor_s* const this,

@@ -159,7 +159,7 @@ void MAI_M2GMainThread (void const *argument)
 	status = osFlagGroupCreate(&UOS_sFlagSis);
 	ASSERT(status == osOK);
 
-	//WDS_eStart(); //Start Watchdog
+	WDS_eStart(); //Start Watchdog
 
 	uint8_t bIndex = 0;
 	while (sThreads[bIndex].thisThread.pthread != NULL)
