@@ -64,11 +64,10 @@ CREATE_MUTEX(GUI_UpdateMask);
 eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
 
 tsAcumulados GUI_sAcumulado;
+tsStatus GUI_sStatus;
 
 extern osFlagsGroupId UOS_sFlagSis;
 
-extern tsStatus AQR_sPubStatus;
-extern tsStatus AQR_sStatus;
 extern uint16_t AQR_wEspacamento;
 
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
@@ -107,11 +106,8 @@ void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
 void GUI_vUpdateWorkedArea (void);
 void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds);
 void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds);
-void GUI_vUptTestModeTimerCallback (void const *argument);
-void GUI_vUptPlanterTimerCallback (void const *argument);
-
-CREATE_TIMER(Gui_UptTestModeTimer, GUI_vUptTestModeTimerCallback);
-CREATE_TIMER(Gui_UptPlanterTimer, GUI_vUptPlanterTimerCallback);
+void GUI_vUptTestMode(void);
+void GUI_vUptPlanter(void);
 
 /******************************************************************************
  * Function Definitions
@@ -152,7 +148,7 @@ eAPPError_s GUI_eInitGuiPublisher (void)
 	return APP_ERROR_SUCCESS;
 }
 
-void GUI_vUptTestModeTimerCallback (void const *argument)
+void GUI_vUptTestMode(void)
 {
 	event_e ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
@@ -220,7 +216,7 @@ void GUI_vGetValuesToPlanterDataMask (void)
 
 //#define RANDOM_VALUES
 
-void GUI_vUptPlanterTimerCallback (void const *argument)
+void GUI_vUptPlanter (void)
 {
 	event_e ePubEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
 #if defined (RANDOM_VALUES)
@@ -667,7 +663,6 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
-					START_TIMER(Gui_UptTestModeTimer, 1500);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
@@ -682,15 +677,17 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
+				sConfigurationData *psConfig = GET_PUBLISHED_PAYLOAD(contract);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
-
-				memcpy(&GUIConfigurationData, (sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract), sizeof(sConfigurationData));
-				GUI_SetSisConfiguration();
-				GUI_InitSensorStatus();
-
+				if (psConfig != NULL)
+				{
+					memcpy(&GUIConfigurationData, psConfig, sizeof(sConfigurationData));
+					GUI_SetSisConfiguration();
+					GUI_InitSensorStatus();
+				}
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
 				ASSERT(status == osOK);
@@ -832,11 +829,20 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-				tsAcumulados *psPlantAcumulado = GET_PUBLISHED_PAYLOAD(contract);
-				if ((psPlantAcumulado != NULL) && (eCurrMask == DATA_MASK_PLANTER))
+				tsPubPlantData *psPlantData = GET_PUBLISHED_PAYLOAD(contract);
+
+				if (psPlantData != NULL)
 				{
-					GUI_sAcumulado =  *psPlantAcumulado;
-					GUI_vUptPlanterTimerCallback(NULL);
+					GUI_sAcumulado =  *(psPlantData->AQR_sAcumulado);
+					GUI_sStatus = *(psPlantData->AQR_sStatus);
+					if (eCurrMask == DATA_MASK_PLANTER)
+					{
+						GUI_vUptPlanter();
+					}
+					if (eCurrMask == DATA_MASK_TEST_MODE)
+					{
+						GUI_vUptTestMode();
+					}
 				}
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
@@ -887,9 +893,6 @@ void GUI_vGuiThread (void const *argument)
 	INITIALIZE_QUEUE(GuiQueue);
 
 	INITIALIZE_MUTEX(GUI_UpdateMask);
-
-	INITIALIZE_TIMER(Gui_UptTestModeTimer, osTimerPeriodic);
-	INITIALIZE_TIMER(Gui_UptPlanterTimer, osTimerPeriodic);
 
 	GUI_eInitGuiPublisher();
 
@@ -985,7 +988,7 @@ void GUI_vUpdateWorkedArea (void)
 	tsDistanciaTrab* const psParcDisDir = &GUI_sAcumulado.sDistTrabParcialDir;
 	tsDistanciaTrab* const psParcDisEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
 
-	tsStatus *psStatus = &AQR_sPubStatus;
+	tsStatus *psStatus = &GUI_sStatus;
 	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
 
 	//Divide por 10 porque AQR_wEspacamento esta em cm*10
@@ -1094,7 +1097,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 	tsDistanciaTrab* const psDistParcDir = &GUI_sAcumulado.sDistTrabParcialDir;
 	tsDistanciaTrab* const psDistParcEsq = &GUI_sAcumulado.sDistTrabParcialEsq;
 
-	tsStatus *psStatus = &AQR_sPubStatus;
+	tsStatus *psStatus = &GUI_sStatus;
 
 	uint32_t dFlagSis = osFlagGet(UOS_sFlagSis);
 
@@ -1218,7 +1221,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 		{
 			// NOTA:
 			// Media de sementes instantanea esta em sem/m * 100
-			fSem = (float)(AQR_sPubStatus.awMediaSementes[dNumSensor - 1]);
+			fSem = (float)(GUI_sStatus.awMediaSementes[dNumSensor - 1]);
 			fSem /= 100.0f;
 		}
 	}
@@ -1275,10 +1278,10 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 
 		if (dNumSensor > 0)
 		{
-			const uint32_t dBits = (AQR_sPubStatus.dMemLinhaDesconectada | AQR_sPubStatus.dSementeFalhaIHM
-				| AQR_sPubStatus.dAduboFalha | AQR_sPubStatus.dSementeZeroIHM);
-			const uint32_t dBitsExt = (AQR_sPubStatus.dMemLinhaDesconectadaExt | AQR_sPubStatus.dSementeFalhaIHMExt
-				| AQR_sPubStatus.dAduboFalhaExt | AQR_sPubStatus.dSementeZeroIHMExt);
+			const uint32_t dBits = (GUI_sStatus.dMemLinhaDesconectada | GUI_sStatus.dSementeFalhaIHM
+				| GUI_sStatus.dAduboFalha | GUI_sStatus.dSementeZeroIHM);
+			const uint32_t dBitsExt = (GUI_sStatus.dMemLinhaDesconectadaExt | GUI_sStatus.dSementeFalhaIHMExt
+				| GUI_sStatus.dAduboFalhaExt | GUI_sStatus.dSementeZeroIHMExt);
 
 			if (((dBits & (1 << (dNumSensor - 1))) && (dNumSensor < 33)) ||
 				((dBitsExt & (1 << (dNumSensor - 33))) && (dNumSensor >= 33)))
@@ -1411,7 +1414,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
         // simplificando,
         // sem/m� = ( sem/m  / ( dist_entre_linhas / 10 ) )  ou
         // sem/m� = ( sem/m  /  dist_entre_linhas * 10 )
-        //fSem = ( float )( AQR_sPubStatus.awMediaSementes[ dNumSensor - 1 ] );
+        //fSem = ( float )( GUI_sStatus.awMediaSementes[ dNumSensor - 1 ] );
         //fSem = ( fSem / AQR_wEspacamento * 10.0f );
 
          //Se a divis�o da plantadeira est� no lado esquerdo
@@ -1528,7 +1531,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 {
 	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
-	tsStatus *psStatus = &AQR_sPubStatus;
+	tsStatus *psStatus = &GUI_sStatus;
 
 	tsLinhas* const psParcial = &GUI_sAcumulado.sTrabParcial;
 	tsLinhas* const psParcDir = &GUI_sAcumulado.sTrabParcDir;

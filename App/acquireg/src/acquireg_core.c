@@ -119,7 +119,7 @@ GPS_tsDadosGPS AQR_sDadosGPS;
 CAN_tsCtrlListaSens AQR_sDadosCAN;
 //Estrutura de Status do Monitor
 tsStatus AQR_sStatus;
-tsStatus AQR_sPubStatus;
+
 //Estrutura de valores Acumulados
 tsAcumulados AQR_sAcumulado;
 //Estrutura de valores relativos à velocidade
@@ -145,7 +145,10 @@ AQR_teArremate eMemArremate;
 
 PubMessage sArqRegPubMsg;
 CAN_tsCtrlListaSens AQR_sPubCtrlLista;
+
 tsAcumulados AQR_sPubAcumulado;
+tsStatus AQR_sPubStatus;
+tsPubPlantData AQR_sPubPlantData;
 
 /******************************************************************************
  * Module Variable Definitions
@@ -1241,6 +1244,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		}
 		if ((dFlags & AQR_APL_FLAG_CONFIRM_INSTALLATION) > 0)
 		{
+			AQR_sPubStatus = AQR_sStatus;
 			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
 			sArqRegPubMsg.vPayload = (void*)&AQR_sPubStatus;
@@ -1267,10 +1271,11 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		}
 		if ((dFlags & AQR_APL_FLAG_SEND_TOTAL) > 0)
 		{
-
+			AQR_sPubPlantData.AQR_sAcumulado = &AQR_sPubAcumulado;
+			AQR_sPubPlantData.AQR_sStatus = &AQR_sPubStatus;
 			sArqRegPubMsg.dEvent = EVENT_AQR_UPDATE_PLANT_DATA;
 			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = &AQR_sPubAcumulado;
+			sArqRegPubMsg.vPayload = &AQR_sPubPlantData;
 			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
 			PUBLISH(CONTRACT(Acquireg), 0);
 		}
@@ -1607,7 +1612,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 		}
 
 		dFlagsSis = osFlagGet(UOS_sFlagSis);
-		if ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0)
+		if ((dFlagsSis & (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE)) != 0)
 		{
 			WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
 			AQR_sPubStatus = AQR_sStatus;
