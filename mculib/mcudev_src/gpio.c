@@ -82,6 +82,7 @@ extern void GPIO4_IRQHandler (void);
 extern void GPIO5_IRQHandler (void);
 extern void GPIO6_IRQHandler (void);
 extern void GPIO7_IRQHandler (void);
+extern void *pvPortMalloc( size_t xWantedSize );
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
@@ -502,7 +503,7 @@ eMCUError_s GPIO_eInit (gpio_config_s *pGPIO)
 	}
 
 	//Create private struct, populate it and then reference it on the public struct
-	gpio_config_private_s *psPrivate = malloc(sizeof(gpio_config_private_s));
+	gpio_config_private_s *psPrivate = pvPortMalloc(sizeof(gpio_config_private_s));
 	*psPrivate = (gpio_config_private_s )
 			{
 				.bGPort = sGPIOMap[bPosition].bGPIOPort,

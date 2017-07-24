@@ -592,3 +592,10 @@ void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage
 		NVIC_EnableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
 	}
 }
+/*
+uint8_t CAN_bGetErCount(const can_config_s *pCAN, can_transfer_id dir)
+{
+
+	return Chip_CCAN_GetErrCounter (CAN_MAP_REGISTER(pCAN->eCANPort), dir);
+}
+*/
