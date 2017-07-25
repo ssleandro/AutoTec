@@ -364,6 +364,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 {
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);;
+	void *pvPubData = GET_PUBLISHED_PAYLOAD(contract);
 	eAPPError_s error;
 
 	switch (contract->eOrigin)
@@ -372,7 +373,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
+				UOS_tsConfiguracao *psConfig =pvPubData;
 				if ((ePubEvType == EVENT_SET) && ( psConfig != NULL))
 				{
 					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0)
@@ -391,8 +392,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			{
 				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
 				{
-					uint32_t a = osKernelSysTick();
-					AQR_tsRegEstaticoCRC *pRegEstaticData = GET_PUBLISHED_PAYLOAD(contract);
+					AQR_tsRegEstaticoCRC *pRegEstaticData = pvPubData;
 					if ((pRegEstaticData != NULL)
 						&& (memcmp(&FFS_sRegEstaticoCRC, pRegEstaticData, sizeof(FFS_sRegEstaticoCRC)) != 0))
 					{
@@ -408,7 +408,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					CAN_tsCtrlListaSens *psCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+					CAN_tsCtrlListaSens *psCtrlListaSens = pvPubData;
 					if ((psCtrlListaSens != NULL) && ( memcmp(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, psCtrlListaSens, sizeof(CAN_tsCtrlListaSens)) != 0))
 					{
 							FFS_sCtrlListaSens.CAN_sCtrlListaSens =  *psCtrlListaSens;

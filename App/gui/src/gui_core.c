@@ -645,6 +645,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osStatus status;
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	void * pvPayload = GET_PUBLISHED_PAYLOAD(contract);
 
 	switch (contract->eOrigin)
 	{
@@ -652,12 +653,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_DATA_MASK)
 			{
+				eCurrMask = *((eIsobusMask*)pvPayload);
+
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
-
-				eCurrMask = *((eIsobusMask*)GET_PUBLISHED_PAYLOAD(contract));
 
 				if (eCurrMask == DATA_MASK_TEST_MODE)
 				{
@@ -677,7 +678,8 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_UPDATE_CURRENT_CONFIGURATION)
 			{
-				sConfigurationData *psConfig = GET_PUBLISHED_PAYLOAD(contract);
+				sConfigurationData *psConfig = pvPayload;
+
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
@@ -759,12 +761,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
+				UOS_tsConfiguracao *psConfig = pvPayload;
+
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
 				if (psConfig != NULL)
 				{
 					if (memcmp(&sSISConfiguration, psConfig, sizeof(UOS_tsConfiguracao)) != 0)
@@ -791,12 +794,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION)
 			{
+				CAN_tsLista *pPubData = pvPayload;
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-				GUI_UpdateSensorStatus((CAN_tsLista *)GET_PUBLISHED_PAYLOAD(contract));
+				GUI_UpdateSensorStatus(pPubData);
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
@@ -812,7 +816,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
 				// Update test mode data mask number of sensors installed, number of sensors configured
-				GUI_vSetGuiTestData(ePubEvt, GET_PUBLISHED_PAYLOAD(contract));
+				GUI_vSetGuiTestData(ePubEvt, pvPayload);
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 
@@ -824,22 +828,28 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_AQR_UPDATE_PLANT_DATA)
 			{
+				tsPubPlantData *psPlantData = pvPayload;
+
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-				tsPubPlantData *psPlantData = GET_PUBLISHED_PAYLOAD(contract);
-
 				if (psPlantData != NULL)
 				{
-					GUI_sAcumulado =  *(psPlantData->AQR_sAcumulado);
-					GUI_sStatus = *(psPlantData->AQR_sStatus);
+					if (psPlantData->AQR_sAcumulado != NULL)
+					{
+						memcpy(&GUI_sAcumulado, psPlantData->AQR_sAcumulado, sizeof(GUI_sAcumulado));
+					}
+					if(psPlantData->AQR_sStatus != NULL)
+					{
+						memcpy(&GUI_sStatus, psPlantData->AQR_sStatus, sizeof(GUI_sStatus));
+					}
 					if (eCurrMask == DATA_MASK_PLANTER)
 					{
 						GUI_vUptPlanter();
 					}
-					if (eCurrMask == DATA_MASK_TEST_MODE)
+					else if (eCurrMask == DATA_MASK_TEST_MODE)
 					{
 						GUI_vUptTestMode();
 					}

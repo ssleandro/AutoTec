@@ -291,6 +291,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 {
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
+	void *pvPayData = GET_PUBLISHED_PAYLOAD(contract);
 
 	switch (contract->eOrigin)
 	{
@@ -320,7 +321,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					UOS_tsConfiguracao *psConfig = GET_PUBLISHED_PAYLOAD(contract);
+					UOS_tsConfiguracao *psConfig = pvPayData;
 					if (psConfig != NULL)
 					{
 						UOS_sConfiguracao =*psConfig;
@@ -339,7 +340,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_GUI_UPDATE_SYS_CONFIG)
 			{
-				UOS_tsConfiguracao *psConfig = GET_PUBLISHED_PAYLOAD(contract);
+				UOS_tsConfiguracao *psConfig = pvPayData;
 				if (psConfig != NULL)
 				{
 					UOS_sConfiguracao = *psConfig;

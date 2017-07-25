@@ -497,35 +497,33 @@ eAPPError_s ISO_vInitDeviceLayer (uint32_t wSelectedInterface)
 
 void ISO_vIdentifyEvent (contract_s* contract)
 {
-	event_e eEvt;
+	event_e eEvt =  GET_PUBLISHED_EVENT(contract);
+	void * pvPayData = GET_PUBLISHED_PAYLOAD(contract);
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_GUI:
 		{
-			eEvt = GET_PUBLISHED_EVENT(contract);
 			switch (eEvt)
 			{
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
-					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
-						sizeof(eSensorsIntallStatus)) != 0)
+					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus)) != 0)
 					{
-						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
-							sizeof(eSensorsIntallStatus));
+						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus));
 						PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					}
 					break;
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
-					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
-					ISO_vUpdateTestModeData(eEvt, GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdateTestModeData(eEvt, pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -546,13 +544,13 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
-					ISO_vUpdateTestModeData(eEvt, GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdateTestModeData(eEvt, pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
-					ISO_vUpdateConfigData((sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdateConfigData((sConfigurationData *)pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}

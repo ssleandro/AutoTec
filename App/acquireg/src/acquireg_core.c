@@ -144,6 +144,7 @@ uint8_t bLimpaFalhas = false;
 AQR_teArremate eMemArremate;
 
 PubMessage sArqRegPubMsg;
+PubMessage sArqRegPubStaticReg;
 CAN_tsCtrlListaSens AQR_sPubCtrlLista;
 
 tsAcumulados AQR_sPubAcumulado;
@@ -161,6 +162,7 @@ CREATE_SIGNATURE(AcquiregGPS);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregFileSys);
 CREATE_SIGNATURE(AcquiregGUI);
 CREATE_CONTRACT(Acquireg);   //!< Create contract for buzzer msg publication
+CREATE_CONTRACT(AcquiregSave);   //!< Create contract for buzzer msg publication
 
 /**
  * Module Threads
@@ -1030,6 +1032,10 @@ void AQR_vApagaListaSensores (void)
 	//Prepara a cópia de trabalho da estrutura com dados CAN:
 	AQR_sDadosCAN = CAN_sCtrlLista;
 
+	AQR_sStatus.bAdicionalInstalados = 0;
+	AQR_sStatus.bAduboInstalados = 0;
+	AQR_sStatus.bSementeInstalados = 0;
+
 	//Devolve o mutex:
 	status = RELEASE_MUTEX(CAN_MTX_sBufferListaSensores);
 	ASSERT(status == osOK);
@@ -1162,6 +1168,10 @@ eAPPError_s AQR_eInitAcquiregPublisher (void)
 	MESSAGE_HEADER(Acquireg, ACQUIREG_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
 	CONTRACT_HEADER(Acquireg, 1, THIS_MODULE, TOPIC_ACQUIREG);
 
+	//Prepare Default Contract/Message
+	MESSAGE_HEADER(AcquiregSave, ACQUIREG_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
+	CONTRACT_HEADER(AcquiregSave, 1, THIS_MODULE, TOPIC_ACQUIREG_SAVE);
+
 	return APP_ERROR_SUCCESS;
 }
 
@@ -1228,11 +1238,11 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		}
 		if ((dFlags & AQR_APL_FLAG_SAVE_STATIC_REG) > 0)
 		{
-			sArqRegPubMsg.dEvent = EVENT_FFS_STATIC_REG;
-			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)&sRegEstaticoCRC;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			sArqRegPubStaticReg.dEvent = EVENT_FFS_STATIC_REG;
+			sArqRegPubStaticReg.eEvtType = EVENT_SET;
+			sArqRegPubStaticReg.vPayload = (void*)&sRegEstaticoCRC;
+			MESSAGE_PAYLOAD(AcquiregSave) = (void*)&sArqRegPubStaticReg;
+			PUBLISH(CONTRACT(AcquiregSave), 0);
 		}
 		if ((dFlags & AQR_APL_FLAG_UPDATE_INSTALLATION) > 0)
 		{
