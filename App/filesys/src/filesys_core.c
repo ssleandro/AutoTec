@@ -399,8 +399,10 @@ void FFS_vIdentifyEvent (contract_s* contract)
 						&& (memcmp(&FFS_sRegEstaticoCRC, pRegEstaticData, sizeof(FFS_sRegEstaticoCRC)) != 0))
 					{
 						FFS_sRegEstaticoCRC = *pRegEstaticData;
+						WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 						eAPPError_s error = FFS_vSaveStaticReg();
 						ASSERT(error == APP_ERROR_SUCCESS);
+						WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 					}
 				}
 			}
