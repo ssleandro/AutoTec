@@ -1,0 +1,924 @@
+/* file: ftl_if_ex.h */
+/**************************************************************************
+ * Copyright (C)2012 Spansion Inc. All Rights Reserved. 
+ *
+ * This software is owned and published by: 
+ * Spansion Inc, 915 DeGuigne Dr. Sunnyvale, CA  94088-3453 ("Spansion").
+ *
+ * BY DOWNLOADING, INSTALLING OR USING THIS SOFTWARE, YOU AGREE TO BE BOUND 
+ * BY ALL THE TERMS AND CONDITIONS OF THIS AGREEMENT.
+ *
+ * This software constitutes driver source code for use in programming Spansion's 
+ * Flash memory components. This software is licensed by Spansion to be adapted only 
+ * for use in systems utilizing Spansion's Flash memories. Spansion is not be 
+ * responsible for misuse or illegal use of this software for devices not 
+ * supported herein.  Spansion is providing this source code "AS IS" and will 
+ * not be responsible for issues arising from incorrect user implementation 
+ * of the source code herein.  
+ *
+ * SPANSION MAKES NO WARRANTY, EXPRESS OR IMPLIED, ARISING BY LAW OR OTHERWISE, 
+ * REGARDING THE SOFTWARE, ITS PERFORMANCE OR SUITABILITY FOR YOUR INTENDED 
+ * USE, INCLUDING, WITHOUT LIMITATION, NO IMPLIED WARRANTY OF MERCHANTABILITY, 
+ * FITNESS FOR A  PARTICULAR PURPOSE OR USE, OR NONINFRINGEMENT.  SPANSION WILL 
+ * HAVE NO LIABILITY (WHETHER IN CONTRACT, WARRANTY, TORT, NEGLIGENCE OR 
+ * OTHERWISE) FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE, 
+ * INCLUDING, WITHOUT LIMITATION, ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS OF DATA, SAVINGS OR PROFITS, 
+ * EVEN IF SPANSION HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
+ *
+ * This software may be replicated in part or whole for the licensed use, 
+ * with the restriction that this Copyright notice must be included with 
+ * this software, whether used in part or whole, at all times.  
+ */
+
+/* external APIs suppied to the outside world */
+
+/* Intialization and shutdown */
+#ifndef FTL_IF_EX_H
+#define FTL_IF_EX_H
+
+#include "Format.h"
+#include "Flash.h"
+
+#define NUM_EBLOCKS_PER_DEVICE    (NUMBER_OF_ERASE_BLOCKS) 
+#define FTL_GC_THRESHOLD          (0)
+#define FTL_DEV                   unsigned char
+#define FTL_STATUS                unsigned long
+#define FTL_ERR_BASE              (0x0)
+#define FTL_ERR_GC_BASE           (FTL_ERR_BASE + 1000)
+#define FTL_ERR_GC_SCAN_BASE      (FTL_ERR_BASE + 2000) 
+#define FTL_ERR_INIT_BASE         (FTL_ERR_BASE + 3000)
+#define FTL_ERR_FORMAT_BASE       (FTL_ERR_BASE + 4000)
+#define FTL_ERR_BB_BASE           (FTL_ERR_BASE + 5000)
+#define FTL_ERR_PHY_PAGE_BASE     (FTL_ERR_BASE + 6000)
+#define FTL_ERR_DO_READ_BASE      (FTL_ERR_BASE + 7000)
+#define FTL_ERR_TRANS_RD_BASE     (FTL_ERR_BASE + 8000)
+#define FTL_ERR_DO_WRITE_BASE     (FTL_ERR_BASE + 9000) 
+#define FTL_ERR_TRANS_WRITE_BASE  (FTL_ERR_BASE + 10000)
+#define FTL_ERR_SYSBLK_BASE       (FTL_ERR_BASE + 11000)
+#define FTL_ERR_FREEPAGE_BASE     (FTL_ERR_BASE + 12000)
+#define FTL_ERR_RPB_CACHE_BASE    (FTL_ERR_BASE + 13000)
+#define FTL_ERR_TABLE_BASE        (FTL_ERR_BASE + 14000)
+#define FTL_ERR_DEFECT_WRITE_BASE (FTL_ERR_BASE + 15000)
+#define FTL_ERR_ECHAIN_BASE       (FTL_ERR_BASE + 16000)
+#define FTL_ERR_ERASE_LIST_BASE   (FTL_ERR_BASE + 17000)
+#define FTL_ERR_BACKGROUND_BASE   (FTL_ERR_BASE + 18000)
+#define FTL_ERR_DEBUG_TST_BASE    (FTL_ERR_BASE + 19000)
+#define FTL_ERR_PRE_ERASED_BASE   (FTL_ERR_BASE + 20000)
+#define FTL_ERR_DEL_INFO_BASE     (FTL_ERR_BASE + 21000)
+#define FTL_ERR_DATA_GC_BASE      (FTL_ERR_BASE + 22000)
+#define FTL_ERR_FLUSH_BASE        (FTL_ERR_BASE + 23000)
+#define FTL_ERR_LOG_BASE          (FTL_ERR_BASE + 24000)
+#define FTL_ERR_TABLE_PPA_BASE    (FTL_ERR_BASE + 25000)
+#define FTL_ERR_MOUNT_LOCK_BASE   (FTL_ERR_BASE + 26000)
+#define FTL_ERR_FLASH_OPS_BASE    (FTL_ERR_BASE + 27000)
+#define FTL_ERR_SUPER_BASE        (FTL_ERR_BASE + 28000)
+#define FTL_ERR_CACHE_BASE        (FTL_ERR_BASE + 29000)
+
+#define FTL_ERR_PASS              (FTL_ERR_BASE + 0)
+#define FTL_ERR_FAIL              (FTL_ERR_BASE + 1)
+#define FTL_ERR_BAD_EBLOCK        (FTL_ERR_BASE + 2)
+#define FTL_ERR_VERSION_UNKNOWN   (FTL_ERR_BASE + 3)
+#define FTL_ERR_VERSION_MISMATCH  (FTL_ERR_BASE + 4)
+#define FTL_ERR_ARGS              (FTL_ERR_BASE + 5)
+#define FTL_ERR_ARG_DEVID         (FTL_ERR_BASE + 6)
+#define FTL_ERR_ARG_PTR           (FTL_ERR_BASE + 7)
+#define FTL_ERR_CALC              (FTL_ERR_BASE + 8)
+#define FTL_ERR_CALC_2            (FTL_ERR_BASE + 9)
+#define FTL_ERR_NOT_FOUND         (FTL_ERR_BASE + 10)
+#define FTL_ERR_TRANS_MAP_FULL    (FTL_ERR_BASE + 11)
+#define FTL_ERR_TRANS_MAP_EMPTY   (FTL_ERR_BASE + 12)
+#define FTL_ERR_DATA_GC_NEEDED    (FTL_ERR_BASE + 13)
+#define FTL_ERR_NOT_FORMATTED     (FTL_ERR_BASE + 14)
+#define FTL_ERR_READ_ONLY         (FTL_ERR_BASE + 15)
+#define FTL_ERR_PAGE_RETRY_XFER   (FTL_ERR_BASE + 16)
+#define FTL_ERR_IN_RANGE          (FTL_ERR_BASE + 17)
+#define FTL_ERR_OUT_OF_RANGE      (FTL_ERR_BASE + 18)
+#define FTL_GENERIC_BASE_END      (FTL_ERR_BASE + 19) /*Don't use this error code in *.c files*/
+
+/*Garbage Collection Error Codes*//*starts at 19*/
+#define FTL_ERR_GC_PAGE_LOAD1     (FTL_ERR_GC_BASE  + 0)
+#define FTL_ERR_GC_PAGE_LOAD2     (FTL_ERR_GC_BASE + 1)
+#define FTL_ERR_GC_SET_MOVED      (FTL_ERR_GC_BASE + 2)
+#define FTL_ERR_GC_IS_MOVED       (FTL_ERR_GC_BASE + 3)
+#define FTL_ERR_GC_SET_THRESHOLD  (FTL_ERR_GC_BASE + 4)
+#define FTL_ERR_GC_PAGE_WR1       (FTL_ERR_GC_BASE + 5)
+#define FTL_ERR_GC_PAGE_WR2       (FTL_ERR_GC_BASE + 6)
+#define FTL_ERR_GC_ERASE1         (FTL_ERR_GC_BASE + 7)
+#define FTL_ERR_GC_ERASE2         (FTL_ERR_GC_BASE + 8)
+#define FTL_ERR_GC_ERASE3         (FTL_ERR_GC_BASE + 9)
+#define FTL_ERR_GC_REWRITE        (FTL_ERR_GC_BASE + 10)
+#define FTL_ERR_GC_BB_LOAD1       (FTL_ERR_GC_BASE + 11) /*Don't use this error code in *.c files*/
+#define FTL_ERR_GC_BB_PAGE_WR1    (FTL_ERR_GC_BASE + 12)
+#define FTL_ERR_GC_BB_LOAD2       (FTL_ERR_GC_BASE + 13)
+#define FTL_ERR_GC_BB_PAGE_WR2    (FTL_ERR_GC_BASE + 14)
+#define FTL_ERR_GC_BB_PAGE_SANITY (FTL_ERR_GC_BASE + 15)
+#define FTL_ERR_GC_BB_CHAIN       (FTL_ERR_GC_BASE + 16)
+#define FTL_ERR_GC_BB_INDEX       (FTL_ERR_GC_BASE + 17)
+
+/*Garbage Scan Erase Block Error Codes*//*starts at 30*/
+#define FTL_ERR_GSEB_PAGE_LD      (FTL_ERR_GC_SCAN_BASE + 0)
+#define FTL_ERR_GSEB_PAGE_RD_SEC  (FTL_ERR_GC_SCAN_BASE + 1)
+#define FTL_ERR_GSEB_PAGE_RD_SP   (FTL_ERR_GC_SCAN_BASE + 2)
+#define FTL_ERR_GSEB_END          (FTL_ERR_GC_SCAN_BASE + 3) /*Don't use this error code in *.c files*/
+
+/*Init Error Codes*//*starts at 33*/
+#define FTL_ERR_INIT_SYS_EBLK_LD      (FTL_ERR_INIT_BASE + 0)
+#define FTL_ERR_INIT_SYS_EBLK_RD      (FTL_ERR_INIT_BASE + 1)
+#define FTL_ERR_INIT_NO_SYS_EBLK      (FTL_ERR_INIT_BASE + 2)
+#define FTL_ERR_INIT_SYS_PAGE_LD1     (FTL_ERR_INIT_BASE + 3)
+#define FTL_ERR_INIT_SYS_PAGE_RD1     (FTL_ERR_INIT_BASE + 4)
+#define FTL_ERR_INIT_SYS_PAGE_LD2     (FTL_ERR_INIT_BASE + 5)
+#define FTL_ERR_INIT_SYS_PAGE_RD2     (FTL_ERR_INIT_BASE + 6)
+#define FTL_ERR_INIT_FORMAT_FAILED    (FTL_ERR_INIT_BASE + 7)
+#define FTL_ERR_INIT_MAP_SIZE         (FTL_ERR_INIT_BASE + 8)
+#define FTL_ERR_INIT_HDR_PAGE_RD1     (FTL_ERR_INIT_BASE + 9)
+#define FTL_ERR_INIT_HDR_PAGE_RD2     (FTL_ERR_INIT_BASE + 10)
+#define FTL_ERR_INIT_HDR_PAGE_RD3     (FTL_ERR_INIT_BASE + 11)
+#define FTL_ERR_INIT_PG_LOAD_SCAN     (FTL_ERR_INIT_BASE + 12)
+#define FTL_ERR_INIT_SPARE_LOAD_SCAN  (FTL_ERR_INIT_BASE + 13)
+#define FTL_ERR_INIT_NV_READ_PT_FAIL  (FTL_ERR_INIT_BASE + 14)
+#define FTL_ERR_INIT_NV_WRITE_PT_FAIL (FTL_ERR_INIT_BASE + 15)
+#define FTL_ERR_INIT_END              (FTL_ERR_INIT_BASE + 16) /*Don't use this error code in *.c files*/
+
+/*Format Error Codes*//*starts at 49*/
+#define FTL_ERR_FORMAT_LOG_EBLOCK     (FTL_ERR_FORMAT_BASE + 0)
+#define FTL_ERR_FORMAT_FLUSH_EBLOCK   (FTL_ERR_FORMAT_BASE + 1)
+#define FTL_ERR_FORMAT_SYS_EBLOCK     (FTL_ERR_FORMAT_BASE + 2)
+#define FTL_ERR_FORMAT_DATA_EBLOCK    (FTL_ERR_FORMAT_BASE + 3)
+#define FTL_ERR_FORMAT_DATA_INIT      (FTL_ERR_FORMAT_BASE + 4)
+#define FTL_ERR_FORMAT_SYS_INIT       (FTL_ERR_FORMAT_BASE + 5)
+#define FTL_ERR_FORMAT_END            (FTL_ERR_FORMAT_BASE + 6) /*Don't use this error code in *.c files*/
+
+/*Mark Bad Block Error Codes*//*starts at 53*/
+#define FTL_ERR_MARKBB_WR_FFPAD   (FTL_ERR_BB_BASE + 0)
+#define FTL_ERR_MARKBB_WRITE      (FTL_ERR_BB_BASE + 1)
+#define FTL_ERR_MARKBB_COMMIT     (FTL_ERR_BB_BASE + 2)
+#define FTL_ERR_MARKBB_STATUS     (FTL_ERR_BB_BASE + 3)
+#define FTL_ERR_MARKBB_END        (FTL_ERR_BB_BASE + 4) /*Don't use this error code in *.c files*/
+
+/*Mark Get Physical Page Error Codes*//*starts at 57*/
+#define FTL_ERR_GET_PHY_PA_LOAD   (FTL_ERR_PHY_PAGE_BASE + 0)
+#define FTL_ERR_GET_PHY_PA_RD     (FTL_ERR_PHY_PAGE_BASE + 1)
+#define FTL_ERR_GET_PHY_PA_END    (FTL_ERR_PHY_PAGE_BASE + 2) /*Don't use this error code in *.c files*/
+
+/*Device Object Read Error Codes*//*starts at 59*/
+#define FTL_ERR_DO_RD_LOAD        (FTL_ERR_DO_READ_BASE + 0)
+#define FTL_ERR_DO_RD_SEC_RDY     (FTL_ERR_DO_READ_BASE + 1)
+#define FTL_ERR_DO_RD_READ1       (FTL_ERR_DO_READ_BASE + 2)
+#define FTL_ERR_DO_RD_ECC         (FTL_ERR_DO_READ_BASE + 3)
+#define FTL_ERR_DO_RD_READ2       (FTL_ERR_DO_READ_BASE + 4)
+#define FTL_ERR_DO_RD_SEC_DONE    (FTL_ERR_DO_READ_BASE + 5)
+#define FTL_ERR_DO_RD_SEC_END     (FTL_ERR_DO_READ_BASE + 6) /*Don't use this error code in *.c files*/
+
+/*Transfer Map Read Error Codes*//*starts at 65*/
+#define FTL_ERR_TRANS_RD_FULL     (FTL_ERR_TRANS_RD_BASE + 0)
+#define FTL_ERR_TRANS_RD_PART1    (FTL_ERR_TRANS_RD_BASE + 1)
+#define FTL_ERR_TRANS_RD_PART2    (FTL_ERR_TRANS_RD_BASE + 2)
+#define FTL_ERR_TRANS_RD_PART3    (FTL_ERR_TRANS_RD_BASE + 3)
+#define FTL_ERR_TRANS_NO_ENTRIES  (FTL_ERR_TRANS_RD_BASE + 4)
+#define FTL_ERR_TRANS_RD_END      (FTL_ERR_TRANS_RD_BASE + 5) /*Don't use this error code in *.c files*/
+
+/*Device Object Write Error Codes*//*starts at 70*/
+#define FTL_ERR_DO_WR_LOAD        (FTL_ERR_DO_WRITE_BASE + 0)
+#define FTL_ERR_DO_WR_SEC_RDY     (FTL_ERR_DO_WRITE_BASE + 1)
+#define FTL_ERR_DO_WR_WRITE1      (FTL_ERR_DO_WRITE_BASE + 2)
+#define FTL_ERR_DO_WR_ECC         (FTL_ERR_DO_WRITE_BASE + 3)
+#define FTL_ERR_DO_WR_WRITE2      (FTL_ERR_DO_WRITE_BASE + 4)
+#define FTL_ERR_DO_WR_SEC_DONE    (FTL_ERR_DO_WRITE_BASE + 5)
+#define FTL_ERR_DO_WR_COMMIT      (FTL_ERR_DO_WRITE_BASE + 6)
+#define FTL_ERR_DO_WR_END         (FTL_ERR_DO_WRITE_BASE + 7) /*Don't use this error code in *.c files*/
+
+/*Transfer Map write Error Codes*//*starts at 77*/
+#define FTL_ERR_TRANS_WR_FULL     (FTL_ERR_TRANS_WRITE_BASE + 0)
+#define FTL_ERR_TRANS_WR_PART1    (FTL_ERR_TRANS_WRITE_BASE + 1)
+#define FTL_ERR_TRANS_WR_PART2    (FTL_ERR_TRANS_WRITE_BASE + 2)
+#define FTL_ERR_TRANS_WR_PART3    (FTL_ERR_TRANS_WRITE_BASE + 3)
+#define FTL_ERR_TRANS_WR_PART4    (FTL_ERR_TRANS_WRITE_BASE + 4)
+#define FTL_ERR_TRANS_WR_PART5    (FTL_ERR_TRANS_WRITE_BASE + 5)
+#define FTL_ERR_TRANS_WR_PART6    (FTL_ERR_TRANS_WRITE_BASE + 6)
+#define FTL_ERR_TRANS_WR_ECC      (FTL_ERR_TRANS_WRITE_BASE + 7)
+#define FTL_ERR_TRANS_WR_COMMIT   (FTL_ERR_TRANS_WRITE_BASE + 8)
+#define FTL_ERR_TRANS_WR_INTR     (FTL_ERR_TRANS_WRITE_BASE + 9)
+#define FTL_ERR_CALC1             (FTL_ERR_TRANS_WRITE_BASE + 10)
+#define FTL_ERR_TRANS_WR_END      (FTL_ERR_TRANS_WRITE_BASE + 11) /*Don't use this error code in *.c files*/
+
+/*System Block Error Codes*//*starts at 88*/
+#define FTL_ERR_SYSEBLK_PAGE_LD1  (FTL_ERR_SYSBLK_BASE + 0)
+#define FTL_ERR_SYSEBLK_PAGE_LD2  (FTL_ERR_SYSBLK_BASE + 1)
+#define FTL_ERR_SYSEBLK_PAGE_LD3  (FTL_ERR_SYSBLK_BASE + 2)
+#define FTL_ERR_SYSEBLK_PAGE_RD1  (FTL_ERR_SYSBLK_BASE + 3)
+#define FTL_ERR_SYSEBLK_PAGE_RD2  (FTL_ERR_SYSBLK_BASE + 4)
+#define FTL_ERR_SYSEBLK_PAGE_WR1  (FTL_ERR_SYSBLK_BASE + 5)
+#define FTL_ERR_SYSEBLK_PAGE_WR2  (FTL_ERR_SYSBLK_BASE + 6)
+#define FTL_ERR_SYSEBLK_PAGE_WR3  (FTL_ERR_SYSBLK_BASE + 7)
+#define FTL_ERR_SYSEBLK_PAGE_WR4  (FTL_ERR_SYSBLK_BASE + 8)
+#define FTL_ERR_SYSEBLK_PAGE_WR5  (FTL_ERR_SYSBLK_BASE + 9)
+#define FTL_ERR_SYSEBLK_PAGE_WR6  (FTL_ERR_SYSBLK_BASE + 10)
+#define FTL_ERR_SYSEBLK_PAGE_WR7  (FTL_ERR_SYSBLK_BASE + 11)
+#define FTL_ERR_SYSEBLK_PAGE_COM1 (FTL_ERR_SYSBLK_BASE + 12)
+#define FTL_ERR_SYSEBLK_PAGE_COM2 (FTL_ERR_SYSBLK_BASE + 13)
+#define FTL_ERR_SYSEBLK_PAGE_COM3 (FTL_ERR_SYSBLK_BASE + 14)
+#define FTL_ERR_SYSEBLK_PAGE_COM4 (FTL_ERR_SYSBLK_BASE + 15)
+#define FTL_ERR_SYSEBLK_ERASE     (FTL_ERR_SYSBLK_BASE + 16)
+#define FTL_ERR_SYSEBLK_STATUS1   (FTL_ERR_SYSBLK_BASE + 17)
+#define FTL_ERR_SYSEBLK_STATUS2   (FTL_ERR_SYSBLK_BASE + 18)
+#define FTL_ERR_SYSEBLK_STATUS3   (FTL_ERR_SYSBLK_BASE + 19)
+#define FTL_ERR_SYSEBLK_STATUS4   (FTL_ERR_SYSBLK_BASE + 20)
+#define FTL_ERR_SYSEBLK_STATUS5   (FTL_ERR_SYSBLK_BASE + 21)
+#define FTL_ERR_SYSEBLK_ECC       (FTL_ERR_SYSBLK_BASE + 22)
+#define FTL_ERR_SYSEBLK_NO_BLK    (FTL_ERR_SYSBLK_BASE + 23)
+#define FTL_ERR_SYSEBLK_END       (FTL_ERR_SYSBLK_BASE + 24) /*Don't use this error code in *.c files*/
+
+/*GetFreePageIndex Error Codes*//*starts at 112*/
+#define FTL_ERR_FREEPAGE_PAGE_LD  (FTL_ERR_FREEPAGE_BASE + 0)
+#define FTL_ERR_FREEPAGE_PAGE_RD  (FTL_ERR_FREEPAGE_BASE + 1)
+#define FTL_ERR_FREEPAGE_END      (FTL_ERR_FREEPAGE_BASE + 2) /*Don't use this error code in *.c files*/
+
+/*RPB Cache Error Codes*//*starts at 114*/
+#define FTL_ERR_RPB_CACHE_FLUSH    (FTL_ERR_RPB_CACHE_BASE + 0)
+#define FTL_ERR_RPB_CACHE_EMPTY_01 (FTL_ERR_RPB_CACHE_BASE + 1)
+#define FTL_ERR_RPB_CACHE_EMPTY_02 (FTL_ERR_RPB_CACHE_BASE + 2)
+#define FTL_ERR_RPB_CACHE_EMPTY_03 (FTL_ERR_RPB_CACHE_BASE + 3)
+#define FTL_ERR_RPB_CACHE_MISS_01  (FTL_ERR_RPB_CACHE_BASE + 4)
+#define FTL_ERR_RPB_CACHE_MISS_02  (FTL_ERR_RPB_CACHE_BASE + 5)
+#define FTL_ERR_RPB_CACHE_NUM_01   (FTL_ERR_RPB_CACHE_BASE + 6)
+#define FTL_ERR_RPB_CACHE_NUM_02   (FTL_ERR_RPB_CACHE_BASE + 7)
+#define FTL_ERR_RPB_CACHE_NUM_03   (FTL_ERR_RPB_CACHE_BASE + 8)
+#define FTL_ERR_RPB_CACHE_NUM_04   (FTL_ERR_RPB_CACHE_BASE + 9)
+#define FTL_ERR_RPB_CACHE_MERGE    (FTL_ERR_RPB_CACHE_BASE + 10)
+#define FTL_ERR_RPB_CACHE_DIRTY    (FTL_ERR_RPB_CACHE_BASE + 11)
+#define FTL_ERR_RPB_CACHE_END      (FTL_ERR_RPB_CACHE_BASE + 12) /*Don't use this error code in *.c files*/
+
+/*Page Index Table Error Codes*//*starts at 126*/
+#define FTL_ERR_TABLE_PAGE_LD1    (FTL_ERR_TABLE_BASE + 0)
+#define FTL_ERR_TABLE_PAGE_RD1    (FTL_ERR_TABLE_BASE + 1)
+#define FTL_ERR_TABLE_PAGE_RD2    (FTL_ERR_TABLE_BASE + 2)
+#define FTL_ERR_TABLE_PAGE_LD2    (FTL_ERR_TABLE_BASE + 3)
+#define FTL_ERR_TABLE_PAGE_RD3    (FTL_ERR_TABLE_BASE + 4)
+#define FTL_ERR_TABLE_PAGE_LD3    (FTL_ERR_TABLE_BASE + 5)
+#define FTL_ERR_TABLE_PAGE_RD4    (FTL_ERR_TABLE_BASE + 6)
+#define FTL_ERR_TABLE_PAGE_WR1    (FTL_ERR_TABLE_BASE + 7)
+#define FTL_ERR_TABLE_PAGE_COM1   (FTL_ERR_TABLE_BASE + 8)
+#define FTL_ERR_TABLE_STATUS1     (FTL_ERR_TABLE_BASE + 9)
+#define FTL_ERR_TABLE_PAGE_LD4    (FTL_ERR_TABLE_BASE + 10)
+#define FTL_ERR_TABLE_PAGE_RD5    (FTL_ERR_TABLE_BASE + 11)
+#define FTL_ERR_TABLE_PAGE_LD5    (FTL_ERR_TABLE_BASE + 12)
+#define FTL_ERR_TABLE_PAGE_RD6    (FTL_ERR_TABLE_BASE + 13)
+#define FTL_ERR_TABLE_ERASE       (FTL_ERR_TABLE_BASE + 14)
+#define FTL_ERR_TABLE_STATUS2     (FTL_ERR_TABLE_BASE + 15)
+#define FTL_ERR_TABLE_PAGE_WR2    (FTL_ERR_TABLE_BASE + 16)
+#define FTL_ERR_TABLE_PAGE_WR3    (FTL_ERR_TABLE_BASE + 17)
+#define FTL_ERR_TABLE_PAGE_WR4    (FTL_ERR_TABLE_BASE + 18)
+#define FTL_ERR_TABLE_PAGE_COM2   (FTL_ERR_TABLE_BASE + 19)
+#define FTL_ERR_TABLE_STATUS3     (FTL_ERR_TABLE_BASE + 20)
+#define FTL_ERR_TABLE_PAGE_WR5    (FTL_ERR_TABLE_BASE + 21)
+#define FTL_ERR_TABLE_PAGE_WR6    (FTL_ERR_TABLE_BASE + 22)
+#define FTL_ERR_TABLE_PAGE_COM3   (FTL_ERR_TABLE_BASE + 23)
+#define FTL_ERR_TABLE_STATUS4     (FTL_ERR_TABLE_BASE + 24)
+#define FTL_ERR_TABLE_PAGE_WR7    (FTL_ERR_TABLE_BASE + 25)
+#define FTL_ERR_TABLE_PAGE_COM4   (FTL_ERR_TABLE_BASE + 26)
+#define FTL_ERR_TABLE_STATUS5     (FTL_ERR_TABLE_BASE + 27)
+#define FTL_ERR_TABLE_PAGE_WR8    (FTL_ERR_TABLE_BASE + 28)
+#define FTL_ERR_TABLE_PAGE_COM5   (FTL_ERR_TABLE_BASE + 29)
+#define FTL_ERR_TABLE_STATUS6     (FTL_ERR_TABLE_BASE + 30)
+#define FTL_ERR_TABLE_SPARE_EB    (FTL_ERR_TABLE_BASE + 31)
+#define FTL_ERR_TABLE_SPARE_CHAIN (FTL_ERR_TABLE_BASE + 32)
+#define FTL_ERR_TABLE_PAGE_END    (FTL_ERR_TABLE_BASE + 33) /*Don't use this error code in *.c files*/
+
+/*Defect Management Error Codes*//*starts at 157*/
+#define FTL_ERR_DEFECT_WRITE_LD1  (FTL_ERR_DEFECT_WRITE_BASE + 0)
+#define FTL_ERR_DEFECT_WRITE_RD1  (FTL_ERR_DEFECT_WRITE_BASE + 1)
+#define FTL_ERR_DEFECT_WRITE_ER1  (FTL_ERR_DEFECT_WRITE_BASE + 2)
+#define FTL_ERR_DEFECT_WRITE_WR1  (FTL_ERR_DEFECT_WRITE_BASE + 3)
+#define FTL_ERR_DEFECT_WRITE_WR2  (FTL_ERR_DEFECT_WRITE_BASE + 4)
+#define FTL_ERR_DEFECT_WRITE_CM1  (FTL_ERR_DEFECT_WRITE_BASE + 5)
+#define FTL_ERR_DEFECT_WRITE_ST1  (FTL_ERR_DEFECT_WRITE_BASE + 6)
+#define FTL_ERR_DEFECT_WRITE_ST2  (FTL_ERR_DEFECT_WRITE_BASE + 7)
+#define FTL_ERR_DEFECT_WRITE_NF1  (FTL_ERR_DEFECT_WRITE_BASE + 8)
+#define FTL_ERR_DEFECT_WRITE_NF2  (FTL_ERR_DEFECT_WRITE_BASE + 9)
+#define FTL_ERR_DEFECT_WRITE_END  (FTL_ERR_DEFECT_WRITE_BASE + 10) /*Don't use this error code in *.c files*/
+
+/*EBlock Chaining Error Codes*//*starts at 167*/
+#define FTL_ERR_ECHAIN_INIT_PAGE_LD   (FTL_ERR_ECHAIN_BASE + 0)
+#define FTL_ERR_ECHAIN_INIT_CHAIN_RD  (FTL_ERR_ECHAIN_BASE + 1)
+#define FTL_ERR_ECHAIN_INIT_FREE_RD   (FTL_ERR_ECHAIN_BASE + 2)
+#define FTL_ERR_ECHAIN_INIT_PPA1      (FTL_ERR_ECHAIN_BASE + 3)
+#define FTL_ERR_ECHAIN_INIT_PPA2      (FTL_ERR_ECHAIN_BASE + 4)
+#define FTL_ERR_ECHAIN_FPI_INVALID    (FTL_ERR_ECHAIN_BASE + 5)
+#define FTL_ERR_ECHAIN_SETUP_WR1      (FTL_ERR_ECHAIN_BASE + 6)
+#define FTL_ERR_ECHAIN_SETUP_WR2      (FTL_ERR_ECHAIN_BASE + 7)
+#define FTL_ERR_ECHAIN_SETUP_WR3      (FTL_ERR_ECHAIN_BASE + 8)
+#define FTL_ERR_ECHAIN_SETUP_WR4      (FTL_ERR_ECHAIN_BASE + 9)
+#define FTL_ERR_ECHAIN_SETUP_CM1      (FTL_ERR_ECHAIN_BASE + 10)
+#define FTL_ERR_ECHAIN_SETUP_CM2      (FTL_ERR_ECHAIN_BASE + 11)
+#define FTL_ERR_ECHAIN_SETUP_LD1      (FTL_ERR_ECHAIN_BASE + 12)
+#define FTL_ERR_ECHAIN_SETUP_RD1      (FTL_ERR_ECHAIN_BASE + 13)
+#define FTL_ERR_ECHAIN_SETUP_ER1      (FTL_ERR_ECHAIN_BASE + 14)
+#define FTL_ERR_ECHAIN_SETUP_ST1      (FTL_ERR_ECHAIN_BASE + 15)
+#define FTL_ERR_ECHAIN_SETUP_ST2      (FTL_ERR_ECHAIN_BASE + 16)
+#define FTL_ERR_ECHAIN_SETUP_ST3      (FTL_ERR_ECHAIN_BASE + 17)
+#define FTL_ERR_ECHAIN_SETUP_SANITY1  (FTL_ERR_ECHAIN_BASE + 18)
+#define FTL_ERR_ECHAIN_CK_FREE_RD1    (FTL_ERR_ECHAIN_BASE + 19)
+#define FTL_ERR_ECHAIN_CK_FREE_RD2    (FTL_ERR_ECHAIN_BASE + 20)
+#define FTL_ERR_ECHAIN_GC_WR1         (FTL_ERR_ECHAIN_BASE + 21)
+#define FTL_ERR_ECHAIN_GC_CM1         (FTL_ERR_ECHAIN_BASE + 22)
+#define FTL_ERR_ECHAIN_GC_ST1         (FTL_ERR_ECHAIN_BASE + 23)
+#define FTL_ERR_ECHAIN_GC_DEL         (FTL_ERR_ECHAIN_BASE + 24)
+#define FTL_ERR_ECHAIN_GC_NEEDED      (FTL_ERR_ECHAIN_BASE + 25)
+#define FTL_ERR_ECHAIN_GET_PAGE2      (FTL_ERR_ECHAIN_BASE + 26)
+#define FTL_ERR_ECHAIN_END            (FTL_ERR_ECHAIN_BASE + 27) /*Don't use this error code in *.c files*/
+
+/*Erase List Error Codes*//*starts at 194*/
+#define FTL_ERR_ERASE_LIST_LD         (FTL_ERR_ERASE_LIST_BASE + 0)
+#define FTL_ERR_ERASE_LIST_RD         (FTL_ERR_ERASE_LIST_BASE + 1)
+#define FTL_ERR_ERASE_LIST_UNDERFLOW  (FTL_ERR_ERASE_LIST_BASE + 2)
+#define FTL_ERR_ERASE_LIST_OVERFLOW   (FTL_ERR_ERASE_LIST_BASE + 3)
+#define FTL_ERR_ERASE_LIST_ERASE      (FTL_ERR_ERASE_LIST_BASE + 4)
+#define FTL_ERR_ERASE_LIST_WR         (FTL_ERR_ERASE_LIST_BASE + 5)
+#define FTL_ERR_ERASE_LIST_COM        (FTL_ERR_ERASE_LIST_BASE + 6)
+#define FTL_ERR_ERASE_LIST_ST1        (FTL_ERR_ERASE_LIST_BASE + 7)
+#define FTL_ERR_ERASE_LIST_ST2        (FTL_ERR_ERASE_LIST_BASE + 8)
+#define FTL_ERR_ERASE_LIST_STATUS     (FTL_ERR_ERASE_LIST_BASE + 9)
+#define FTL_ERR_ERASE_LIST_SUS        (FTL_ERR_ERASE_LIST_BASE + 10)
+#define FTL_ERR_ERASE_LIST_GC         (FTL_ERR_ERASE_LIST_BASE + 11)
+#define FTL_ERR_ERASE_LIST_ECHAIN     (FTL_ERR_ERASE_LIST_BASE + 12)
+#define FTL_ERR_ERASE_LIST_END        (FTL_ERR_ERASE_LIST_BASE + 13) /*Don't use this error code in *.c files*/
+
+/*Background Task Codes*//*starts at 207*/
+#define FTL_ERR_BACKGROUND_GT1         (FTL_ERR_BACKGROUND_BASE + 0)
+#define FTL_ERR_BACKGROUND_GT2         (FTL_ERR_BACKGROUND_BASE + 1)
+#define FTL_ERR_BACKGROUND_END         (FTL_ERR_BACKGROUND_BASE + 2) /*Don't use this error code in *.c files*/
+
+/* Debug and Test Codes*//*starts at 210*/
+#define FTL_ERR_DEBUG_DUPLICATE_BLOCK  (FTL_ERR_DEBUG_TST_BASE + 0)
+#define FTL_ERR_DEBUG_MISSING_BLOCK    (FTL_ERR_DEBUG_TST_BASE + 1)
+#define FTL_ERR_DEBUG_LOG_CHAIN_BROKE  (FTL_ERR_DEBUG_TST_BASE + 2)
+#define FTL_ERR_DEBUG_PHY_CHAIN_BROKE  (FTL_ERR_DEBUG_TST_BASE + 3)
+#define FTL_ERR_TST_ERASE_CNT_ERR      (FTL_ERR_DEBUG_TST_BASE + 4)
+#define FTL_ERR_TST_PAGE_NOT_FOUND     (FTL_ERR_DEBUG_TST_BASE + 5)
+#define FTL_ERR_TST_LBA_MISMATCH       (FTL_ERR_DEBUG_TST_BASE + 6)
+#define FTL_ERR_TST_INDEX_NOT_ONE      (FTL_ERR_DEBUG_TST_BASE + 7)
+#define FTL_ERR_NO_ROOM_IN_GCSAVE      (FTL_ERR_DEBUG_TST_BASE + 8)
+
+/* Pre Erased Codes *//* starts at 219 */
+#define FTL_ERR_PRE_ERASED_PARAMETER   (FTL_ERR_PRE_ERASED_BASE + 0)
+#define FTL_ERR_PRE_ERASED_CHAINED     (FTL_ERR_PRE_ERASED_BASE + 1)
+
+/* Delete Codes *//* starts at 230 */
+#define FTL_ERR_DEL_INFO_EMPTY         (FTL_ERR_DEL_INFO_BASE + 0)
+#define FTL_ERR_DEL_INFO_MISS          (FTL_ERR_DEL_INFO_BASE + 1)
+
+/*------ Room For More ------*/
+
+/* new GC Codes *//* starts at 300*/
+#define FTL_ERR_LOG_WR                 (FTL_ERR_DATA_GC_BASE + 0)
+#define FTL_ERR_EBLOCK_FULL            (FTL_ERR_DATA_GC_BASE + 1)
+#define FTL_ERR_LOGICAL_PAGE_NOT_FOUND (FTL_ERR_DATA_GC_BASE + 2)
+#define FTL_ERR_DATA_GC_FLASH_TIMEOUT1 (FTL_ERR_DATA_GC_BASE + 3)
+#define FTL_ERR_DATA_GC_FLASH_TIMEOUT2 (FTL_ERR_DATA_GC_BASE + 4)
+#define FTL_ERR_BB_BUSY_TIMEOUT1       (FTL_ERR_DATA_GC_BASE + 5)
+#define FTL_ERR_BB_BUSY_TIMEOUT2       (FTL_ERR_DATA_GC_BASE + 6)
+
+/* new Flush Codes *//* starts at 320 */
+#define FTL_ERR_FLUSH_NO_ENTRIES       (FTL_ERR_FLUSH_BASE + 0)
+#define FTL_ERR_FLUSH_NEXT_ENTRY       (FTL_ERR_FLUSH_BASE + 1)
+#define FTL_ERR_FLUSH_NO_EBLOCKS       (FTL_ERR_FLUSH_BASE + 2)
+#define FTL_ERR_FLUSH_GET_LATEST       (FTL_ERR_FLUSH_BASE + 3)
+#define FTL_ERR_FLUSH_SHUTDOWN         (FTL_ERR_FLUSH_BASE + 4)
+#define FTL_ERR_FLUSH_TOO_MANY_BLOCKS  (FTL_ERR_FLUSH_BASE + 5)
+#define FTL_ERR_FLUSH_NO_ROOM          (FTL_ERR_FLUSH_BASE + 6)
+#define FTL_ERR_FLUSH_LOG_ENTRY        (FTL_ERR_FLUSH_BASE + 7)
+#define FTL_ERR_FLUSH_GC_NEEDED        (FTL_ERR_FLUSH_BASE + 8)
+#define FTL_ERR_FLUSH_OUT_OF_RANGE     (FTL_ERR_FLUSH_BASE + 9)
+#define FTL_ERR_FLUSH_READ             (FTL_ERR_FLUSH_BASE + 10)
+#define FTL_ERR_FLUSH_NO_EBLOCK        (FTL_ERR_FLUSH_BASE + 11)
+#define FTL_ERR_FLUSH_NO_SYS_EBLOCK    (FTL_ERR_FLUSH_BASE + 12)
+#define FTL_ERR_FLUSH_VERIFY_TABLE     (FTL_ERR_FLUSH_BASE + 13)
+#define FTL_ERR_FLUSH_NEXT_EBLOCK_FAIL (FTL_ERR_FLUSH_BASE + 14)
+#define FTL_ERR_FLUSH_FLUSH_FAIL       (FTL_ERR_FLUSH_BASE + 15)
+#define FTL_ERR_FLUSH_FLUSH_GC_FAIL    (FTL_ERR_FLUSH_BASE + 16)
+#define FTL_ERR_FLUSH_END              (FTL_ERR_FLUSH_BASE + 17) /*Don't use this error code in *.c files*/
+
+/* new Log Codes *//* starts at 338 */
+#define FTL_ERR_LOG_UNLINK_A1_SEQUENCE (FTL_ERR_LOG_BASE + 0)
+#define FTL_ERR_LOG_UNLINK_A2_SEQUENCE (FTL_ERR_LOG_BASE + 1)
+#define FTL_ERR_CANNOT_FIND_NEXT_ENTRY (FTL_ERR_LOG_BASE + 2)
+#define FTL_ERR_LOG_NO_EBLOCKS         (FTL_ERR_LOG_BASE + 3)
+#define FTL_ERR_LOG_GET_LATEST         (FTL_ERR_LOG_BASE + 4)
+#define FTL_ERR_LOG_GET_ENTRY          (FTL_ERR_LOG_BASE + 5)
+#define FTL_ERR_LOG_SET_ENTRY          (FTL_ERR_LOG_BASE + 6)
+#define FTL_ERR_LOG_TYPE_A_SEQUENCE    (FTL_ERR_LOG_BASE + 7)
+#define FTL_ERR_LOG_TYPE_B_SEQUENCE    (FTL_ERR_LOG_BASE + 8)
+#define FTL_ERR_LOG_TYPE_C_SEQUENCE    (FTL_ERR_LOG_BASE + 9)
+#define FTL_ERR_LOG_GC_A_SEQUENCE      (FTL_ERR_LOG_BASE + 10)
+#define FTL_ERR_LOG_GC_B_SEQUENCE      (FTL_ERR_LOG_BASE + 11)
+#define FTL_ERR_LOG_INSERT             (FTL_ERR_LOG_BASE + 12)
+#define FTL_ERR_LOG_NO_ROOM            (FTL_ERR_LOG_BASE + 13)
+#define FTL_ERR_LOG_BLK_OUT_OF_RANGE   (FTL_ERR_LOG_BASE + 14)
+#define FTL_ERR_LOG_UNLINK_B_SEQUENCE  (FTL_ERR_LOG_BASE + 15)
+#define FTL_ERR_LOG_TOO_MANY_TYPE_B    (FTL_ERR_LOG_BASE + 16)
+#define FTL_ERR_LOG_TOO_MANY_ENTRIES   (FTL_ERR_LOG_BASE + 17)
+#define FTL_ERR_LOG_EB_REMOVE          (FTL_ERR_LOG_BASE + 18)
+#define FTL_ERR_LOG_EB_COUNTER         (FTL_ERR_LOG_BASE + 19)
+#define FTL_ERR_LOG_CHAIN_SEQUENCE     (FTL_ERR_LOG_BASE + 20)
+#define FTL_ERR_LOG_RECOVERY_EBLOCK    (FTL_ERR_LOG_BASE + 21)
+#define FTL_ERR_LOG_EBSWAP_SEQUENCE    (FTL_ERR_LOG_BASE + 22)
+#define FTL_ERR_LOG_NO_FOUND_EBLOCK    (FTL_ERR_LOG_BASE + 23)
+#define FTL_ERR_LOG_NO_TYPE_C          (FTL_ERR_LOG_BASE + 24)
+#define FTL_ERR_LOG_MISS_TYPE_C        (FTL_ERR_LOG_BASE + 25)
+#define FTL_ERR_LOG_EBLOCK_INDEX       (FTL_ERR_LOG_BASE + 26)
+#define FTL_ERR_LOG_INVALID_EBLOCK     (FTL_ERR_LOG_BASE + 27)
+#define FTL_ERR_LOG_CHECK_GC_B         (FTL_ERR_LOG_BASE + 28)
+#define FTL_ERR_LOG_CHECK_UNLINK_B     (FTL_ERR_LOG_BASE + 29)
+#define FTL_ERR_LOG_TYPE_B_ENTRY       (FTL_ERR_LOG_BASE + 30)
+#define FTL_ERR_LOG_TYPE_C_ENTRY       (FTL_ERR_LOG_BASE + 31)
+#define FTL_ERR_LOG_GC_B_ENTRY         (FTL_ERR_LOG_BASE + 32)
+#define FTL_ERR_LOG_UNLINK_B_ENTRY     (FTL_ERR_LOG_BASE + 33)
+#define FTL_ERR_LOG_TYPE_C_FLUSH       (FTL_ERR_LOG_BASE + 34)
+#define FTL_ERR_LOG_NEXT_EBLOCK_FAIL   (FTL_ERR_LOG_BASE + 35)
+#define FTL_ERR_LOG_NEW_EBLOCK_FAIL    (FTL_ERR_LOG_BASE + 36)
+#define FTL_ERR_LOG_TYPE_SPARE_SEQ     (FTL_ERR_LOG_BASE + 37)
+#define FTL_ERR_LOG_TYPE_A_ENTRY       (FTL_ERR_LOG_BASE + 38)
+#define FTL_ERR_LOG_END                (FTL_ERR_LOG_BASE + 39) /*Don't use this error code in *.c files*/
+
+/* new Table Codes *//* starts at 375 */
+#define FTL_ERR_TABLE_PPA_BITMAP_01    (FTL_ERR_TABLE_PPA_BASE + 0)
+#define FTL_ERR_TABLE_PPA_BITMAP_02    (FTL_ERR_TABLE_PPA_BASE + 1)
+#define FTL_ERR_TABLE_PPA_BITMAP_03    (FTL_ERR_TABLE_PPA_BASE + 2)
+#define FTL_ERR_TABLE_PPA_BITMAP_04    (FTL_ERR_TABLE_PPA_BASE + 3)
+#define FTL_ERR_TABLE_PPA_BITMAP_05    (FTL_ERR_TABLE_PPA_BASE + 4)
+#define FTL_ERR_TABLE_PPA_BITMAP_06    (FTL_ERR_TABLE_PPA_BASE + 5)
+#define FTL_ERR_TABLE_END              (FTL_ERR_TABLE_PPA_BASE + 6) /*Don't use this error code in *.c files*/
+
+/* Error Codes *//* starts at 381 */
+#define FTL_ERR_MOUNTED                 (FTL_ERR_MOUNT_LOCK_BASE + 0)
+#define FTL_ERR_NOT_MOUNTED             (FTL_ERR_MOUNT_LOCK_BASE + 1)
+#define FTL_ERR_LOCKED                  (FTL_ERR_MOUNT_LOCK_BASE + 2)
+#define FTL_ERR_UNLOCKED                (FTL_ERR_MOUNT_LOCK_BASE + 3)
+#define FTL_ERR_FLUSH_GC_SANITY         (FTL_ERR_MOUNT_LOCK_BASE + 4)
+
+/* new Flash Error codes *//* starts at 400 */
+#define FTL_ERR_FLASH_READ_01           (FTL_ERR_FLASH_OPS_BASE + 0)
+#define FTL_ERR_FLASH_READ_02           (FTL_ERR_FLASH_OPS_BASE + 1)
+#define FTL_ERR_FLASH_READ_03           (FTL_ERR_FLASH_OPS_BASE + 2)
+#define FTL_ERR_FLASH_READ_04           (FTL_ERR_FLASH_OPS_BASE + 3)
+#define FTL_ERR_FLASH_READ_05           (FTL_ERR_FLASH_OPS_BASE + 4)
+#define FTL_ERR_FLASH_READ_06           (FTL_ERR_FLASH_OPS_BASE + 5)
+#define FTL_ERR_FLASH_READ_07           (FTL_ERR_FLASH_OPS_BASE + 6)
+#define FTL_ERR_FLASH_READ_08           (FTL_ERR_FLASH_OPS_BASE + 7)
+#define FTL_ERR_FLASH_READ_09           (FTL_ERR_FLASH_OPS_BASE + 8)
+#define FTL_ERR_FLASH_READ_10           (FTL_ERR_FLASH_OPS_BASE + 9)
+#define FTL_ERR_FLASH_READ_11           (FTL_ERR_FLASH_OPS_BASE + 10)
+#define FTL_ERR_FLASH_READ_12           (FTL_ERR_FLASH_OPS_BASE + 11)
+#define FTL_ERR_FLASH_READ_13           (FTL_ERR_FLASH_OPS_BASE + 12)
+#define FTL_ERR_FLASH_READ_14           (FTL_ERR_FLASH_OPS_BASE + 13)
+#define FTL_ERR_FLASH_READ_15           (FTL_ERR_FLASH_OPS_BASE + 14)
+#define FTL_ERR_FLASH_READ_16           (FTL_ERR_FLASH_OPS_BASE + 15)
+#define FTL_ERR_FLASH_READ_17           (FTL_ERR_FLASH_OPS_BASE + 16)
+#define FTL_ERR_FLASH_READ_18           (FTL_ERR_FLASH_OPS_BASE + 17)
+#define FTL_ERR_FLASH_READ_19           (FTL_ERR_FLASH_OPS_BASE + 18)
+#define FTL_ERR_FLASH_READ_20           (FTL_ERR_FLASH_OPS_BASE + 19)
+#define FTL_ERR_FLASH_READ_21           (FTL_ERR_FLASH_OPS_BASE + 20)
+#define FTL_ERR_FLASH_READ_22           (FTL_ERR_FLASH_OPS_BASE + 21)
+#define FTL_ERR_FLASH_READ_23           (FTL_ERR_FLASH_OPS_BASE + 22)
+#define FTL_ERR_FLASH_READ_24           (FTL_ERR_FLASH_OPS_BASE + 23)
+#define FTL_ERR_FLASH_READ_25           (FTL_ERR_FLASH_OPS_BASE + 24)
+#define FTL_ERR_FLASH_READ_26           (FTL_ERR_FLASH_OPS_BASE + 25)
+#define FTL_ERR_FLASH_READ_27           (FTL_ERR_FLASH_OPS_BASE + 26)
+#define FTL_ERR_FLASH_WRITE_01          (FTL_ERR_FLASH_OPS_BASE + 27)
+#define FTL_ERR_FLASH_WRITE_02          (FTL_ERR_FLASH_OPS_BASE + 28)
+#define FTL_ERR_FLASH_WRITE_03          (FTL_ERR_FLASH_OPS_BASE + 29)
+#define FTL_ERR_FLASH_WRITE_04          (FTL_ERR_FLASH_OPS_BASE + 30)
+#define FTL_ERR_FLASH_WRITE_05          (FTL_ERR_FLASH_OPS_BASE + 31)
+#define FTL_ERR_FLASH_WRITE_06          (FTL_ERR_FLASH_OPS_BASE + 32)
+#define FTL_ERR_FLASH_WRITE_07          (FTL_ERR_FLASH_OPS_BASE + 33)
+#define FTL_ERR_FLASH_WRITE_08          (FTL_ERR_FLASH_OPS_BASE + 34)
+#define FTL_ERR_FLASH_WRITE_09          (FTL_ERR_FLASH_OPS_BASE + 35)
+#define FTL_ERR_FLASH_WRITE_10          (FTL_ERR_FLASH_OPS_BASE + 36)
+#define FTL_ERR_FLASH_WRITE_11          (FTL_ERR_FLASH_OPS_BASE + 37)
+#define FTL_ERR_FLASH_WRITE_12          (FTL_ERR_FLASH_OPS_BASE + 38)
+#define FTL_ERR_FLASH_WRITE_13          (FTL_ERR_FLASH_OPS_BASE + 39)
+#define FTL_ERR_FLASH_WRITE_14          (FTL_ERR_FLASH_OPS_BASE + 40)
+#define FTL_ERR_FLASH_WRITE_15          (FTL_ERR_FLASH_OPS_BASE + 41)
+#define FTL_ERR_FLASH_WRITE_16          (FTL_ERR_FLASH_OPS_BASE + 42)
+#define FTL_ERR_FLASH_WRITE_17          (FTL_ERR_FLASH_OPS_BASE + 43)
+#define FTL_ERR_FLASH_WRITE_18          (FTL_ERR_FLASH_OPS_BASE + 44)
+#define FTL_ERR_FLASH_COMMIT_01         (FTL_ERR_FLASH_OPS_BASE + 45)
+#define FTL_ERR_FLASH_COMMIT_02         (FTL_ERR_FLASH_OPS_BASE + 46)
+#define FTL_ERR_FLASH_COMMIT_03         (FTL_ERR_FLASH_OPS_BASE + 47)
+#define FTL_ERR_FLASH_COMMIT_04         (FTL_ERR_FLASH_OPS_BASE + 48)
+#define FTL_ERR_FLASH_COMMIT_05         (FTL_ERR_FLASH_OPS_BASE + 49)
+#define FTL_ERR_FLASH_COMMIT_06         (FTL_ERR_FLASH_OPS_BASE + 50)
+#define FTL_ERR_FLASH_COMMIT_07         (FTL_ERR_FLASH_OPS_BASE + 51)
+#define FTL_ERR_FLASH_ERASE_01          (FTL_ERR_FLASH_OPS_BASE + 52)
+#define FTL_ERR_FLASH_ERASE_02          (FTL_ERR_FLASH_OPS_BASE + 53)
+#define FTL_ERR_FLASH_ERASE_03          (FTL_ERR_FLASH_OPS_BASE + 54)
+#define FTL_ERR_FLASH_BUSY_01           (FTL_ERR_FLASH_OPS_BASE + 55)
+#define FTL_ERR_FLASH_BUSY_02           (FTL_ERR_FLASH_OPS_BASE + 56)
+#define FTL_ERR_FLASH_BUSY_03           (FTL_ERR_FLASH_OPS_BASE + 57)
+#define FTL_ERR_FLASH_BUSY_04           (FTL_ERR_FLASH_OPS_BASE + 58)
+#define FTL_ERR_FLASH_BUSY_05           (FTL_ERR_FLASH_OPS_BASE + 59)
+#define FTL_ERR_FLASH_BUSY_06           (FTL_ERR_FLASH_OPS_BASE + 60)
+#define FTL_ERR_FLASH_BUSY_07           (FTL_ERR_FLASH_OPS_BASE + 61)
+#define FTL_ERR_FLASH_BUSY_08           (FTL_ERR_FLASH_OPS_BASE + 62)
+#define FTL_ERR_FLASH_BUSY_09           (FTL_ERR_FLASH_OPS_BASE + 63)
+#define FTL_ERR_FLASH_BUSY_10           (FTL_ERR_FLASH_OPS_BASE + 64)
+#define FTL_ERR_FLASH_BUSY_11           (FTL_ERR_FLASH_OPS_BASE + 65)
+#define FTL_ERR_FLASH_BUSY_12           (FTL_ERR_FLASH_OPS_BASE + 66)
+#define FTL_ERR_FLASH_TRANS_01          (FTL_ERR_FLASH_OPS_BASE + 67)
+#define FTL_ERR_FLASH_TRANS_02          (FTL_ERR_FLASH_OPS_BASE + 68)
+#define FTL_ERR_FLASH_TRANS_03          (FTL_ERR_FLASH_OPS_BASE + 69)
+#define FTL_ERR_FLASH_TRANS_04          (FTL_ERR_FLASH_OPS_BASE + 70)
+#define FTL_ERR_FLASH_TRANS_05          (FTL_ERR_FLASH_OPS_BASE + 71)
+#define FTL_ERR_FLASH_GETID_01          (FTL_ERR_FLASH_OPS_BASE + 72)
+#define FTL_ERR_FLASH_GETID_02          (FTL_ERR_FLASH_OPS_BASE + 73)
+#define FTL_ERR_FLASH_GETID_03          (FTL_ERR_FLASH_OPS_BASE + 74)
+#define FTL_ERR_FLASH_GETID_04          (FTL_ERR_FLASH_OPS_BASE + 75)
+#define FTL_ERR_FLASH_GETID_05          (FTL_ERR_FLASH_OPS_BASE + 76)
+#define FTL_ERR_FLASH_LOAD_01           (FTL_ERR_FLASH_OPS_BASE + 77)
+#define FTL_ERR_FLASH_LOAD_02           (FTL_ERR_FLASH_OPS_BASE + 78)
+#define FTL_ERR_FLASH_LOAD_03           (FTL_ERR_FLASH_OPS_BASE + 79)
+#define FTL_ERR_FLASH_STATUS_01         (FTL_ERR_FLASH_OPS_BASE + 80)
+#define FTL_ERR_FLASH_STATUS_02         (FTL_ERR_FLASH_OPS_BASE + 81)
+#define FTL_ERR_FLASH_STATUS_03         (FTL_ERR_FLASH_OPS_BASE + 82)
+#define FTL_ERR_FLASH_STATUS_04         (FTL_ERR_FLASH_OPS_BASE + 83)
+#define FTL_ERR_FLASH_INIT_01           (FTL_ERR_FLASH_OPS_BASE + 84)
+#define FTL_ERR_FLASH_INIT_02           (FTL_ERR_FLASH_OPS_BASE + 85)
+#define FTL_ERR_FLASH_SHUTDOWN_01       (FTL_ERR_FLASH_OPS_BASE + 86)
+
+#define FTL_ERR_SUPER_READ_01                 (FTL_ERR_SUPER_BASE + 0)
+#define FTL_ERR_SUPER_READ_02                 (FTL_ERR_SUPER_BASE + 1)
+#define FTL_ERR_SUPER_READ_03                 (FTL_ERR_SUPER_BASE + 2)
+#define FTL_ERR_SUPER_READ_04                 (FTL_ERR_SUPER_BASE + 3)
+#define FTL_ERR_SUPER_READ_05                 (FTL_ERR_SUPER_BASE + 4)
+#define FTL_ERR_SUPER_WRITE_01                (FTL_ERR_SUPER_BASE + 5)
+#define FTL_ERR_SUPER_WRITE_02                (FTL_ERR_SUPER_BASE + 6)
+#define FTL_ERR_SUPER_WRITE_03                (FTL_ERR_SUPER_BASE + 7)
+#define FTL_ERR_SUPER_WRITE_04                (FTL_ERR_SUPER_BASE + 8)
+#define FTL_ERR_SUPER_WRITE_05                (FTL_ERR_SUPER_BASE + 9)
+#define FTL_ERR_SUPER_PARAM_01                (FTL_ERR_SUPER_BASE + 10)
+#define FTL_ERR_SUPER_PARAM_02                (FTL_ERR_SUPER_BASE + 11)
+#define FTL_ERR_SUPER_PARAM_03                (FTL_ERR_SUPER_BASE + 12)
+#define FTL_ERR_SUPER_NO_SYS_EBLOCK           (FTL_ERR_SUPER_BASE + 13) 
+#define FTL_ERR_SUPER_EB_NO_ENTRY             (FTL_ERR_SUPER_BASE + 14)
+#define FTL_ERR_SUPER_FLUSH_NO_ROOM           (FTL_ERR_SUPER_BASE + 15)
+#define FTL_ERR_SUPER_LOG_NO_ROOM_01          (FTL_ERR_SUPER_BASE + 16)
+#define FTL_ERR_SUPER_LOG_NO_ROOM_02          (FTL_ERR_SUPER_BASE + 17)
+#define FTL_ERR_SUPER_LOG_GET_LATEST          (FTL_ERR_SUPER_BASE + 18)
+#define FTL_ERR_SUPER_LOG_GET_ENTRY           (FTL_ERR_SUPER_BASE + 19)
+#define FTL_ERR_SUPER_LOG_NEW_EBLOCK_FAIL_01  (FTL_ERR_SUPER_BASE + 20)
+#define FTL_ERR_SUPER_LOG_NEW_EBLOCK_FAIL_02  (FTL_ERR_SUPER_BASE + 21)
+#define FTL_ERR_SUPER_CANNOT_FIND_NEXT_ENTRY  (FTL_ERR_SUPER_BASE + 22)
+#define FTL_ERR_SUPER_LOG_INSERT              (FTL_ERR_SUPER_BASE + 23)
+#define FTL_ERR_SUPER_NO_EBLOCKS              (FTL_ERR_SUPER_BASE + 24)
+#define FTL_ERR_SUPER_NO_EBLOCK               (FTL_ERR_SUPER_BASE + 25)
+#define FTL_ERR_FORMAT_SUPER_EBLOCK           (FTL_ERR_SUPER_BASE + 26)
+#define FTL_ERR_SUPER_FLASH_WRITE_01          (FTL_ERR_SUPER_BASE + 27)
+#define FTL_ERR_SUPER_FLASH_WRITE_02          (FTL_ERR_SUPER_BASE + 28)
+#define FTL_ERR_SUPER_FLASH_WRITE_03          (FTL_ERR_SUPER_BASE + 29)
+
+#define FTL_ERR_CACHE_EB_LOAD                                     (FTL_ERR_CACHE_BASE + 0) // not use
+#define FTL_ERR_CACHE_NOT_FOUND                                   (FTL_ERR_CACHE_BASE + 1)
+#define FTL_ERR_CACHE_CLEAR                                       (FTL_ERR_CACHE_BASE + 2) // not use
+#define FTL_ERR_CACHE_ALLOCATE                                    (FTL_ERR_CACHE_BASE + 3) // not use
+#define FTL_ERR_CACHE_INDEX_FIND_CANDIDATE                        (FTL_ERR_CACHE_BASE + 4) // not use
+#define FTL_ERR_CACHE_INDEX_FIND_CANDIDATE_FOR_CROSS_BOUNDARY_1   (FTL_ERR_CACHE_BASE + 5)
+#define FTL_ERR_CACHE_INDEX_FIND_CANDIDATE_FOR_CROSS_BOUNDARY_2   (FTL_ERR_CACHE_BASE + 6)
+#define FTL_ERR_CACHE_INDEX_FIND_CANDIDATE_FOR_CROSS_BOUNDARY_3   (FTL_ERR_CACHE_BASE + 7)
+#define FTL_ERR_CACHE_INDEX_NOT_SWAP                              (FTL_ERR_CACHE_BASE + 8) // not use
+#define FTL_ERR_CACHE_UPDATE_LRUOP                                (FTL_ERR_CACHE_BASE + 9) // not use
+#define FTL_ERR_CACHE_EB_INSERT_1                                 (FTL_ERR_CACHE_BASE + 10)
+#define FTL_ERR_CACHE_EB_INSERT_2                                 (FTL_ERR_CACHE_BASE + 11)
+#define FTL_ERR_CACHE_SET_EBLOCKMAP                               (FTL_ERR_CACHE_BASE + 12)
+#define FTL_ERR_CACHE_GET_EBLOCKMAP                               (FTL_ERR_CACHE_BASE + 13)
+#define FTL_ERR_CACHE_CLEAR_EBLOCKMAP                             (FTL_ERR_CACHE_BASE + 14)
+#define FTL_ERR_CACHE_SET_RAMMAP                                  (FTL_ERR_CACHE_BASE + 15) // not use
+#define FTL_ERR_CACHE_GET_RAMMAP                                  (FTL_ERR_CACHE_BASE + 16) // not use
+#define FTL_ERR_CACHE_CLEAR_RAMMAP                                (FTL_ERR_CACHE_BASE + 17) // not use
+#define FTL_ERR_CACHE_SET_EBMCACHE                                (FTL_ERR_CACHE_BASE + 18) // not use
+#define FTL_ERR_CACHE_GET_EBMCACHE                                (FTL_ERR_CACHE_BASE + 19) // not use
+#define FTL_ERR_CACHE_CLEAR_EBMCACHE                              (FTL_ERR_CACHE_BASE + 20) // not use
+#define FTL_ERR_CACHE_SET_LRUCOUNTER                              (FTL_ERR_CACHE_BASE + 21) // not use
+#define FTL_ERR_CACHE_GET_LRUCOUNTER                              (FTL_ERR_CACHE_BASE + 22) // not use
+#define FTL_ERR_CACHE_CLEAR_LRUCOUNTER                            (FTL_ERR_CACHE_BASE + 23) // not use
+#define FTL_ERR_CACHE_FLUSH_NEED                                  (FTL_ERR_CACHE_BASE + 24)
+#define FTL_ERR_CACHE_INDEX_OUT_OF_SCOPE_1                        (FTL_ERR_CACHE_BASE + 25)
+#define FTL_ERR_CACHE_INDEX_OUT_OF_SCOPE_2                        (FTL_ERR_CACHE_BASE + 26)
+#define FTL_ERR_CACHE_INDEX_OUT_OF_SCOPE_3                        (FTL_ERR_CACHE_BASE + 27)
+#define FTL_ERR_CACHE_CROSS_LEB_EXCEED_ONE_1                      (FTL_ERR_CACHE_BASE + 28)
+#define FTL_ERR_CACHE_CROSS_LEB_EXCEED_ONE_2                      (FTL_ERR_CACHE_BASE + 29)
+#define FTL_ERR_CACHE_CROSS_LEB_NO_SPACE                          (FTL_ERR_CACHE_BASE + 30)
+#define FTL_ERR_CACHE_CROSS_LEB_NOT_FOUND                         (FTL_ERR_CACHE_BASE + 31)
+#define FTL_ERR_GET_RAM_OFFSET_EB                                 (FTL_ERR_CACHE_BASE + 32)
+#define FTL_ERR_CACHE_FIND_INDEX_FOR_ALIGN                        (FTL_ERR_CACHE_BASE + 33)
+#define FTL_ERR_CACHE_FLASH_READ_01                               (FTL_ERR_CACHE_BASE + 34)
+#define FTL_ERR_CACHE_FLASH_READ_02                               (FTL_ERR_CACHE_BASE + 35)
+#define FTL_ERR_CACHE_FLASH_READ_03                               (FTL_ERR_CACHE_BASE + 36)
+#define FTL_ERR_CACHE_FLASH_READ_04                               (FTL_ERR_CACHE_BASE + 37)
+#define FTL_ERR_CACHE_FLASH_WRITE_01                              (FTL_ERR_CACHE_BASE + 38)
+#define FTL_ERR_CACHE_FLASH_WRITE_02                              (FTL_ERR_CACHE_BASE + 39)
+#define FTL_ERR_CACHE_FLASH_WRITE_03                              (FTL_ERR_CACHE_BASE + 40)
+#define FTL_ERR_CACHE_FLASH_WRITE_04                              (FTL_ERR_CACHE_BASE + 41)
+#define FTL_ERR_CACHE_ALLOCTION_ARRAY                             (FTL_ERR_CACHE_BASE + 42)
+#define FTL_ERR_DEBUG_CACHE_RAMMAPINDEX_1                         (FTL_ERR_CACHE_BASE + 43)
+#define FTL_ERR_DEBUG_CACHE_RAMMAPINDEX_2                         (FTL_ERR_CACHE_BASE + 44)
+#define FTL_ERR_DEBUG_CACHE_RAMMAPINDEX_3                         (FTL_ERR_CACHE_BASE + 45)
+#define FTL_ERR_DEBUG_CACHE_COMP_MAPPING_1                        (FTL_ERR_CACHE_BASE + 46)
+#define FTL_ERR_DEBUG_CACHE_COMP_MAPPING_2                        (FTL_ERR_CACHE_BASE + 47)
+#define FTL_ERR_CACHE_GET_SPARE_INFO_1                            (FTL_ERR_CACHE_BASE + 48)
+#define FTL_ERR_CACHE_GET_SPARE_INFO_2                            (FTL_ERR_CACHE_BASE + 49)
+#define FTL_ERR_CACHE_GET_SPARE_INFO_3                            (FTL_ERR_CACHE_BASE + 50)
+#define FTL_ERR_CACHE_GET_SPARE_INFO_4                            (FTL_ERR_CACHE_BASE + 51)
+#define FTL_ERR_CACHE_GET_SPARE_INFO_5                            (FTL_ERR_CACHE_BASE + 52)
+#define FTL_ERR_CACHE_GET_SPARE_INFO_6                            (FTL_ERR_CACHE_BASE + 53)
+
+#define FTL_FALSE                       (0x00)
+#define FTL_TRUE                        (0x01)
+
+#define FTL_DONT_FORMAT                (0)
+#define FTL_FORMAT_AS_NEEDED           (1)
+#define FTL_RTOS_INT                   (2)
+#define FTL_RTOS_COOP                  (3)
+#define FTL_NO_RTOS                    (4)
+#define FTL_ALLOCATE                   (5)
+#define FTL_NO_ALLOCATE                (6)
+#define FTL_TABLE_NV                   (7)
+#define FTL_TABLE_RAM                  (9)
+#define FTL_SYSTEM_CONFIRM_SIGNATURE   (12)
+#define FTL_SYSTEM_CONFIRM_ECC         (13)
+#define FTL_SYSTEM_CONFIRM_METHOD      FTL_SYSTEM_CONFIRM_ECC
+#define FTL_FORCE_FORMAT               (14)
+#define FTL_DATA_WEAR_LEVEL_RANGE      (20)
+#define DELETE_GC_THRESHOLD            (32)
+
+#define AUTOFILL_0xFF_UNMAPPED_SECTORS FTL_TRUE
+
+// user configurable parameter
+#define CACHE_RAM_BD_MODULE            FTL_FALSE
+#if (CACHE_RAM_BD_MODULE == FTL_TRUE)
+#define CACHE_MINIMUM_RAM           FTL_FALSE
+#define CACHE_MAXIMUM_RAM           FTL_FALSE // debug only.
+#if ((CACHE_MINIMUM_RAM == FTL_TRUE) && (CACHE_MAXIMUM_RAM == FTL_TRUE))
+#error "both maximum and minimum, set"
+#endif
+#if ((CACHE_MINIMUM_RAM == FTL_FALSE) && (CACHE_MAXIMUM_RAM == FTL_FALSE))
+#define CACHE_BD_RAM_SIZE (0x5000) // Using ram size
+#endif
+
+#define CACHE_DYNAMIC_ALLOCATION    FTL_FALSE
+
+#if (CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
+unsigned long gTotal_ram_allowed;
+#endif
+
+#endif
+
+//.System Configuration/Feature  Flags
+#define FTL_BACKGROUND_ERASE        FTL_FALSE
+#define FTL_RPB_CACHE               FTL_FALSE
+#define FTL_RPB_CACHE_API_PFT_SAFE  FTL_TRUE
+#define FTL_TABLE_LOCATION          FTL_TABLE_RAM
+#define FTL_PERFORMANCE_MARKERS     FTL_TRUE
+#define FTL_ENABLE_DELETE_API       FTL_TRUE
+#define FTL_DELETE_WITH_GC          FTL_TRUE
+#define FTL_EBLOCK_CHAINING         FTL_TRUE
+#if (CACHE_RAM_BD_MODULE == FTL_TRUE)
+#define FTL_ENABLE_UNUSED_EB_SWAP   FTL_FALSE
+#else
+#define FTL_ENABLE_UNUSED_EB_SWAP   FTL_TRUE
+#endif
+#define FTL_CHECK_ERRORS            FTL_TRUE
+#define FTL_STATIC_WEAR_LEVELING    FTL_TRUE
+#define FTL_CHECK_VERSION           FTL_TRUE
+#define FTL_NON_ALIGNED_BUFFER      FTL_TRUE
+#define FTL_UNLINK_GC               FTL_TRUE
+#if (FTL_SUPER_SYSEB_MODE == FTL_SUPER_SYSEB_ENABLE)
+#define FTL_SUPER_SYS_EBLOCK        FTL_TRUE
+#else
+#define FTL_SUPER_SYS_EBLOCK        FTL_FALSE
+#endif  // #if (FTL_SUPER_SYSEB_MODE == FTL_SUPER_SYSEB_ENABLE)
+#define INVERT_FLASH_MMAP           FTL_FALSE
+#define MAX_BAD_BLOCK_SANITY_TRIES  4
+
+#if (FTL_DEVICE_TYPE == FTL_DEVICE_NAND)
+#define FTL_REDUNDANT_LOG_ENTRIES   FTL_FALSE
+#define FTL_DEFECT_MANAGEMENT       FTL_TRUE
+#else
+#define FTL_REDUNDANT_LOG_ENTRIES   FTL_TRUE
+#define FTL_DEFECT_MANAGEMENT       FTL_FALSE
+#endif
+
+#if (FTL_DEVICE_TYPE == FTL_DEVICE_NAND)
+#define FTL_CHECK_BAD_BLOCK_LIMIT     FTL_FALSE
+#define FTL_ENABLE_NAND_SECOND_CHIP   FTL_FALSE
+#endif
+
+// three options for logging if FTL_DEVICE_TYPE is set to FTL_DEVICE_NOR
+// 1- use only A half - FTL_REDUNDANT_LOG_ENTRIES = FTL_FALSE
+//    ftl_def.h (LOG_ENTRY_DELTA = 32)
+// 2- redundant copy - FTL_REDUNDANT_LOG_ENTRIES = FTL_TRUE
+//    ftl_def.h (LOG_ENTRY_DELTA = 32)
+// 3- use both A and B half - FTL_REDUNDANT_LOG_ENTRIES = FTL_FALSE
+//    ftl_def.h (LOG_ENTRY_DELTA = 16)
+#if (FTL_STATIC_WEAR_LEVELING == FTL_TRUE)
+#define STATIC_WL_THRESHOLD_COUNT  200
+#endif
+
+#define FTL_ENABLE_DEBUG_CODE       FTL_FALSE  /*enables FTL DEBUG CODE*/
+
+// FTL_ENABLE_DEBUG_CODE is not supported with CACHE_RAM_BD_MODULE.
+#if ((FTL_ENABLE_DEBUG_CODE == FTL_TRUE) && (CACHE_RAM_BD_MODULE == FTL_FALSE))
+#define DEBUG_COMPARE_TABLES        FTL_FALSE
+#define DEBUG_ENABLE_LOGGING        FTL_TRUE
+// FTL_DEBUG_STRUCT_SIZE is not supported with FTL_DEVICE_NAND and CACHE_RAM_BD_MODULE.
+#if(FTL_DEVICE_TYPE == FTL_DEVICE_NOR)
+#define FTL_DEBUG_STRUCT_SIZE       FTL_TRUE
+#else
+#define FTL_DEBUG_STRUCT_SIZE       FTL_FALSE
+#endif
+#define DEBUG_INIT_CHECK            FTL_TRUE
+#define FTL_DEBUG_FLASH_USAGE       FTL_TRUE
+
+#else  // #if (FTL_ENABLE_DEBUG_CODE == FTL_TRUE)
+#define DEBUG_COMPARE_TABLES        FTL_FALSE
+#define FTL_DEBUG_STRUCT_SIZE       FTL_FALSE
+#define DEBUG_INIT_CHECK            FTL_FALSE
+#define DEBUG_ENABLE_LOGGING        FTL_FALSE
+#define FTL_DEBUG_FLASH_USAGE       FTL_FALSE
+
+#endif  // #else  // #if (FTL_ENABLE_DEBUG_CODE == FTL_TRUE)
+
+#if (FTL_ENABLE_UNUSED_EB_SWAP == FTL_TRUE)
+#define ENABLE_EB_ERASED_BIT       (FTL_TRUE)
+
+#else  // #if (FTL_ENABLE_UNUSED_EB_SWAP == FTL_TRUE)
+#define ENABLE_EB_ERASED_BIT       (FTL_FALSE)
+#endif  // #else  // #if (FTL_ENABLE_UNUSED_EB_SWAP == FTL_TRUE)
+
+// TimeMark Arguments
+#define TM_START                     (1)
+#define TM_STOP                      (2)
+
+#define TM_BUILD_FOR_WRITE           (1)
+#define TM_BUILD_FOR_READ            (2)
+#define TM_GARBAGE_COLLECTION        (3)
+#define TM_TRANSFER_FOR_WRITE        (4)
+#define TM_TRANSFER_FOR_READ         (5)
+#define TM_WRITE_OBJECTS             (6)
+#define TM_READ_OBJECTS              (7)
+#define TM_FLUSH_GC                  (8)
+
+// INT_Generate Parameters
+#define FTL_RDY_BSY_EVENT            (0)
+#define FTL_XFER_DONE_EVENT          (1)
+#define FTL_MONOLITHIC_RDY_BSY_EVENT (2)
+
+#if (DEBUG_ENABLE_LOGGING == FTL_TRUE)
+typedef struct _ftlDebugLogElement
+{
+	unsigned long LBA;
+	unsigned long NB;
+	unsigned char operation;
+}FTL_DEBUG_LOG_ELEMENT;
+#endif
+
+typedef struct _transMap
+{
+	unsigned char devID; /*1*/
+	unsigned char numSectors; /*1*/
+	unsigned char startSector; /*1*/
+	unsigned long startLBA; /*4*/
+	unsigned long phyPageAddr; /*4*/
+	unsigned long mergePageForWrite; /*4*/
+	unsigned short logEBlockEntryIndex; /*4*/
+} TRANSFER_MAP_STRUCT; /*Total 23 bytes*/
+
+typedef TRANSFER_MAP_STRUCT* TRANS_MAP_ENTRY_PTR;
+typedef TRANS_MAP_ENTRY_PTR* TRANS_MAP_ENTRY_PTR_PTR;
+
+typedef struct _ftlInitVars
+{
+	unsigned char format;
+	unsigned char os_type;
+	unsigned char table_storage;
+	unsigned char allocate;
+	unsigned char mode;
+#if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
+unsigned long total_ram_allowed;
+#endif
+} FTL_INIT_STRUCT;
+
+typedef struct _capacity
+{
+unsigned long totalSize;    //In Bytes
+unsigned long numDBlocks;
+unsigned long numEBlocks;
+unsigned long eBlockSizeBytes;
+unsigned long eBlockSizePages;
+unsigned long pageSizeDBlocks;
+unsigned long pageSizeBytes;
+unsigned long numBlocks;    // is equivalent to numDBlocks OBSOLETE
+unsigned long blockSize;    // is equivalent to numEBlocks OBSOLETE
+unsigned long pageSize;     // is equivalent to pageSizeBytes OBSOLETE
+unsigned long busWidth;
+unsigned long numDevices;
+} FTL_CAPACITY;
+
+typedef struct _devConfig
+{
+unsigned short dataEBlkStart;
+unsigned short dataEBlkEnd;
+unsigned short reserveEBlkStart;
+unsigned short reserveEBlkEnd;
+unsigned short sysEBlkStart;
+unsigned short sysEBlkEnd;
+unsigned short numDevices;
+unsigned short sectorsPerPage;
+unsigned short dataPagesPerEBlock;
+unsigned short sysPagesPerEBlock;
+unsigned short eblockChainingEnabled;
+} FTL_DEV_CONFIG;
+
+typedef struct _defect
+{
+unsigned short devID; /*2*/
+unsigned short phyEBNum; /*2*/
+} FTL_DEFECT; /*Total 4 bytes*/
+
+/* used for LBA to PBA conversion */
+typedef struct _PBAStruct
+{
+unsigned char devID;
+unsigned long PPA;
+unsigned long PBA;
+} PBA_STRUCT;
+typedef PBA_STRUCT* PBA_STRUCT_PTR;
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+FTL_STATUS FTL_InitAll (FTL_INIT_STRUCT *initStructPtr);
+#if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
+FTL_STATUS FTL_Format(FTL_INIT_STRUCT *initStructPtr);
+#else
+FTL_STATUS FTL_Format (void);
+#endif
+FTL_STATUS FTL_Shutdown (void);
+/* Utiltiy */
+FTL_STATUS FTL_GetCapacity (FTL_CAPACITY * capacity);
+FTL_STATUS FTL_SetXtremeModeProgramming (unsigned char mode);
+FTL_STATUS FTL_GetUtilizationInfo (unsigned long DeviceID, unsigned long * Free, unsigned long * Used,
+	unsigned long * Dirty);
+FTL_STATUS FTL_GetEraseCycles (unsigned long DeviceID, unsigned long * high_block_number,
+	unsigned long * high_erase_count, unsigned long * low_block_number, unsigned long * low_erase_count);
+/* Cache and Tanslation Table */
+FTL_STATUS FTL_FlushDataCache (void);
+FTL_STATUS FTL_FlushTableCache (void);
+/* Read */
+FTL_STATUS FTL_DeviceObjectsRead (unsigned char * buffer, unsigned long LBA, unsigned long NB,
+	unsigned long * bytesDone);
+/* Write */
+FTL_STATUS FTL_DeviceObjectsWrite (unsigned char * buffer, unsigned long LBA, unsigned long NB,
+	unsigned long * bytesDone);
+/* Delete */
+FTL_STATUS FTL_DeviceObjectsDelete (unsigned long LBA, unsigned long NB, unsigned long * sectorsDeleted);
+/* Garbage Collection */
+FTL_STATUS FTL_ForcedGC (FTL_DEV DeviceID, unsigned short logicalEBNum, unsigned short * FreedUpPages,
+	unsigned short * freePageIndex);
+FTL_STATUS FTL_SetGCThreshold (unsigned char type, unsigned long threshold);
+/*Trafer map*/
+FTL_STATUS FTL_BuildTransferMapForWriteBlocking (unsigned long LBA,
+	unsigned long NB, unsigned long * resultingEntries);
+FTL_STATUS FTL_BuildTransferMapForReadBlocking (unsigned long LBA,
+	unsigned long NB, unsigned long * resultingEntries);
+FTL_STATUS FTL_GetTransferMapEntry (unsigned short int entryIndex, TRANS_MAP_ENTRY_PTR transferMapEntry);
+FTL_STATUS FTL_TransferPageForWrite (unsigned char **byteBuffer, unsigned long *remainingEntries);
+FTL_STATUS FTL_TransferPageForRead (unsigned char **byteBuffer, unsigned long * remainingEntries);
+FTL_STATUS FTL_BackgroundTask (void);
+FTL_STATUS FTL_ManageRead (void);
+/* Defect Management */
+FTL_STATUS TST_WriteDefectList (FTL_DEFECT* buffer, unsigned short replace);
+FTL_STATUS TST_ReadDefectList (FTL_DEFECT* buffer);
+/*Helper funntion for BDT*/
+FTL_STATUS TST_LBAToPBA (unsigned long LBA, PBA_STRUCT_PTR pbaStruct, unsigned char verifyFlash);
+/*Wearleveling Test functions*/
+FTL_STATUS TST_GetDevConfig (FTL_DEV_CONFIG* devConfig);
+FTL_STATUS TST_GetLogicalEBEraseCount (unsigned char devID, unsigned short logicalEBNum,
+	unsigned short* physicalEBNum, unsigned long* eraseCount);
+FTL_STATUS TST_GetPhysicalEBEraseCount (unsigned char devID, unsigned short phyEBNum, unsigned long* eraseCount);
+FTL_STATUS TST_GetAverageEraseCount (unsigned char devID, unsigned short Start_Logical_eBlk,
+	unsigned short End_Logical_eBlk, unsigned short* avgEraseCount);
+FTL_STATUS TST_CheckEraseCount (unsigned char devID, unsigned short Start_Logical_eBlk,
+	unsigned short End_Logical_eBlk, unsigned short expected_value);
+FLASH_STATUS TST_ResetFlash (unsigned long devId);
+#if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
+FTL_STATUS CACHE_GetUsedRamSize(unsigned long* miniRamSize, unsigned long* maxRamSize);
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // #ifndef FTL_IF_EX_H

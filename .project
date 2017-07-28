@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>TDA3500_GCC</name>
+	<name>M2GPlus_GCC</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -26,7 +26,7 @@
 	<linkedResources>
 		<link>
 			<name>.git</name>
-			<type>1</type>
+			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/devices/.git</locationURI>
 		</link>
 		<link>

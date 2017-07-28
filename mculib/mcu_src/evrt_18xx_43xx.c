@@ -48,64 +48,72 @@
  ****************************************************************************/
 
 /* Initialize the EVRT */
-void Chip_EVRT_Init(void)
+void Chip_EVRT_Init (void)
 {
 	uint8_t i = 0;
 	// Clear all register to be default
-	LPC_EVRT->HILO      = 0x0000;
-	LPC_EVRT->EDGE      = 0x0000;
-	LPC_EVRT->CLR_EN    = 0xFFFF;
-	do {
+	LPC_EVRT->HILO = 0x0000;
+	LPC_EVRT->EDGE = 0x0000;
+	LPC_EVRT->CLR_EN = 0xFFFF;
+	do
+	{
 		i++;
-		LPC_EVRT->CLR_STAT  = 0xFFFFF;
+		LPC_EVRT->CLR_STAT = 0xFFFFF;
 	} while ((LPC_EVRT->STATUS != 0) && (i < 10));
 }
 
 /* Set up the type of interrupt type for a source to EVRT */
-void Chip_EVRT_ConfigIntSrcActiveType(CHIP_EVRT_SRC_T EVRT_Src, CHIP_EVRT_SRC_ACTIVE_T type)
+void Chip_EVRT_ConfigIntSrcActiveType (CHIP_EVRT_SRC_T EVRT_Src, CHIP_EVRT_SRC_ACTIVE_T type)
 {
-	switch (type) {
-	case EVRT_SRC_ACTIVE_LOW_LEVEL:
-		LPC_EVRT->HILO &= ~(1 << (uint8_t) EVRT_Src);
-		LPC_EVRT->EDGE &= ~(1 << (uint8_t) EVRT_Src);
-		break;
+	switch (type)
+	{
+		case EVRT_SRC_ACTIVE_LOW_LEVEL:
+		LPC_EVRT->HILO &= ~(1 << (uint8_t)EVRT_Src);
+		LPC_EVRT->EDGE &= ~(1 << (uint8_t)EVRT_Src);
+			break;
 
-	case EVRT_SRC_ACTIVE_HIGH_LEVEL:
-		LPC_EVRT->HILO |= (1 << (uint8_t) EVRT_Src);
-		LPC_EVRT->EDGE &= ~(1 << (uint8_t) EVRT_Src);
-		break;
+		case EVRT_SRC_ACTIVE_HIGH_LEVEL:
+		LPC_EVRT->HILO |= (1 << (uint8_t)EVRT_Src);
+		LPC_EVRT->EDGE &= ~(1 << (uint8_t)EVRT_Src);
+			break;
 
-	case EVRT_SRC_ACTIVE_FALLING_EDGE:
-		LPC_EVRT->HILO &= ~(1 << (uint8_t) EVRT_Src);
-		LPC_EVRT->EDGE |= (1 << (uint8_t) EVRT_Src);
-		break;
+		case EVRT_SRC_ACTIVE_FALLING_EDGE:
+		LPC_EVRT->HILO &= ~(1 << (uint8_t)EVRT_Src);
+		LPC_EVRT->EDGE |= (1 << (uint8_t)EVRT_Src);
+			break;
 
-	case EVRT_SRC_ACTIVE_RISING_EDGE:
-		LPC_EVRT->HILO |= (1 << (uint8_t) EVRT_Src);
-		LPC_EVRT->EDGE |= (1 << (uint8_t) EVRT_Src);
-		break;
+		case EVRT_SRC_ACTIVE_RISING_EDGE:
+		LPC_EVRT->HILO |= (1 << (uint8_t)EVRT_Src);
+		LPC_EVRT->EDGE |= (1 << (uint8_t)EVRT_Src);
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 }
 
 /* Enable or disable interrupt sources to EVRT */
-void Chip_EVRT_SetUpIntSrc(CHIP_EVRT_SRC_T EVRT_Src, FunctionalState state)
+void Chip_EVRT_SetUpIntSrc (CHIP_EVRT_SRC_T EVRT_Src, FunctionalState state)
 {
-	if (state == ENABLE) {
-		LPC_EVRT->SET_EN = (1 << (uint8_t) EVRT_Src);
+	if (state == ENABLE)
+	{
+		LPC_EVRT->SET_EN = (1 << (uint8_t)EVRT_Src);
 	}
-	else {
-		LPC_EVRT->CLR_EN = (1 << (uint8_t) EVRT_Src);
+	else
+	{
+		LPC_EVRT->CLR_EN = (1 << (uint8_t)EVRT_Src);
 	}
 }
 
 /* Check if a source is sending interrupt to EVRT */
-IntStatus Chip_EVRT_IsSourceInterrupting(CHIP_EVRT_SRC_T EVRT_Src)
+IntStatus Chip_EVRT_IsSourceInterrupting (CHIP_EVRT_SRC_T EVRT_Src)
 {
-	if (LPC_EVRT->STATUS & (1 << (uint8_t) EVRT_Src)) {
+	if (LPC_EVRT->STATUS & (1 << (uint8_t)EVRT_Src))
+	{
 		return SET;
 	}
-	else {return RESET; }
+	else
+	{
+		return RESET;
+	}
 }

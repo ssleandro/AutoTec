@@ -1,38 +1,38 @@
 /****************************************************************************
-* Title                 :   control_core
-* Filename              :   control_core.h
-* Author                :   Henrique Reis
-* Origin Date           :   18 de abr de 2017
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   control_core
+ * Filename              :   control_core.h
+ * Author                :   Henrique Reis
+ * Origin Date           :   18 de abr de 2017
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version       Author          Description
-*  18/04/17   1.0.0     Henrique Reis         control_core.h created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version       Author          Description
+ *  18/04/17   1.0.0     Henrique Reis         control_core.h created.
+ *
+ *****************************************************************************/
 #ifndef APP_CONTROL_SRC_CONTROL_CORE_H_
 #define APP_CONTROL_SRC_CONTROL_CORE_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include <M2G_app.h>
 #if defined (UNITY_TEST)
 #include "../control/inc/interface_control.h"
@@ -41,43 +41,16 @@
 #endif
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
-//Máscaras para os flags de sistema:
-#define UOS_SIS_FLAG_NENHUM             0x00000000
-#define UOS_SIS_FLAG_TODOS              0xFFFFFFFF
-
-#define UOS_SIS_FLAG_BOOT               0x00000001
-#define UOS_SIS_FLAG_FFS_OK             0x00000002
-#define UOS_SIS_FLAG_MEM_OK             0x00000004
-#define UOS_SIS_FLAG_CFG_OK             0x00000008
-#define UOS_SIS_FLAG_AQR_OK             0x00000010
-#define UOS_SIS_FLAG_BTH_OK             0x00000020
-#define UOS_SIS_FLAG_SIS_OK             0x00000040
-#define UOS_SIS_FLAG_REINICIO           0x00000080
-#define UOS_SIS_FLAG_COMUNICA           0x00000100
-#define UOS_SIS_FLAG_NOVO_REG           0x00000200
-#define UOS_SIS_FLAG_REGISTRO           0x00000400
-#define UOS_SIS_FLAG_EMERGENCIA         0x00000800
-#define UOS_SIS_FLAG_ALARME             0x00001000
-#define UOS_SIS_FLAG_CONECTADO          0x00002000
-#define UOS_SIS_FLAG_IHM                0x00004000
-#define UOS_SIS_FLAG_MODO_TRABALHO      0x00008000
-#define UOS_SIS_FLAG_CONFIRMA_INST      0x00010000
-#define UOS_SIS_FLAG_MODO_TESTE         0x00020000
-#define UOS_SIS_FLAG_VERIFICANDO        0x00040000
-#define UOS_SIS_FLAG_PARAMETROS_OK      0x00080000
-#define UOS_SIS_FLAG_VERSAO_SW_OK       0x00100000
-#define UOS_SIS_FLAG_ALARME_TOLERANCIA  0x00200000
-#define UOS_SIS_FLAG_ERRO_INST_SENSOR   0x00400000
+ * Macros
+ *******************************************************************************/
 
 //Máscaras para os flags de sincronismo:
 #define UOS_SINC_FLAG_NENHUM    0x00000000
@@ -137,26 +110,30 @@
 #define UOS_BUZZER_OFF 0x00
 #define UOS_BUZZER_ON  0x01
 
-/******************************************************************************
-* Typedefs
-*******************************************************************************/
+
+#define CTL_SAVE_CONFIG_DATA	 		0x000001
+#define CTL_UPDATE_CONFIG_DATA	 	0x000002
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
 /******************************************************************************
-* Public Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Public Variables
+ *******************************************************************************/
+
+/******************************************************************************
+ * Function Prototypes
+ *******************************************************************************/
 
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
-
 
 #ifdef __cplusplus
 } // extern "C"

@@ -48,7 +48,7 @@
  ****************************************************************************/
 
 /* Initialize the DAC peripheral */
-void Chip_DAC_Init(LPC_DAC_T *pDAC)
+void Chip_DAC_Init (LPC_DAC_T *pDAC)
 {
 	Chip_Clock_EnableOpts(CLK_APB3_DAC, true, true, 1);
 
@@ -57,13 +57,13 @@ void Chip_DAC_Init(LPC_DAC_T *pDAC)
 }
 
 /* Shutdown DAC peripheral */
-void Chip_DAC_DeInit(LPC_DAC_T *pDAC)
+void Chip_DAC_DeInit (LPC_DAC_T *pDAC)
 {
 	Chip_Clock_Disable(CLK_APB3_DAC);
 }
 
 /* Update value to DAC buffer*/
-void Chip_DAC_UpdateValue(LPC_DAC_T *pDAC, uint32_t dac_value)
+void Chip_DAC_UpdateValue (LPC_DAC_T *pDAC, uint32_t dac_value)
 {
 	uint32_t tmp;
 
@@ -74,11 +74,12 @@ void Chip_DAC_UpdateValue(LPC_DAC_T *pDAC, uint32_t dac_value)
 }
 
 /* Set Maximum update rate for DAC */
-void Chip_DAC_SetBias(LPC_DAC_T *pDAC, uint32_t bias)
+void Chip_DAC_SetBias (LPC_DAC_T *pDAC, uint32_t bias)
 {
 	pDAC->CR &= ~DAC_BIAS_EN;
 
-	if (bias  == DAC_MAX_UPDATE_RATE_400kHz) {
+	if (bias == DAC_MAX_UPDATE_RATE_400kHz)
+	{
 		pDAC->CR |= DAC_BIAS_EN;
 	}
 }

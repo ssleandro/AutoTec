@@ -33,7 +33,8 @@
 #define __EVRT_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup EVRT_18XX_43XX CHIP: LPC18xx/43xx Event router driver
@@ -44,42 +45,44 @@ extern "C" {
 /**
  * @brief Event Router register structure
  */
-typedef struct {						/*!< EVENTROUTER Structure  */
-	__IO uint32_t HILO;					/*!< Level configuration register */
-	__IO uint32_t EDGE;					/*!< Edge configuration     */
-	__I  uint32_t RESERVED0[1012];
-	__O  uint32_t CLR_EN;				/*!< Event clear enable register */
-	__O  uint32_t SET_EN;				/*!< Event set enable register */
-	__I  uint32_t STATUS;				/*!< Status register        */
-	__I  uint32_t ENABLE;				/*!< Enable register        */
-	__O  uint32_t CLR_STAT;				/*!< Clear register         */
-	__O  uint32_t SET_STAT;				/*!< Set register           */
+typedef struct
+{ /*!< EVENTROUTER Structure  */
+	__IO uint32_t HILO; /*!< Level configuration register */
+	__IO uint32_t EDGE; /*!< Edge configuration     */
+	__I uint32_t RESERVED0[1012];
+	__O uint32_t CLR_EN; /*!< Event clear enable register */
+	__O uint32_t SET_EN; /*!< Event set enable register */
+	__I uint32_t STATUS; /*!< Status register        */
+	__I uint32_t ENABLE; /*!< Enable register        */
+	__O uint32_t CLR_STAT; /*!< Clear register         */
+	__O uint32_t SET_STAT; /*!< Set register           */
 } LPC_EVRT_T;
 
 /**
  * @brief EVRT input sources
  */
-typedef enum CHIP_EVRT_SRC {
-	EVRT_SRC_WAKEUP0,			/*!< WAKEUP0 event router source		*/
-	EVRT_SRC_WAKEUP1,			/*!< WAKEUP1 event router source		*/
-	EVRT_SRC_WAKEUP2,			/*!< WAKEUP2 event router source		*/
-	EVRT_SRC_WAKEUP3,			/*!< WAKEUP3 event router source		*/
-	EVRT_SRC_ATIMER,			/*!< Alarm timer event router source	*/
-	EVRT_SRC_RTC,				/*!< RTC event router source			*/
-	EVRT_SRC_BOD1,				/*!< BOD event router source			*/
-	EVRT_SRC_WWDT,				/*!< WWDT event router source			*/
-	EVRT_SRC_ETHERNET,			/*!< Ethernet event router source		*/
-	EVRT_SRC_USB0,				/*!< USB0 event router source			*/
-	EVRT_SRC_USB1,				/*!< USB1 event router source			*/
-	EVRT_SRC_SDIO,				/*!< Reserved							*/
-	EVRT_SRC_CCAN,				/*!< C_CAN event router source			*/
-	EVRT_SRC_COMBINE_TIMER2,	/*!< Combined timer 2 event router source	*/
-	EVRT_SRC_COMBINE_TIMER6,	/*!< Combined timer 6 event router source	*/
-	EVRT_SRC_QEI,				/*!< QEI event router source			*/
-	EVRT_SRC_COMBINE_TIMER14,	/*!< Combined timer 14 event router source	*/
-	EVRT_SRC_RESERVED1,			/*!< Reserved                           */
-	EVRT_SRC_RESERVED2,			/*!< Reserved							*/
-	EVRT_SRC_RESET				/*!< Reset event router source			*/
+typedef enum CHIP_EVRT_SRC
+{
+	EVRT_SRC_WAKEUP0, /*!< WAKEUP0 event router source		*/
+	EVRT_SRC_WAKEUP1, /*!< WAKEUP1 event router source		*/
+	EVRT_SRC_WAKEUP2, /*!< WAKEUP2 event router source		*/
+	EVRT_SRC_WAKEUP3, /*!< WAKEUP3 event router source		*/
+	EVRT_SRC_ATIMER, /*!< Alarm timer event router source	*/
+	EVRT_SRC_RTC, /*!< RTC event router source			*/
+	EVRT_SRC_BOD1, /*!< BOD event router source			*/
+	EVRT_SRC_WWDT, /*!< WWDT event router source			*/
+	EVRT_SRC_ETHERNET, /*!< Ethernet event router source		*/
+	EVRT_SRC_USB0, /*!< USB0 event router source			*/
+	EVRT_SRC_USB1, /*!< USB1 event router source			*/
+	EVRT_SRC_SDIO, /*!< Reserved							*/
+	EVRT_SRC_CCAN, /*!< C_CAN event router source			*/
+	EVRT_SRC_COMBINE_TIMER2, /*!< Combined timer 2 event router source	*/
+	EVRT_SRC_COMBINE_TIMER6, /*!< Combined timer 6 event router source	*/
+	EVRT_SRC_QEI, /*!< QEI event router source			*/
+	EVRT_SRC_COMBINE_TIMER14, /*!< Combined timer 14 event router source	*/
+	EVRT_SRC_RESERVED1, /*!< Reserved                           */
+	EVRT_SRC_RESERVED2, /*!< Reserved							*/
+	EVRT_SRC_RESET /*!< Reset event router source			*/
 } CHIP_EVRT_SRC_T;
 
 /**
@@ -98,11 +101,12 @@ typedef enum CHIP_EVRT_SRC {
 /**
  * @brief EVRT input state detecting type
  */
-typedef enum CHIP_EVRT_SRC_ACTIVE {
-	EVRT_SRC_ACTIVE_LOW_LEVEL,		/*!< Active low level       */
-	EVRT_SRC_ACTIVE_HIGH_LEVEL,		/*!< Active high level		*/
-	EVRT_SRC_ACTIVE_FALLING_EDGE,	/*!< Active falling edge	*/
-	EVRT_SRC_ACTIVE_RISING_EDGE		/*!< Active rising edge		*/
+typedef enum CHIP_EVRT_SRC_ACTIVE
+{
+	EVRT_SRC_ACTIVE_LOW_LEVEL, /*!< Active low level       */
+	EVRT_SRC_ACTIVE_HIGH_LEVEL, /*!< Active high level		*/
+	EVRT_SRC_ACTIVE_FALLING_EDGE, /*!< Active falling edge	*/
+	EVRT_SRC_ACTIVE_RISING_EDGE /*!< Active rising edge		*/
 } CHIP_EVRT_SRC_ACTIVE_T;
 
 /**
@@ -123,14 +127,14 @@ void Chip_EVRT_Init (void);
  * @param	type		: EVRT type, should be one of CHIP_EVRT_SRC_ACTIVE_T type
  * @return	Nothing
  */
-void Chip_EVRT_ConfigIntSrcActiveType(CHIP_EVRT_SRC_T EVRT_Src, CHIP_EVRT_SRC_ACTIVE_T type);
+void Chip_EVRT_ConfigIntSrcActiveType (CHIP_EVRT_SRC_T EVRT_Src, CHIP_EVRT_SRC_ACTIVE_T type);
 
 /**
  * @brief	Check if a source is sending interrupt to EVRT
  * @param	EVRT_Src	: EVRT source, should be one of CHIP_EVRT_SRC_T type
  * @return	true if the interrupt from the source is pending, otherwise false
  */
-IntStatus Chip_EVRT_IsSourceInterrupting(CHIP_EVRT_SRC_T EVRT_Src);
+IntStatus Chip_EVRT_IsSourceInterrupting (CHIP_EVRT_SRC_T EVRT_Src);
 
 /**
  * @brief	Enable or disable interrupt sources to EVRT
@@ -138,16 +142,16 @@ IntStatus Chip_EVRT_IsSourceInterrupting(CHIP_EVRT_SRC_T EVRT_Src);
  * @param	state		: ENABLE or DISABLE to enable or disable event router source
  * @return	Nothing
  */
-void Chip_EVRT_SetUpIntSrc(CHIP_EVRT_SRC_T EVRT_Src, FunctionalState state);
+void Chip_EVRT_SetUpIntSrc (CHIP_EVRT_SRC_T EVRT_Src, FunctionalState state);
 
 /**
  * @brief	De-initializes the EVRT peripheral
  * @return	Nothing
  */
-STATIC INLINE void Chip_EVRT_DeInit(void)
+STATIC INLINE void Chip_EVRT_DeInit (void)
 {
-	LPC_EVRT->CLR_EN    = 0xFFFF;
-	LPC_EVRT->CLR_STAT  = 0xFFFF;
+	LPC_EVRT->CLR_EN = 0xFFFF;
+	LPC_EVRT->CLR_STAT = 0xFFFF;
 }
 
 /**
@@ -155,9 +159,9 @@ STATIC INLINE void Chip_EVRT_DeInit(void)
  * @param	EVRT_Src	: EVRT source, should be one of CHIP_EVRT_SRC_T type
  * @return	Nothing
  */
-STATIC INLINE void Chip_EVRT_ClrPendIntSrc(CHIP_EVRT_SRC_T EVRT_Src)
+STATIC INLINE void Chip_EVRT_ClrPendIntSrc (CHIP_EVRT_SRC_T EVRT_Src)
 {
-	LPC_EVRT->CLR_STAT = (1 << (uint8_t) EVRT_Src);
+	LPC_EVRT->CLR_STAT = (1 << (uint8_t)EVRT_Src);
 }
 
 /**

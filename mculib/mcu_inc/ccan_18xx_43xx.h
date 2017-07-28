@@ -33,7 +33,8 @@
 #define __CCAN_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup CCAN_18XX_43XX CHIP: LPC18xx/43xx CCAN driver
@@ -44,48 +45,50 @@ extern "C" {
 /**
  * @brief CCAN message interface register block structure
  */
-typedef struct {	/*!< C_CAN message interface Structure       */
-	__IO uint32_t CMDREQ;			/*!< Message interface command request  */
-	__IO uint32_t CMDMSK;			/*!< Message interface command mask*/
-	__IO uint32_t MSK1;				/*!< Message interface mask 1 */
-	__IO uint32_t MSK2;				/*!< Message interface mask 2 */
-	__IO uint32_t ARB1;				/*!< Message interface arbitration 1 */
-	__IO uint32_t ARB2;				/*!< Message interface arbitration 2 */
-	__IO uint32_t MCTRL;			/*!< Message interface message control */
-	__IO uint32_t DA1;				/*!< Message interface data A1 */
-	__IO uint32_t DA2;				/*!< Message interface data A2 */
-	__IO uint32_t DB1;				/*!< Message interface data B1 */
-	__IO uint32_t DB2;				/*!< Message interface data B2 */
-	__I  uint32_t  RESERVED[13];
+typedef struct
+{ /*!< C_CAN message interface Structure       */
+	__IO uint32_t CMDREQ; /*!< Message interface command request  */
+	__IO uint32_t CMDMSK; /*!< Message interface command mask*/
+	__IO uint32_t MSK1; /*!< Message interface mask 1 */
+	__IO uint32_t MSK2; /*!< Message interface mask 2 */
+	__IO uint32_t ARB1; /*!< Message interface arbitration 1 */
+	__IO uint32_t ARB2; /*!< Message interface arbitration 2 */
+	__IO uint32_t MCTRL; /*!< Message interface message control */
+	__IO uint32_t DA1; /*!< Message interface data A1 */
+	__IO uint32_t DA2; /*!< Message interface data A2 */
+	__IO uint32_t DB1; /*!< Message interface data B1 */
+	__IO uint32_t DB2; /*!< Message interface data B2 */
+	__I uint32_t RESERVED[13];
 } CCAN_IF_T;
 
 /**
  * @brief CCAN Controller Area Network register block structure
  */
-typedef struct {						/*!< C_CAN Structure       */
-	__IO uint32_t CNTL;					/*!< CAN control            */
-	__IO uint32_t STAT;					/*!< Status register        */
-	__I  uint32_t EC;					/*!< Error counter          */
-	__IO uint32_t BT;					/*!< Bit timing register    */
-	__I  uint32_t INT;					/*!< Interrupt register     */
-	__IO uint32_t TEST;					/*!< Test register          */
-	__IO uint32_t BRPE;					/*!< Baud rate prescaler extension register */
-	__I  uint32_t  RESERVED0;
+typedef struct
+{ /*!< C_CAN Structure       */
+	__IO uint32_t CNTL; /*!< CAN control            */
+	__IO uint32_t STAT; /*!< Status register        */
+	__I uint32_t EC; /*!< Error counter          */
+	__IO uint32_t BT; /*!< Bit timing register    */
+	__I uint32_t INT; /*!< Interrupt register     */
+	__IO uint32_t TEST; /*!< Test register          */
+	__IO uint32_t BRPE; /*!< Baud rate prescaler extension register */
+	__I uint32_t RESERVED0;
 	CCAN_IF_T IF[2];
-	__I  uint32_t  RESERVED2[8];
-	__I  uint32_t TXREQ1;				/*!< Transmission request 1 */
-	__I  uint32_t TXREQ2;				/*!< Transmission request 2 */
-	__I  uint32_t  RESERVED3[6];
-	__I  uint32_t ND1;					/*!< New data 1             */
-	__I  uint32_t ND2;					/*!< New data 2             */
-	__I  uint32_t  RESERVED4[6];
-	__I  uint32_t IR1;					/*!< Interrupt pending 1    */
-	__I  uint32_t IR2;					/*!< Interrupt pending 2    */
-	__I  uint32_t  RESERVED5[6];
-	__I  uint32_t MSGV1;				/*!< Message valid 1        */
-	__I  uint32_t MSGV2;				/*!< Message valid 2        */
-	__I  uint32_t  RESERVED6[6];
-	__IO uint32_t CLKDIV;				/*!< CAN clock divider register */
+	__I uint32_t RESERVED2[8];
+	__I uint32_t TXREQ1; /*!< Transmission request 1 */
+	__I uint32_t TXREQ2; /*!< Transmission request 2 */
+	__I uint32_t RESERVED3[6];
+	__I uint32_t ND1; /*!< New data 1             */
+	__I uint32_t ND2; /*!< New data 2             */
+	__I uint32_t RESERVED4[6];
+	__I uint32_t IR1; /*!< Interrupt pending 1    */
+	__I uint32_t IR2; /*!< Interrupt pending 2    */
+	__I uint32_t RESERVED5[6];
+	__I uint32_t MSGV1; /*!< Message valid 1        */
+	__I uint32_t MSGV2; /*!< Message valid 2        */
+	__I uint32_t RESERVED6[6];
+	__IO uint32_t CLKDIV; /*!< CAN clock divider register */
 } LPC_CCAN_T;
 
 /* CCAN Control register bit definitions */
@@ -110,18 +113,19 @@ typedef struct {						/*!< C_CAN Structure       */
 /**
  * @brief Last Error Code definition
  */
-typedef enum {
-	CCAN_LEC_NO_ERROR,		/*!< No error */
-	CCAN_LEC_STUFF_ERROR,	/*!< More than 5 equal bits in a sequence have occurred in a part of a received message where this is not allowed. */
-	CCAN_LEC_FORM_ERROR,	/*!< A fixed format part of a received frame has the wrong format */
-	CCAN_LEC_ACK_ERROR,		/*!< The message this CAN core transmitted was not acknowledged. */
-	CCAN_LEC_BIT1_ERROR,	/*!< During the transmission of a message (with the exception of the arbitration field), the device wanted to send a HIGH/recessive level
-							    (bit of logical value "1"), but the monitored bus value was LOW/dominant. */
-	CCAN_LEC_BIT0_ERROR,	/*!< During the transmission of a message (or acknowledge bit, or active error flag, or overload flag), the device wanted to send a
-							    LOW/dominant level (data or identifier bit logical value "0"), but the monitored Bus value was HIGH/recessive. During busoff recovery this
-							    status is set each time a sequence of 11 HIGH/recessive bits has been monitored. This enables
-							    the CPU to monitor the proceeding of the busoff recovery sequence (indicating the bus is not stuck at LOW/dominant or continuously disturbed). */
-	CCAN_LEC_CRC_ERROR,		/*!< The CRC checksum was incorrect in the message received. */
+typedef enum
+{
+	CCAN_LEC_NO_ERROR, /*!< No error */
+	CCAN_LEC_STUFF_ERROR, /*!< More than 5 equal bits in a sequence have occurred in a part of a received message where this is not allowed. */
+	CCAN_LEC_FORM_ERROR, /*!< A fixed format part of a received frame has the wrong format */
+	CCAN_LEC_ACK_ERROR, /*!< The message this CAN core transmitted was not acknowledged. */
+	CCAN_LEC_BIT1_ERROR, /*!< During the transmission of a message (with the exception of the arbitration field), the device wanted to send a HIGH/recessive level
+	 (bit of logical value "1"), but the monitored bus value was LOW/dominant. */
+	CCAN_LEC_BIT0_ERROR, /*!< During the transmission of a message (or acknowledge bit, or active error flag, or overload flag), the device wanted to send a
+	 LOW/dominant level (data or identifier bit logical value "0"), but the monitored Bus value was HIGH/recessive. During busoff recovery this
+	 status is set each time a sequence of 11 HIGH/recessive bits has been monitored. This enables
+	 the CPU to monitor the proceeding of the busoff recovery sequence (indicating the bus is not stuck at LOW/dominant or continuously disturbed). */
+	CCAN_LEC_CRC_ERROR, /*!< The CRC checksum was incorrect in the message received. */
 } CCAN_LEC_T;
 
 /* CCAN INT register bit definitions */
@@ -147,7 +151,8 @@ typedef enum {
 /**
  * @brief CCAN Transfer direction definition
  */
-typedef enum {
+typedef enum
+{
 	CCAN_RX_DIR,
 	CCAN_TX_DIR,
 } CCAN_TRANSFER_DIR_T;
@@ -161,7 +166,7 @@ typedef enum {
  *						- CCAN_CTRL_EIE <br>
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_EnableInt(LPC_CCAN_T *pCCAN, uint32_t mask)
+STATIC INLINE void Chip_CCAN_EnableInt (LPC_CCAN_T *pCCAN, uint32_t mask)
 {
 	pCCAN->CNTL |= mask;
 }
@@ -175,7 +180,7 @@ STATIC INLINE void Chip_CCAN_EnableInt(LPC_CCAN_T *pCCAN, uint32_t mask)
  *						- CCAN_CTRL_EIE <br>
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_DisableInt(LPC_CCAN_T *pCCAN, uint32_t mask)
+STATIC INLINE void Chip_CCAN_DisableInt (LPC_CCAN_T *pCCAN, uint32_t mask)
 {
 	pCCAN->CNTL &= ~mask;
 }
@@ -185,7 +190,7 @@ STATIC INLINE void Chip_CCAN_DisableInt(LPC_CCAN_T *pCCAN, uint32_t mask)
  * @param	pCCAN	: The base of CCAN peripheral on the chip
  * @return	Interrupt source ID
  */
-STATIC INLINE uint32_t Chip_CCAN_GetIntID(LPC_CCAN_T *pCCAN)
+STATIC INLINE uint32_t Chip_CCAN_GetIntID (LPC_CCAN_T *pCCAN)
 {
 	return pCCAN->INT;
 }
@@ -195,7 +200,7 @@ STATIC INLINE uint32_t Chip_CCAN_GetIntID(LPC_CCAN_T *pCCAN)
  * @param	pCCAN	: The base of CCAN peripheral on the chip
  * @return	CCAN status register (or-ed bit value of  CCAN_STAT_*)
  */
-STATIC INLINE uint32_t Chip_CCAN_GetStatus(LPC_CCAN_T *pCCAN)
+STATIC INLINE uint32_t Chip_CCAN_GetStatus (LPC_CCAN_T *pCCAN)
 {
 	return pCCAN->STAT;
 }
@@ -206,7 +211,7 @@ STATIC INLINE uint32_t Chip_CCAN_GetStatus(LPC_CCAN_T *pCCAN)
  * @param	val		: Value to be set for status register (or-ed bit value of  CCAN_STAT_*)
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_SetStatus(LPC_CCAN_T *pCCAN, uint32_t val)
+STATIC INLINE void Chip_CCAN_SetStatus (LPC_CCAN_T *pCCAN, uint32_t val)
 {
 	pCCAN->STAT = val & 0x1F;
 }
@@ -217,7 +222,7 @@ STATIC INLINE void Chip_CCAN_SetStatus(LPC_CCAN_T *pCCAN, uint32_t val)
  * @param	val	: Status to be cleared (or-ed bit value of  CCAN_STAT_*)
  * @return	Nothing
  */
-void Chip_CCAN_ClearStatus(LPC_CCAN_T *pCCAN, uint32_t val);
+void Chip_CCAN_ClearStatus (LPC_CCAN_T *pCCAN, uint32_t val);
 
 /**
  * @brief	Get the current value of the transmit/receive error counter
@@ -232,7 +237,7 @@ void Chip_CCAN_ClearStatus(LPC_CCAN_T *pCCAN, uint32_t val);
  * the actual error count. When @a dir is #CCAN_TX_DIR, the complete
  * 8-bits indicates the number of tx errors.
  */
-STATIC INLINE uint8_t Chip_CCAN_GetErrCounter(LPC_CCAN_T *pCCAN, CCAN_TRANSFER_DIR_T dir)
+STATIC INLINE uint8_t Chip_CCAN_GetErrCounter (LPC_CCAN_T *pCCAN, CCAN_TRANSFER_DIR_T dir)
 {
 	return (dir == CCAN_TX_DIR) ? (pCCAN->EC & 0x0FF) : ((pCCAN->EC >> 8) & 0x0FF);
 }
@@ -242,7 +247,7 @@ STATIC INLINE uint8_t Chip_CCAN_GetErrCounter(LPC_CCAN_T *pCCAN, CCAN_TRANSFER_D
  * @param	pCCAN		: The base of CCAN peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_EnableTestMode(LPC_CCAN_T *pCCAN)
+STATIC INLINE void Chip_CCAN_EnableTestMode (LPC_CCAN_T *pCCAN)
 {
 	pCCAN->CNTL |= CCAN_CTRL_TEST;
 }
@@ -252,7 +257,7 @@ STATIC INLINE void Chip_CCAN_EnableTestMode(LPC_CCAN_T *pCCAN)
  * @param	pCCAN		: The base of CCAN peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_DisableTestMode(LPC_CCAN_T *pCCAN)
+STATIC INLINE void Chip_CCAN_DisableTestMode (LPC_CCAN_T *pCCAN)
 {
 	pCCAN->CNTL &= ~CCAN_CTRL_TEST;
 }
@@ -264,7 +269,7 @@ STATIC INLINE void Chip_CCAN_DisableTestMode(LPC_CCAN_T *pCCAN)
  * @return	Nothing
  * @note	Test Mode must be enabled before using Chip_CCAN_EnableTestMode function.
  */
-STATIC INLINE void Chip_CCAN_ConfigTestMode(LPC_CCAN_T *pCCAN, uint32_t cfg)
+STATIC INLINE void Chip_CCAN_ConfigTestMode (LPC_CCAN_T *pCCAN, uint32_t cfg)
 {
 	pCCAN->TEST = cfg;
 }
@@ -274,7 +279,7 @@ STATIC INLINE void Chip_CCAN_ConfigTestMode(LPC_CCAN_T *pCCAN, uint32_t cfg)
  * @param	pCCAN			: The base of CCAN peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_EnableAutoRetransmit(LPC_CCAN_T *pCCAN)
+STATIC INLINE void Chip_CCAN_EnableAutoRetransmit (LPC_CCAN_T *pCCAN)
 {
 	pCCAN->CNTL &= ~CCAN_CTRL_DAR;
 }
@@ -284,7 +289,7 @@ STATIC INLINE void Chip_CCAN_EnableAutoRetransmit(LPC_CCAN_T *pCCAN)
  * @param	pCCAN			: The base of CCAN peripheral on the chip
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_DisableAutoRetransmit(LPC_CCAN_T *pCCAN)
+STATIC INLINE void Chip_CCAN_DisableAutoRetransmit (LPC_CCAN_T *pCCAN)
 {
 	pCCAN->CNTL |= CCAN_CTRL_DAR;
 }
@@ -294,12 +299,12 @@ STATIC INLINE void Chip_CCAN_DisableAutoRetransmit(LPC_CCAN_T *pCCAN)
  * @param	pCCAN	: The base of CCAN peripheral on the chip
  * @return	A 32 bits value, each bit corresponds to transmit request bit in message objects
  */
-STATIC INLINE uint32_t Chip_CCAN_GetTxRQST(LPC_CCAN_T *pCCAN)
+STATIC INLINE uint32_t Chip_CCAN_GetTxRQST (LPC_CCAN_T *pCCAN)
 {
-        uint32_t txreq1 = pCCAN->TXREQ1;
-        uint32_t txreq2 = (pCCAN->TXREQ2 << 16);
+	uint32_t txreq1 = pCCAN->TXREQ1;
+	uint32_t txreq2 = (pCCAN->TXREQ2 << 16);
 	return (txreq1 | txreq2);
-        //return (pCCAN->TXREQ1 | (pCCAN->TXREQ2 << 16));
+	//return (pCCAN->TXREQ1 | (pCCAN->TXREQ2 << 16));
 }
 
 /**
@@ -307,14 +312,14 @@ STATIC INLINE uint32_t Chip_CCAN_GetTxRQST(LPC_CCAN_T *pCCAN)
  * @param	pCCAN		: The base of CCAN peripheral on the chip
  * @return	Nothing
  */
-void Chip_CCAN_Init(LPC_CCAN_T *pCCAN);
+void Chip_CCAN_Init (LPC_CCAN_T *pCCAN);
 
 /**
  * @brief	De-initialize the CCAN peripheral
  * @param	pCCAN		: The base of CCAN peripheral on the chip
  * @return	Nothing
  */
-void Chip_CCAN_DeInit(LPC_CCAN_T *pCCAN);
+void Chip_CCAN_DeInit (LPC_CCAN_T *pCCAN);
 
 /**
  * @brief	Select bit rate for CCAN bus
@@ -322,7 +327,7 @@ void Chip_CCAN_DeInit(LPC_CCAN_T *pCCAN);
  * @param	bitRate	: Bit rate to be set
  * @return	SUCCESS/ERROR
  */
-Status Chip_CCAN_SetBitRate(LPC_CCAN_T *pCCAN, uint32_t bitRate);
+Status Chip_CCAN_SetBitRate (LPC_CCAN_T *pCCAN, uint32_t bitRate);
 
 /** Number of message objects in Message RAM */
 #define CCAN_MSG_MAX_NUM                              32
@@ -330,13 +335,15 @@ Status Chip_CCAN_SetBitRate(LPC_CCAN_T *pCCAN, uint32_t bitRate);
 /**
  * @brief CAN message object structure
  */
-typedef struct {
-	uint32_t    id;		/**< ID of message, if bit 30 is set then this is extended frame */
-	uint32_t    dlc;	/**< Message data length */
-	uint8_t     data[8];	/**< Message data */
+typedef struct
+{
+	uint32_t id; /**< ID of message, if bit 30 is set then this is extended frame */
+	uint32_t dlc; /**< Message data length */
+	uint8_t data[8]; /**< Message data */
 } CCAN_MSG_OBJ_T;
 
-typedef enum {
+typedef enum
+{
 	CCAN_MSG_IF1 = 0,
 	CCAN_MSG_IF2 = 1,
 } CCAN_MSG_IF_T;
@@ -391,10 +398,10 @@ typedef enum {
  * @param	msgNum		: The number of message object in message RAM to be get
  * @return	Nothing
  */
-void Chip_CCAN_TransferMsgObject(LPC_CCAN_T *pCCAN,
-								 CCAN_MSG_IF_T IFSel,
-								 uint32_t mask,
-								 uint32_t msgNum);
+void Chip_CCAN_TransferMsgObject (LPC_CCAN_T *pCCAN,
+	CCAN_MSG_IF_T IFSel,
+	uint32_t mask,
+	uint32_t msgNum);
 
 /**
  * @brief	Set a message into the message object in message RAM
@@ -407,11 +414,11 @@ void Chip_CCAN_TransferMsgObject(LPC_CCAN_T *pCCAN,
  * @return	Nothing
  */
 void Chip_CCAN_SetMsgObject (LPC_CCAN_T *pCCAN,
-							 CCAN_MSG_IF_T IFSel,
-							 CCAN_TRANSFER_DIR_T dir,
-							 bool remoteFrame,
-							 uint8_t msgNum,
-							 const CCAN_MSG_OBJ_T *pMsgObj);
+	CCAN_MSG_IF_T IFSel,
+	CCAN_TRANSFER_DIR_T dir,
+	bool remoteFrame,
+	uint8_t msgNum,
+	const CCAN_MSG_OBJ_T *pMsgObj);
 
 /**
  * @brief	Get a message object in message RAM into the message buffer
@@ -421,7 +428,7 @@ void Chip_CCAN_SetMsgObject (LPC_CCAN_T *pCCAN,
  * @param	pMsgObj		: Pointer of the message buffer
  * @return	Nothing
  */
-void Chip_CCAN_GetMsgObject(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, CCAN_MSG_OBJ_T *pMsgObj);
+void Chip_CCAN_GetMsgObject (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, CCAN_MSG_OBJ_T *pMsgObj);
 
 /**
  * @brief	Enable/Disable the message object to valid
@@ -431,17 +438,17 @@ void Chip_CCAN_GetMsgObject(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgN
  * @param	valid	: true: valid, false: invalide
  * @return	Nothing
  */
-void Chip_CCAN_SetValidMsg(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, bool valid);
+void Chip_CCAN_SetValidMsg (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, bool valid);
 
 /**
  * @brief	Check the message objects is valid or not
  * @param	pCCAN	: The base of CCAN peripheral on the chip
  * @return	A 32 bits value, each bit corresponds to a message objects form 0 to 31 (1 is valid, 0 is invalid)
  */
-STATIC INLINE uint32_t Chip_CCAN_GetValidMsg(LPC_CCAN_T *pCCAN)
+STATIC INLINE uint32_t Chip_CCAN_GetValidMsg (LPC_CCAN_T *pCCAN)
 {
-        uint32_t msgv1 = pCCAN->MSGV1;
-        uint32_t msgv2 = (pCCAN->MSGV2 << 16);
+	uint32_t msgv1 = pCCAN->MSGV1;
+	uint32_t msgv2 = (pCCAN->MSGV2 << 16);
 	return (msgv1 | msgv2);
 	//return pCCAN->MSGV1 | (pCCAN->MSGV2 << 16);
 }
@@ -454,10 +461,10 @@ STATIC INLINE uint32_t Chip_CCAN_GetValidMsg(LPC_CCAN_T *pCCAN)
  * @param	dir	: Select transmit or receive interrupt to be cleared
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_ClearMsgIntPend(LPC_CCAN_T *pCCAN,
-											 CCAN_MSG_IF_T IFSel,
-											 uint8_t msgNum,
-											 CCAN_TRANSFER_DIR_T dir)
+STATIC INLINE void Chip_CCAN_ClearMsgIntPend (LPC_CCAN_T *pCCAN,
+	CCAN_MSG_IF_T IFSel,
+	uint8_t msgNum,
+	CCAN_TRANSFER_DIR_T dir)
 {
 	Chip_CCAN_TransferMsgObject(pCCAN, IFSel, CCAN_IF_CMDMSK_RD | CCAN_IF_CMDMSK_R_CLRINTPND, msgNum);
 }
@@ -469,7 +476,7 @@ STATIC INLINE void Chip_CCAN_ClearMsgIntPend(LPC_CCAN_T *pCCAN,
  * @param	msgNum	: Message number
  * @return	Nothing
  */
-STATIC INLINE void Chip_CCAN_ClearNewDataFlag(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum)
+STATIC INLINE void Chip_CCAN_ClearNewDataFlag (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum)
 {
 	Chip_CCAN_TransferMsgObject(pCCAN, IFSel, CCAN_IF_CMDMSK_RD | CCAN_IF_CMDMSK_R_NEWDAT, msgNum);
 }
@@ -491,7 +498,7 @@ void Chip_CCAN_Send (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, C
  * @param	id		: Received message ID
  * @return	Nothing
  */
-void Chip_CCAN_AddReceiveID(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id);
+void Chip_CCAN_AddReceiveID (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id);
 
 /**
  * @brief	Remove a registered message ID from receiving
@@ -500,7 +507,7 @@ void Chip_CCAN_AddReceiveID(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id)
  * @param	id		: Received message ID to be removed
  * @return	Nothing
  */
-void Chip_CCAN_DeleteReceiveID(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id);
+void Chip_CCAN_DeleteReceiveID (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id);
 
 /**
  * @}

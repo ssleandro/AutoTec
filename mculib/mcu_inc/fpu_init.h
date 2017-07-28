@@ -43,7 +43,7 @@
  * @brief	Early initialization of the FPU
  * @return	Nothing
  */
-void fpuInit(void);
+void fpuInit (void);
 
 /**
  * @}

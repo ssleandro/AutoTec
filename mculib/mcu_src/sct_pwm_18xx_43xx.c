@@ -48,9 +48,9 @@
  ****************************************************************************/
 
 /* Setup the OUTPUT pin corresponding to the PWM index */
-void Chip_SCTPWM_SetOutPin(LPC_SCT_T *pSCT, uint8_t index, uint8_t pin)
+void Chip_SCTPWM_SetOutPin (LPC_SCT_T *pSCT, uint8_t index, uint8_t pin)
 {
-	int ix = (int) index;
+	int ix = (int)index;
 	pSCT->EVENT[ix].CTRL = index | (1 << 12);
 	pSCT->EVENT[ix].STATE = 1;
 	pSCT->OUT[pin].SET = 1;
@@ -64,11 +64,12 @@ void Chip_SCTPWM_SetOutPin(LPC_SCT_T *pSCT, uint8_t index, uint8_t pin)
 }
 
 /* Set the PWM frequency */
-void Chip_SCTPWM_SetRate(LPC_SCT_T *pSCT, uint32_t freq)
+void Chip_SCTPWM_SetRate (LPC_SCT_T *pSCT, uint32_t freq)
 {
 	uint32_t rate;
 
-	rate = Chip_Clock_GetRate(CLK_MX_SCT) / freq;;
+	rate = Chip_Clock_GetRate(CLK_MX_SCT) / freq;
+	;
 
 	/* Stop the SCT before configuration */
 	Chip_SCTPWM_Stop(pSCT);

@@ -1,36 +1,36 @@
 /****************************************************************************
-* Title                 :   iso11783 Include File
-* Filename              :   iso11783.h
-* Author                :   Henrique Reis
-* Origin Date           :   01 de jul de 2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   iso11783 Include File
+ * Filename              :   iso11783.h
+ * Author                :   Henrique Reis
+ * Origin Date           :   01 de jul de 2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version        Author         Description
-*  01/07/16   1.0.0    Henrique Reis    iso11783.h created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version        Author         Description
+ *  01/07/16   1.0.0    Henrique Reis    iso11783.h created.
+ *
+ *****************************************************************************/
 /** @file   iso11783.h
-*  @brief
-*
-*/
+ *  @brief
+ *
+ */
 #ifndef ISO_PGN_H__
 #define ISO_PGN_H__
 
@@ -43,7 +43,7 @@
 #define DESTINATION_ADDRESS 0x26
 #define VT_ADDRESS 0x26
 #define BROADCAST_ADDRESS 0xFF
-#define PRIORITY 0x06
+#define PRIORITY 0x04
 
 #define TRANSPORT_PROTOCOL 0
 #define TRANSPORT_PROTOCOL_MAX_POOLSIZE 1785
@@ -52,8 +52,8 @@
 #define EXTENDED_TRANSPORT_PROTOCOL_MAX_PACKETS 16777215
 
 /* ********************************************************
-* Define PGN codes of ISO 11783 messages
-***********************************************************/
+ * Define PGN codes of ISO 11783 messages
+ ***********************************************************/
 // <DESTINATION> PGNs
 #define CLIENT_TO_FS_PGN        0x00AA00LU
 #define FS_TO_GLOBAL_PGN        0x00ABFFLU
@@ -260,61 +260,67 @@
 #define ETP_Conn_Abort    0xFF
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
-typedef union{
-    struct {
-        uint8_t SA : 8;			// Source address according to ISO 11783
-        uint8_t PS : 8;			// PDU Specific according to ISO 11783, if <DESTINATION PGN> is the destination address of received message
-        uint8_t PF : 8;			// PDU Format according to ISO 11783
-        uint8_t DP : 1;			// Data Page according to ISO 11783
-        uint8_t R1 : 1;			// Reserved Bit according to ISO 11783
-        uint8_t P  : 3;         // Priority Bit according to ISO 11783
-        uint8_t    : 3;
-        uint32_t DLC;           // Message data length
-        uint8_t B1 : 8;         // Message data byte 1
-        uint8_t B2 : 8;         // Message data byte 2
-        uint8_t B3 : 8;         // Message data byte 3
-        uint8_t B4 : 8;         // Message data byte 4
-        uint8_t B5 : 8;         // Message data byte 5
-        uint8_t B6 : 8;         // Message data byte 6
-        uint8_t B7 : 8;         // Message data byte 7
-        uint8_t B8 : 8;         // Message data byte 8
-    };
-    canMSGStruct_s frame;
+ * Typedefs
+ *******************************************************************************/
+typedef union
+{
+	struct
+	{
+		uint8_t SA :8;			// Source address according to ISO 11783
+		uint8_t PS :8;	// PDU Specific according to ISO 11783, if <DESTINATION PGN> is the destination address of received message
+		uint8_t PF :8;			// PDU Format according to ISO 11783
+		uint8_t DP :1;			// Data Page according to ISO 11783
+		uint8_t R1 :1;			// Reserved Bit according to ISO 11783
+		uint8_t P :3;         // Priority Bit according to ISO 11783
+		uint8_t :3;
+		uint32_t DLC;           // Message data length
+		uint8_t B1 :8;         // Message data byte 1
+		uint8_t B2 :8;         // Message data byte 2
+		uint8_t B3 :8;         // Message data byte 3
+		uint8_t B4 :8;         // Message data byte 4
+		uint8_t B5 :8;         // Message data byte 5
+		uint8_t B6 :8;         // Message data byte 6
+		uint8_t B7 :8;         // Message data byte 7
+		uint8_t B8 :8;         // Message data byte 8
+	};
+	canMSGStruct_s frame;
 } ISOBUSMsg;
 
-typedef struct{
-    uint8_t bActiveWSM   : 8;     // Source address of active working set master
-    uint16_t wMaskActWS  : 16;    // Object ID of visible Data/Alarm Mask of the active working set
-    uint16_t wSoftActWS  : 16;    // Object ID of visible Soft Key Mask of the active working set
-    uint8_t bBusyUpdMask : 1;     // VT is busy updating visible mask
-    uint8_t bBusySavMem  : 1;     // VT is busy saving data to non-volatile memory
-    uint8_t bBusyExcCmd  : 1;     // VT is busy executing a command
-    uint8_t bBusyExcMac  : 1;     // VT is busy executing a macro
-    uint8_t bBusyParsOP  : 1;     // VT is busy parsing an object pool
-    uint8_t bBusyReserv  : 1;     // Reserved, set to 0
-    uint8_t bAuxCtrlAct  : 1;     // Auxiliary controls learn mode active
-    uint8_t bVTOutMemory : 1;     // VT is out of memory
-    uint8_t bVTFuncCode  : 8;     // VT function code of current command being executed
+typedef struct
+{
+	uint8_t bActiveWSM :8;     // Source address of active working set master
+	uint16_t wMaskActWS :16;    // Object ID of visible Data/Alarm Mask of the active working set
+	uint16_t wSoftActWS :16;    // Object ID of visible Soft Key Mask of the active working set
+	uint8_t bBusyUpdMask :1;     // VT is busy updating visible mask
+	uint8_t bBusySavMem :1;     // VT is busy saving data to non-volatile memory
+	uint8_t bBusyExcCmd :1;     // VT is busy executing a command
+	uint8_t bBusyExcMac :1;     // VT is busy executing a macro
+	uint8_t bBusyParsOP :1;     // VT is busy parsing an object pool
+	uint8_t bBusyReserv :1;     // Reserved, set to 0
+	uint8_t bAuxCtrlAct :1;     // Auxiliary controls learn mode active
+	uint8_t bVTOutMemory :1;     // VT is out of memory
+	uint8_t bVTFuncCode :8;     // VT function code of current command being executed
 } VTStatus;
-    
+
 /*      Function prototypes    */
-void ISO_vSendAddressClaimed(void);
-void ISO_vSendCommandedAddress(void);
-void ISO_vSendRequest(uint32_t);
-void ISO_vSendWorkingSetMaster(void);
-void ISO_vSendGetHardware(void);
-void ISO_vSendWorkingSetMaintenance(bool);
-void ISO_vSendWSMaintenancePoolSent(void);
-void ISO_vSendGetMemory(uint32_t);
-void ISO_vSendGetNumberSoftKeys(void);
-void ISO_vSendRequestToSend(void);
-void ISO_vSendProprietaryA(void);
-void ISO_vSendLoadVersion(uint64_t);
-void ISO_vSendETP_CM_DPO(uint8_t, uint32_t);
-uint8_t ISO_vInitPointersToTranfer(const uint8_t*, uint32_t);
-void ISO_vSendObjectPool(uint8_t, uint32_t, uint8_t);
-void ISO_vSendEndObjectPool(void);
+void ISO_vSendAddressClaimed (void);
+void ISO_vSendCommandedAddress (void);
+void ISO_vSendRequest (uint32_t);
+void ISO_vSendWorkingSetMaster (void);
+void ISO_vSendGetHardware (void);
+void ISO_vSendWorkingSetMaintenance ( bool);
+void ISO_vSendWSMaintenancePoolSent (void);
+void ISO_vSendGetMemory (uint32_t);
+void ISO_vSendGetNumberSoftKeys (void);
+void ISO_vSendRequestToSend (void);
+void ISO_vSendProprietaryA (void);
+void ISO_vSendLoadVersion (uint64_t);
+void ISO_vSendStoreVersion (uint64_t);
+void ISO_vSendETP_CM_DPO (uint8_t, uint32_t);
+uint8_t ISO_vInitPointersToTranfer (const uint8_t*, uint32_t);
+void ISO_vSendObjectPool (uint8_t, uint32_t, uint8_t);
+void ISO_vSendEndObjectPool (void);
+
+extern uint32_t ISO_vGetID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio);
 
 #endif

@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :	TERMDEV Device - board specific configurations
-* Filename              :	termdev_config.h
-* Author                :	Joao Paulo Martins
-* Origin Date           :	16/03/2016
-* Version               :	1.0.0
-* Compiler              : GCC 5.2 2015q4
-* Target                : LPC43XX M4
-* Notes                 : None
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :	TERMDEV Device - board specific configurations
+ * Filename              :	termdev_config.h
+ * Author                :	Joao Paulo Martins
+ * Origin Date           :	16/03/2016
+ * Version               :	1.0.0
+ * Compiler              : GCC 5.2 2015q4
+ * Target                : LPC43XX M4
+ * Notes                 : None
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*     Date      Version      Author         		Description
-*  16/03/2016	 1.0.0	   Joao Paulo Martins	  First version of file
-*
-*****************************************************************************/
+ *
+ *     Date      Version      Author         		Description
+ *  16/03/2016	 1.0.0	   Joao Paulo Martins	  First version of file
+ *
+ *****************************************************************************/
 /** @file termdev_config.h
  *  @brief
  *
@@ -35,19 +35,19 @@
 #define COMMON_TERMDEV_CONFIG_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #ifndef UNITY_TEST
 #include "mculib.h"
 #else
 #endif
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /* Initial configurations for the devices */
 #define	TERMDEV_IFACE_UART 0x01								 /*!< TERMDEV messages over UART interface */
@@ -66,8 +66,8 @@
 #define TERMDEV_BUF_SIZE			50	/*!< Fixed receive buffer size in bytes */
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 /**
  * This private MACRO holds all the mapping between IOCTL commands and functions
  */
@@ -83,19 +83,18 @@
 #define X(a, b) a,
 typedef enum IOCTL_TDV_REQUEST_e
 {
-  IOCTL_termdev
-}IOCTL_TDV_REQUEST_e;
+	IOCTL_termdev
+} IOCTL_TDV_REQUEST_e;
 #undef X
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 //#endif /* UNITY_TEST */
-
 #endif /* COMMON_TERMDEV_CONFIG_H_ */

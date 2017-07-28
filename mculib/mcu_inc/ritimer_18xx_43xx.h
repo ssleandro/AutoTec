@@ -33,7 +33,8 @@
 #define __RITIMER_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup RITIMER_18XX_43XX CHIP: LPC18xx/43xx Repetitive Interrupt Timer driver
@@ -44,11 +45,12 @@ extern "C" {
 /**
  * @brief Repetitive Interrupt Timer register block structure
  */
-typedef struct {				/*!< RITIMER Structure      */
-	__IO uint32_t  COMPVAL;		/*!< Compare register       */
-	__IO uint32_t  MASK;		/*!< Mask register. This register holds the 32-bit mask value. A 1 written to any bit will force a compare on the corresponding bit of the counter and compare register. */
-	__IO uint32_t  CTRL;		/*!< Control register.      */
-	__IO uint32_t  COUNTER;		/*!< 32-bit counter         */
+typedef struct
+{ /*!< RITIMER Structure      */
+	__IO uint32_t COMPVAL; /*!< Compare register       */
+	__IO uint32_t MASK; /*!< Mask register. This register holds the 32-bit mask value. A 1 written to any bit will force a compare on the corresponding bit of the counter and compare register. */
+	__IO uint32_t CTRL; /*!< Control register.      */
+	__IO uint32_t COUNTER; /*!< 32-bit counter         */
 } LPC_RITIMER_T;
 
 /*
@@ -72,21 +74,21 @@ typedef struct {				/*!< RITIMER Structure      */
  * @param	pRITimer	: RITimer peripheral selected
  * @return	None
  */
-void Chip_RIT_Init(LPC_RITIMER_T *pRITimer);
+void Chip_RIT_Init (LPC_RITIMER_T *pRITimer);
 
 /**
  * @brief	Shutdown the RIT
  * @param	pRITimer	: RITimer peripheral selected
  * @return	None
  */
-void Chip_RIT_DeInit(LPC_RITIMER_T *pRITimer);
+void Chip_RIT_DeInit (LPC_RITIMER_T *pRITimer);
 
 /**
  * @brief	Enable Timer
  * @param	pRITimer		: RITimer peripheral selected
  * @return	None
  */
-STATIC INLINE void Chip_RIT_Enable(LPC_RITIMER_T *pRITimer)
+STATIC INLINE void Chip_RIT_Enable (LPC_RITIMER_T *pRITimer)
 {
 	pRITimer->CTRL |= RIT_CTRL_TEN;
 }
@@ -96,7 +98,7 @@ STATIC INLINE void Chip_RIT_Enable(LPC_RITIMER_T *pRITimer)
  * @param	pRITimer		: RITimer peripheral selected
  * @return	None
  */
-STATIC INLINE void Chip_RIT_Disable(LPC_RITIMER_T *pRITimer)
+STATIC INLINE void Chip_RIT_Disable (LPC_RITIMER_T *pRITimer)
 {
 	pRITimer->CTRL &= ~RIT_CTRL_TEN;
 }
@@ -106,7 +108,7 @@ STATIC INLINE void Chip_RIT_Disable(LPC_RITIMER_T *pRITimer)
  * @param	pRITimer	: RITimer peripheral selected
  * @return	None
  */
-STATIC INLINE void Chip_RIT_TimerDebugEnable(LPC_RITIMER_T *pRITimer)
+STATIC INLINE void Chip_RIT_TimerDebugEnable (LPC_RITIMER_T *pRITimer)
 {
 	pRITimer->CTRL |= RIT_CTRL_ENBR;
 }
@@ -116,7 +118,7 @@ STATIC INLINE void Chip_RIT_TimerDebugEnable(LPC_RITIMER_T *pRITimer)
  * @param	pRITimer	: RITimer peripheral selected
  * @return	None
  */
-STATIC INLINE void Chip_RIT_TimerDebugDisable(LPC_RITIMER_T *pRITimer)
+STATIC INLINE void Chip_RIT_TimerDebugDisable (LPC_RITIMER_T *pRITimer)
 {
 	pRITimer->CTRL &= ~RIT_CTRL_ENBR;
 }
@@ -126,7 +128,7 @@ STATIC INLINE void Chip_RIT_TimerDebugDisable(LPC_RITIMER_T *pRITimer)
  * @param	pRITimer	: RITimer peripheral selected
  * @return	Current interrupt status, either ET or UNSET
  */
-IntStatus Chip_RIT_GetIntStatus(LPC_RITIMER_T *pRITimer);
+IntStatus Chip_RIT_GetIntStatus (LPC_RITIMER_T *pRITimer);
 
 /**
  * @brief	Set a tick value for the interrupt to time out
@@ -134,7 +136,7 @@ IntStatus Chip_RIT_GetIntStatus(LPC_RITIMER_T *pRITimer);
  * @param	val			: value (in ticks) of the interrupt to be set
  * @return	None
  */
-STATIC INLINE void Chip_RIT_SetCOMPVAL(LPC_RITIMER_T *pRITimer, uint32_t val)
+STATIC INLINE void Chip_RIT_SetCOMPVAL (LPC_RITIMER_T *pRITimer, uint32_t val)
 {
 	pRITimer->COMPVAL = val;
 }
@@ -145,7 +147,7 @@ STATIC INLINE void Chip_RIT_SetCOMPVAL(LPC_RITIMER_T *pRITimer, uint32_t val)
  * @param	val			: RIT to be set, one or more RIT_CTRL_* values
  * @return	None
  */
-STATIC INLINE void Chip_RIT_EnableCTRL(LPC_RITIMER_T *pRITimer, uint32_t val)
+STATIC INLINE void Chip_RIT_EnableCTRL (LPC_RITIMER_T *pRITimer, uint32_t val)
 {
 	pRITimer->CTRL |= val;
 }
@@ -155,7 +157,7 @@ STATIC INLINE void Chip_RIT_EnableCTRL(LPC_RITIMER_T *pRITimer, uint32_t val)
  * @param	pRITimer	: RITimer peripheral selected
  * @return	None
  */
-STATIC INLINE void Chip_RIT_ClearInt(LPC_RITIMER_T *pRITimer)
+STATIC INLINE void Chip_RIT_ClearInt (LPC_RITIMER_T *pRITimer)
 {
 	pRITimer->CTRL |= RIT_CTRL_INT;
 }
@@ -165,7 +167,7 @@ STATIC INLINE void Chip_RIT_ClearInt(LPC_RITIMER_T *pRITimer)
  * @param	pRITimer	: RITimer peripheral selected
  * @return	the current timer counter value
  */
-STATIC INLINE uint32_t Chip_RIT_GetCounter(LPC_RITIMER_T *pRITimer)
+STATIC INLINE uint32_t Chip_RIT_GetCounter (LPC_RITIMER_T *pRITimer)
 {
 	return pRITimer->COUNTER;
 }
@@ -176,7 +178,7 @@ STATIC INLINE uint32_t Chip_RIT_GetCounter(LPC_RITIMER_T *pRITimer)
  * @param	time_interval	: timer interval value (ms)
  * @return	None
  */
-void Chip_RIT_SetTimerInterval(LPC_RITIMER_T *pRITimer, uint32_t time_interval);
+void Chip_RIT_SetTimerInterval (LPC_RITIMER_T *pRITimer, uint32_t time_interval);
 
 /**
  * @}

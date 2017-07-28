@@ -36,7 +36,8 @@
 #include "error.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup ROMAPI_18XX_43XX CHIP: LPC18xx_43xx ROM API declarations and functions
@@ -47,51 +48,54 @@ extern "C" {
 /**
  * @brief LPC18XX_43XX OTP API structure
  */
-typedef struct {
-	uint32_t (*Init)(void);					/*!< Initializes OTP controller. */
-	uint32_t (*ProgBootSrc)(CHIP_OTP_BOOT_SRC_T BootSrc);
-	uint32_t (*ProgJTAGDis)(void);
-	uint32_t (*ProgUSBID)(uint32_t ProductID, uint32_t VendorID);
+typedef struct
+{
+	uint32_t (*Init) (void); /*!< Initializes OTP controller. */
+	uint32_t (*ProgBootSrc) (CHIP_OTP_BOOT_SRC_T BootSrc);
+	uint32_t (*ProgJTAGDis) (void);
+	uint32_t (*ProgUSBID) (uint32_t ProductID, uint32_t VendorID);
 	uint32_t reserved01;
 	uint32_t reserved02;
 	uint32_t reserved03;
 	uint32_t reserved04;
-	uint32_t (*ProgGP0)(uint32_t data, uint32_t mask);
-	uint32_t (*ProgGP1)(uint32_t data, uint32_t mask);
-	uint32_t (*ProgGP2)(uint32_t data, uint32_t mask);
-	uint32_t (*ProgKey1)(uint8_t *key);
-	uint32_t (*ProgKey2)(uint8_t *key);
-	uint32_t (*GenRand)(void);
+	uint32_t (*ProgGP0) (uint32_t data, uint32_t mask);
+	uint32_t (*ProgGP1) (uint32_t data, uint32_t mask);
+	uint32_t (*ProgGP2) (uint32_t data, uint32_t mask);
+	uint32_t (*ProgKey1) (uint8_t *key);
+	uint32_t (*ProgKey2) (uint8_t *key);
+	uint32_t (*GenRand) (void);
 } OTP_API_T;
 
 /**
  * @brief LPC18XX_43XX AES API structure
  */
-typedef struct {
-	uint32_t (*Init)(void);
-	uint32_t (*SetMode)(uint32_t mode);
-	uint32_t (*LoadKey1)(void);
-	uint32_t (*LoadKey2)(void);
-	uint32_t (*LoadKeyRNG)(void);
-	uint32_t (*LoadKeySW)(uint8_t *pKey);
-	uint32_t (*LoadIV_SW)(uint8_t *pVector);
-	uint32_t (*LoadIV_IC)(void);
-	uint32_t (*Operate)(uint8_t *pOutput, uint8_t *pInput, uint32_t size);
-	uint32_t (*ProgramKey1)(uint8_t *pKey);
-	uint32_t (*ProgramKey2)(uint8_t *pKey);
+typedef struct
+{
+	uint32_t (*Init) (void);
+	uint32_t (*SetMode) (uint32_t mode);
+	uint32_t (*LoadKey1) (void);
+	uint32_t (*LoadKey2) (void);
+	uint32_t (*LoadKeyRNG) (void);
+	uint32_t (*LoadKeySW) (uint8_t *pKey);
+	uint32_t (*LoadIV_SW) (uint8_t *pVector);
+	uint32_t (*LoadIV_IC) (void);
+	uint32_t (*Operate) (uint8_t *pOutput, uint8_t *pInput, uint32_t size);
+	uint32_t (*ProgramKey1) (uint8_t *pKey);
+	uint32_t (*ProgramKey2) (uint8_t *pKey);
 } AES_API_T;
 
 /**
  * @brief LPC18XX High level ROM API structure
  */
-typedef struct {
-	void(*const iap_entry) (uint32_t *, uint32_t *);	/*!< IAP API entry function available on Flash parts only*/
+typedef struct
+{
+	void (* const iap_entry) (uint32_t *, uint32_t *); /*!< IAP API entry function available on Flash parts only*/
 	const OTP_API_T *pOtp;
 	const AES_API_T *pAes;
 	uint32_t reserved[3];
-	const uint32_t spifiApiBase;			/*!< SPIFI API function table base address*/
-	const uint32_t usbdApiBase;				/*!< USBD API function table base address*/
-	const uint32_t endMarker;				/*!< API table end marker = 0x87654321 */
+	const uint32_t spifiApiBase; /*!< SPIFI API function table base address*/
+	const uint32_t usbdApiBase; /*!< USBD API function table base address*/
+	const uint32_t endMarker; /*!< API table end marker = 0x87654321 */
 
 } LPC_ROM_API_T;
 

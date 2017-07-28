@@ -33,7 +33,8 @@
 #define __LCD_18XX_43XX_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** @defgroup LCD_18XX_43XX CHIP: LPC18xx/43xx LCD driver
@@ -44,65 +45,69 @@ extern "C" {
 /**
  * @brief LCD Controller register block structure
  */
-typedef struct {				/*!< LCD Structure          */
-	__IO uint32_t  TIMH;		/*!< Horizontal Timing Control register */
-	__IO uint32_t  TIMV;		/*!< Vertical Timing Control register */
-	__IO uint32_t  POL;			/*!< Clock and Signal Polarity Control register */
-	__IO uint32_t  LE;			/*!< Line End Control register */
-	__IO uint32_t  UPBASE;		/*!< Upper Panel Frame Base Address register */
-	__IO uint32_t  LPBASE;		/*!< Lower Panel Frame Base Address register */
-	__IO uint32_t  CTRL;		/*!< LCD Control register   */
-	__IO uint32_t  INTMSK;		/*!< Interrupt Mask register */
-	__I  uint32_t  INTRAW;		/*!< Raw Interrupt Status register */
-	__I  uint32_t  INTSTAT;		/*!< Masked Interrupt Status register */
-	__O  uint32_t  INTCLR;		/*!< Interrupt Clear register */
-	__I  uint32_t  UPCURR;		/*!< Upper Panel Current Address Value register */
-	__I  uint32_t  LPCURR;		/*!< Lower Panel Current Address Value register */
-	__I  uint32_t  RESERVED0[115];
-	__IO uint16_t PAL[256];		/*!< 256x16-bit Color Palette registers */
-	__I  uint32_t  RESERVED1[256];
+typedef struct
+{ /*!< LCD Structure          */
+	__IO uint32_t TIMH; /*!< Horizontal Timing Control register */
+	__IO uint32_t TIMV; /*!< Vertical Timing Control register */
+	__IO uint32_t POL; /*!< Clock and Signal Polarity Control register */
+	__IO uint32_t LE; /*!< Line End Control register */
+	__IO uint32_t UPBASE; /*!< Upper Panel Frame Base Address register */
+	__IO uint32_t LPBASE; /*!< Lower Panel Frame Base Address register */
+	__IO uint32_t CTRL; /*!< LCD Control register   */
+	__IO uint32_t INTMSK; /*!< Interrupt Mask register */
+	__I uint32_t INTRAW; /*!< Raw Interrupt Status register */
+	__I uint32_t INTSTAT; /*!< Masked Interrupt Status register */
+	__O uint32_t INTCLR; /*!< Interrupt Clear register */
+	__I uint32_t UPCURR; /*!< Upper Panel Current Address Value register */
+	__I uint32_t LPCURR; /*!< Lower Panel Current Address Value register */
+	__I uint32_t RESERVED0[115];
+	__IO uint16_t PAL[256]; /*!< 256x16-bit Color Palette registers */
+	__I uint32_t RESERVED1[256];
 	__IO uint32_t CRSR_IMG[256];/*!< Cursor Image registers */
-	__IO uint32_t  CRSR_CTRL;	/*!< Cursor Control register */
-	__IO uint32_t  CRSR_CFG;	/*!< Cursor Configuration register */
-	__IO uint32_t  CRSR_PAL0;	/*!< Cursor Palette register 0 */
-	__IO uint32_t  CRSR_PAL1;	/*!< Cursor Palette register 1 */
-	__IO uint32_t  CRSR_XY;		/*!< Cursor XY Position register */
-	__IO uint32_t  CRSR_CLIP;	/*!< Cursor Clip Position register */
-	__I  uint32_t  RESERVED2[2];
-	__IO uint32_t  CRSR_INTMSK;	/*!< Cursor Interrupt Mask register */
-	__O  uint32_t  CRSR_INTCLR;	/*!< Cursor Interrupt Clear register */
-	__I  uint32_t  CRSR_INTRAW;	/*!< Cursor Raw Interrupt Status register */
-	__I  uint32_t  CRSR_INTSTAT;/*!< Cursor Masked Interrupt Status register */
+	__IO uint32_t CRSR_CTRL; /*!< Cursor Control register */
+	__IO uint32_t CRSR_CFG; /*!< Cursor Configuration register */
+	__IO uint32_t CRSR_PAL0; /*!< Cursor Palette register 0 */
+	__IO uint32_t CRSR_PAL1; /*!< Cursor Palette register 1 */
+	__IO uint32_t CRSR_XY; /*!< Cursor XY Position register */
+	__IO uint32_t CRSR_CLIP; /*!< Cursor Clip Position register */
+	__I uint32_t RESERVED2[2];
+	__IO uint32_t CRSR_INTMSK; /*!< Cursor Interrupt Mask register */
+	__O uint32_t CRSR_INTCLR; /*!< Cursor Interrupt Clear register */
+	__I uint32_t CRSR_INTRAW; /*!< Cursor Raw Interrupt Status register */
+	__I uint32_t CRSR_INTSTAT;/*!< Cursor Masked Interrupt Status register */
 } LPC_LCD_T;
 
 /**
  * @brief LCD Palette entry format
  */
-typedef struct {
-	uint32_t Rl : 5;
-	uint32_t Gl : 5;
-	uint32_t Bl : 5;
-	uint32_t Il : 1;
-	uint32_t Ru : 5;
-	uint32_t Gu : 5;
-	uint32_t Bu : 5;
-	uint32_t Iu : 1;
+typedef struct
+{
+	uint32_t Rl :5;
+	uint32_t Gl :5;
+	uint32_t Bl :5;
+	uint32_t Il :1;
+	uint32_t Ru :5;
+	uint32_t Gu :5;
+	uint32_t Bu :5;
+	uint32_t Iu :1;
 } LCD_PALETTE_ENTRY_T;
 
 /**
  * @brief LCD Panel type
  */
-typedef enum {
-	LCD_TFT = 0x02,		/*!< standard TFT */
-	LCD_MONO_4 = 0x01,	/*!< 4-bit STN mono */
-	LCD_MONO_8 = 0x05,	/*!< 8-bit STN mono */
-	LCD_CSTN = 0x00		/*!< color STN */
+typedef enum
+{
+	LCD_TFT = 0x02, /*!< standard TFT */
+	LCD_MONO_4 = 0x01, /*!< 4-bit STN mono */
+	LCD_MONO_8 = 0x05, /*!< 8-bit STN mono */
+	LCD_CSTN = 0x00 /*!< color STN */
 } LCD_PANEL_OPT_T;
 
 /**
  * @brief LCD Color Format
  */
-typedef enum {
+typedef enum
+{
 	LCD_COLOR_FORMAT_RGB = 0,
 	LCD_COLOR_FORMAT_BGR
 } LCD_COLOR_FORMAT_OPT_T;
@@ -119,30 +124,32 @@ typedef enum {
 /**
  * @brief A structure for LCD Configuration
  */
-typedef struct {
-	uint8_t  HBP;	/*!< Horizontal back porch in clocks */
-	uint8_t  HFP;	/*!< Horizontal front porch in clocks */
-	uint8_t  HSW;	/*!< HSYNC pulse width in clocks */
-	uint16_t PPL;	/*!< Pixels per line */
-	uint8_t  VBP;	/*!< Vertical back porch in clocks */
-	uint8_t  VFP;	/*!< Vertical front porch in clocks */
-	uint8_t  VSW;	/*!< VSYNC pulse width in clocks */
-	uint16_t LPP;	/*!< Lines per panel */
-	uint8_t  IOE;	/*!< Invert output enable, 1 = invert */
-	uint8_t  IPC;	/*!< Invert panel clock, 1 = invert */
-	uint8_t  IHS;	/*!< Invert HSYNC, 1 = invert */
-	uint8_t  IVS;	/*!< Invert VSYNC, 1 = invert */
-	uint8_t  ACB;	/*!< AC bias frequency in clocks (not used) */
-	uint8_t  BPP;	/*!< Maximum bits per pixel the display supports */
-	LCD_PANEL_OPT_T  LCD;	/*!< LCD panel type */
-	LCD_COLOR_FORMAT_OPT_T  color_format;	/*!<BGR or RGB */
-	uint8_t  Dual;	/*!< Dual panel, 1 = dual panel display */
+typedef struct
+{
+	uint8_t HBP; /*!< Horizontal back porch in clocks */
+	uint8_t HFP; /*!< Horizontal front porch in clocks */
+	uint8_t HSW; /*!< HSYNC pulse width in clocks */
+	uint16_t PPL; /*!< Pixels per line */
+	uint8_t VBP; /*!< Vertical back porch in clocks */
+	uint8_t VFP; /*!< Vertical front porch in clocks */
+	uint8_t VSW; /*!< VSYNC pulse width in clocks */
+	uint16_t LPP; /*!< Lines per panel */
+	uint8_t IOE; /*!< Invert output enable, 1 = invert */
+	uint8_t IPC; /*!< Invert panel clock, 1 = invert */
+	uint8_t IHS; /*!< Invert HSYNC, 1 = invert */
+	uint8_t IVS; /*!< Invert VSYNC, 1 = invert */
+	uint8_t ACB; /*!< AC bias frequency in clocks (not used) */
+	uint8_t BPP; /*!< Maximum bits per pixel the display supports */
+	LCD_PANEL_OPT_T LCD; /*!< LCD panel type */
+	LCD_COLOR_FORMAT_OPT_T color_format; /*!<BGR or RGB */
+	uint8_t Dual; /*!< Dual panel, 1 = dual panel display */
 } LCD_CONFIG_T;
 
 /**
  * @brief LCD Cursor Size
  */
-typedef enum {
+typedef enum
+{
 	LCD_CURSOR_32x32 = 0,
 	LCD_CURSOR_64x64
 } LCD_CURSOR_SIZE_OPT_T;
@@ -153,25 +160,27 @@ typedef enum {
  * @param	LCD_ConfigStruct	: Pointer to LCD configuration
  * @return  LCD_FUNC_OK is executed successfully or LCD_FUNC_ERR on error
  */
-void Chip_LCD_Init(LPC_LCD_T *pLCD, LCD_CONFIG_T *LCD_ConfigStruct);
+void Chip_LCD_Init (LPC_LCD_T *pLCD, LCD_CONFIG_T *LCD_ConfigStruct);
 
 /**
  * @brief	Shutdown the LCD controller
  * @param	pLCD	: The base of LCD peripheral on the chip
  * @return  Nothing
  */
-void Chip_LCD_DeInit(LPC_LCD_T *pLCD);
+void Chip_LCD_DeInit (LPC_LCD_T *pLCD);
 
 /**
  * @brief	Power-on the LCD Panel (power pin)
  * @param	pLCD	: The base of LCD peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_LCD_PowerOn(LPC_LCD_T *pLCD)
+STATIC INLINE void Chip_LCD_PowerOn (LPC_LCD_T *pLCD)
 {
 	volatile int i;
 	pLCD->CTRL |= CLCDC_LCDCTRL_PWR;
-	for (i = 0; i < 1000000; i++) {}
+	for (i = 0; i < 1000000; i++)
+	{
+	}
 	pLCD->CTRL |= CLCDC_LCDCTRL_ENABLE;
 }
 
@@ -180,11 +189,13 @@ STATIC INLINE void Chip_LCD_PowerOn(LPC_LCD_T *pLCD)
  * @param	pLCD	: The base of LCD peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_LCD_PowerOff(LPC_LCD_T *pLCD)
+STATIC INLINE void Chip_LCD_PowerOff (LPC_LCD_T *pLCD)
 {
 	volatile int i;
 	pLCD->CTRL &= ~CLCDC_LCDCTRL_PWR;
-	for (i = 0; i < 1000000; i++) {}
+	for (i = 0; i < 1000000; i++)
+	{
+	}
 	pLCD->CTRL &= ~CLCDC_LCDCTRL_ENABLE;
 }
 
@@ -193,7 +204,7 @@ STATIC INLINE void Chip_LCD_PowerOff(LPC_LCD_T *pLCD)
  * @param	pLCD	: The base of LCD peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Enable(LPC_LCD_T *pLCD)
+STATIC INLINE void Chip_LCD_Enable (LPC_LCD_T *pLCD)
 {
 	pLCD->CTRL |= CLCDC_LCDCTRL_ENABLE;
 }
@@ -203,7 +214,7 @@ STATIC INLINE void Chip_LCD_Enable(LPC_LCD_T *pLCD)
  * @param	pLCD	: The base of LCD peripheral on the chip
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Disable(LPC_LCD_T *pLCD)
+STATIC INLINE void Chip_LCD_Disable (LPC_LCD_T *pLCD)
 {
 	pLCD->CTRL &= ~CLCDC_LCDCTRL_ENABLE;
 }
@@ -215,9 +226,9 @@ STATIC INLINE void Chip_LCD_Disable(LPC_LCD_T *pLCD)
  * @param	buffer	: address of buffer
  * @return	None
  */
-STATIC INLINE void Chip_LCD_SetUPFrameBuffer(LPC_LCD_T *pLCD, void *buffer)
+STATIC INLINE void Chip_LCD_SetUPFrameBuffer (LPC_LCD_T *pLCD, void *buffer)
 {
-	pLCD->UPBASE = (uint32_t) buffer;
+	pLCD->UPBASE = (uint32_t)buffer;
 }
 
 /**
@@ -226,9 +237,9 @@ STATIC INLINE void Chip_LCD_SetUPFrameBuffer(LPC_LCD_T *pLCD, void *buffer)
  * @param	buffer	: address of buffer
  * @return	None
  */
-STATIC INLINE void Chip_LCD_SetLPFrameBuffer(LPC_LCD_T *pLCD, void *buffer)
+STATIC INLINE void Chip_LCD_SetLPFrameBuffer (LPC_LCD_T *pLCD, void *buffer)
 {
-	pLCD->LPBASE = (uint32_t) buffer;
+	pLCD->LPBASE = (uint32_t)buffer;
 }
 
 /**
@@ -242,7 +253,7 @@ STATIC INLINE void Chip_LCD_SetLPFrameBuffer(LPC_LCD_T *pLCD, void *buffer)
  *                  - FALSE	:cursor async mode
  * @return	None
  */
-void Chip_LCD_Cursor_Config(LPC_LCD_T *pLCD, LCD_CURSOR_SIZE_OPT_T cursor_size, bool sync);
+void Chip_LCD_Cursor_Config (LPC_LCD_T *pLCD, LCD_CURSOR_SIZE_OPT_T cursor_size, bool sync);
 
 /**
  * @brief	Enable Cursor
@@ -251,7 +262,7 @@ void Chip_LCD_Cursor_Config(LPC_LCD_T *pLCD, LCD_CURSOR_SIZE_OPT_T cursor_size, 
  *							this param must < 4
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Cursor_Enable(LPC_LCD_T *pLCD, uint8_t cursor_num)
+STATIC INLINE void Chip_LCD_Cursor_Enable (LPC_LCD_T *pLCD, uint8_t cursor_num)
 {
 	pLCD->CRSR_CTRL = (cursor_num << 4) | 1;
 }
@@ -263,7 +274,7 @@ STATIC INLINE void Chip_LCD_Cursor_Enable(LPC_LCD_T *pLCD, uint8_t cursor_num)
  *							this param must < 4
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Cursor_Disable(LPC_LCD_T *pLCD, uint8_t cursor_num)
+STATIC INLINE void Chip_LCD_Cursor_Disable (LPC_LCD_T *pLCD, uint8_t cursor_num)
 {
 	pLCD->CRSR_CTRL = (cursor_num << 4);
 }
@@ -274,13 +285,13 @@ STATIC INLINE void Chip_LCD_Cursor_Disable(LPC_LCD_T *pLCD, uint8_t cursor_num)
  * @param	palette_color	: cursor palette 0 value
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Cursor_LoadPalette0(LPC_LCD_T *pLCD, uint32_t palette_color)
+STATIC INLINE void Chip_LCD_Cursor_LoadPalette0 (LPC_LCD_T *pLCD, uint32_t palette_color)
 {
 	/* 7:0 - Red
-	   15:8 - Green
-	   23:16 - Blue
-	   31:24 - Not used*/
-	pLCD->CRSR_PAL0 = (uint32_t) palette_color;
+	 15:8 - Green
+	 23:16 - Blue
+	 31:24 - Not used*/
+	pLCD->CRSR_PAL0 = (uint32_t)palette_color;
 }
 
 /**
@@ -289,13 +300,13 @@ STATIC INLINE void Chip_LCD_Cursor_LoadPalette0(LPC_LCD_T *pLCD, uint32_t palett
  * @param	palette_color	: cursor palette 1 value
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Cursor_LoadPalette1(LPC_LCD_T *pLCD, uint32_t palette_color)
+STATIC INLINE void Chip_LCD_Cursor_LoadPalette1 (LPC_LCD_T *pLCD, uint32_t palette_color)
 {
 	/* 7:0 - Red
-	       15:8 - Green
-	       23:16 - Blue
-	       31:24 - Not used*/
-	pLCD->CRSR_PAL1 = (uint32_t) palette_color;
+	 15:8 - Green
+	 23:16 - Blue
+	 31:24 - Not used*/
+	pLCD->CRSR_PAL1 = (uint32_t)palette_color;
 }
 
 /**
@@ -305,7 +316,7 @@ STATIC INLINE void Chip_LCD_Cursor_LoadPalette1(LPC_LCD_T *pLCD, uint32_t palett
  * @param	y		: vertical position
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Cursor_SetPos(LPC_LCD_T *pLCD, uint16_t x, uint16_t y)
+STATIC INLINE void Chip_LCD_Cursor_SetPos (LPC_LCD_T *pLCD, uint16_t x, uint16_t y)
 {
 	pLCD->CRSR_XY = (x & 0x3FF) | ((y & 0x3FF) << 16);
 }
@@ -317,7 +328,7 @@ STATIC INLINE void Chip_LCD_Cursor_SetPos(LPC_LCD_T *pLCD, uint16_t x, uint16_t 
  * @param	y		: vertical position, should be in range: 0..63
  * @return	None
  */
-STATIC INLINE void Chip_LCD_Cursor_SetClip(LPC_LCD_T *pLCD, uint16_t x, uint16_t y)
+STATIC INLINE void Chip_LCD_Cursor_SetClip (LPC_LCD_T *pLCD, uint16_t x, uint16_t y)
 {
 	pLCD->CRSR_CLIP = (x & 0x3F) | ((y & 0x3F) << 8);
 }
@@ -328,7 +339,7 @@ STATIC INLINE void Chip_LCD_Cursor_SetClip(LPC_LCD_T *pLCD, uint16_t x, uint16_t
  * @param	ints	: OR'ed interrupt bits to enable
  * @return	None
  */
-STATIC INLINE void Chip_LCD_EnableInts(LPC_LCD_T *pLCD, uint32_t ints)
+STATIC INLINE void Chip_LCD_EnableInts (LPC_LCD_T *pLCD, uint32_t ints)
 {
 	pLCD->INTMSK = ints;
 }
@@ -339,7 +350,7 @@ STATIC INLINE void Chip_LCD_EnableInts(LPC_LCD_T *pLCD, uint32_t ints)
  * @param	ints	: OR'ed interrupt bits to disable
  * @return	None
  */
-STATIC INLINE void Chip_LCD_DisableInts(LPC_LCD_T *pLCD, uint32_t ints)
+STATIC INLINE void Chip_LCD_DisableInts (LPC_LCD_T *pLCD, uint32_t ints)
 {
 	pLCD->INTMSK = pLCD->INTMSK & ~(ints);
 }
@@ -350,7 +361,7 @@ STATIC INLINE void Chip_LCD_DisableInts(LPC_LCD_T *pLCD, uint32_t ints)
  * @param	ints	: OR'ed interrupt bits to clear
  * @return	None
  */
-STATIC INLINE void Chip_LCD_ClearInts(LPC_LCD_T *pLCD, uint32_t ints)
+STATIC INLINE void Chip_LCD_ClearInts (LPC_LCD_T *pLCD, uint32_t ints)
 {
 	pLCD->INTCLR = pLCD->INTMSK & (ints);
 }
@@ -362,7 +373,7 @@ STATIC INLINE void Chip_LCD_ClearInts(LPC_LCD_T *pLCD, uint32_t ints)
  * @param	Image		: Pointer to image data
  * @return	None
  */
-void Chip_LCD_Cursor_WriteImage(LPC_LCD_T *pLCD, uint8_t cursor_num, void *Image);
+void Chip_LCD_Cursor_WriteImage (LPC_LCD_T *pLCD, uint8_t cursor_num, void *Image);
 
 /**
  * @brief	Load LCD Palette
@@ -370,7 +381,7 @@ void Chip_LCD_Cursor_WriteImage(LPC_LCD_T *pLCD, uint8_t cursor_num, void *Image
  * @param	palette	: Address of palette table to load
  * @return	None
  */
-void Chip_LCD_LoadPalette(LPC_LCD_T *pLCD, void *palette);
+void Chip_LCD_LoadPalette (LPC_LCD_T *pLCD, void *palette);
 
 #ifdef __cplusplus
 }

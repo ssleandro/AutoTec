@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   sensor_management
-* Filename              :   sensor_management.h
-* Author                :   Henrique Reis
-* Origin Date           :   21 de out de 2016
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   sensor_management
+ * Filename              :   sensor_management.h
+ * Author                :   Henrique Reis
+ * Origin Date           :   21 de out de 2016
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version       Author          Description
-*  21/10/16   1.0.0     Henrique Reis         sensor_management.h created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version       Author          Description
+ *  21/10/16   1.0.0     Henrique Reis         sensor_management.h created.
+ *
+ *****************************************************************************/
 
 /*******************************************************************************
  *
@@ -53,12 +53,12 @@
 #define APP_SENSOR_SRC_SENSOR_MANAGEMENT_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include <M2G_app.h>
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 //// Listagem de comandos utilizados na rede CAN
 //#define CAN_APL_CMD_PNP                           0x01 //Comando de PnP
 //#define CAN_APL_CMD_LEITURA_DADOS                 0x02 //Comando de leitura de dados
@@ -161,16 +161,14 @@
 //
 //// Macro para calcular a quantidade de elementos de um array
 //#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
-
 //#define CAN_bNUM_DE_LINHAS                    36
 //#define CAN_bNUM_SENSORES_POR_LINHA           2
 //#define CAN_bNUM_SENSORES_DIGITAIS            6
 //#define CAN_bNUM_SENSORES_SEMENTE_E_ADUBO     (CAN_bNUM_DE_LINHAS * CAN_bNUM_SENSORES_POR_LINHA)
 //#define CAN_bTAMANHO_LISTA                    (CAN_bNUM_SENSORES_SEMENTE_E_ADUBO + CAN_bNUM_SENSORES_DIGITAIS)
-
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 //Estado do sensor na lista de sensores
 //typedef enum {
 //  Novo,
@@ -184,7 +182,6 @@
 //  Reprovado,
 //  Aprovado
 //} CAN_teAutoTeste;
-
 //typedef struct {
 //    bool               bNovo;
 //    uint8_t            bTipoSensor;
@@ -213,9 +210,7 @@
 //    CAN_tsNovoSensor      sNovoSensor;
 //    CAN_tsLista           asLista[ CAN_bTAMANHO_LISTA ];
 //} CAN_tsCtrlListaSens;
-
 //#pragma pack(pop)
-
 //// Estrutura de parametros de sensores
 //typedef struct {
 //    uint16_t wMinimo;       //Tempo mínimo em us para contagem de uma semente
@@ -234,22 +229,21 @@
 //    uint8_t bDivPicoOffsetMinimo;       // LSN = DivPico     / MSN = OffsetMin      (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
 //    uint8_t bOffsetDuploOffsetTriplo;   // LSN = OffsetDuplo / MSN = OffsetTriplo   (LSN = Nibble menos significativo / MSN = Nibble mais significativo)
 //}CAN_tsParametrosExtended;
+/******************************************************************************
+ * Macros
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
-
-/******************************************************************************
-* Public Variables
-*******************************************************************************/
+ * Public Variables
+ *******************************************************************************/
 // Estrutura da lista de dispositivos na rede CAN
 extern CAN_tsCtrlListaSens CAN_sCtrlLista;
 
@@ -266,34 +260,34 @@ EXTERN_MUTEX(CAN_MTX_sBufferListaSensores);
 //TODO: extern OS_EVENT              *CAN_MTX_sArquivoListaSensores;
 
 // Variável para incrementar a quantidade de pulsos lida pelo sensor de velociadade
-extern  uint32_t CAN_dLeituraSensor;
-extern  uint8_t CAN_bSensorSimulador;
-extern  uint8_t CAN_bNumRespostasPNP;
+extern uint32_t CAN_dLeituraSensor;
+extern uint8_t CAN_bSensorSimulador;
+extern uint8_t CAN_bNumRespostasPNP;
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
-void SEN_vObtemListaAnterior( void );
-void SEN_vArquivoErros( void );
-void SEN_vSalvaLista( void );
-void SEN_vApagaLista( void );
-void SEN_vSalvaArquivoErros(void);
+ * Function Prototypes
+ *******************************************************************************/
+void SEN_vObtemListaAnterior (void);
+void SEN_vArquivoErros (void);
+void SEN_vSalvaLista (void);
+void SEN_vApagaLista (void);
+void SEN_vSalvaArquivoErros (void);
 
-void SEN_vAddNewSensor(const uint8_t bLinha);
-void SEN_vReadDataFromSensors(void);
-void SEN_vSensorsParameters( uint8_t bComando,
-                              uint8_t bLinha,
-                              uint8_t bTipo,
-                              uint8_t *pbDados,
-                              uint8_t bDLC );
-void SEN_vGetVersion( void );
+void SEN_vAddNewSensor (const uint8_t bLinha);
+void SEN_vReadDataFromSensors (void);
+void SEN_vSensorsParameters (uint8_t bComando,
+	uint8_t bLinha,
+	uint8_t bTipo,
+	uint8_t *pbDados,
+	uint8_t bDLC);
+void SEN_vGetVersion (void);
 
-void SEN_vManagementNetwork(void);
+void SEN_vManagementNetwork (void);
 
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
-
 
 #ifdef __cplusplus
 } // extern "C"

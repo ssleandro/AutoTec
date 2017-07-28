@@ -54,7 +54,8 @@ extern "C"
 /**
  * Structure containing Virtual Comm port control data
  */
-typedef struct VCOM_DATA {
+typedef struct VCOM_DATA
+{
 	USBD_HANDLE_T hUsb;
 	USBD_HANDLE_T hCdc;
 	uint8_t *rx_buff;
@@ -69,7 +70,7 @@ typedef struct VCOM_DATA {
  */
 extern VCOM_DATA_T g_vCOM;
 
-extern void vUSBInternallCallback(void);
+extern void vUSBInternallCallback (void);
 /**
  * @brief	Virtual com port init routine
  * @param	hUsb		: Handle to USBD stack instance
@@ -77,7 +78,8 @@ extern void vUSBInternallCallback(void);
  * @param	pUsbParam	: Pointer USB param structure returned by previous init call
  * @return	Always returns LPC_OK.
  */
-ErrorCode_t vcom_init (eUSBInterfaces_s eUSBInterface, USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT_PARAM_T *pUsbParam);
+ErrorCode_t vcom_init (eUSBInterfaces_s eUSBInterface, USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc,
+	USBD_API_INIT_PARAM_T *pUsbParam);
 
 /**
  * @brief	Virtual com port buffered read routine
@@ -99,13 +101,14 @@ ErrorCode_t vcom_read_req (eUSBInterfaces_s eUSBInterface, uint8_t *pBuf, uint32
  * @brief	Gets current read count.
  * @return	Returns current read count.
  */
-uint32_t vcom_read_cnt(void);
+uint32_t vcom_read_cnt (void);
 
 /**
  * @brief	Check if Vcom is connected
  * @return	Returns non-zero value if connected.
  */
-static INLINE uint32_t vcom_connected(void) {
+static INLINE uint32_t vcom_connected (void)
+{
 	return g_vCOM.tx_flags & VCOM_TX_CONNECTED;
 }
 

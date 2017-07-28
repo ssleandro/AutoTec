@@ -33,7 +33,8 @@
 #include "sys_config.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #if !defined(CORE_M4) && !defined(CORE_M0)
@@ -46,10 +47,10 @@ extern "C" {
 #error CHIP_LPC43XX is not defined!
 #endif
 
-/** @defgroup PERIPH_43XX_BASE CHIP: LPC43xx Peripheral addresses and register set declarations
- * @ingroup CHIP_18XX_43XX_Drivers
- * @{
- */
+	/** @defgroup PERIPH_43XX_BASE CHIP: LPC43xx Peripheral addresses and register set declarations
+	 * @ingroup CHIP_18XX_43XX_Drivers
+	 * @{
+	 */
 
 #define LPC_SCT_BASE              0x40000000
 #define LPC_GPDMA_BASE            0x40002000
@@ -109,6 +110,7 @@ extern "C" {
 
 #define LPC_SCT                   ((LPC_SCT_T              *) LPC_SCT_BASE)
 #define LPC_GPDMA                 ((LPC_GPDMA_T            *) LPC_GPDMA_BASE)
+#define LPC_SPIFI                 ((LPC_SPIFI_T            *) LPC_SPIFI_BASE)
 #define LPC_SDMMC                 ((LPC_SDMMC_T            *) LPC_SDMMC_BASE)
 #define LPC_EMC                   ((LPC_EMC_T              *) LPC_EMC_BASE)
 #define LPC_USB0                  ((LPC_USBHS_T            *) LPC_USB0_BASE)
@@ -162,9 +164,9 @@ extern "C" {
 #define LPC_FMCB                  ((LPC_FMC_T              *) LPC_FMCB_BASE)
 #define LPC_ROM_API               ((LPC_ROM_API_T          *) LPC_ROM_API_BASE)
 
-/**
- * @}
- */
+	/**
+	 * @}
+	 */
 
 #include "scu_18xx_43xx.h"
 #include "clock_18xx_43xx.h"

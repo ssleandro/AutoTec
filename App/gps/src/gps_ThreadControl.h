@@ -1,32 +1,32 @@
 /****************************************************************************
-* Title                 :   gps_ThreadControl
-* Filename              :   gps_ThreadControl.h
-* Author                :   Henrique Reis
-* Origin Date           :   21 de mar de 2017
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   gps_ThreadControl
+ * Filename              :   gps_ThreadControl.h
+ * Author                :   Henrique Reis
+ * Origin Date           :   21 de mar de 2017
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version       Author          Description
-*  21/03/17   1.0.0     Henrique Reis         gps_ThreadControl.h created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version       Author          Description
+ *  21/03/17   1.0.0     Henrique Reis         gps_ThreadControl.h created.
+ *
+ *****************************************************************************/
 #ifndef APP_GPS_SRC_GPS_THREADCONTROL_H_
 #define APP_GPS_SRC_GPS_THREADCONTROL_H_
 
@@ -35,25 +35,25 @@
 #endif
 
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define GPS_MODULES \
-    X("GPSPublish"      , 150 , osPriorityNormal      , GPS_vGPSPublishThread     , (1 << 0) , 1 ) \
-    X("GPSRecv"         , 300 , osPriorityAboveNormal , GPS_vGPSRecvThread        , (1 << 1) , 2 ) \
-    X("GPSManagement"   , 350 , osPriorityAboveNormal , GPS_vGPSManagementThread  , (1 << 2) , 3 ) \
-    X("GPSTimePulse"    , 150 , osPriorityHigh        , GPS_vGPSTimePulseThread   , (1 << 3) , 4 ) \
-    X(NULL              ,   0 , 0                     , NULL                      , 0        , 5 )
+    X("GPSPublish"      , 350 , osPriorityNormal , GPS_vGPSPublishThread     , (1 << 0) , 1 ) \
+    X("GPSRecv"         , 300 , osPriorityNormal , GPS_vGPSRecvThread        , (1 << 1) , 2 ) \
+    X("GPSManagement"   , 350 , osPriorityNormal , GPS_vGPSManagementThread  , (1 << 2) , 3 ) \
+    X("GPSTimePulse"    , 350 , osPriorityHigh , GPS_vGPSTimePulseThread   , (1 << 3) , 4 ) \
+    X(NULL              ,   0 , 0					 , NULL                      , 0        , 5 )
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 #define WATCHDOG_FLAG_ARRAY baGPSWatchdogFlags
 
 #define THREADS_THISTHREAD  sGPSThreads
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 #define WATCHDOG_CREATE(thread) \
   static thisWDTFlag p##thread##WDTFlag = NULL
 
@@ -70,41 +70,42 @@
 #define THREADS_RETURN_SIGNAL(position) THREADS_THISTHREAD[position].thisModule
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 /**
  * This Typedef is used to define Threads data for initialization
  */
 typedef struct Threads_t
 {
-  osThreadDef_t   thisThread;       //!< Thread Definition
-  uint32_t        thisModule;       //!< Synchronization
-  uint8_t         thisWDTPosition;  //!< WDT position in flag array
+	osThreadDef_t thisThread;       //!< Thread Definition
+	uint32_t thisModule;       //!< Synchronization
+	uint8_t thisWDTPosition;  //!< WDT position in flag array
 } Threads_t;
 
-typedef uint8_t*        thisWDTFlag;      //!< Watchdog Control flag pointer typedef
+typedef uint8_t* thisWDTFlag;      //!< Watchdog Control flag pointer typedef
 
 /******************************************************************************
-* Variables
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
 extern Threads_t THREADS_THISTHREAD[];    //!< Actuator Thread control array of structure
 
 extern volatile uint8_t WATCHDOG_FLAG_ARRAY[];   //!< Threads Watchdog flag holder
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Function Prototypes
+ *******************************************************************************/
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
 
 extern void GPS_vGPSPublishThread (void const *argument);
 
-extern void GPS_vGPSTimePulseThread(void const *argument);
+extern void GPS_vGPSTimePulseThread (void const *argument);
 
 extern void GPS_vGPSManagementThread (void const *argument);
 
-extern void GPS_vGPSRecvThread(void const *argument);
+extern void GPS_vGPSRecvThread (void const *argument);
 
 extern void GPS_vDetectThread (thisWDTFlag* flag, uint8_t* bCounter, void* pFunc);
 

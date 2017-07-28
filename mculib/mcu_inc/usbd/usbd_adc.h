@@ -1,29 +1,28 @@
 /***********************************************************************
-* $Id:: mw_usbd_audio.h 165 2011-04-14 17:41:11Z usb10131                     $
-*
-* Project: USB device ROM Stack
-*
-* Description:
-*     USB Audio Device Class Definitions.
-*
-***********************************************************************
-*   Copyright(C) 2011, NXP Semiconductor
-*   All rights reserved.
-*
-* Software that is described herein is for illustrative purposes only
-* which provides customers with programming information regarding the
-* products. This software is supplied "AS IS" without any warranties.
-* NXP Semiconductors assumes no responsibility or liability for the
-* use of the software, conveys no license or title under any patent,
-* copyright, or mask work right to the product. NXP Semiconductors
-* reserves the right to make changes in the software without
-* notification. NXP Semiconductors also make no representation or
-* warranty that such application will be suitable for the specified
-* use without further testing or modification.
-**********************************************************************/
+ * $Id:: mw_usbd_audio.h 165 2011-04-14 17:41:11Z usb10131                     $
+ *
+ * Project: USB device ROM Stack
+ *
+ * Description:
+ *     USB Audio Device Class Definitions.
+ *
+ ***********************************************************************
+ *   Copyright(C) 2011, NXP Semiconductor
+ *   All rights reserved.
+ *
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ **********************************************************************/
 #ifndef __AUDIO_H__
 #define __AUDIO_H__
-
 
 /* Audio Interface Subclass Codes */
 #define AUDIO_SUBCLASS_UNDEFINED                0x00
@@ -34,7 +33,6 @@
 /* Audio Interface Protocol Codes */
 #define AUDIO_PROTOCOL_UNDEFINED                0x00
 
-
 /* Audio Descriptor Types */
 #define AUDIO_UNDEFINED_DESCRIPTOR_TYPE         0x20
 #define AUDIO_DEVICE_DESCRIPTOR_TYPE            0x21
@@ -42,7 +40,6 @@
 #define AUDIO_STRING_DESCRIPTOR_TYPE            0x23
 #define AUDIO_INTERFACE_DESCRIPTOR_TYPE         0x24
 #define AUDIO_ENDPOINT_DESCRIPTOR_TYPE          0x25
-
 
 /* Audio Control Interface Descriptor Subtypes */
 #define AUDIO_CONTROL_UNDEFINED                 0x00
@@ -65,7 +62,6 @@
 #define AUDIO_ENDPOINT_UNDEFINED                0x00
 #define AUDIO_ENDPOINT_GENERAL                  0x01
 
-
 /* Audio Descriptor Sizes */
 #define AUDIO_CONTROL_INTERFACE_DESC_SZ(n)      0x08+n
 #define AUDIO_STREAMING_INTERFACE_DESC_SIZE     0x07
@@ -79,7 +75,6 @@
 #define AUDIO_STANDARD_ENDPOINT_DESC_SIZE       0x09
 #define AUDIO_STREAMING_ENDPOINT_DESC_SIZE      0x07
 
-
 /* Audio Processing Unit Process Types */
 #define AUDIO_UNDEFINED_PROCESS                 0x00
 #define AUDIO_UP_DOWN_MIX_PROCESS               0x01
@@ -88,7 +83,6 @@
 #define AUDIO_REVERBERATION_PROCESS             0x04
 #define AUDIO_CHORUS_PROCESS                    0x05
 #define AUDIO_DYN_RANGE_COMP_PROCESS            0x06
-
 
 /* Audio Request Codes */
 #define AUDIO_REQUEST_UNDEFINED                 0x00
@@ -103,7 +97,6 @@
 #define AUDIO_REQUEST_SET_MEM                   0x05
 #define AUDIO_REQUEST_GET_MEM                   0x85
 #define AUDIO_REQUEST_GET_STAT                  0xFF
-
 
 /* Audio Control Selector Codes */
 #define AUDIO_CONTROL_UNDEFINED                 0x00    /* Common Selector */
@@ -166,7 +159,6 @@
 #define AUDIO_SAMPLING_FREQ_CONTROL             0x01
 #define AUDIO_PITCH_CONTROL                     0x02
 
-
 /* Audio Format Specific Control Selectors */
 
 /*  MPEG Control Selectors */
@@ -185,13 +177,11 @@
 #define AUDIO_AC3_SCALING_CONTROL               0x03
 #define AUDIO_AC3_HILO_SCALING_CONTROL          0x04
 
-
 /* Audio Format Types */
 #define AUDIO_FORMAT_TYPE_UNDEFINED             0x00
 #define AUDIO_FORMAT_TYPE_I                     0x01
 #define AUDIO_FORMAT_TYPE_II                    0x02
 #define AUDIO_FORMAT_TYPE_III                   0x03
-
 
 /* Audio Format Type Descriptor Sizes */
 #define AUDIO_FORMAT_TYPE_I_DESC_SZ(n)          0x08+(n*3)
@@ -199,7 +189,6 @@
 #define AUDIO_FORMAT_TYPE_III_DESC_SZ(n)        0x08+(n*3)
 #define AUDIO_FORMAT_MPEG_DESC_SIZE             0x09
 #define AUDIO_FORMAT_AC3_DESC_SIZE              0x0A
-
 
 /* Audio Data Format Codes */
 
@@ -226,7 +215,6 @@
 #define AUDIO_FORMAT_IEC1937_MPEG2_L1_LS        0x2005
 #define AUDIO_FORMAT_IEC1937_MPEG2_L2_3         0x2006
 
-
 /* Predefined Audio Channel Configuration Bits */
 #define AUDIO_CHANNEL_M                         0x0000  /* Mono */
 #define AUDIO_CHANNEL_L                         0x0001  /* Left Front */
@@ -241,7 +229,6 @@
 #define AUDIO_CHANNEL_SL                        0x0200  /* Side Left */
 #define AUDIO_CHANNEL_SR                        0x0400  /* Side Right */
 #define AUDIO_CHANNEL_T                         0x0800  /* Top */
-
 
 /* Feature Unit Control Bits */
 #define AUDIO_CONTROL_MUTE                      0x0001
@@ -299,7 +286,6 @@
 #define AUDIO_CONTROL_SAMPLING_FREQ             0x01
 #define AUDIO_CONTROL_PITCH                     0x02
 #define AUDIO_MAX_PACKETS_ONLY                  0x80
-
 
 /* Audio Terminal Types */
 
@@ -372,6 +358,5 @@
 #define AUDIO_TERMINAL_RADIO_TRANSMITTER        0x0711
 #define AUDIO_TERMINAL_MULTI_TRACK_RECORDER     0x0712
 #define AUDIO_TERMINAL_SYNTHESIZER              0x0713
-
 
 #endif  /* __AUDIO_H__ */

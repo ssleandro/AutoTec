@@ -46,58 +46,65 @@
  ****************************************************************************/
 
 /* Configure the bit timing for CCAN bus */
-STATIC void configTimming(LPC_CCAN_T *pCCAN,
-						  uint32_t ClkDiv,
-						  uint32_t BaudRatePrescaler,
-						  uint8_t SynJumpWidth,
-						  uint8_t Tseg1,
-						  uint8_t Tseg2)
+STATIC void configTimming (LPC_CCAN_T *pCCAN,
+	uint32_t ClkDiv,
+	uint32_t BaudRatePrescaler,
+	uint8_t SynJumpWidth,
+	uint8_t Tseg1,
+	uint8_t Tseg2)
 {
 	/* Reset software */
-	if (!(pCCAN->CNTL & CCAN_CTRL_INIT)) {
+	if (!(pCCAN->CNTL & CCAN_CTRL_INIT))
+	{
 		pCCAN->CNTL |= CCAN_CTRL_INIT;
 	}
 
 	/*Set bus timing */
-	pCCAN->CLKDIV = ClkDiv;			/* Divider for CAN VPB3 clock */
-	pCCAN->CNTL |= CCAN_CTRL_CCE;		/* Start configuring bit timing */
+	pCCAN->CLKDIV = ClkDiv; /* Divider for CAN VPB3 clock */
+	pCCAN->CNTL |= CCAN_CTRL_CCE; /* Start configuring bit timing */
 	pCCAN->BT = (BaudRatePrescaler & 0x3F) | (SynJumpWidth & 0x03) << 6 | (Tseg1 & 0x0F) << 8 | (Tseg2 & 0x07) << 12;
-	pCCAN->BRPE = BaudRatePrescaler >> 6;	/* Set Baud Rate Prescaler MSBs */
-	pCCAN->CNTL &= ~CCAN_CTRL_CCE;		/* Stop configuring bit timing */
+	pCCAN->BRPE = BaudRatePrescaler >> 6; /* Set Baud Rate Prescaler MSBs */
+	pCCAN->CNTL &= ~CCAN_CTRL_CCE; /* Stop configuring bit timing */
 
 	/* Finish software initialization */
 	pCCAN->CNTL &= ~CCAN_CTRL_INIT;
-	while ( pCCAN->CNTL & CCAN_CTRL_INIT ) {}
+	while (pCCAN->CNTL & CCAN_CTRL_INIT)
+	{
+	}
 }
 
 /* Return 1->32; 0 if not find free msg */
-STATIC uint8_t getFreeMsgObject(LPC_CCAN_T *pCCAN)
+STATIC uint8_t getFreeMsgObject (LPC_CCAN_T *pCCAN)
 {
 	uint32_t msg_valid;
 	uint8_t i;
 	msg_valid = Chip_CCAN_GetValidMsg(pCCAN);
-	for (i = 0; i < CCAN_MSG_MAX_NUM; i++) {
-		if (!((msg_valid >> i) & 1UL)) {
+	for (i = 0; i < CCAN_MSG_MAX_NUM; i++)
+	{
+		if (!((msg_valid >> i) & 1UL))
+		{
 			return i + 1;
 		}
 	}
 	return 0;	// No free object
 }
 
-STATIC void freeMsgObject(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum)
+STATIC void freeMsgObject (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum)
 {
 	Chip_CCAN_SetValidMsg(pCCAN, IFSel, msgNum, false);
 }
 
 /* Returns clock index for the peripheral block */
-STATIC CHIP_CCU_CLK_T Chip_CCAN_GetClockIndex(LPC_CCAN_T *pCCAN)
+STATIC CHIP_CCU_CLK_T Chip_CCAN_GetClockIndex (LPC_CCAN_T *pCCAN)
 {
 	CHIP_CCU_CLK_T clkCCAN;
 
-	if (pCCAN == LPC_C_CAN1) {
+	if (pCCAN == LPC_C_CAN1)
+	{
 		clkCCAN = CLK_APB1_CAN1;
 	}
-	else {
+	else
+	{
 		clkCCAN = CLK_APB3_CAN0;
 	}
 
@@ -109,35 +116,40 @@ STATIC CHIP_CCU_CLK_T Chip_CCAN_GetClockIndex(LPC_CCAN_T *pCCAN)
  ****************************************************************************/
 
 /* Initialize the CCAN peripheral, free all message object in RAM */
-void Chip_CCAN_Init(LPC_CCAN_T *pCCAN)
+void Chip_CCAN_Init (LPC_CCAN_T *pCCAN)
 {
 	uint8_t i;
 
 	Chip_Clock_EnableOpts(Chip_CCAN_GetClockIndex(pCCAN), true, false, 1);
 
-	for (i = 1; i <= CCAN_MSG_MAX_NUM; i++) {
+	for (i = 1; i <= CCAN_MSG_MAX_NUM; i++)
+	{
 		freeMsgObject(pCCAN, CCAN_MSG_IF1, i);
 	}
 	Chip_CCAN_ClearStatus(pCCAN, (CCAN_STAT_RXOK | CCAN_STAT_TXOK));
 }
 
 /* De-initialize the CCAN peripheral */
-void Chip_CCAN_DeInit(LPC_CCAN_T *pCCAN)
+void Chip_CCAN_DeInit (LPC_CCAN_T *pCCAN)
 {
 	Chip_Clock_Disable(Chip_CCAN_GetClockIndex(pCCAN));
 }
 
 /* Select bit rate for CCAN bus */
-Status Chip_CCAN_SetBitRate(LPC_CCAN_T *pCCAN, uint32_t bitRate)
+Status Chip_CCAN_SetBitRate (LPC_CCAN_T *pCCAN, uint32_t bitRate)
 {
 	uint32_t pClk, div, quanta, segs, seg1, seg2, clk_per_bit, can_sjw;
 	pClk = Chip_Clock_GetRate(Chip_CCAN_GetClockIndex(pCCAN));
 	clk_per_bit = pClk / bitRate;
 
-	for (div = 0; div <= 15; div++) {
-		for (quanta = 1; quanta <= 32; quanta++) {
-			for (segs = 3; segs <= 17; segs++) {
-				if (clk_per_bit == (segs * quanta * (div + 1))) {
+	for (div = 0; div <= 15; div++)
+	{
+		for (quanta = 1; quanta <= 32; quanta++)
+		{
+			for (segs = 3; segs <= 17; segs++)
+			{
+				if (clk_per_bit == (segs * quanta * (div + 1)))
+				{
 					segs -= 3;
 					seg2 = (segs / 2) - 1;
 					seg1 = segs - seg2;
@@ -152,50 +164,55 @@ Status Chip_CCAN_SetBitRate(LPC_CCAN_T *pCCAN, uint32_t bitRate)
 }
 
 /* Clear the status of CCAN bus */
-void Chip_CCAN_ClearStatus(LPC_CCAN_T *pCCAN, uint32_t val)
+void Chip_CCAN_ClearStatus (LPC_CCAN_T *pCCAN, uint32_t val)
 {
 	uint32_t tmp = Chip_CCAN_GetStatus(pCCAN);
 	Chip_CCAN_SetStatus(pCCAN, tmp & (~val));
 }
 
 /* Set a message into the message object in message RAM */
-void Chip_CCAN_SetMsgObject(LPC_CCAN_T *pCCAN,
-							CCAN_MSG_IF_T IFSel,
-							CCAN_TRANSFER_DIR_T dir,
-							bool remoteFrame,
-							uint8_t msgNum,
-							const CCAN_MSG_OBJ_T *pMsgObj)
+void Chip_CCAN_SetMsgObject (LPC_CCAN_T *pCCAN,
+	CCAN_MSG_IF_T IFSel,
+	CCAN_TRANSFER_DIR_T dir,
+	bool remoteFrame,
+	uint8_t msgNum,
+	const CCAN_MSG_OBJ_T *pMsgObj)
 {
 	uint16_t *pData;
 	uint32_t msgCtrl = 0;
 
-	if (pMsgObj == NULL) {
+	if (pMsgObj == NULL)
+	{
 		return;
 	}
-	pData = (uint16_t *) (pMsgObj->data);
+	pData = (uint16_t *)(pMsgObj->data);
 
 	msgCtrl |= CCAN_IF_MCTRL_UMSK | CCAN_IF_MCTRL_RMTEN(remoteFrame) | CCAN_IF_MCTRL_EOB |
-			   (pMsgObj->dlc & CCAN_IF_MCTRL_DLC_MSK);
-	if (dir == CCAN_TX_DIR) {
+		(pMsgObj->dlc & CCAN_IF_MCTRL_DLC_MSK);
+	if (dir == CCAN_TX_DIR)
+	{
 #ifdef ENABLE_TX_INTERRUPT
 		//msgCtrl |= CCAN_IF_MCTRL_TXIE;
 #endif
-		if (!remoteFrame) {
+		if (!remoteFrame)
+		{
 			msgCtrl |= CCAN_IF_MCTRL_TXRQ;
 		}
 	}
-	else {
+	else
+	{
 		msgCtrl |= CCAN_IF_MCTRL_RXIE;
 	}
 
 	pCCAN->IF[IFSel].MCTRL = msgCtrl;
-	pCCAN->IF[IFSel].DA1 = *pData++;	/* Lower two bytes of message pointer */
-	pCCAN->IF[IFSel].DA2 = *pData++;	/* Upper two bytes of message pointer */
-	pCCAN->IF[IFSel].DB1 = *pData++;	/* Lower two bytes of message pointer */
-	pCCAN->IF[IFSel].DB2 = *pData;	/* Upper two bytes of message pointer */
+	pCCAN->IF[IFSel].DA1 = *pData++; /* Lower two bytes of message pointer */
+	pCCAN->IF[IFSel].DA2 = *pData++; /* Upper two bytes of message pointer */
+	pCCAN->IF[IFSel].DB1 = *pData++; /* Lower two bytes of message pointer */
+	pCCAN->IF[IFSel].DB2 = *pData; /* Upper two bytes of message pointer */
 
 	/* Configure arbitration */
-	if (!(pMsgObj->id & (0x1 << 30))) {					/* bit 30 is 0, standard frame */
+	if (!(pMsgObj->id & (0x1 << 30)))
+	{ /* bit 30 is 0, standard frame */
 		/* Mxtd: 0, Mdir: 1, Mask is 0x7FF */
 		pCCAN->IF[IFSel].MSK2 = CCAN_IF_MASK2_MDIR(dir) | (CCAN_MSG_ID_STD_MASK << 2);
 		pCCAN->IF[IFSel].MSK1 = 0x0000;
@@ -204,7 +221,8 @@ void Chip_CCAN_SetMsgObject(LPC_CCAN_T *pCCAN,
 		pCCAN->IF[IFSel].ARB2 = CCAN_IF_ARB2_MSGVAL | CCAN_IF_ARB2_DIR(dir) | (pMsgObj->id << 2);
 		pCCAN->IF[IFSel].ARB1 = 0x0000;
 	}
-	else {										/* Extended frame */
+	else
+	{ /* Extended frame */
 		/* Mxtd: 1, Mdir: 1, Mask is 0x1FFFFFFF */
 		pCCAN->IF[IFSel].MSK2 = CCAN_IF_MASK2_MXTD | CCAN_IF_MASK2_MDIR(dir) | (CCAN_MSG_ID_EXT_MASK >> 16);
 		pCCAN->IF[IFSel].MSK1 = CCAN_MSG_ID_EXT_MASK & 0x0000FFFF;
@@ -218,37 +236,41 @@ void Chip_CCAN_SetMsgObject(LPC_CCAN_T *pCCAN,
 }
 
 /* Get a message object in message RAM into the message buffer */
-void Chip_CCAN_GetMsgObject(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, CCAN_MSG_OBJ_T *pMsgObj)
+void Chip_CCAN_GetMsgObject (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, CCAN_MSG_OBJ_T *pMsgObj)
 {
 	uint32_t *pData;
-	if (!pMsgObj) {
+	if (!pMsgObj)
+	{
 		return;
 	}
-	pData = (uint32_t *) pMsgObj->data;
+	pData = (uint32_t *)pMsgObj->data;
 	Chip_CCAN_TransferMsgObject(pCCAN,
-								IFSel,
-								CCAN_IF_CMDMSK_RD | CCAN_IF_CMDMSK_TRANSFER_ALL | CCAN_IF_CMDMSK_R_CLRINTPND,
-								msgNum);
+		IFSel,
+		CCAN_IF_CMDMSK_RD | CCAN_IF_CMDMSK_TRANSFER_ALL | CCAN_IF_CMDMSK_R_CLRINTPND,
+		msgNum);
 
-	if (pCCAN->IF[IFSel].MCTRL & CCAN_IF_MCTRL_NEWD) {
-                uint32_t a = (pCCAN->IF[IFSel].ARB1); //used to remove volatile warning
-                uint32_t b = (pCCAN->IF[IFSel].ARB2 << 16); //used to remove volatile warning
+	if (pCCAN->IF[IFSel].MCTRL & CCAN_IF_MCTRL_NEWD)
+	{
+		uint32_t a = (pCCAN->IF[IFSel].ARB1); //used to remove volatile warning
+		uint32_t b = (pCCAN->IF[IFSel].ARB2 << 16); //used to remove volatile warning
 		pMsgObj->id = a | b;
-                //pMsgObj->id = (pCCAN->IF[IFSel].ARB1) | (pCCAN->IF[IFSel].ARB2 << 16);
+		//pMsgObj->id = (pCCAN->IF[IFSel].ARB1) | (pCCAN->IF[IFSel].ARB2 << 16);
 		pMsgObj->dlc = pCCAN->IF[IFSel].MCTRL & CCAN_IF_MCTRL_DLC_MSK;
-                a = (pCCAN->IF[IFSel].DA2 << 16);
-                b = pCCAN->IF[IFSel].DA1;
+		a = (pCCAN->IF[IFSel].DA2 << 16);
+		b = pCCAN->IF[IFSel].DA1;
 		//*pData++ = (pCCAN->IF[IFSel].DA2 << 16) | pCCAN->IF[IFSel].DA1;
-                *pData++ = a | b;
-                a = (pCCAN->IF[IFSel].DB2 << 16);
-                b = pCCAN->IF[IFSel].DB1;
+		*pData++ = a | b;
+		a = (pCCAN->IF[IFSel].DB2 << 16);
+		b = pCCAN->IF[IFSel].DB1;
 		*pData = a | b;
-                //*pData = (pCCAN->IF[IFSel].DB2 << 16) | pCCAN->IF[IFSel].DB1;
+		//*pData = (pCCAN->IF[IFSel].DB2 << 16) | pCCAN->IF[IFSel].DB1;
 
-		if (pMsgObj->id & (0x1 << 30)) {
+		if (pMsgObj->id & (0x1 << 30))
+		{
 			pMsgObj->id &= CCAN_MSG_ID_EXT_MASK;
 		}
-		else {
+		else
+		{
 			pMsgObj->id >>= 18;
 			pMsgObj->id &= CCAN_MSG_ID_STD_MASK;
 		}
@@ -256,26 +278,31 @@ void Chip_CCAN_GetMsgObject(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgN
 }
 
 /* Data transfer between IF registers and Message RAM */
-void Chip_CCAN_TransferMsgObject(LPC_CCAN_T *pCCAN,
-								 CCAN_MSG_IF_T IFSel,
-								 uint32_t mask,
-								 uint32_t msgNum) {
+void Chip_CCAN_TransferMsgObject (LPC_CCAN_T *pCCAN,
+	CCAN_MSG_IF_T IFSel,
+	uint32_t mask,
+	uint32_t msgNum)
+{
 	msgNum &= 0x3F;
 	pCCAN->IF[IFSel].CMDMSK = mask;
 	pCCAN->IF[IFSel].CMDREQ = msgNum;
-	while (pCCAN->IF[IFSel].CMDREQ & CCAN_IF_CMDREQ_BUSY ) {}
+	while (pCCAN->IF[IFSel].CMDREQ & CCAN_IF_CMDREQ_BUSY)
+	{
+	}
 }
 
 /* Enable/Disable the message object to valid */
-void Chip_CCAN_SetValidMsg(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, bool valid)
+void Chip_CCAN_SetValidMsg (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNum, bool valid)
 {
 
 	uint32_t temp;
 	temp = pCCAN->IF[IFSel].ARB2;
-	if (!valid) {
+	if (!valid)
+	{
 		pCCAN->IF[IFSel].ARB2 = (temp & (~CCAN_IF_ARB2_MSGVAL));
 	}
-	else {
+	else
+	{
 		pCCAN->IF[IFSel].ARB2 = (temp | (CCAN_IF_ARB2_MSGVAL));
 	}
 
@@ -283,26 +310,37 @@ void Chip_CCAN_SetValidMsg(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgNu
 }
 
 /* Send a message */
-void Chip_CCAN_Send(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, CCAN_MSG_OBJ_T *pMsgObj)
+void Chip_CCAN_Send (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, CCAN_MSG_OBJ_T *pMsgObj)
 {
+	uint16_t wCount = 0;
+
 	uint8_t msgNum = getFreeMsgObject(pCCAN);
-	if (!msgNum) {
-		return;
+	if (!msgNum)
+	{
+		for( int i=1; i<=CCAN_MSG_MAX_NUM;i++)
+		{
+			freeMsgObject(pCCAN, IFSel, i);
+		}
+		msgNum = getFreeMsgObject(pCCAN);
+		//return;
 	}
 	Chip_CCAN_SetMsgObject(pCCAN, IFSel, CCAN_TX_DIR, remoteFrame, msgNum, pMsgObj);
-	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1)) {	// blocking , wait for sending completed
+	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1) && (wCount++ < 0x7FF))
+	{	// blocking , wait for sending completed
 	}
-	if (!remoteFrame) {
+	if (!remoteFrame)
+	{
 		freeMsgObject(pCCAN, IFSel, msgNum);
 	}
 }
 
 /* Register a message ID for receiving */
-void Chip_CCAN_AddReceiveID(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id)
+void Chip_CCAN_AddReceiveID (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id)
 {
 	CCAN_MSG_OBJ_T temp;
 	uint8_t msgNum = getFreeMsgObject(pCCAN);
-	if (!msgNum) {
+	if (!msgNum)
+	{
 		return;
 	}
 	temp.id = id;
@@ -310,13 +348,15 @@ void Chip_CCAN_AddReceiveID(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id)
 }
 
 /* Remove a registered message ID from receiving */
-void Chip_CCAN_DeleteReceiveID(LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id)
+void Chip_CCAN_DeleteReceiveID (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint32_t id)
 {
 	uint8_t i;
 	CCAN_MSG_OBJ_T temp;
-	for (i = 1; i <= CCAN_MSG_MAX_NUM; i++) {
+	for (i = 1; i <= CCAN_MSG_MAX_NUM; i++)
+	{
 		Chip_CCAN_GetMsgObject(pCCAN, IFSel, i, &temp);
-		if (temp.id == id) {
+		if (temp.id == id)
+		{
 			freeMsgObject(pCCAN, IFSel, i);
 		}
 	}

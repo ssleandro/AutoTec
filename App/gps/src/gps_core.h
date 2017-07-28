@@ -1,38 +1,38 @@
 /****************************************************************************
-* Title                 :   gps_core
-* Filename              :   gps_core.h
-* Author                :   Henrique Reis
-* Origin Date           :   21 de mar de 2017
-* Version               :   1.0.0
-* Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
-* Target                :   LPC43XX M4
-* Notes                 :   Qualicode Machine Technologies
-*
-* THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
-* OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Title                 :   gps_core
+ * Filename              :   gps_core.h
+ * Author                :   Henrique Reis
+ * Origin Date           :   21 de mar de 2017
+ * Version               :   1.0.0
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
+ * Target                :   LPC43XX M4
+ * Notes                 :   Qualicode Machine Technologies
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AUTEQ TELEMATICA OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
-*
-*    Date    Version       Author          Description
-*  21/03/17   1.0.0     Henrique Reis         gps_core.h created.
-*
-*****************************************************************************/
+ *
+ *    Date    Version       Author          Description
+ *  21/03/17   1.0.0     Henrique Reis         gps_core.h created.
+ *
+ *****************************************************************************/
 #ifndef GPS_SRC_GPS_CORE_H_
 #define GPS_SRC_GPS_CORE_H_
 
 /******************************************************************************
-* Includes
-*******************************************************************************/
+ * Includes
+ *******************************************************************************/
 #include <M2G_app.h>
 #if defined (UNITY_TEST)
 #include "../gps/inc/interface_gps.h"
@@ -40,20 +40,20 @@
 #include "interface_gps.h"
 #endif
 /******************************************************************************
-* Preprocessor Constants
-*******************************************************************************/
+ * Preprocessor Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Configuration Constants
-*******************************************************************************/
+ * Configuration Constants
+ *******************************************************************************/
 
 /******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 
 /******************************************************************************
-* Typedefs
-*******************************************************************************/
+ * Typedefs
+ *******************************************************************************/
 ////Valores para os temporizadores de comunicação:
 //#define GPS_wTICKS_WDT  (TICK/2)      //Número de ticks até o watchdog timeout.
 //#define GPS_wTICKS_WAT  (TICK/8)    //Número de ticks até o fim de uma espera.
@@ -86,26 +86,24 @@
 //#define GPS_FLAG_METRO              0x00000004
 //#define GPS_FLAG_TIMEOUT_MTR        0x00000008
 //#define GPS_FLAG_SEGUNDO            0x00000010
+/*******************************************************************************
+
+ Definições relacionadas à comunicação com o GPS:
+
+ *******************************************************************************/
 
 /*******************************************************************************
 
-   Definições relacionadas à comunicação com o GPS:
+ Definições do Protocolo Ubx
 
-*******************************************************************************/
+ | Sync | Sync |       |    |               |     ~     |    |    |
+ | Char | Char | Class | ID |    LENGTH     |  Payload  | CK | CK |
+ |  1   |  2   |       |    | Little Endian |     ~     | _A | _B |
+ (2 Bytes)      (n Bytes)
 
-/*******************************************************************************
-
-  Definições do Protocolo Ubx
-
-  | Sync | Sync |       |    |               |     ~     |    |    |
-  | Char | Char | Class | ID |    LENGTH     |  Payload  | CK | CK |
-  |  1   |  2   |       |    | Little Endian |     ~     | _A | _B |
-                                (2 Bytes)      (n Bytes)
-
-*******************************************************************************/
+ *******************************************************************************/
 
 // Definições relacionadas à máquina de estados de recepção
-
 #define GPS_ERX_W_SYNC_1   0
 #define GPS_ERX_W_SYNC_2   1
 #define GPS_ERX_W_CLASS    2
@@ -192,13 +190,12 @@
 //#define VALID_UTCOFF  0x04 //1=Valid Leap Seconds, i.e. Leap Seconds already known
 //#define GPS_VALID_TIME ( VALID_TOW | VALID_WEEK | VALID_UTCOFF )
 
-
 /*******************************************************************************
 
-  Definições relacionadas ao método de interpolação de coordenadas.
-  O Gps envia coordenada à 1 Hz, porém o programa calcula coordenadas
-  entre coordenadas reais para precisão no cálculo.
-*******************************************************************************/
+ Definições relacionadas ao método de interpolação de coordenadas.
+ O Gps envia coordenada à 1 Hz, porém o programa calcula coordenadas
+ entre coordenadas reais para precisão no cálculo.
+ *******************************************************************************/
 // nº de amostras em um segundo. No caso de 4 amostras, o programa irá
 // receber 1 amostra e interpolar outras 3, tendo assim amostras à cada 250 Hz.
 #define NUM_AM_INT          (TICK/8)
@@ -206,19 +203,18 @@
 /* Valor do semi-eixo maior do elipsóide WGS-84 */
 //#define GPS_ELIP_EIXO_MAIOR    6378137
 
-
 // dia juliano para o dia 6 de janeiro de 1980( referência do GPS )
 #define JD_GPS_TIME         2444245
 
 /*******************************************************************************
 
-   Definições relacionadas ao sistema de navegação:
+ Definições relacionadas ao sistema de navegação:
 
-*******************************************************************************/
+ *******************************************************************************/
 
 /*******************************************************************************
-  Estruturas públicas deste módulo:
-*******************************************************************************/
+ Estruturas públicas deste módulo:
+ *******************************************************************************/
 //typedef enum {
 //  No_Fix,
 //  Dead_Reckoning_only,
@@ -241,7 +237,6 @@
 //  POWER_ON,
 //  DONTKNOW
 //}GPS_tePWR;
-
 //typedef struct
 //{
 //
@@ -305,7 +300,6 @@
 //
 //} GPS_tsDadosGPS; // estrutura contendo os dados do gps.
 
-
 //Estrutura com a hora local:
 // os dois membros desta estrutura armazaenam a data/hora com o seguinte formato:
 // 0 - centésimos de segundos
@@ -317,78 +311,68 @@
 // 6 - mês
 // 7 - ano
 //
-typedef struct {
-  //Hora Atual GPS
-  uint8_t         abHoraAtualGPS[8];
+typedef struct
+{
+	//Hora Atual GPS
+	uint8_t abHoraAtualGPS[8];
 
-  //Hora local = hora GPS + offset GPS/UTC + diferença de fuso-horário:
-  uint8_t         abDataHoraBCDLocal[ 8 ];
+	//Hora local = hora GPS + offset GPS/UTC + diferença de fuso-horário:
+	uint8_t abDataHoraBCDLocal[8];
 
-  //Hora local HV = hora local + 1 hora, se no período do horário de verão
-  //senão: Hora local HV = hora local:
-  uint8_t         abDataHoraBCDLocalHV[ 8 ];
+	//Hora local HV = hora local + 1 hora, se no período do horário de verão
+	//senão: Hora local HV = hora local:
+	uint8_t abDataHoraBCDLocalHV[8];
 
-  //Hora local em segundos desde 01/01/1970 sem o horário de verão:
-  uint32_t        dDataHoraSistema;
+	//Hora local em segundos desde 01/01/1970 sem o horário de verão:
+	uint32_t dDataHoraSistema;
 
 } GPS_tsDataHoraLocal;
 
-
-
 /*******************************************************************************
-  Variáveis públicas deste módulo:
-*******************************************************************************/
+ Variáveis públicas deste módulo:
+ *******************************************************************************/
 //Pilha da tarefa principal:
 //extern OS_STK GPS_adTrfPrincipalStk[ GPS_TRF_PRINCIPAL_STK_SIZE ];
-
 //Estrutura de dados do GPS
 //extern GPS_tsDadosGPS         GPS_sDadosGPS;
-
 //Flags para indicar eventos do GPS
 //extern OS_FLAG_GRP            *GPS_sFlagGPS;
-
 //Mutex para controle de acesso às estruturas de dados das entradas do GPS:
 //extern OS_EVENT               *GPS_MTX_sEntradas;
-
 //Timer do GPS para percorrer 1 metro
 //extern UOS_tbTimerHandler     GPS_bTimerMtr;
-
 //Timer do TIMEPULSE
 //extern UOS_tbTimerHandler     GPS_bTimerInt;
-
 //Flags para indicar eventos da aplicação do protocolo:
 //extern OS_FLAG_GRP            *GPS_sFlagApl;
-
 //extern uint8_t                  GPS_bEstadoRxGPS;
 //extern uint8_t              GPS_bDistanciaPercorrida;
-
 /*******************************************************************************
-  Funções públicas deste módulo:
-*******************************************************************************/
+ Funções públicas deste módulo:
+ *******************************************************************************/
 //void GPS_vTrataInterrupt( void );
-void GPS_vTrfPrincipal( void *p_arg );
-void GPS_vTrataEINT2( void );
-void GPS_vTimeout(void );
-void GPS_dDataHoraLocalHV( uint8_t *pabDataHoraLocalHV );
-void GPS_dDataHoraLocal( uint8_t *pabDataHoraLocal );
-uint32_t GPS_dDataHoraSistema( void );
-void GPS_vCalcHoraUTC( uint8_t *pabDataHora );
-void GPS_vCalcHoraLocal( void );
-uint32_t GPS_dCalcHoraSistema( uint8_t *pabDataHora );
-
-
-/******************************************************************************
-* Variables
-*******************************************************************************/
+void GPS_vTrfPrincipal (void *p_arg);
+void GPS_vTrataEINT2 (void);
+void GPS_vTimeout (void);
+void GPS_dDataHoraLocalHV (uint8_t *pabDataHoraLocalHV);
+void GPS_dDataHoraLocal (uint8_t *pabDataHoraLocal);
+uint32_t GPS_dDataHoraSistema (void);
+void GPS_vCalcHoraUTC (uint8_t *pabDataHora);
+void GPS_vCalcHoraLocal (void);
+uint32_t GPS_dCalcHoraSistema (uint8_t *pabDataHora);
 
 /******************************************************************************
-* Function Prototypes
-*******************************************************************************/
+ * Variables
+ *******************************************************************************/
+
+/******************************************************************************
+ * Function Prototypes
+ *******************************************************************************/
 
 #ifdef __cplusplus
-extern "C"{
+extern "C"
+{
 #endif
-
 
 #ifdef __cplusplus
 } // extern "C"
