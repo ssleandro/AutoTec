@@ -78,6 +78,7 @@ static adc_config_s * ADClist[ADC_MAX_CHANNELS]; //!< List of enabled ADC channe
 extern void ADC0_IRQHandler (void);
 extern void ADC1_IRQHandler (void);
 extern void DMA_IRQHandler (void);
+extern void *pvPortMalloc( size_t xWantedSize );
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
@@ -554,7 +555,7 @@ eMCUError_s ADC_eInit (adc_config_s * pADC)
 		Chip_ADC_SetResolution(ADC_MAP_REGISTER(pADC->eChannel), &sADCSetup, pADC->eResolution);
 
 		//Create private struct, populate it and then reference it on the public struct
-		adc_private_config_s * psPrivate = malloc(sizeof(adc_private_config_s));
+		adc_private_config_s * psPrivate = pvPortMalloc(sizeof(adc_private_config_s));
 		if (psPrivate != NULL)
 		{
 			psPrivate->bStarted = true;

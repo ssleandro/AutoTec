@@ -102,7 +102,7 @@ void MCU_vFFSInit (void)
 			f_format(F_FAT16_MEDIA);
 		}
 
-	} while ((bStatus != F_NO_ERROR) && (bStatus-- > 0));
+	} while ((bStatus != F_NO_ERROR) && (bRetries-- > 0));
 
 	if (bStatus != F_NO_ERROR)
 	{

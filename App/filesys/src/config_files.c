@@ -434,10 +434,10 @@ eAPPError_s FFS_vSaveStaticReg (void)
 		xFileHandle = f_open(FFS_abStaticRegCfgName, "w+");
 		ASSERT(xFileHandle != NULL);
 
-		//bErr = f_rewind(xFileHandle);
-		//ASSERT(bErr == F_NO_ERROR);
+		bErr = f_rewind(xFileHandle);
+		ASSERT(bErr == F_NO_ERROR);
 
-				bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
+		bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
 		ASSERT(bErr == 1);
 
 		f_close(xFileHandle);

@@ -319,6 +319,64 @@ void HardFault_Handler (void)
 }
 #endif
 
+
+/******************************************************************************
+* Function : MemManage_Handler (void)
+*//**
+* \b Description:
+*
+* This is the MemManage  handler.
+*
+* PRE-CONDITION: None
+*
+* POST-CONDITION: None
+*
+* @return     void
+*
+* \b Example
+~~~~~~~~~~~~~~~{.c}
+* //This is the Hard_fault function
+~~~~~~~~~~~~~~~
+*
+* @see main
+*
+* <br><b> - HISTORY OF CHANGES - </b>
+*
+* <table align="left" style="width:800px">
+* <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
+* <tr><td> 12/07/2017 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
+* </table><br><br>
+* <hr>
+*
+*******************************************************************************/
+#ifndef UNITY_TEST
+/* The prototype shows it is a naked function - in effect this is just an
+assembly function. */
+void MemManage_Handler( void ) __attribute__( ( naked ) );
+void MemManage_Handler (void)
+{
+  /* The fault handler implementation calls a function called
+  DIG_prvGetRegistersFromStack(). */
+  ASM volatile
+  (
+      " tst lr, #4                                                \n"
+      " ite eq                                                    \n"
+      " mrseq r0, msp                                             \n"
+      " mrsne r0, psp                                             \n"
+      " ldr r1, [r0, #24]                                         \n"
+#if defined(__IAR_SYSTEMS_ICC__)
+      " bl DIG_prvGetRegistersFromStack                           \n"
+#elif defined (__GNUC__)
+//      " ldr r2, handler2_address_const                            \n"
+//      " bx r2                                                     \n"
+//      " handler2_address_const: .word DIG_prvGetRegistersFromStack\n"
+      " B DIG_prvGetRegistersFromStack                            \n"
+#endif
+
+  );
+}
+#endif
+
 /******************************************************************************
  * Function : DIG_onAssert__(unsigned int timer, char const *file, unsigned line)
  *//**

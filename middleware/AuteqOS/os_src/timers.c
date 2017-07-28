@@ -276,7 +276,9 @@ TimerHandle_t xTimerCreate (const char * const pcTimerName, const TickType_t xTi
 	const UBaseType_t uxAutoReload, void * const pvTimerID, TimerCallbackFunction_t pxCallbackFunction) /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 {
 	Timer_t *pxNewTimer;
-
+#if (configUSE_TRACE_FACILITY == 1)
+	static uint16_t wTNumber = 0;
+#endif
 	/* Allocate the timer structure. */
 	if (xTimerPeriodInTicks == (TickType_t)0U)
 	{
@@ -297,6 +299,9 @@ TimerHandle_t xTimerCreate (const char * const pcTimerName, const TickType_t xTi
 			pxNewTimer->uxAutoReload = uxAutoReload;
 			pxNewTimer->pvTimerID = pvTimerID;
 			pxNewTimer->pxCallbackFunction = pxCallbackFunction;
+#if (configUSE_TRACE_FACILITY == 1)
+			pxNewTimer->uxTimerNumber = wTNumber++;
+#endif
 			vListInitialiseItem(&(pxNewTimer->xTimerListItem));
 
 			traceTIMER_CREATE( pxNewTimer );

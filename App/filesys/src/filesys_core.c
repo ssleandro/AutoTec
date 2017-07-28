@@ -92,8 +92,6 @@ osThreadId xPbulishThreadID;
 
 osFlagsGroupId FFS_sFlagSis;
 
-PubMessage sFileSysPubMsg;
-
 /******************************************************************************
  * Module Internal DATABASE
  *******************************************************************************/
@@ -204,15 +202,6 @@ eAPPError_s FSM_eInitFileSysPublisher (void)
 	return APP_ERROR_SUCCESS;
 }
 
-void FSM_ePublishEvent (uint32_t event, eEventType eventType, void *payload)
-{
-	sFileSysPubMsg.dEvent = event;
-	sFileSysPubMsg.eEvtType = eventType;
-	sFileSysPubMsg.vPayload = payload;
-	MESSAGE_PAYLOAD(FileSys) = (void*)&sFileSysPubMsg;
-	PUBLISH(CONTRACT(FileSys), 0);
-}
-
 /******************************************************************************
  * Function : FSM_vFileSysPublishThread(void const *argument)
  *//**
@@ -258,6 +247,8 @@ void FSM_vFileSysPublishThread (void const *argument)
 	osDelay(200);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
+
+
 	while (1)
 	{
 		/* Pool the device waiting for */
@@ -271,29 +262,40 @@ void FSM_vFileSysPublishThread (void const *argument)
 		if (tSignalBit & FFS_FLAG_STATUS)
 		{
 			if (dFlags & FFS_FLAG_STATUS)
-				FSM_ePublishEvent(EVENT_FFS_STATUS, EVENT_SET, NULL);
+			{
+				PUBLISH_MESSAGE(FileSys, EVENT_FFS_STATUS, EVENT_SET, NULL);
+			}
 			else
-				FSM_ePublishEvent(EVENT_FFS_STATUS, EVENT_CLEAR, NULL);
+			{
+				PUBLISH_MESSAGE(FileSys,EVENT_FFS_STATUS, EVENT_CLEAR, NULL);
+			}
 		}
 		if (tSignalBit & FFS_FLAG_CFG)
 		{
 			if (dFlags & FFS_FLAG_CFG)
-				FSM_ePublishEvent(EVENT_FFS_CFG, EVENT_SET, (void*)&FFS_sConfiguracao);
+			{
+				PUBLISH_MESSAGE(FileSys, EVENT_FFS_CFG, EVENT_SET, &FFS_sConfiguracao);
+			}
 			else
-				FSM_ePublishEvent(EVENT_FFS_CFG, EVENT_CLEAR, NULL);
+			{
+				PUBLISH_MESSAGE(FileSys, EVENT_FFS_CFG, EVENT_CLEAR, NULL);
+			}
 		}
 		if (tSignalBit & FFS_FLAG_STATIC_REG)
 		{
 			if (dFlags & FFS_FLAG_STATIC_REG)
-				FSM_ePublishEvent(EVENT_FFS_STATIC_REG, EVENT_SET, (void*)&FFS_sRegEstaticoCRC);
+			{
+				PUBLISH_MESSAGE(FileSys, EVENT_FFS_STATIC_REG, EVENT_SET, (void*)&FFS_sRegEstaticoCRC);
+			}
 			else
-				FSM_ePublishEvent(EVENT_FFS_STATIC_REG, EVENT_CLEAR, NULL);
+			{
+				PUBLISH_MESSAGE(FileSys, EVENT_FFS_STATIC_REG, EVENT_CLEAR, NULL);
+			}
 		}
 		if (tSignalBit & FFS_FLAG_SENSOR_CFG)
 		{
-				FSM_ePublishEvent(EVENT_FFS_SENSOR_CFG, EVENT_SET, (void*)&FFS_sCtrlListaSens.CAN_sCtrlListaSens);
+			PUBLISH_MESSAGE(FileSys, EVENT_FFS_SENSOR_CFG, EVENT_SET, (void*)&FFS_sCtrlListaSens.CAN_sCtrlListaSens);
 		}
-
 
 	}
 
@@ -363,7 +365,8 @@ eAPPError_s FSM_vInitDeviceLayer (void)
 void FFS_vIdentifyEvent (contract_s* contract)
 {
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
-	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);;
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
+	void *pvPubData = GET_PUBLISHED_PAYLOAD(contract);
 	eAPPError_s error;
 
 	switch (contract->eOrigin)
@@ -372,7 +375,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_CTL_UPDATE_CONFIG)
 			{
-				UOS_tsConfiguracao *psConfig = (UOS_tsConfiguracao*)(GET_PUBLISHED_PAYLOAD(contract));
+				UOS_tsConfiguracao *psConfig =pvPubData;
 				if ((ePubEvType == EVENT_SET) && ( psConfig != NULL))
 				{
 					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0)
@@ -389,15 +392,13 @@ void FFS_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_FFS_STATIC_REG)
 			{
-				if (GET_PUBLISHED_TYPE(contract) == EVENT_SET)
+				if (ePubEvType == EVENT_SET)
 				{
-					uint32_t a = osKernelSysTick();
-					AQR_tsRegEstaticoCRC *pRegEstaticData = GET_PUBLISHED_PAYLOAD(contract);
+					AQR_tsRegEstaticoCRC *pRegEstaticData = pvPubData;
 					if ((pRegEstaticData != NULL)
 						&& (memcmp(&FFS_sRegEstaticoCRC, pRegEstaticData, sizeof(FFS_sRegEstaticoCRC)) != 0))
 					{
 						FFS_sRegEstaticoCRC = *pRegEstaticData;
-
 						eAPPError_s error = FFS_vSaveStaticReg();
 						ASSERT(error == APP_ERROR_SUCCESS);
 					}
@@ -408,7 +409,7 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					CAN_tsCtrlListaSens *psCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+					CAN_tsCtrlListaSens *psCtrlListaSens = pvPubData;
 					if ((psCtrlListaSens != NULL) && ( memcmp(&FFS_sCtrlListaSens.CAN_sCtrlListaSens, psCtrlListaSens, sizeof(CAN_tsCtrlListaSens)) != 0))
 					{
 							FFS_sCtrlListaSens.CAN_sCtrlListaSens =  *psCtrlListaSens;
@@ -461,11 +462,10 @@ void FSM_vFileSysThread (void const *argument)
 		FSM_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-
 	SIGNATURE_HEADER(FileSysControl, THIS_MODULE, TOPIC_CONTROL, FileSysQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(FileSysControl), 0) == osOK);
 
-	SIGNATURE_HEADER(FileSysAcqureg, THIS_MODULE, TOPIC_ACQUIREG, FileSysQueue);
+	SIGNATURE_HEADER(FileSysAcqureg, THIS_MODULE, TOPIC_ACQUIREG_SAVE, FileSysQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(FileSysAcqureg), 0) == osOK);
 
 	osFlagGroupCreate(&FFS_sFlagSis);

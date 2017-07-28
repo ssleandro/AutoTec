@@ -93,6 +93,7 @@ const USBD_API_T * g_pUsbApi; //!< Main entry point for Methods exposed by the R
  *******************************************************************************/
 extern void USB0_IRQHandler (void);
 extern void USB1_IRQHandler (void);
+extern void *pvPortMalloc( size_t xWantedSize );
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
@@ -363,7 +364,7 @@ eMCUError_s USB_eInit (usb_config_s * pUSB)
 				/* now connect */
 				USBD_API->hw->Connect(g_hUsb, 1);
 
-				usb_private_config_s * psPrivate = malloc(sizeof(usb_private_config_s));
+				usb_private_config_s * psPrivate = pvPortMalloc(sizeof(usb_private_config_s));
 				psPrivate->bStarted = true;
 				pUSB->vpPrivateData = psPrivate;
 				if (pUSB->fpUSBCallBack)

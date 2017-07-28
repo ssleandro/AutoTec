@@ -183,7 +183,7 @@ typedef enum messageType_e
  */
 typedef struct message_s
 {
-	uint16_t hMessageKey;           //!< Message Key
+	uint32_t hMessageKey;           //!< Message Key
 	messageType_e eMessageType;     //!< Message Type
 	uint16_t hMessageSize;          //!< Size of message
 	void * pvMessage;               //!< Pointer to the message structure

@@ -197,7 +197,6 @@ extern uint8_t pool[];
 
 // Installation
 eInstallationStatus InstallationStatus[36];
-PubMessage sISOPubMessage;
 
 /******************************************************************************
  * Function Prototypes
@@ -319,15 +318,6 @@ eAPPError_s ISO_eInitIsobusPublisher (void)
 	return APP_ERROR_SUCCESS;
 }
 
-void ISO_vPublishMessage (uint32_t dEvent, eEventType eEvtType, void* vPayload)
-{
-	sISOPubMessage.dEvent = dEvent;
-	sISOPubMessage.eEvtType = eEvtType;
-	sISOPubMessage.vPayload = vPayload;
-	MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-	PUBLISH(CONTRACT(Isobus), 0);
-}
-
 /******************************************************************************
  * Function : ISO_vIsobusPublishThread(void const *argument)
  *//**
@@ -388,22 +378,21 @@ void ISO_vIsobusPublishThread (void const *argument)
 			{
 				case EVENT_ISO_UPDATE_CURRENT_DATA_MASK:
 				{
-					ISO_vPublishMessage(ePubEvt, EVENT_UPDATE, (void*)&eCurrentMask);
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_UPDATE, &eCurrentMask);
 					break;
 				}
-				case EVENT_ISO_INSTALLATION_REPEAT_TEST:
+				case EVENT_ISO_INSTALLATION_REPEAT_TEST: //No break
+				case EVENT_ISO_INSTALLATION_ERASE_INSTALLATION: //No break
+				case EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA: //No break
+				case EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL: //No break
+				case EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL:
 				{
-					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
-					break;
-				}
-				case EVENT_ISO_INSTALLATION_ERASE_INSTALLATION:
-				{
-					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, NULL);
 					break;
 				}
 				case EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION:
 				{
-					ISO_vPublishMessage(ePubEvt, EVENT_CLEAR, NULL);
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_CLEAR, NULL);
 					break;
 				}
 				case EVENT_ISO_CONFIG_UPDATE_DATA:
@@ -411,21 +400,7 @@ void ISO_vIsobusPublishThread (void const *argument)
 					ISO_vTreatUpdateDataEvent(ePubEvt);
 					break;
 				}
-				case EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA:
-				{
-					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
-					break;
-				}
-				case EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL:
-				{
-					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
-					break;
-				}
-				case EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL:
-				{
-					ISO_vPublishMessage(ePubEvt, EVENT_SET, NULL);
-					break;
-				}
+
 				default:
 					break;
 			}
@@ -497,35 +472,33 @@ eAPPError_s ISO_vInitDeviceLayer (uint32_t wSelectedInterface)
 
 void ISO_vIdentifyEvent (contract_s* contract)
 {
-	event_e eEvt;
+	event_e eEvt =  GET_PUBLISHED_EVENT(contract);
+	void * pvPayData = GET_PUBLISHED_PAYLOAD(contract);
 
 	switch (contract->eOrigin)
 	{
 		case MODULE_GUI:
 		{
-			eEvt = GET_PUBLISHED_EVENT(contract);
 			switch (eEvt)
 			{
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
-					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
-						sizeof(eSensorsIntallStatus)) != 0)
+					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus)) != 0)
 					{
-						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)GET_PUBLISHED_PAYLOAD(contract),
-							sizeof(eSensorsIntallStatus));
+						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus));
 						PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					}
 					break;
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
-					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
-					ISO_vUpdateTestModeData(eEvt, GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdateTestModeData(eEvt, pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -546,13 +519,13 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
-					ISO_vUpdateTestModeData(eEvt, GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdateTestModeData(eEvt, pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
-					ISO_vUpdateConfigData((sConfigurationData *)GET_PUBLISHED_PAYLOAD(contract));
+					ISO_vUpdateConfigData((sConfigurationData *)pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -1024,7 +997,7 @@ void ISO_vIsobusBootThread (void const *argument)
 				}
 				case OBJECT_POOL_LOADED:
 				{
-					START_TIMER(WSMaintenanceTimer, 450);
+					START_TIMER(WSMaintenanceTimer, 330);
 
 					// The boot process are completed, so terminate this thread
 					eCurrState = BOOT_COMPLETED;
@@ -1881,7 +1854,6 @@ void ISO_vUpdateInstallationDataMask (void)
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 }
 
-
 void ISO_vUpdatePlanterDataMask (void)
 {
 	osStatus status;
@@ -2267,11 +2239,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt)
 		case DATA_MASK_CONFIRM_CONFIG_CHANGES:
 		{
 			ISO_vUpdateSisConfigData(&GUIConfigurationData);
-			sISOPubMessage.dEvent = EVENT_ISO_UPDATE_CURRENT_CONFIGURATION;
-			sISOPubMessage.eEvtType = EVENT_CLEAR;
-			sISOPubMessage.vPayload = (void*)&GUIConfigurationData;
-			MESSAGE_PAYLOAD(Isobus) = (void*)&sISOPubMessage;
-			PUBLISH(CONTRACT(Isobus), 0);
+			PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
 			break;
 		}
 		default:

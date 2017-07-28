@@ -45,9 +45,9 @@
 #define FTL_START_EBLOCK                  (0)
 #define NUMBER_OF_DEVICES                 (1)
 #define NUMBER_OF_BYTES_PER_SECTOR        (512)
-#define NUMBER_OF_SECTORS_PER_PAGE        (4) /* For the option FTL_DEVICE_NAND for FTL_DEVICE_TYPE, the only supported value is 4*/
+#define NUMBER_OF_SECTORS_PER_PAGE        (1) /* For the option FTL_DEVICE_NAND for FTL_DEVICE_TYPE, the only supported value is 4*/
 #define SECTOR_SIZE                       (NUMBER_OF_BYTES_PER_SECTOR)
-#define EBLOCK_SIZE                       (0x10000)  /*32K, 16 pages @ 2 K per page*/
+#define EBLOCK_SIZE                       (0x10000)  /*64K, 16 pages @ 4 K per page*/
 
 #define MANAGED_REGIONS  FTL_FALSE
 #define NUM_MANAGED_REGIONS (2)

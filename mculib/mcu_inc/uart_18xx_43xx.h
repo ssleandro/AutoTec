@@ -155,6 +155,7 @@ typedef struct
 #define UART_FCR_BITMASK        (0xCF)		/*!< UART FIFO control bit mask */
 
 #define UART_TX_FIFO_SIZE       (16)
+#define UART_RX_FIFO_SIZE       (16)
 
 /* FIFO trigger level bit definitions */
 #define UART_FCR_TRG_LEV0       (0)			/*!< UART FIFO trigger level 0: 1 character */

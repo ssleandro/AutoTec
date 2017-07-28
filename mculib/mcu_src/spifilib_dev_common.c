@@ -31,6 +31,8 @@
 
 #include "spifilib_api.h"
 #include "private/spifilib_chiphw.h"
+#include "wdt.h"
+#include "board.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -862,6 +864,7 @@ SPIFI_ERR_T spifiProgram (const SPIFI_HANDLE_T *pHandle, uint32_t addr, const ui
 	/* Program using up to page size */
 	while ((bytes > 0) && (err == SPIFI_ERR_NONE))
 	{
+		Chip_WWDT_Feed(LPC_WWDT);
 		sendBytes = bytes;
 		if (sendBytes > pHandle->pInfoData->pageSize)
 		{
@@ -886,6 +889,7 @@ SPIFI_ERR_T spifiRead (const SPIFI_HANDLE_T *pHandle, uint32_t addr, uint32_t *r
 	/* Read using up to the maximum read size */
 	while ((bytes > 0) && (err == SPIFI_ERR_NONE))
 	{
+		Chip_WWDT_Feed(LPC_WWDT);
 		readBytes = bytes;
 		if (readBytes > pHandle->pInfoData->maxReadSize)
 		{
@@ -914,6 +918,7 @@ SPIFI_ERR_T spifiErase (const SPIFI_HANDLE_T *pHandle, uint32_t firstBlock, uint
 	/* Only perform erase if numBlocks is != 0 */
 	for (; (numBlocks); ++firstBlock, --numBlocks)
 	{
+		Chip_WWDT_Feed(LPC_WWDT);
 		err = pHandle->pFamFx->eraseBlock(pHandle, firstBlock);
 		if (err != SPIFI_ERR_NONE)
 		{

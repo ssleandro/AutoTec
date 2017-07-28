@@ -396,6 +396,7 @@ static eAPPError_s eError;                          //!< Error variable
 DECLARE_QUEUE(GPSQueue, QUEUE_SIZEOFGPS);    //!< Declaration of Interface Queue
 CREATE_SIGNATURE(GPS);//!< Signature Declarations
 CREATE_CONTRACT(GPS);//!< Create contract for buzzer msg publication
+CREATE_CONTRACT(GPSMetro);//!< Create contract for buzzer msg publication
 
 /**
  * Module Threads
@@ -420,6 +421,7 @@ CREATE_LOCAL_QUEUE(GPSPublishQ, uint8_t*, 10);
 peripheral_descriptor_p pGPSHandle;
 
 gpio_config_s sTimePulseInt;
+gpio_config_s sDebugIO;
 
 /*******************************************************************************
  Variáveis públicas deste módulo:
@@ -487,7 +489,7 @@ extern UOS_tsConfiguracao UOS_sConfiguracao;
 extern uint32_t CAN_dLeituraSensor;
 extern uint8_t CAN_bSensorSimulador;
 
-GPS_tsDadosGPS GPS_sPublishDadosGPS;
+GPS_sPubDadosGPS GPS_sPublishGPS;
 
 /******************************************************************************
  * Function Prototypes
@@ -611,10 +613,12 @@ eAPPError_s GPS_eInitGPSPublisher (void)
 	MESSAGE_HEADER(GPS, GPS_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
 	CONTRACT_HEADER(GPS, 1, THIS_MODULE, TOPIC_GPS);
 
+
+	MESSAGE_HEADER(GPSMetro, GPS_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
+	CONTRACT_HEADER(GPSMetro, 1, THIS_MODULE, TOPIC_GPS_METRO);
+
 	return APP_ERROR_SUCCESS;
 }
-
-PubMessage sGPSPubMsg;
 
 /******************************************************************************
  * Function : GPS_vGPSPublishThread(void const *argument)
@@ -670,8 +674,8 @@ void GPS_vGPSPublishThread (void const *argument)
 		status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
 		ASSERT(status == osOK);
 
-		memcpy(&GPS_sPublishDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
-		sGPSPubMsg.vPayload = (void*)&GPS_sPublishDadosGPS;
+		memcpy(&GPS_sPublishGPS.sDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
+		GPS_sPublishGPS.bDistanciaPercorrida = GPS_bDistanciaPercorrida;
 
 		status = RELEASE_MUTEX(GPS_MTX_sEntradas);
 		ASSERT(status == osOK);
@@ -680,25 +684,19 @@ void GPS_vGPSPublishThread (void const *argument)
 		if ((dValorGPS & GPS_FLAG_METRO) > 0)
 		{
 			// Este evento interessa ao modulo SENSOR, ACQUIREG e RECORDS
-			sGPSPubMsg.dEvent = GPS_FLAG_METRO;
-			MESSAGE_PAYLOAD(GPS) = (void*)&sGPSPubMsg;
-			PUBLISH(CONTRACT(GPS), 0);
+			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_METRO, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_SEGUNDO) > 0)
 		{
 			// Este evento interessa ao modulo ACQUIREG, mais precisamente a thread AQR_vAcquiregTimeThread
-			sGPSPubMsg.dEvent = GPS_FLAG_SEGUNDO;
-			MESSAGE_PAYLOAD(GPS) = (void*)&sGPSPubMsg;
-			PUBLISH(CONTRACT(GPS), 0);
+			PUBLISH_MESSAGE(GPS, GPS_FLAG_SEGUNDO, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_TIMEOUT_MTR) > 0)
 		{
 			// Este evento interessa ao modulo ACQUIREG, AQR_vAcquiregManagementThread
-			sGPSPubMsg.dEvent = GPS_FLAG_TIMEOUT_MTR;
-			MESSAGE_PAYLOAD(GPS) = (void*)&sGPSPubMsg;
-			PUBLISH(CONTRACT(GPS), 0);
+			PUBLISH_MESSAGE(GPS, GPS_FLAG_TIMEOUT_MTR, EVENT_SET, &GPS_sPublishGPS);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -707,8 +705,6 @@ void GPS_vGPSPublishThread (void const *argument)
 void GPS_vGPSPublishThread(void const *argument)
 {}
 #endif
-
-gpio_config_s sTimeTest;
 
 /*******************************************************************************
 
@@ -863,18 +859,9 @@ void GPS_vConfigExtInterrupt (void)
 	sTimePulseInt.bMPort = EXTINT_TIMEPULSE_PORT;
 	sTimePulseInt.bMPin = EXTINT_TIMEPULSE_PIN;
 
-	sTimeTest.vpPrivateData = NULL;
-	sTimeTest.bDefaultOutputHigh = false;
-	sTimeTest.eDirection = GPIO_OUTPUT;
-	sTimeTest.ePull = GPIO_PULLDOWN;
-	sTimeTest.bMPort = 5;
-	sTimeTest.bMPin = 4;
-
-	// Initialize enable PS9 structure
-	GPIO_eInit(&sTimeTest);
-
 	// Initialize time pulse external interrupt
 	GPIO_eInit(&sTimePulseInt);
+
 }
 
 /*******************************************************************************
@@ -925,7 +912,6 @@ void GPS_vGPSTimePulseThread (void const *argument)
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
 				}
 			}
-			//GPIO_vToggle(&sTimeTest);
 			//Acumula a distância percorrida.
 			GPS_vAcumulaDistancia();
 		}

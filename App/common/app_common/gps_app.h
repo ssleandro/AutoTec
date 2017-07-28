@@ -185,6 +185,12 @@ typedef struct
 
 } GPS_tsDadosGPS; // estrutura contendo os dados do gps.
 
+typedef struct
+{
+	GPS_tsDadosGPS sDadosGPS;
+	uint8_t  bDistanciaPercorrida;
+}GPS_sPubDadosGPS;
+
 /******************************************************************************
  * Variables
  *******************************************************************************/
