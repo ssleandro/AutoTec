@@ -259,8 +259,9 @@ uint32_t Chip_UART_SetBaud (LPC_USART_T *pUART, uint32_t baudrate)
 /* UART receive-only interrupt handler for ring buffers */
 void Chip_UART_RXIntHandlerRB (LPC_USART_T *pUART, RINGBUFF_T *pRB)
 {
+	uint8_t bRxCount = 0;
 	/* New data will be ignored if data not popped in time */
-	while (Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR)
+	while ((Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR) && (bRxCount++ < UART_RX_FIFO_SIZE))
 	{
 		uint8_t ch = Chip_UART_ReadByte(pUART);
 		RingBuffer_Insert(pRB, &ch);
@@ -450,4 +451,3 @@ void Chip_UART_ABCmd (LPC_USART_T *pUART, uint32_t mode, bool autorestart, Funct
 		pUART->ACR = 0;
 	}
 }
-
