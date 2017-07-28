@@ -166,9 +166,30 @@
 /*!< Receive from Queue */
 #define RECEIVE_LOCAL_QUEUE(fromQueue, buffer, time) (osMessageGetValue(fromQueue, buffer, time))
 
+/*
 #define GET_PUBLISHED_EVENT(contract)   ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent
 #define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
 #define GET_PUBLISHED_PAYLOAD(contract) ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->vPayload
+*/
+
+#define GET_PUBLISHED_EVENT(contract)  	((smsg_key)(GET_MESSAGE(contract)->hMessageKey)).wEvent
+#define GET_PUBLISHED_TYPE(contract)  	(eEventType)((smsg_key)GET_MESSAGE(contract)->hMessageKey).wType
+#define GET_PUBLISHED_PAYLOAD(contract) GET_MESSAGE(contract)->pvMessage
+
+#define PUBLISH_MESSAGE(contract, event, type, payload) \
+{ \
+  ((smsg_key*)(&MESSAGE(contract).hMessageKey))->wEvent = event; \
+  ((smsg_key*)(&MESSAGE(contract).hMessageKey))->wType = type; \
+  MESSAGE(contract).pvMessage = (void*)payload; \
+  PUBLISH(CONTRACT(contract), 0); \
+}
+
+#define MESSAGE_HEADER(name, Size, Key, Type) \
+{ \
+  MESSAGE(name).hMessageSize = Size; \
+  MESSAGE(name).hMessageKey = Key; \
+  MESSAGE(name).eMessageType = Type; \
+}
 
 
 // Converter Macros
@@ -240,9 +261,12 @@ typedef enum topic_e
 	TOPIC_BUZZER,        //!< TOPIC_BUZZER
 	TOPIC_FILESYS,       //!< TOPIC_FILESYS
 	TOPIC_GPS,           //!< TOPIC_GPS
+	TOPIC_GPS_METRO,           //!< TOPIC_GPS
 	TOPIC_ACQUIREG,      //!< TOPIC_ACQUIREG
+	TOPIC_ACQUIREG_SAVE,      //!< TOPIC_ACQUIREG
 	TOPIC_CONTROL,       //!< TOPIC_CONTROL
 	TOPIC_GUI,           //!< TOPIC_GUI
+	TOPIC_GUI_AQR,           //!< TOPIC_GUI
 	TOPIC_RECORDS,       //!< TOPIC_RECORDS
 	TOPIC_SIMULATOR,     //!< TOPIC_SIMULATOR
 	TOPIC_LAST,          //!< TOPIC_LAST
@@ -291,6 +315,7 @@ typedef enum
 
 typedef enum event_e
 {
+	EVENT_NONE,
 	EVENT_FFS_STATUS,
 	EVENT_FFS_CFG,
 	EVENT_FFS_SENSOR_CFG,
@@ -324,7 +349,8 @@ typedef enum event_e
 	EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL,
 	EVENT_ISO_CONFIG_UPDATE_DATA,
 	EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA,
-	EVENT_CTL_UPDATE_CONFIG,        					//!< EVENT FILE CFG STATUS CHANGED
+	EVENT_CTL_UPDATE_CONFIG,
+	EVENT_SEN_PUBLISH_FLAG,
 } event_e;
 
 typedef struct
@@ -689,6 +715,17 @@ typedef struct
 	uint32_t wCRC16;         //CRC desta estrutura.
 
 } __attribute__((aligned(1), packed)) AQR_tsRegEstaticoCRC;
+
+
+typedef union
+{
+	uint32_t wMsgKey;
+	struct
+	{
+		uint32_t wEvent:29;
+		uint32_t wType:3;
+	};
+}smsg_key;
 
 #define LCD_bBRILHO_MAX        99
 

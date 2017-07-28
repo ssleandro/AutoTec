@@ -69,6 +69,7 @@ extern GPS_tsDadosGPS GPS_sDadosGPS;
 
 extern osMutexId GPS_MTX_sEntradas;
 extern uint8_t GPS_bDistanciaPercorrida;
+uint8_t AQR_bDistanciaPercorrida;
 EXTERN_TIMER(GPS_bTimerMtr);
 
 extern void GPS_dDataHoraLocal (uint8_t*);
@@ -143,8 +144,6 @@ uint8_t bLimpaFalhas = false;
 
 AQR_teArremate eMemArremate;
 
-PubMessage sArqRegPubMsg;
-PubMessage sArqRegPubStaticReg;
 CAN_tsCtrlListaSens AQR_sPubCtrlLista;
 
 tsAcumulados AQR_sPubAcumulado;
@@ -159,6 +158,7 @@ DECLARE_QUEUE(AcquiregQueue, QUEUE_SIZEOFBUZZER);   //!< Declaration of Interfac
 CREATE_SIGNATURE(AcquiregControl);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregSensor);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregGPS);//!< Signature Declarations
+CREATE_SIGNATURE(AcquiregGPSMetro);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregFileSys);
 CREATE_SIGNATURE(AcquiregGUI);
 CREATE_CONTRACT(Acquireg);   //!< Create contract for buzzer msg publication
@@ -1230,64 +1230,35 @@ void AQR_vAcquiregPublishThread (void const *argument)
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
 		{
-			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_FINISH_INSTALLATION;
-			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = NULL;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_FINISH_INSTALLATION, EVENT_SET, NULL);
 		}
 		if ((dFlags & AQR_APL_FLAG_SAVE_STATIC_REG) > 0)
 		{
-			sArqRegPubStaticReg.dEvent = EVENT_FFS_STATIC_REG;
-			sArqRegPubStaticReg.eEvtType = EVENT_SET;
-			sArqRegPubStaticReg.vPayload = (void*)&sRegEstaticoCRC;
-			MESSAGE_PAYLOAD(AcquiregSave) = (void*)&sArqRegPubStaticReg;
-			PUBLISH(CONTRACT(AcquiregSave), 0);
+			PUBLISH_MESSAGE(AcquiregSave, EVENT_FFS_STATIC_REG, EVENT_SET, &sRegEstaticoCRC);
 		}
 		if ((dFlags & AQR_APL_FLAG_UPDATE_INSTALLATION) > 0)
 		{
-			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION;
-			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)AQR_sDadosCAN.asLista;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION, EVENT_SET, AQR_sDadosCAN.asLista);
 		}
 		if ((dFlags & AQR_APL_FLAG_CONFIRM_INSTALLATION) > 0)
 		{
 			AQR_sPubStatus = AQR_sStatus;
-			sArqRegPubMsg.dEvent = EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION;
-			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)&AQR_sPubStatus;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION, EVENT_SET, &AQR_sPubStatus);
 		}
 		if ((dFlags & AQR_APL_FLAG_SAVE_LIST) > 0)
 		{
 			AQR_GetCANsCrtlLista(&AQR_sPubCtrlLista);
-
-			sArqRegPubMsg.dEvent = EVENT_FFS_SENSOR_CFG;
-			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = (void*)&AQR_sPubCtrlLista  ;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			PUBLISH_MESSAGE(AcquiregSave, EVENT_FFS_SENSOR_CFG, EVENT_SET, &AQR_sPubCtrlLista);
 		}
 		if ((dFlags & AQR_APL_FLAG_ERASE_LIST) > 0)
 		{
-			sArqRegPubMsg.dEvent = EVENT_FFS_SENSOR_CFG;
-			sArqRegPubMsg.eEvtType = EVENT_CLEAR;
-			sArqRegPubMsg.vPayload = NULL;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			PUBLISH_MESSAGE(AcquiregSave, EVENT_FFS_SENSOR_CFG, EVENT_CLEAR, NULL);
 		}
 		if ((dFlags & AQR_APL_FLAG_SEND_TOTAL) > 0)
 		{
 			AQR_sPubPlantData.AQR_sAcumulado = &AQR_sPubAcumulado;
 			AQR_sPubPlantData.AQR_sStatus = &AQR_sPubStatus;
-			sArqRegPubMsg.dEvent = EVENT_AQR_UPDATE_PLANT_DATA;
-			sArqRegPubMsg.eEvtType = EVENT_SET;
-			sArqRegPubMsg.vPayload = &AQR_sPubPlantData;
-			MESSAGE_PAYLOAD(Acquireg) = (void*)&sArqRegPubMsg;
-			PUBLISH(CONTRACT(Acquireg), 0);
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_UPDATE_PLANT_DATA, EVENT_SET, &AQR_sPubPlantData);
 		}
 
 
@@ -1305,6 +1276,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 	osStatus status;
 	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
 	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
+	void *pvPubData = GET_PUBLISHED_PAYLOAD(contract);
 
 	switch (contract->eOrigin)
 	{
@@ -1335,21 +1307,27 @@ void AQR_vIdentifyEvent (contract_s* contract)
 		case MODULE_SENSOR:
 		{
 			// Treat an event receive from MODULE_SENSOR
-			osStatus stat = osFlagSet(xSEN_sFlagApl, GET_PUBLISHED_EVENT(contract));
+			osFlags sPubFlag = *((osFlags*)pvPubData);
+			osStatus stat = osFlagSet(xSEN_sFlagApl, sPubFlag);
 			break;
 		}
 		case MODULE_GPS:
 		{
-			GPS_tsDadosGPS *psGPSDados = GET_PUBLISHED_PAYLOAD(contract);
+			GPS_sPubDadosGPS *psGPSDados = pvPubData;
 
 			// Treat an event receive from MODULE_GPS
-			osFlagSet(xGPS_sFlagGPS, GET_PUBLISHED_EVENT(contract));
+			osFlagSet(xGPS_sFlagGPS, (osFlags)ePubEvt);
 
 			if (psGPSDados != NULL)
 			{
 				status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
 				ASSERT(status == osOK);
-				AQR_sDadosGPS = *psGPSDados;
+				AQR_sDadosGPS = psGPSDados->sDadosGPS;
+				if (ePubEvt == GPS_FLAG_METRO)
+				{
+					AQR_bDistanciaPercorrida = psGPSDados->bDistanciaPercorrida;
+				}
+
 				status = RELEASE_MUTEX(AQR_MTX_sEntradas);
 				ASSERT(status == osOK);
 			}
@@ -1362,7 +1340,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			{
 				if (ePubEvType == EVENT_SET)
 				{
-					AQR_tsRegEstaticoCRC *pAQRRegData = GET_PUBLISHED_PAYLOAD(contract);
+					AQR_tsRegEstaticoCRC *pAQRRegData = pvPubData;
 					if (pAQRRegData != NULL)
 					{
 						sRegEstaticoCRC = *pAQRRegData;
@@ -1376,7 +1354,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			}
 			if (ePubEvt == EVENT_FFS_SENSOR_CFG)
 			{
-				CAN_tsCtrlListaSens *pCtrlListaSens = GET_PUBLISHED_PAYLOAD(contract);
+				CAN_tsCtrlListaSens *pCtrlListaSens = pvPubData;
 				if (pCtrlListaSens != NULL)
 				{
 					AQR_SetCANsCrtlLista(pCtrlListaSens);
@@ -1470,10 +1448,13 @@ void AQR_vAcquiregThread (void const *argument)
 	SIGNATURE_HEADER(AcquiregGPS, THIS_MODULE, TOPIC_GPS, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGPS), 0) == osOK);
 
+	SIGNATURE_HEADER(AcquiregGPSMetro, THIS_MODULE, TOPIC_GPS_METRO, AcquiregQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGPSMetro), 0) == osOK);
+
 	SIGNATURE_HEADER(AcquiregFileSys, THIS_MODULE, TOPIC_FILESYS, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregFileSys), 0) == osOK);
 
-	SIGNATURE_HEADER(AcquiregGUI, THIS_MODULE, TOPIC_GUI, AcquiregQueue);
+	SIGNATURE_HEADER(AcquiregGUI, THIS_MODULE, TOPIC_GUI_AQR, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGUI), 0) == osOK);
 
 	// TODO: Wait for system is ready to work event

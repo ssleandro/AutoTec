@@ -285,8 +285,6 @@ eAPPError_s SEN_eInitSensorPublisher (void)
 	return APP_ERROR_SUCCESS;
 }
 
-PubMessage sSensorPubMsg;
-
 /******************************************************************************
  * Function : SEN_vSensorPublishThread(void const *argument)
  *//**
@@ -317,6 +315,7 @@ void SEN_vSensorPublishThread (void const *argument)
 {
 	osStatus status;
 	uint32_t dValorFlag;
+	static uint32_t dTxFlag = 0;
 
 	INITIALIZE_LOCAL_QUEUE(SensorPublishQ);   //!< Initialise message queue to publish thread
 
@@ -350,61 +349,45 @@ void SEN_vSensorPublishThread (void const *argument)
 
 		WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
 
-		sSensorPubMsg.vPayload = NULL;
-
 		if ((dValorFlag & CAN_APL_FLAG_TODOS_SENS_RESP_PNP) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_TODOS_SENS_RESP_PNP;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_TODOS_SENS_RESP_PNP;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_DET_NOVO_SENSOR) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_DET_NOVO_SENSOR;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_DET_NOVO_SENSOR;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_PARAMETROS_TODOS_SENS_RESP;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_VERSAO_SW_TODOS_SENS_RESP;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_SENSOR_NAO_RESPONDEU) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_SENSOR_NAO_RESPONDEU;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_SENSOR_NAO_RESPONDEU;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_DET_SENSOR_RECONECTADO) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_DET_SENSOR_RECONECTADO;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_DET_SENSOR_RECONECTADO;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO;
 		}
 		if ((dValorFlag & CAN_APL_FLAG_CFG_SENSOR_RESPONDEU) > 0)
 		{
-			sSensorPubMsg.dEvent = CAN_APL_FLAG_CFG_SENSOR_RESPONDEU;
-			MESSAGE_PAYLOAD(Sensor) = (void*)&sSensorPubMsg;
-			PUBLISH(CONTRACT(Sensor), 0);
+			dTxFlag = CAN_APL_FLAG_CFG_SENSOR_RESPONDEU;
+		}
+		if (dTxFlag != 0)
+		{
+			PUBLISH_MESSAGE(Sensor, EVENT_SEN_PUBLISH_FLAG, EVENT_SET, &dTxFlag);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -484,7 +467,8 @@ eAPPError_s SEN_vInitDeviceLayer (uint32_t wSelectedInterface)
 void SEN_vIdentifyEvent (contract_s* contract)
 {
 	osStatus status;
-
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
 	switch (contract->eOrigin)
 	{
 		case MODULE_CONTROL:
@@ -493,7 +477,7 @@ void SEN_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_ACQUIREG:
 		{
-			if (GET_PUBLISHED_EVENT(contract) == EVENT_AQR_INSTALLATION_FINISH_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_INSTALLATION_FINISH_INSTALLATION)
 			{
 				// Send final handshake messages to sensors...
 
@@ -541,11 +525,16 @@ void SEN_vIdentifyEvent (contract_s* contract)
 				SEN_vSensorsParameters(CAN_APL_CMD_PARAMETROS_EXTENDED, CAN_APL_LINHA_TODAS,
 				CAN_APL_SENSOR_SEMENTE, abParametrosExt, CAN_MSG_DLC_8);
 			}
+			if (ePubEvt == EVENT_FFS_SENSOR_CFG &&  ePubEvType == EVENT_CLEAR)
+			{
+				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
+			}
+
 			break;
 		}
 		case MODULE_GPS:
 		{
-			if ((GET_PUBLISHED_EVENT(contract) & GPS_FLAG_METRO) > 0)
+			if ((ePubEvt & GPS_FLAG_METRO) > 0)
 			{
 				// TODO: Se nao esta em monitor de area nao pede a leitura dos sensores e nao esta em modo instalacao
 				SEN_vReadDataFromSensors();
@@ -648,9 +637,8 @@ void SEN_vSensorThread (void const *argument)
 	SIGNATURE_HEADER(SensorAcquireg, THIS_MODULE, TOPIC_ACQUIREG, SensorQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(SensorAcquireg), 0) == osOK);
 
-	SIGNATURE_HEADER(SensorGPS, THIS_MODULE, TOPIC_GPS, SensorQueue);
+	SIGNATURE_HEADER(SensorGPS, THIS_MODULE, TOPIC_GPS_METRO, SensorQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(SensorGPS), 0) == osOK);
-
 
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);

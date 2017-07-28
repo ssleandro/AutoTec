@@ -112,8 +112,6 @@ uint8_t UOS_bSilenciaAlarme;
 /****************************************************************************
  Variáveis locais
  *****************************************************************************/
-PubMessage sControlPubMsg;
-
 const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 	{
 
@@ -252,6 +250,7 @@ void CTL_vControlPublishThread (void const *argument)
 	osFlags flags;
 	osFlags UOSflags;
 	uint32_t* dPayload;
+	eEventType eEvType;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Control Publish Thread Created");
@@ -273,15 +272,12 @@ void CTL_vControlPublishThread (void const *argument)
 
 		if ((flags & CTL_UPDATE_CONFIG_DATA) > 0)
 		{
-			sControlPubMsg.dEvent = EVENT_CTL_UPDATE_CONFIG;
-
 			if (UOSflags & UOS_SIS_FLAG_CFG_OK)
-				sControlPubMsg.eEvtType = EVENT_SET;
+				eEvType = EVENT_SET;
 			else
-				sControlPubMsg.eEvtType = EVENT_CLEAR;
-			sControlPubMsg.vPayload = (void*)&UOS_sConfiguracao;
-			MESSAGE_PAYLOAD(Control) = (void*)&sControlPubMsg;
-			PUBLISH(CONTRACT(Control), 0);
+				eEvType = EVENT_CLEAR;
+			PUBLISH_MESSAGE(Control, EVENT_CTL_UPDATE_CONFIG, eEvType, &UOS_sConfiguracao);
+
 		}
 	}
 	osThreadTerminate(NULL);
@@ -391,11 +387,11 @@ void CTL_vControlThread (void const *argument)
 		CTL_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-	SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(ControlAcquireg), 0) == osOK);
+	//SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
+	//ASSERT(SUBSCRIBE(SIGNATURE(ControlAcquireg), 0) == osOK);
 
-	SIGNATURE_HEADER(ControlSensor, THIS_MODULE, TOPIC_SENSOR, ControlQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(ControlSensor), 0) == osOK);
+	//SIGNATURE_HEADER(ControlSensor, THIS_MODULE, TOPIC_GPS, ControlQueue);
+	//ASSERT(SUBSCRIBE(SIGNATURE(ControlSensor), 0) == osOK);
 
 	SIGNATURE_HEADER(ControlFileSys, THIS_MODULE, TOPIC_FILESYS, ControlQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(ControlFileSys), 0) == osOK);
