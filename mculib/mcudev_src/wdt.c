@@ -127,7 +127,7 @@ eMCUError_s WDT_eInit (wdt_config_s * pWDT)
 		}
 		else
 		{
-			//Chip_WWDT_SetOption(LPC_WWDT, WWDT_WDMOD_WDRESET); //activate reset mode
+			Chip_WWDT_SetOption(LPC_WWDT, WWDT_WDMOD_WDRESET); //activate reset mode
 		}
 		bWDTEnabled = true;
 	}

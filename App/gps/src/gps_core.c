@@ -861,6 +861,7 @@ void GPS_vConfigExtInterrupt (void)
 
 	// Initialize time pulse external interrupt
 	GPIO_eInit(&sTimePulseInt);
+
 }
 
 /*******************************************************************************
@@ -911,7 +912,6 @@ void GPS_vGPSTimePulseThread (void const *argument)
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
 				}
 			}
-			GPIO_vToggle(&sTimeTest);
 			//Acumula a distância percorrida.
 			GPS_vAcumulaDistancia();
 		}

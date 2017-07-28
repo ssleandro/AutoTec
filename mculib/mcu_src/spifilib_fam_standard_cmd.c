@@ -33,6 +33,7 @@
 #include "spifilib_dev.h"
 #include "private/spifilib_chiphw.h"
 
+
 /* need access to the device register Fx without importing the whole API */
 extern SPIFI_ERR_T spifiDevRegister (SPIFI_FAM_NODE_T *pFamily, SPIFI_DEV_NODE_T *pDevData);
 
@@ -326,15 +327,23 @@ static void spifiPrvSetWREN (LPC_SPIFI_CHIPHW_T *pSpifiCtrlAddr)
 			SPIFI_CMD_FIELDFORM(SPIFI_FIELDFORM_ALL_SERIAL) |
 			SPIFI_CMD_FRAMEFORM(SPIFI_FRAMEFORM_OP)));
 
+
 	spifi_HW_WaitCMD(pSpifiCtrlAddr);
 }
 
 /* Wait for device to complete operation (I.e not busy) */
 static void spifiPrvWaitUnBusy (const SPIFI_HANDLE_T *pHandle)
 {
+	uint32_t wIrq = __get_PRIMASK();
 	/* Device wait for device to be ready */
 	while ((pHandle->pFamFx->devGetStatus(pHandle) & STATUS_WIP) != 0)
 	{
+		if (osKernelRunning()) {
+			__enable_irq();
+			osDelay(1);
+			if (wIrq != 0) // Check if it was disabled before enable
+				__disable_irq();
+		}
 	}
 }
 
@@ -1117,8 +1126,16 @@ static SPIFI_ERR_T spifiFamFxEraseBlock (const SPIFI_HANDLE_T *pHandle, uint32_t
 			/* Only clear status if necessary */
 			pHandle->pFamFx->devClearStatus(pHandle);
 
-			spifiPrvSetWREN(pSpifiCtrlAddr);
+			//spifiPrvSetWREN(pSpifiCtrlAddr);
 
+			spifi_HW_SetCmd(pSpifiCtrlAddr,
+				(SPIFI_CMD_OPCODE(CMD_06_WREN) |
+					SPIFI_CMD_FIELDFORM(SPIFI_FIELDFORM_ALL_SERIAL) |
+					SPIFI_CMD_FRAMEFORM(SPIFI_FRAMEFORM_OP)));
+
+
+			spifiFramWaitCMD(pSpifiCtrlAddr);
+//---
 			spifi_HW_SetAddr(pSpifiCtrlAddr, addr);
 			if (pHandle->pInfoData->pDeviceData->caps & SPIFI_CAP_4BYTE_ADDR)
 			{
@@ -1134,6 +1151,8 @@ static SPIFI_ERR_T spifiFamFxEraseBlock (const SPIFI_HANDLE_T *pHandle, uint32_t
 						SPIFI_CMD_FIELDFORM(SPIFI_FIELDFORM_ALL_SERIAL) |
 						SPIFI_CMD_FRAMEFORM(SPIFI_FRAMEFORM_OP_3ADDRESS)));
 			}
+
+			spifiFramWaitCMD(pSpifiCtrlAddr);
 			spifi_HW_WaitCMD(pSpifiCtrlAddr);
 
 			/* If blocking is disabled, exit now */
