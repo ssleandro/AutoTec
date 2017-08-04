@@ -335,12 +335,14 @@ static void spifiPrvSetWREN (LPC_SPIFI_CHIPHW_T *pSpifiCtrlAddr)
 static void spifiPrvWaitUnBusy (const SPIFI_HANDLE_T *pHandle)
 {
 	uint32_t wIrq = __get_PRIMASK();
+	uint32_t wCount = 0;
 	/* Device wait for device to be ready */
 	while ((pHandle->pFamFx->devGetStatus(pHandle) & STATUS_WIP) != 0)
 	{
 		if (osKernelRunning()) {
 			__enable_irq();
-			osDelay(1);
+			if (wCount++ == 5000)
+				osDelay(2);
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
 		}
@@ -1153,7 +1155,6 @@ static SPIFI_ERR_T spifiFamFxEraseBlock (const SPIFI_HANDLE_T *pHandle, uint32_t
 			}
 
 			spifiFramWaitCMD(pSpifiCtrlAddr);
-			spifi_HW_WaitCMD(pSpifiCtrlAddr);
 
 			/* If blocking is disabled, exit now */
 			if ((pHandle->pInfoData->opts & SPIFI_OPT_NOBLOCK) == 0)
