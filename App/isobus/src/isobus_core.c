@@ -2037,7 +2037,7 @@ void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
 			sTestUpdate = *((sTestModeDataMaskData*)vPayload);
 			for (int i = 0; i < 36; i++)
 			{
-				sTestDataMask.psSeedsCount[i].dValue = sTestUpdate.sAccumulated.sTotalReg.adSementes[i];
+				sTestDataMask.psSeedsCount[i].dValue = (sTestUpdate.sAccumulated.sTotalReg.adSementes[i] % 1000);
 			}
 			break;
 		}

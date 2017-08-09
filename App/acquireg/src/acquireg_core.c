@@ -39,7 +39,6 @@
 #include "acquireg_ThreadControl.h"
 #include <stdlib.h>
 
-extern gpio_config_s sTimeTest;
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
@@ -884,7 +883,6 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 	uint32_t dSementeDesconectadoExt = 0;
 	uint32_t dAux, dAuxExt;
 
-	// TODO: wait mutex to access AQR_sDadosCAN
 	for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 	{
 		//Conta sensores em um determinado estado
@@ -901,10 +899,8 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 					bLimpaAux = true;
 				}
 				//Se o sensor desconectado é sensor adicional
-				//          if( ( bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO )&&
-				//              ( CAN_bSensorSimulador != false               )  )
-				// TODO: commented lines
-				if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO))
+				if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO)
+						&& (CAN_bSensorSimulador != false))
 				{
 					//Encontra o número do sensor
 					bLinha = (bConta - CAN_bNUM_SENSORES_SEMENTE_E_ADUBO);
@@ -1063,10 +1059,8 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 		if (psAQR_Sensor[bConta].eEstado != Novo)
 		{
 			//Conta qtde de Sensores Adicionais
-			//        if( ( bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO )&&
-			//            ( CAN_bSensorSimulador != false               )  )
-			// TODO: commented lines
-			if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO))
+			if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO)
+					&& (CAN_bSensorSimulador != false))
 			{
 				bAdicionalInstalados++;
 			}
@@ -1089,7 +1083,6 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 			}
 		}
 	}
-	// TODO: release mutex to access AQR_sDadosCAN
 
 	//Atualiza a quantidade de sensores reprovados no auto-teste
 	AQR_sStatus.bReprovados = bContaTeste;
