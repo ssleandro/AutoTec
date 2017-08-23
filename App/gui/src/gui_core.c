@@ -428,6 +428,7 @@ void GUI_SetGuiConfiguration(void)
 	GUIConfigurationData.eAlterRows =
 			(sSISConfiguration.sMonitor.eIntercala == Sem_Intercalacao) ? ALTERNATE_ROWS_DISABLED : ALTERNATE_ROWS_ENABLED;
 
+	GUIConfigurationData.eCentralRowSide = (eCentralRowSide)sSISConfiguration.sMonitor.bDivLinhas;
 	GUIConfigurationData.eMonitorArea = (eAreaMonitor)sSISConfiguration.sMonitor.bMonitorArea;
 	GUIConfigurationData.eLanguage = sSISConfiguration.sIHM.eLanguage;
 	GUIConfigurationData.eUnit = sSISConfiguration.sIHM.eUnit;
@@ -470,6 +471,7 @@ void GUI_SetSisConfiguration(void)
 		sSISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
 	}
 
+	sSISConfiguration.sMonitor.bDivLinhas = GUIConfigurationData.eCentralRowSide;
 	sSISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
 	sSISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
 	sSISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;

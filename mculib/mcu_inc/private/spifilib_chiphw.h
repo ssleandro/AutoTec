@@ -34,6 +34,7 @@
 
 #include <stdint.h>
 #include "auteq_os.h"
+#include "board.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -324,7 +325,10 @@ static INLINE void spifi_HW_ResetController (LPC_SPIFI_CHIPHW_T *pSpifi)
 		if (osKernelRunning()) {
 			__enable_irq();
 			if (count++ % 100 == 0)
+			{
+				Chip_WWDT_Feed(LPC_WWDT);
 				osDelay(1);
+			}
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
 		}
@@ -354,6 +358,7 @@ static INLINE void spifiFramWaitCMD (LPC_SPIFI_CHIPHW_T *pSpifi)
 	{
 		if (osKernelRunning()) {
 			__enable_irq();
+			Chip_WWDT_Feed(LPC_WWDT);
 			osDelay(5);
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
@@ -375,7 +380,10 @@ static INLINE void spifi_HW_WaitRESET (LPC_SPIFI_CHIPHW_T *pSpifi)
 		if (osKernelRunning()) {
 			__enable_irq();
 			if (wCount++ == 5000)
+			{
+				Chip_WWDT_Feed(LPC_WWDT);
 				osDelay(5);
+			}
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
 		}

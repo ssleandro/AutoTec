@@ -32,7 +32,7 @@
 
 #include "spifilib_dev.h"
 #include "private/spifilib_chiphw.h"
-
+#include "wdt.h"
 
 /* need access to the device register Fx without importing the whole API */
 extern SPIFI_ERR_T spifiDevRegister (SPIFI_FAM_NODE_T *pFamily, SPIFI_DEV_NODE_T *pDevData);
@@ -342,7 +342,10 @@ static void spifiPrvWaitUnBusy (const SPIFI_HANDLE_T *pHandle)
 		if (osKernelRunning()) {
 			__enable_irq();
 			if (wCount++ == 5000)
+			{
+				Chip_WWDT_Feed(LPC_WWDT);
 				osDelay(2);
+			}
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
 		}
