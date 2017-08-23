@@ -184,6 +184,7 @@ eBootStates eCurrState;
 eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
 eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
 
 VTStatus sVTCurrentStatus;                          //!< Holds the current VT status
 peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
@@ -1391,10 +1392,11 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_BUTTON_ERASE_INSTALLATION_ID:
 							{
-								ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								eClearSetupCurrState = CLEAR_SETUP_WAIT_CONFIRMATION;
+//								ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+//								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+//								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+//								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							case ISO_BUTTON_CLEAR_COUNT_CANCEL_ID:
@@ -1423,6 +1425,26 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+								}
+								break;
+							}
+							case ISO_BUTTON_CLEAR_SETUP_CANCEL_ID:
+							{
+								if (eClearSetupCurrState == CLEAR_SETUP_WAIT_CONFIRMATION)
+								{
+									eClearSetupCurrState = CLEAR_SETUP_IDLE;
+								}
+								break;
+							}
+							case ISO_BUTTON_CLEAR_SETUP_ACCEPT_ID:
+							{
+								if (eClearSetupCurrState == CLEAR_SETUP_WAIT_CONFIRMATION)
+								{
+									ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									eClearSetupCurrState = CLEAR_SETUP_IDLE;
 								}
 								break;
 							}
