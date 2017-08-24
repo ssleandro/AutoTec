@@ -116,16 +116,11 @@ const sPlanterDataMask sPlanterMask =
 		.psWorkedAreaHa = &(asNumVarObjects[231]),
 		.psTotalMt = &(asNumVarObjects[234]),
 		.psTotalHa = &(asNumVarObjects[233]),
-	};
-
-static sInstallationDataMask sInstallDataMask =
-	{
-		.psLinesInstallStatus = &sInstallStatus
-	};
-
-static sTrimmingDataMask sTrimminDataMask =
-	{
-		.psTrimmedLines = &sLinesTrimmingStatus
+		.psSpeedKm = &(asNumVarObjects[235]),
+		.psSpeedHa = &(asNumVarObjects[236]),
+		.psTEV = &(asNumVarObjects[237]),
+		.psMTEV = &(asNumVarObjects[238]),
+		.psMaxSpeed = &(asNumVarObjects[239]),
 	};
 
 #ifndef UNITY_TEST
@@ -206,6 +201,7 @@ eInstallationStatus InstallationStatus[36];
 void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask);
 void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload);
 void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData);
+void ISO_vUpdatePlanterDataMaskLines (void);
 void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
 void ISO_vEnableDisableObjCommand (uint16_t wObjID, bool bIsEnable);
 void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNewValue);
@@ -1122,10 +1118,6 @@ void ISO_vInitObjectStruct (void)
 	for (int i = 0; i < ARRAY_SIZE(asNumVarObjects); i++)
 	{
 		asNumVarObjects[i].wObjID = ISO_OBJECT_NUMBER_VARIABLE_ID + i;
-//		if (i == ISO_NUM_LARGURA_IMPLEMENTO_INDEX)
-//		{
-//			asNumVarObjects[i].wObjID = ISO_OBJECT_LARGURA_IMPLEMENTO_ID;
-//		}
 	}
 
 	// Initialize fill attributes objects
@@ -1191,7 +1183,7 @@ void ISO_vInputNumberVariableValue (uint16_t wObjectID, uint32_t dValue)
 
 void ISO_vInputIndexListValue (uint16_t wObjectID, uint32_t dValue)
 {
-	uint16_t index = GET_INDEX_FROM_ID(wObjectID);
+	uint16_t index = INPUT_LIST_GET_INDEX_FROM_ID(wObjectID);
 
 	if (index < ARRAY_SIZE(asConfigInputList))
 	{
@@ -1372,6 +1364,18 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							{
 								break;
 							}
+							case ISO_KEY_INFO_ID:
+							{
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+										MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+								break;
+							}
+							case ISO_KEY_SPEED_ID:
+							{
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+										MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+								break;
+							}
 							default:
 								break;
 						}
@@ -1393,10 +1397,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							case ISO_BUTTON_ERASE_INSTALLATION_ID:
 							{
 								eClearSetupCurrState = CLEAR_SETUP_WAIT_CONFIRMATION;
-//								ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-//								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-//								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-//								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							case ISO_BUTTON_CLEAR_COUNT_CANCEL_ID:
@@ -1905,6 +1905,11 @@ void ISO_vUpdatePlanterDataMask (void)
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
 	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+	ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);
@@ -2122,11 +2127,62 @@ void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData)
 	sPlanterMask.psWorkedAreaHa->dValue = psPlanterData->dWorkedAreaHa;
 	sPlanterMask.psTotalMt->dValue = psPlanterData->dTotalMt;
 	sPlanterMask.psTotalHa->dValue = psPlanterData->dTotalHa;
+	sPlanterMask.psSpeedKm->dValue = psPlanterData->dSpeedKm;
+	sPlanterMask.psSpeedHa->dValue = psPlanterData->dSpeedHa;
+	sPlanterMask.psTEV->dValue = psPlanterData->dTEV;
+	sPlanterMask.psMTEV->dValue = psPlanterData->dMTEV;
+	sPlanterMask.psMaxSpeed->dValue = psPlanterData->dMaxSpeed;
 
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	status = RELEASE_MUTEX(ISO_UpdateMask);
 	ASSERT(status == osOK);
 	WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+}
+
+void ISO_vUpdatePlanterDataMaskLines (void)
+{
+	if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_ENABLED)
+	{
+		for (uint8_t i = 0; i < CAN_bNUM_DE_LINHAS; i++)
+		{
+			if (i < (*sConfigDataMask.bNumOfRows))
+			{
+				if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_EVEN)
+				{
+					if ((i % 2) == 0)
+					{
+						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+					} else
+					{
+						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+					}
+
+				} else if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_ODD)
+				{
+					if ((i % 2) == 0)
+					{
+						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+					} else
+					{
+						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+					}
+				}
+			} else
+			{
+				ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+				ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
+			}
+		}
+
+	} else
+	{
+		for (uint8_t i = (*sConfigDataMask.bNumOfRows); i < CAN_bNUM_DE_LINHAS; i++)
+		{
+			ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+			ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
+		}
+	}
+	ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
 }
 
 /******************************************************************************
@@ -2224,6 +2280,12 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_INSTALLATION_FINISH);
 					ISO_vControlAudioSignalCommand(3, 210, 250, 250);
+
+					if ((*sConfigDataMask.bNumOfRows) != 36)
+					{
+						ISO_vUpdatePlanterDataMaskLines();
+					}
+
 					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
 					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 					break;

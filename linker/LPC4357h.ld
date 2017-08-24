@@ -1,3 +1,10 @@
+/* Import */
+GROUP (
+  libgcc.a 
+  libc.a 
+  libm.a
+)
+
 /* Entry Point */
 ENTRY(ResetISR)
 
@@ -139,14 +146,6 @@ SECTIONS
     *(.extram)        /* .mb1text sections (code) */
     *(.extram*)       /* .mb1text* sections (code)  */
   } >EXTSRAM
-
-  /* Remove information from the standard libraries */
-  /DISCARD/ :
-  {
-    libc.a ( * )
-    libm.a ( * )
-    libgcc.a ( * )
-  }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }

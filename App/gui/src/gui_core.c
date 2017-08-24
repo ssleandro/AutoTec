@@ -38,6 +38,7 @@
 #include "gui_ThreadControl.h"
 #include <stdlib.h>
 #include "common_app.h"
+#include "math.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
@@ -70,6 +71,9 @@ tsStatus GUI_sStatus;
 extern osFlagsGroupId UOS_sFlagSis;
 
 extern uint16_t AQR_wEspacamento;
+extern GPS_tsDadosGPS AQR_sDadosGPS;
+extern tsVelocidade AQR_sVelocidade;
+extern uint8_t CAN_bSensorSimulador;
 
 eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
 
@@ -107,6 +111,7 @@ void GUI_vSetGuiTestData (event_e eEvt, void* vPayload);
 void GUI_vUpdateWorkedArea (void);
 void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds);
 void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds);
+void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, uint32_t* dMTEV, uint32_t* dMaxSpeed);
 void GUI_vUptTestMode(void);
 void GUI_vUptPlanter(void);
 
@@ -217,6 +222,9 @@ void GUI_vGetValuesToPlanterDataMask (void)
 	GUI_vLinesPartialPopulation(ALL_LINES, NULL, &sGUIPlanterData.dPartPopSemPerUnit, &sGUIPlanterData.dPartPopSemPerHa,
 		&sGUIPlanterData.dTotalSeeds);
 	GUI_vUpdateWorkedArea();
+	GUI_vSpeedInfos(&sGUIPlanterData.dSpeedKm, &sGUIPlanterData.dSpeedHa,
+			&sGUIPlanterData.dTEV, &sGUIPlanterData.dMTEV,
+			&sGUIPlanterData.dMaxSpeed);
 }
 
 //#define RANDOM_VALUES
@@ -924,6 +932,38 @@ double GUI_fConvertUnit (double gValue, uint32_t dFlags)
 	return gValue;
 }
 
+int32_t GUI_dGetBarGraphValue (float fAverage)
+{
+	bool bAboveAverage = (fAverage < 0) ? false : true;
+	uint8_t bTolerance = sSISConfiguration.sMonitor.bTolerancia;
+	int32_t dValue = 0;
+
+	if((fabsf(fAverage)) <= bTolerance)
+	{
+		dValue = 0;
+	} else if(((fabsf(fAverage)) > bTolerance) && ((fabsf(fAverage)) <= (1.5f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 30 : -30;
+	} else if(((fabsf(fAverage)) > (1.5f *bTolerance)) && ((fabsf(fAverage)) <= (2.0f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 44 : -44;
+	} else if(((fabsf(fAverage)) > (2.0f *bTolerance)) && ((fabsf(fAverage)) <= (2.5f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 58 : -58;
+	} else if(((fabsf(fAverage)) > (2.5f *bTolerance)) && ((fabsf(fAverage)) <= (3.0f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 72 : -72;
+	} else if(((fabsf(fAverage)) > (3.0f *bTolerance)) && ((fabsf(fAverage)) <= (3.5f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 82 : -82;
+	} else if(((fabsf(fAverage)) > (3.5f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 100 : -100;
+	}
+
+	return dValue;
+}
+
 void GUI_vUpdateWorkedArea (void)
 {
 	float fAreaTrab;
@@ -1229,7 +1269,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 
 		if(dsAverage != NULL)
 		{
-			*dsAverage = (int32_t) fMedia;
+			*dsAverage = (int32_t) GUI_dGetBarGraphValue(fMedia);
 		}
 
 		if (dNumSensor > 0)
@@ -1562,4 +1602,64 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 
 	*pdSeconds = GUI_sAcumulado.sTrabParcial.dSegundos;
 
+}
+
+void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, uint32_t* dMTEV, uint32_t* dMaxSpeed)
+{
+	float fModVel;
+	UOS_tsCfgMonitor *psMonitor = &sSISConfiguration.sMonitor;
+	tsStatus *psStatus = &GUI_sStatus;
+
+	// If GPS OK or simulator connected
+	if ((psStatus->bErroGPS == false) || (CAN_bSensorSimulador != false)) {
+		fModVel = AQR_sDadosGPS.dGroundSpeed;
+		fModVel *= 36.0f;
+	} else {
+		fModVel = 0.0f;
+	}
+	//--------------------------------------------------------------------------
+	// Convert speed from m/h to km/h or mi/h:
+	float fVel = (float) GUI_fConvertUnit(fModVel,
+			GUI_dCONV(GUI_dMETERS, GUI_dKILOMETERS));
+
+	// Gets the speed value in kilometers per hour
+	*dSpeedKm = (uint32_t) fVel;
+
+	//--------------------------------------------------------------------------
+	// Convert productivity to ha/h or acre/h
+
+	// productivity = m/h + ((n_rows*row_spacing)/100) = m2/h
+	uint8_t bFator;
+
+	// If area monitor, multiply factor equals to 1
+	if (psMonitor->bMonitorArea == false) {
+		bFator = psStatus->bNumLinhasAtivas;
+	} else {
+		bFator = 1;
+	}
+
+	fVel = fModVel;
+
+	// Divide by 1000 because AQR_wEspacamento is in cm*10
+	fVel *= ((float) (bFator * AQR_wEspacamento) * (1.0f / 1000.0f));
+
+	fVel = (float) GUI_fConvertUnit(fVel,
+			GUI_dCONV(GUI_dMETERS, GUI_dHECTARES));
+
+	// Gets the speed in hectares per hour
+	*dSpeedHa = (uint32_t) fVel;
+
+	// Total (TEV)
+	*dTEV = (uint32_t) AQR_sVelocidade.dTEV;
+
+	// Total (MTEV)
+	*dMTEV = (uint32_t) AQR_sVelocidade.dMTEV;
+
+	// ARRUMAR:
+	// fVelMax == m/s?
+	// Total (MEV)
+	fVel = (float) GUI_fConvertUnit((AQR_sVelocidade.fVelMax),
+			GUI_dCONV(GUI_dKILOMETERS, GUI_dKILOMETERS));
+
+	*dMaxSpeed = (uint32_t) fVel;
 }

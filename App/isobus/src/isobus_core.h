@@ -48,10 +48,12 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 235
+#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 240
 #define ISO_NUM_INPUT_LIST_OBJECTS 6
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
 #define ISO_KEY_PLANTER_ID				SoftKey_Planter
+#define ISO_KEY_INFO_ID					SoftKey_Info
+#define ISO_KEY_SPEED_ID				SoftKey_Speed
 #define ISO_KEY_CONFIG_ID				SoftKey_Config
 #define ISO_KEY_INSTALLATION_ID			SoftKey_Setup
 #define ISO_KEY_TEST_MODE_ID			SoftKey_TestMode
@@ -118,7 +120,7 @@
 /******************************************************************************
  * Macros
  *******************************************************************************/
-#define GET_INDEX_FROM_ID(id) (id & 0x0FFF)
+#define INPUT_LIST_GET_INDEX_FROM_ID(id) (id - IL_CFG_LANGUAGE)
 #define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
 #define GET_UNSIGNED_INT_VALUE(value) ((uint32_t)(value*10))
 
