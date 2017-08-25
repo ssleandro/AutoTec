@@ -34,6 +34,7 @@
  * Includes
  *******************************************************************************/
 #include "acquireg_app.h"
+#include "M2GPlus.iop.h"
 
 /******************************************************************************
  * Preprocessor Constants
@@ -50,19 +51,32 @@
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
-
 typedef enum
 {
-	SOFT_KEY_MASK_INSTALLATION = 0x2001,
+	SOFT_KEY_MASK_INSTALLATION = SoftKeyMask_Installation,
+	SOFT_KEY_MASK_INSTALLATION_FINISH,
 	SOFT_KEY_MASK_PLANTER,
 	SOFT_KEY_MASK_CONFIGURATION,
+	SOFT_KEY_MASK_CONFIGURATION_CHANGES,
 	SOFT_KEY_MASK_TEST_MODE,
 	SOFT_KEY_MASK_TRIMMING,
 	SOFT_KEY_MASK_SYSTEM,
-	SOFT_KEY_MASK_INSTALLATION_FINISH,
-	SOFT_KEY_MASK_CONFIGURATION_CHANGES,
+	SOFT_KEY_MASK_PLANTER_INFO,
 	SOFT_KEY_MASK_INVALID
 } eIsobusSoftKeyMask;
+
+typedef enum
+{
+	DATA_MASK_INSTALLATION = DataMask_Installation,
+	DATA_MASK_CONFIGURATION,
+	DATA_MASK_PLANTER,
+	DATA_MASK_TEST_MODE,
+	DATA_MASK_TRIMMING,
+	DATA_MASK_SYSTEM,
+	DATA_MASK_CONFIRM_CLEAR_COUNTER,
+	DATA_MASK_CONFIRM_CONFIG_CHANGES,
+	DATA_MASK_INVALID
+} eIsobusMask;
 
 typedef enum
 {
@@ -70,20 +84,6 @@ typedef enum
 	MASK_TYPE_ALARM_MASK,
 	MASK_TYPE_INVALID
 } eIsobusMaskType;
-
-typedef enum
-{
-	DATA_MASK_CONFIGURATION = 0x5000,
-	DATA_MASK_INSTALLATION,
-	DATA_MASK_PLANTER,
-	DATA_MASK_TEST_MODE,
-	DATA_MASK_TRIMMING,
-	DATA_MASK_SYSTEM,
-	DATA_MASK_CONFIRM_CLEAR_COUNTER,
-	DATA_MASK_CONFIRM_CONFIG_CHANGES,
-	ALARM_MASK_CONFIRM_INSTALLATION = 0x50F0,
-	DATA_MASK_INVALID
-} eIsobusMask;
 
 typedef enum
 {
@@ -120,6 +120,13 @@ typedef enum
 
 typedef enum
 {
+	CENTRAL_ROW_SIDE_LEFT,
+	CENTRAL_ROW_SIDE_RIGHT,
+	CENTRAL_ROW_SIDE_INVALID
+} eCentralRowSide;
+
+typedef enum
+{
 	ALTERNATE_ROWS_DISABLED,
 	ALTERNATE_ROWS_ENABLED,
 	ALTERNATE_ROWS_INVALID
@@ -148,6 +155,7 @@ typedef struct sConfigurationData
 	eAreaMonitor eMonitorArea;
 	uint16_t wSeedRate;
 	uint8_t bNumOfRows;
+	eCentralRowSide eCentralRowSide;
 	uint32_t wImplementWidth;
 	uint32_t wEvaluationDistance;
 	uint32_t wDistBetweenLines;
@@ -165,6 +173,7 @@ typedef struct sConfigurationDataMask
 	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;
 	uint8_t* bNumOfRows;
+	eCentralRowSide* eCentralRowSide;
 	uint32_t* wImplementWidth;
 	uint32_t* wEvaluationDistance;
 	uint32_t* wDistBetweenLines;
@@ -226,6 +235,11 @@ typedef struct sPlanterDataMaskData
 	uint32_t dWorkedAreaHa;
 	uint32_t dTotalMt;
 	uint32_t dTotalHa;
+	uint32_t dSpeedKm;
+	uint32_t dSpeedHa;
+	uint32_t dTEV;
+	uint32_t dMTEV;
+	uint32_t dMaxSpeed;
 } sPlanterDataMaskData;
 
 typedef struct sPlanterIndividualLines
@@ -248,6 +262,11 @@ typedef struct sPlanterDataMask
 	sNumberVariableObj* psWorkedAreaHa;
 	sNumberVariableObj* psTotalMt;
 	sNumberVariableObj* psTotalHa;
+	sNumberVariableObj* psSpeedKm;
+	sNumberVariableObj* psSpeedHa;
+	sNumberVariableObj* psTEV;
+	sNumberVariableObj* psMTEV;
+	sNumberVariableObj* psMaxSpeed;
 } sPlanterDataMask;
 
 typedef struct sTrimmingStatus

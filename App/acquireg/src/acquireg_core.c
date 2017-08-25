@@ -39,7 +39,6 @@
 #include "acquireg_ThreadControl.h"
 #include <stdlib.h>
 
-extern gpio_config_s sTimeTest;
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
@@ -547,6 +546,105 @@ void AQR_vAcumulaArea (void)
 
 }
 
+void AQR_vPubAcumulaArea (void)
+{
+	tsStatus *psStatus = &AQR_sStatus;
+	UOS_tsCfgMonitor *psMonitor = &UOS_sConfiguracao.sMonitor;
+
+	float fArea = AQR_sAcumulado.sTrabParcial.fArea;
+	float fAreaEsq = AQR_sAcumulado.sTrabParcEsq.fArea;
+	float fAreaDir = AQR_sAcumulado.sTrabParcDir.fArea;
+
+	float fIncArea;
+	float fIncAreaDir;
+	float fIncAreaEsq;
+
+	uint32_t dDist = AQR_sAcumulado.sDistTrabParcial.dDistancia;
+	uint32_t dDistEsq = AQR_sAcumulado.sDistTrabParcialEsq.dDistancia;
+	uint32_t dDistDir = AQR_sAcumulado.sDistTrabParcialDir.dDistancia;
+
+	//Acumula área parcial
+	//Divide por 10 porque AQR_wEspacamento está em cm*10
+	fIncArea = ((float)AQR_wEspacamento * (float)dDist) * 0.1f;
+	fIncAreaDir = ((float)AQR_wEspacamento * (float)dDistDir) * 0.1f;
+	fIncAreaEsq = ((float)AQR_wEspacamento * (float)dDistEsq) * 0.1f;
+
+	//Converte de cm² para m²
+	fIncArea *= (1.0f / 10000.0f);
+	fIncAreaDir *= (1.0f / 10000.0f);
+	fIncAreaEsq *= (1.0f / 10000.0f);
+
+	if (psMonitor->bMonitorArea == false)
+	{
+		if (psMonitor->eIntercala != Sem_Intercalacao)
+		{
+			fArea += psStatus->bNumLinhasSemIntercalar * fIncArea;
+		}
+		else
+		{
+			fArea += psMonitor->bNumLinhas * fIncArea;
+		}
+
+		fAreaDir += psStatus->bNumLinhasDir * fIncAreaDir;
+		fAreaEsq += psStatus->bNumLinhasEsq * fIncAreaEsq;
+		sRegEstaticoCRC.sReg.sTrabParcDir.fArea = fAreaDir;
+		sRegEstaticoCRC.sReg.sTrabParcEsq.fArea = fAreaEsq;
+
+	}
+	else
+	{
+		fArea += fIncArea;
+	}
+
+	//Inclui o valor no registro
+	sRegEstaticoCRC.sReg.sTrabParcial.fArea = fArea;
+
+	//Acumula área total
+
+	fArea = AQR_sAcumulado.sTrabTotal.fArea;
+	fAreaEsq = AQR_sAcumulado.sTrabTotalEsq.fArea;
+	fAreaDir = AQR_sAcumulado.sTrabTotalDir.fArea;
+
+	dDist = AQR_sAcumulado.sDistTrabTotal.dDistancia;
+	dDistEsq = AQR_sAcumulado.sDistTrabTotalEsq.dDistancia;
+	dDistDir = AQR_sAcumulado.sDistTrabTotalDir.dDistancia;
+
+	//Divide por 10 porque AQR_wEspacamento está em cm*10
+	fIncArea = ((float)AQR_wEspacamento * (float)dDist) * 0.1f;
+	fIncAreaDir = ((float)AQR_wEspacamento * (float)dDistDir) * 0.1f;
+	fIncAreaEsq = ((float)AQR_wEspacamento * (float)dDistEsq) * 0.1f;
+
+	//Converte de cm² para m²
+	fIncArea *= (1.0f / 10000.0f);
+	fIncAreaDir *= (1.0f / 10000.0f);
+	fIncAreaEsq *= (1.0f / 10000.0f);
+
+	if (psMonitor->bMonitorArea == false)
+	{
+		if (psMonitor->eIntercala != Sem_Intercalacao)
+		{
+			fArea += psStatus->bNumLinhasSemIntercalar * fIncArea;
+		}
+		else
+		{
+			fArea += psMonitor->bNumLinhas * fIncArea;
+		}
+
+		fAreaDir += psStatus->bNumLinhasDir * fIncAreaDir;
+		fAreaEsq += psStatus->bNumLinhasEsq * fIncAreaEsq;
+
+		sRegEstaticoCRC.sTrabTotalDir.fArea = fAreaDir;
+		sRegEstaticoCRC.sTrabTotalEsq.fArea = fAreaEsq;
+	}
+	else
+	{
+		fArea += fIncArea;
+	}
+
+	//Inclui o valor no registro
+	sRegEstaticoCRC.sTrabTotal.fArea = fArea;
+}
+
 /*******************************************************************************
 
  void AQR_vVerificaFalha( void )
@@ -785,7 +883,6 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 	uint32_t dSementeDesconectadoExt = 0;
 	uint32_t dAux, dAuxExt;
 
-	// TODO: wait mutex to access AQR_sDadosCAN
 	for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 	{
 		//Conta sensores em um determinado estado
@@ -802,10 +899,8 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 					bLimpaAux = true;
 				}
 				//Se o sensor desconectado é sensor adicional
-				//          if( ( bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO )&&
-				//              ( CAN_bSensorSimulador != false               )  )
-				// TODO: commented lines
-				if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO))
+				if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO)
+						&& (CAN_bSensorSimulador != false))
 				{
 					//Encontra o número do sensor
 					bLinha = (bConta - CAN_bNUM_SENSORES_SEMENTE_E_ADUBO);
@@ -964,10 +1059,8 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 		if (psAQR_Sensor[bConta].eEstado != Novo)
 		{
 			//Conta qtde de Sensores Adicionais
-			//        if( ( bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO )&&
-			//            ( CAN_bSensorSimulador != false               )  )
-			// TODO: commented lines
-			if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO))
+			if ((bConta >= CAN_bNUM_SENSORES_SEMENTE_E_ADUBO)
+					&& (CAN_bSensorSimulador != false))
 			{
 				bAdicionalInstalados++;
 			}
@@ -990,7 +1083,6 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 			}
 		}
 	}
-	// TODO: release mutex to access AQR_sDadosCAN
 
 	//Atualiza a quantidade de sensores reprovados no auto-teste
 	AQR_sStatus.bReprovados = bContaTeste;
@@ -1612,10 +1704,11 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SEND_TOTAL);
 		}
 
-		if (bSaveEstaticData++ > ARQ_SAVE_ESTATIC_DATA_TIMEOUT)
+		if (((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0) && (bSaveEstaticData++ > ARQ_SAVE_ESTATIC_DATA_TIMEOUT))
 		{
 			bSaveEstaticData = 0;
 			AQR_SetStaticRegData();
+			AQR_vPubAcumulaArea();
 			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 		}
 	}
@@ -2862,7 +2955,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if ((dValorFlag & AQR_FLAG_ZERA_TOTAIS) > 0)
 			{
 				//Ajusta a causa de fim para "leitura de registros":
-				//            AQR_wCausaFim = AQR_wCF_ZERA_TOTAL;
+				AQR_wCausaFim = AQR_wCF_ZERA_TOTAL;
 				AQR_sStatus.bAlarmeOK = true;
 
 				//Pede a criação de um novo registro:

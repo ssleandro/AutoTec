@@ -1,54 +1,69 @@
 /*********************************************************************
- *               SEGGER MICROCONTROLLER GmbH & Co. KG                 *
- *       Solutions for real time microcontroller applications         *
- **********************************************************************
- *                                                                    *
- *       (c) 2015  SEGGER Microcontroller GmbH & Co. KG               *
- *                                                                    *
- *       www.segger.com     Support: support@segger.com               *
- *                                                                    *
- **********************************************************************
- *                                                                    *
- *       SEGGER SystemView * Real-time application analysis           *
- *                                                                    *
- **********************************************************************
- *                                                                    *
- * All rights reserved.                                               *
- *                                                                    *
- * * This software may in its unmodified form be freely redistributed *
- *   in source form.                                                  *
- * * The source code may be modified, provided the source code        *
- *   retains the above copyright notice, this list of conditions and  *
- *   the following disclaimer.                                        *
- * * Modified versions of this software in source or linkable form    *
- *   may not be distributed without prior consent of SEGGER.          *
- *                                                                    *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND     *
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,  *
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A        *
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL               *
- * SEGGER Microcontroller BE LIABLE FOR ANY DIRECT, INDIRECT,         *
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES           *
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS    *
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS            *
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,       *
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING          *
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS *
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.       *
- *                                                                    *
- **********************************************************************
- *                                                                    *
- *       SystemView version: V2.26                                    *
- *                                                                    *
- **********************************************************************
- ----------------------------------------------------------------------
- File    : SEGGER_SYSVIEW_FreeRTOS.h
- Purpose : Interface between FreeRTOS and SystemView.
+*                SEGGER Microcontroller GmbH & Co. KG                *
+*                        The Embedded Experts                        *
+**********************************************************************
+*                                                                    *
+*       (c) 2015 - 2017  SEGGER Microcontroller GmbH & Co. KG        *
+*                                                                    *
+*       www.segger.com     Support: support@segger.com               *
+*                                                                    *
+**********************************************************************
+*                                                                    *
+*       SEGGER SystemView * Real-time application analysis           *
+*                                                                    *
+**********************************************************************
+*                                                                    *
+* All rights reserved.                                               *
+*                                                                    *
+* SEGGER strongly recommends to not make any changes                 *
+* to or modify the source code of this software in order to stay     *
+* compatible with the RTT protocol and J-Link.                       *
+*                                                                    *
+* Redistribution and use in source and binary forms, with or         *
+* without modification, are permitted provided that the following    *
+* conditions are met:                                                *
+*                                                                    *
+* o Redistributions of source code must retain the above copyright   *
+*   notice, this list of conditions and the following disclaimer.    *
+*                                                                    *
+* o Redistributions in binary form must reproduce the above          *
+*   copyright notice, this list of conditions and the following      *
+*   disclaimer in the documentation and/or other materials provided  *
+*   with the distribution.                                           *
+*                                                                    *
+* o Neither the name of SEGGER Microcontroller GmbH & Co. KG         *
+*   nor the names of its contributors may be used to endorse or      *
+*   promote products derived from this software without specific     *
+*   prior written permission.                                        *
+*                                                                    *
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND             *
+* CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,        *
+* INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF           *
+* MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE           *
+* DISCLAIMED. IN NO EVENT SHALL SEGGER Microcontroller BE LIABLE FOR *
+* ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR           *
+* CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT  *
+* OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;    *
+* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF      *
+* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT          *
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE  *
+* USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH   *
+* DAMAGE.                                                            *
+*                                                                    *
+**********************************************************************
+*                                                                    *
+*       SystemView version: V2.50                                    *
+*                                                                    *
+**********************************************************************
+-------------------------- END-OF-HEADER -----------------------------
 
- Include this file at the end of FreeRTOSConfig.h
+File    : SEGGER_SYSVIEW_FreeRTOS.h
+Purpose : Interface between FreeRTOS and SystemView.
+Revision: $Rev: 3734 $
 
- --------- END-OF-HEADER ---------------------------------------------
- */
+Notes:
+  (1) Include this file at the end of FreeRTOSConfig.h
+*/
 
 #ifndef SYSVIEW_FREERTOS_H
 #define SYSVIEW_FREERTOS_H
@@ -56,11 +71,23 @@
 #include "SEGGER_SYSVIEW.h"
 
 /*********************************************************************
- *
- *       Defines, fixed
- *
- **********************************************************************
- */
+*
+*       Defines, configurable
+*
+**********************************************************************
+*/
+#ifndef portSTACK_GROWTH
+  #define portSTACK_GROWTH              ( -1 )
+#endif
+
+#define SYSVIEW_FREERTOS_MAX_NOF_TASKS  8
+
+/*********************************************************************
+*
+*       Defines, fixed
+*
+**********************************************************************
+*/
 #define apiID_OFFSET                              (32u)
 
 #define apiID_VTASKALLOCATEMPUREGIONS             (1u)
@@ -179,9 +206,9 @@
 #define traceTASK_SUSPEND( pxTCB )                                    SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_VTASKSUSPEND, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB))
 #define traceTASK_PRIORITY_DISINHERIT( pxTCB, uxBasePriority )        SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_XTASKPRIORITYDISINHERIT, (U32)pxMutexHolder)
 #define traceTASK_RESUME_FROM_ISR( pxTCB )                            SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_XTASKRESUMEFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB))
-#define traceTASK_NOTIFY()                                            SYSVIEW_RecordU32x4(apiID_XTASKGENERICNOTIFY, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB), ulValue, eAction, (U32)pulPreviousNotificationValue)
-#define traceTASK_NOTIFY_FROM_ISR()                                   SYSVIEW_RecordU32x5(apiID_XTASKGENERICNOTIFYFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB), ulValue, eAction, (U32)pulPreviousNotificationValue, (U32)pxHigherPriorityTaskWoken)
-#define traceTASK_NOTIFY_WAIT()                                       SYSVIEW_RecordU32x4(apiID_XTASKNOTIFYWAIT, ulBitsToClearOnEntry, ulBitsToClearOnExit, (U32)pulNotificationValue, xTicksToWait)
+#define traceTASK_NOTIFY()                                            SYSVIEW_RecordU32x4(apiID_OFFSET + apiID_XTASKGENERICNOTIFY, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB), ulValue, eAction, (U32)pulPreviousNotificationValue)
+#define traceTASK_NOTIFY_FROM_ISR()                                   SYSVIEW_RecordU32x5(apiID_OFFSET + apiID_XTASKGENERICNOTIFYFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB), ulValue, eAction, (U32)pulPreviousNotificationValue, (U32)pxHigherPriorityTaskWoken)
+#define traceTASK_NOTIFY_WAIT()                                       SYSVIEW_RecordU32x4(apiID_OFFSET + apiID_XTASKNOTIFYWAIT, ulBitsToClearOnEntry, ulBitsToClearOnExit, (U32)pulNotificationValue, xTicksToWait)
 
 #define traceQUEUE_CREATE( pxNewQueue )                               SEGGER_SYSVIEW_RecordU32x3(apiID_OFFSET + apiID_XQUEUEGENERICCREATE, uxQueueLength, uxItemSize, ucQueueType)
 #define traceQUEUE_DELETE( pxQueue )                                  SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_VQUEUEDELETE, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue))
@@ -193,44 +220,59 @@
 #define traceQUEUE_RECEIVE_FROM_ISR( pxQueue )                        SEGGER_SYSVIEW_RecordU32x3(apiID_OFFSET + apiID_XQUEUERECEIVEFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), SEGGER_SYSVIEW_ShrinkId((U32)pvBuffer), (U32)pxHigherPriorityTaskWoken)
 #define traceQUEUE_RECEIVE_FROM_ISR_FAILED( pxQueue )                 SEGGER_SYSVIEW_RecordU32x3(apiID_OFFSET + apiID_XQUEUERECEIVEFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), SEGGER_SYSVIEW_ShrinkId((U32)pvBuffer), (U32)pxHigherPriorityTaskWoken)
 #define traceQUEUE_REGISTRY_ADD( xQueue, pcQueueName )                SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_VQUEUEADDTOREGISTRY, SEGGER_SYSVIEW_ShrinkId((U32)xQueue), (U32)pcQueueName)
-#define traceQUEUE_SEND( pxQueue )                                    SYSVIEW_RecordU32x4(apiID_OFFSET + apiID_XQUEUEGENERICSEND, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pvItemToQueue, xTicksToWait, xCopyPosition)
+#if ( configUSE_QUEUE_SETS != 1 )
+  #define traceQUEUE_SEND( pxQueue )                                    SYSVIEW_RecordU32x4(apiID_OFFSET + apiID_XQUEUEGENERICSEND, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pvItemToQueue, xTicksToWait, xCopyPosition)
+#else
+  #define traceQUEUE_SEND( pxQueue )                                    SYSVIEW_RecordU32x4(apiID_OFFSET + apiID_XQUEUEGENERICSEND, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), 0, 0, xCopyPosition)
+#endif
 #define traceQUEUE_SEND_FAILED( pxQueue )                             SYSVIEW_RecordU32x4(apiID_OFFSET + apiID_XQUEUEGENERICSEND, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pvItemToQueue, xTicksToWait, xCopyPosition)
 #define traceQUEUE_SEND_FROM_ISR( pxQueue )                           SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_XQUEUEGENERICSENDFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pxHigherPriorityTaskWoken)
 #define traceQUEUE_SEND_FROM_ISR_FAILED( pxQueue )                    SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_XQUEUEGENERICSENDFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxQueue), (U32)pxHigherPriorityTaskWoken)
 
+#if( portSTACK_GROWTH < 0 )
 #define traceTASK_CREATE(pxNewTCB)                  if (pxNewTCB != NULL) {                                             \
                                                       SEGGER_SYSVIEW_OnTaskCreate((U32)pxNewTCB);                       \
-                                                      SYSVIEW_SendTaskInfo( (U32)pxNewTCB,                              \
-                                                                            &(pxNewTCB->pcTaskName[0]),                 \
-                                                                            pxNewTCB->uxPriority,                       \
-                                                                            (U32)pxNewTCB->pxStack,                     \
-                                                                            0                                           \
-                                                                           );                                           \
+                                                      SYSVIEW_AddTask((U32)pxNewTCB,                                    \
+                                                                      &(pxNewTCB->pcTaskName[0]),                       \
+                                                                      pxNewTCB->uxPriority,                             \
+                                                                      (U32)pxNewTCB->pxStack,                           \
+                                                                      ((U32)pxNewTCB->pxTopOfStack - (U32)pxNewTCB->pxStack) \
+                                                                      );                                                \
                                                     }
-
+#else
+#define traceTASK_CREATE(pxNewTCB)                  if (pxNewTCB != NULL) {                                             \
+                                                      SEGGER_SYSVIEW_OnTaskCreate((U32)pxNewTCB);                       \
+                                                      SYSVIEW_AddTask((U32)pxNewTCB,                                    \
+                                                                      &(pxNewTCB->pcTaskName[0]),                       \
+                                                                      pxNewTCB->uxPriority,                             \
+                                                                      (U32)pxNewTCB->pxStack,                           \
+                                                                      (U32)(pxNewTCB->pxStack-pxNewTCB->pxTopOfStack)   \
+                                                                      );                                                \
+                                                    }
+#endif
 #define traceTASK_PRIORITY_SET(pxTask, uxNewPriority) {                                                                 \
                                                         SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET+apiID_VTASKPRIORITYSET, \
                                                                                    SEGGER_SYSVIEW_ShrinkId((U32)pxTCB), \
                                                                                    uxNewPriority                        \
                                                                                   );                                    \
-                                                        SYSVIEW_SendTaskInfo( (U32)pxTask,                              \
-                                                                              &(pxTask->pcTaskName[0]),                 \
-                                                                              uxNewPriority,                            \
-                                                                              (U32)pxTask->pxStack,                     \
-                                                                              0                                         \
-                                                                            );                                          \
+                                                        SYSVIEW_UpdateTask((U32)pxTask,                                 \
+                                                                           &(pxTask->pcTaskName[0]),                    \
+                                                                           uxNewPriority,                               \
+                                                                           (U32)pxTask->pxStack,                        \
+                                                                           0                                            \
+                                                                          );                                            \
                                                       }
 //
 // Define INCLUDE_xTaskGetIdleTaskHandle as 1 in FreeRTOSConfig.h to allow identification of Idle state.
 //
 #if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
-#define traceTASK_SWITCHED_IN()                   if(prvGetTCBFromHandle(NULL) == xIdleTaskHandle) {                  \
+  #define traceTASK_SWITCHED_IN()                   if(prvGetTCBFromHandle(NULL) == xIdleTaskHandle) {                  \
                                                       SEGGER_SYSVIEW_OnIdle();                                          \
                                                     } else {                                                            \
                                                       SEGGER_SYSVIEW_OnTaskStartExec((U32)pxCurrentTCB);                \
                                                     }
 #else
-#define traceTASK_SWITCHED_IN()                   {                                                                   \
+  #define traceTASK_SWITCHED_IN()                   {                                                                   \
                                                       if (memcmp(pxCurrentTCB->pcTaskName, "IDLE", 5) != 0) {           \
                                                         SEGGER_SYSVIEW_OnTaskStartExec((U32)pxCurrentTCB);              \
                                                       } else {                                                          \
@@ -246,24 +288,25 @@
 #define traceMOVED_TASK_TO_OVERFLOW_DELAYED_LIST()  SEGGER_SYSVIEW_OnTaskStopReady((U32)pxCurrentTCB,  (1u << 2))
 #define traceMOVED_TASK_TO_SUSPENDED_LIST(pxTCB)    SEGGER_SYSVIEW_OnTaskStopReady((U32)pxTCB,         ((3u << 3) | 3))
 
+
 #define traceISR_EXIT_TO_SCHEDULER()                SEGGER_SYSVIEW_RecordExitISRToScheduler()
 #define traceISR_EXIT()                             SEGGER_SYSVIEW_RecordExitISR()
 #define traceISR_ENTER()                            SEGGER_SYSVIEW_RecordEnterISR()
 
 /*********************************************************************
- *
- *       API functions
- *
- **********************************************************************
- */
+*
+*       API functions
+*
+**********************************************************************
+*/
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-
+void SYSVIEW_AddTask      (U32 xHandle, const char* pcTaskName, unsigned uxCurrentPriority, U32  pxStack, unsigned uStackHighWaterMark);
+void SYSVIEW_UpdateTask   (U32 xHandle, const char* pcTaskName, unsigned uxCurrentPriority, U32 pxStack, unsigned uStackHighWaterMark);
 void SYSVIEW_SendTaskInfo (U32 TaskID, const char* sName, unsigned Prio, U32 StackBase, unsigned StackSize);
-void SYSVIEW_RecordU32x4 (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3);
-void SYSVIEW_RecordU32x5 (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3, U32 Para4);
+void SYSVIEW_RecordU32x4  (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3);
+void SYSVIEW_RecordU32x5  (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para3, U32 Para4);
 
 #ifdef __cplusplus
 }
@@ -271,4 +314,4 @@ void SYSVIEW_RecordU32x5 (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Para
 
 #endif
 
-/****** End Of File *************************************************/
+/*************************** End of file ****************************/
