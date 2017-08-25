@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
  * Title                 :   control_core
  * Filename              :   control_core.c
  * Author                :   Henrique Reis
@@ -67,7 +67,7 @@ const UOS_tsVersaoCod UOS_sVersaoCodDef = {
 	5,                //Modelo MPA2500
 	1,                //Versão
 	1,                //Revisão
-	1001,              //Build
+	1002,              //Build
 	0x00,             //Número de série do hardware
 	0x00,             //(6 bytes)
 	0x00,
