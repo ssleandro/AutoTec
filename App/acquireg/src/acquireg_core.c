@@ -1649,7 +1649,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			fVelocidade *= 3.6f;
 
 			// Verifica Excesso de Velocidade a cada segundo
-			if (fVelocidade > (UOS_sConfiguracao.sMonitor.fLimVel + 0.09f))
+			if (fVelocidade > (UOS_sConfiguracao.sMonitor.fLimVel + 0.01f))
 			{
 				//Indica que está em excesso de velocidade
 				psStatus->bExVel = true;

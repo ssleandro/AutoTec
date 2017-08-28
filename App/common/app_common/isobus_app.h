@@ -134,8 +134,8 @@ typedef enum
 
 typedef enum
 {
-	ALTERNATED_ROWS_ODD,
 	ALTERNATED_ROWS_EVEN,
+	ALTERNATED_ROWS_ODD,
 	ALTERNATED_ROWS_INVALID
 } eAlternatedRowsType;
 

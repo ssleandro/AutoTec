@@ -469,7 +469,6 @@ void GUI_SetSisConfiguration(void)
 	sSISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
 	sSISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
 
-	GUIConfigurationData.eAltType = (eAlternatedRowsType)sSISConfiguration.sMonitor.eIntercala;
 	if (GUIConfigurationData.eAlterRows == ALTERNATE_ROWS_DISABLED)
 	{
 		sSISConfiguration.sMonitor.eIntercala = Sem_Intercalacao;
@@ -1623,7 +1622,7 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 			GUI_dCONV(GUI_dMETERS, GUI_dKILOMETERS));
 
 	// Gets the speed value in kilometers per hour
-	*dSpeedKm = (uint32_t) fVel;
+	*dSpeedKm = (uint32_t) roundf(fVel * 10);
 
 	//--------------------------------------------------------------------------
 	// Convert productivity to ha/h or acre/h
@@ -1661,5 +1660,5 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 	fVel = (float) GUI_fConvertUnit((AQR_sVelocidade.fVelMax),
 			GUI_dCONV(GUI_dKILOMETERS, GUI_dKILOMETERS));
 
-	*dMaxSpeed = (uint32_t) fVel;
+	*dMaxSpeed = (uint32_t) roundf(fVel * 10);
 }

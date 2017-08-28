@@ -1202,16 +1202,16 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	uint16_t wObjectID = (sRcvMsg->B2 | (sRcvMsg->B3 << 8));
 	uint32_t dValue = (sRcvMsg->B5 | (sRcvMsg->B6 << 8) | (sRcvMsg->B7 << 16) | (sRcvMsg->B8 << 24));
 
-	if ((wObjectID >= NV_TEST_MODE_L01) && (wObjectID < NV_WORKED_AREA_M))
+	if ((wObjectID >= NV_TEST_MODE_L01) && (wObjectID <= NV_WORKED_AREA_M))
 	{
 		if (wObjectID == NV_CFG_N_ROWS)
 		{
 			if ((dValue % 2) != 0)
 			{
-				ISO_vEnableDisableObjCommand(0x9005, true);
+				ISO_vEnableDisableObjCommand(IL_CFG_CENTER_ROW_SIDE, true);
 			} else
 			{
-				ISO_vEnableDisableObjCommand(0x9005, false);
+				ISO_vEnableDisableObjCommand(IL_CFG_CENTER_ROW_SIDE, false);
 			}
 		}
 		ISO_vInputNumberVariableValue(wObjectID, dValue);
@@ -1220,7 +1220,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 		}
 	}
-	else if ((wObjectID >= IL_CFG_LANGUAGE) && (wObjectID < IL_CFG_RAISED_ROWS))
+	else if ((wObjectID >= IL_CFG_LANGUAGE) && (wObjectID <= IL_CFG_RAISED_ROWS))
 	{
 		switch (wObjectID)
 		{
@@ -1234,6 +1234,8 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, false);
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
 				}
 				else
 				{
@@ -1243,6 +1245,8 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, true);
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
 				break;
@@ -1261,6 +1265,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					*sConfigDataMask.eAlterRows = ALTERNATE_ROWS_DISABLED;
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
+				ISO_vUpdatePlanterDataMaskLines();
 				break;
 			}
 			case ISO_INPUT_LIST_ALTER_ROW_TYPE_ID:
@@ -1273,6 +1278,8 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 				{
 					*sConfigDataMask.eAltType = ALTERNATED_ROWS_EVEN;
 				}
+				ISO_vInputIndexListValue(wObjectID, dValue);
+				ISO_vUpdatePlanterDataMaskLines();
 				break;
 			}
 			default:
@@ -2152,9 +2159,11 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 					if ((i % 2) == 0)
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, false);
 					} else
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
 					}
 
 				} else if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_ODD)
@@ -2162,9 +2171,11 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 					if ((i % 2) == 0)
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
 					} else
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, false);
 					}
 				}
 			} else
@@ -2174,12 +2185,19 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 			}
 		}
 
-	} else
+	} else if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
 	{
-		for (uint8_t i = (*sConfigDataMask.bNumOfRows); i < CAN_bNUM_DE_LINHAS; i++)
+		for (uint8_t i = 0; i < CAN_bNUM_DE_LINHAS; i++)
 		{
-			ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
-			ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
+			if (i < (*sConfigDataMask.bNumOfRows))
+			{
+				ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+				ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, false);
+			} else
+			{
+				ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+				ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
+			}
 		}
 	}
 	ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
@@ -2324,7 +2342,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt)
 		case DATA_MASK_CONFIRM_CONFIG_CHANGES:
 		{
 			ISO_vUpdateSisConfigData(&GUIConfigurationData);
-			PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
+		PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
 			break;
 		}
 		default:

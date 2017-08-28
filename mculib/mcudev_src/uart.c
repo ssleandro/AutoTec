@@ -620,7 +620,7 @@ eMCUError_s UART_eRecvDataConfig (uart_config_s *pUART, int32_t iIRQPrio, int32_
 
 	/* UART_FCR_TRG_LEV3 (3 << 6) UART FIFO trigger level 3: 14 character */
 	Chip_UART_SetupFIFOS(UART_MAP_REGISTER(pUART->eChannel),
-		(UART_FCR_FIFO_EN | UART_FCR_RX_RS | UART_FCR_TX_RS | UART_FCR_TRG_LEV3));
+		(UART_FCR_FIFO_EN | UART_FCR_RX_RS | UART_FCR_TX_RS | UART_FCR_TRG_LEV2));
 
 	/* Sets the IER register to interrupt when:
 	 *  bit 0 - RBR Interrupt Enable
@@ -659,7 +659,7 @@ eMCUError_s UART_eRecvData_IT (uart_config_s *pUART, int32_t iIRQPrio, int32_t i
 
 	/* UART_FCR_TRG_LEV3 (3 << 6) UART FIFO trigger level 3: 14 character */
 	Chip_UART_SetupFIFOS(UART_MAP_REGISTER(pUART->eChannel),
-		(UART_FCR_FIFO_EN | UART_FCR_RX_RS | UART_FCR_TX_RS | UART_FCR_TRG_LEV3));
+		(UART_FCR_FIFO_EN | UART_FCR_RX_RS | UART_FCR_TX_RS | UART_FCR_TRG_LEV2));
 
 	/* Before using the ring buffers, initialize them using the ring
 	 buffer init function */
