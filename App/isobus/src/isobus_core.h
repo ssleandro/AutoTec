@@ -48,9 +48,10 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 240
+#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
 #define ISO_NUM_INPUT_LIST_OBJECTS 6
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
+
 #define ISO_KEY_PLANTER_ID				SoftKey_Planter
 #define ISO_KEY_INFO_ID					SoftKey_Info
 #define ISO_KEY_SPEED_ID				SoftKey_Speed
@@ -90,9 +91,11 @@
 #define ISO_INPUT_LIST_DISABLE				0x00
 
 #define ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE	0x0F
-
 #define ISO_INPUT_NUMBER_ENABLE				0x01
 #define ISO_INPUT_NUMBER_DISABLE			0x00
+
+#define ISO_RECTANGLE_LINE_ATTRIBUTE		0x01
+#define ISO_BAR_GRAPH_COLOUR_ATTRIBUTE		0x03
 
 /******************************************************************************
  * Configuration Constants

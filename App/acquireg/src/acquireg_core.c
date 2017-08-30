@@ -211,6 +211,7 @@ void AQR_vTimerCallbackTurnOff (void const*);
 void AQR_vTimerCallbackImpStopped (void const*);
 void AQR_vRepeteTesteSensores (void);
 void AQR_vApagaInstalacao (void);
+void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored);
 
 /******************************************************************************
  * Module timers
@@ -1484,6 +1485,17 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			{
 				osFlagSet(AQR_sFlagREG, AQR_FLAG_ZERA_PARCIAIS);
 			}
+
+			if (ePubEvt == EVENT_GUI_PLANTER_IGNORE_SENSOR)
+			{
+				sIgnoreLineStatus *psIgnoreLine = pvPubData;
+				if (psIgnoreLine != NULL)
+				{
+					WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+					AQR_vIgnoreSensors(psIgnoreLine->bLineNum, psIgnoreLine->bLineIgnored);
+					WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+				}
+			}
 			break;
 		}
 		default:
@@ -1858,7 +1870,7 @@ void AQR_vRepeteTesteSensores (void)
 	osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 }
 
-void AQR_vApagaInstalacao(void)
+void AQR_vApagaInstalacao (void)
 {
 	AQR_vApagaListaSensores();
 
@@ -1871,6 +1883,43 @@ void AQR_vApagaInstalacao(void)
 	osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_VERIFICANDO);
 
 }
+
+void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored)
+{
+	osStatus status;
+	uint32_t dCurrLine, dCurrLineExt;
+
+	if (bLineNum < 33) {
+		dCurrLine = 1 << (bLineNum - 1);
+	} else if (bLineNum < 37) {
+		dCurrLineExt = 1 << (bLineNum - 33);
+	}
+
+
+	status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
+	ASSERT(status == osOK);
+
+	if (bIgnored) {
+		if (bLineNum < 33) {
+			AQR_sStatus.dSementeIgnorado |= dCurrLine;
+		} else if (bLineNum < 37) {
+			AQR_sStatus.dSementeIgnoradoExt |= dCurrLineExt;
+		}
+	} else {
+		if (bLineNum < 33) {
+			AQR_sStatus.dSementeIgnorado &= ~dCurrLine;
+			AQR_sStatus.dAduboIgnorado &= ~dCurrLine;
+		} else if (bLineNum < 37) {
+			AQR_sStatus.dSementeIgnoradoExt &= ~dCurrLineExt;
+			AQR_sStatus.dAduboIgnoradoExt &= ~dCurrLineExt;
+		}
+		AQR_vRepeteTesteSensores();
+	}
+
+	status = RELEASE_MUTEX(AQR_MTX_sEntradas);
+	ASSERT(status == osOK);
+}
+
 /******************************************************************************
  * Function : AQR_vAcquiregManagementThread(void const *argument)
  *//**

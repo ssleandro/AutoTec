@@ -95,6 +95,12 @@ typedef enum
 	STATUS_INSTALL_INVALID
 } eInstallationStatus;
 
+typedef struct
+{
+	uint8_t bLineNum;
+	bool bLineIgnored;
+} sIgnoreLineStatus;
+
 typedef enum
 {
 	LANGUAGE_PORTUGUESE,
@@ -134,8 +140,8 @@ typedef enum
 
 typedef enum
 {
-	ALTERNATED_ROWS_EVEN,
 	ALTERNATED_ROWS_ODD,
+	ALTERNATED_ROWS_EVEN,
 	ALTERNATED_ROWS_INVALID
 } eAlternatedRowsType;
 

@@ -85,6 +85,8 @@ UOS_tsConfiguracao sSISConfiguration;
 
 GUI_tsConfig GUI_sConfig;
 
+sIgnoreLineStatus GUI_sIgnoreStatus;
+
 /******************************************************************************
  * Module typedef
  *******************************************************************************/
@@ -395,7 +397,13 @@ void GUI_vGuiPublishThread (void const *argument)
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
-
+				case EVENT_GUI_PLANTER_IGNORE_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sIgnoreStatus);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
 				default:
 					break;
 			}
@@ -480,6 +488,24 @@ void GUI_SetSisConfiguration(void)
 
 	sSISConfiguration.sMonitor.bDivLinhas = GUIConfigurationData.eCentralRowSide;
 	sSISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
+
+
+    // If area monitor is enable, disable auto pause
+	if (GUIConfigurationData.eMonitorArea == AREA_MONITOR_ENABLED) {
+		sSISConfiguration.sMonitor.bPausaAuto = false;
+	} else {
+		sSISConfiguration.sMonitor.bPausaAuto = true;
+	}
+
+	// If auto pause is enable, disable pause button and calculate the of lines to auto pause
+	if (sSISConfiguration.sMonitor.bPausaAuto != false) {
+		sSISConfiguration.sMonitor.bTeclaPausaHab = false;
+		sSISConfiguration.sMonitor.bLinhasFalhaPausaAuto =
+				(GUIConfigurationData.bNumOfRows > 1) ? (((GUIConfigurationData.bNumOfRows + 1) >> 1) + 1) : GUIConfigurationData.bNumOfRows;
+	} else {
+		sSISConfiguration.sMonitor.bTeclaPausaHab = true;
+	}
+
 	sSISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
 	sSISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;
 
@@ -499,6 +525,43 @@ void GUI_SetSisConfiguration(void)
 		sSISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
 		sSISConfiguration.sMonitor.wDistLinhas = IN2MM(GUIConfigurationData.wDistBetweenLines);
 	}
+
+	if (sSISConfiguration.sGPS.wDistanciaEntreFixos < (AQR_wEspacamento / 10))
+	{
+		sSISConfiguration.sGPS.wDistanciaEntreFixos = (AQR_wEspacamento / 10);
+	} else
+	{
+		if (GUIConfigurationData.eMonitorArea != AREA_MONITOR_DISABLED)
+		{
+			if (sSISConfiguration.sGPS.wDistanciaEntreFixos > (AQR_wEspacamento / 10))
+			{
+				sSISConfiguration.sGPS.wDistanciaEntreFixos = (AQR_wEspacamento / 10);
+			}
+		} else
+		{
+			if (sSISConfiguration.sGPS.wDistanciaEntreFixos > (AQR_wEspacamento * GUIConfigurationData.bNumOfRows) / 10)
+			{
+				sSISConfiguration.sGPS.wDistanciaEntreFixos = (AQR_wEspacamento
+						* GUIConfigurationData.bNumOfRows) / 10;
+			}
+		}
+	}
+	if (sSISConfiguration.sGPS.wDistanciaEntreFixos < 100)
+	{
+		sSISConfiguration.sGPS.wDistanciaEntreFixos = 100;
+	}
+
+	if (sSISConfiguration.sGPS.wAnguloEntreFixos < 15)
+	{
+		sSISConfiguration.sGPS.wAnguloEntreFixos = 15;
+	} else
+	{
+		if (sSISConfiguration.sGPS.wAnguloEntreFixos > 180)
+		{
+			sSISConfiguration.sGPS.wAnguloEntreFixos = 180;
+		}
+	}
+
 	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
@@ -583,9 +646,6 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 
 }
 
-extern tsAcumulados AQR_sPubAcumulado;
-extern tsStatus AQR_sPubStatus;
-extern tsPubPlantData AQR_sPubPlantData;
 void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osStatus status;
@@ -701,6 +761,15 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ePubEvt = EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
+
+			if (ePubEvt == EVENT_ISO_PLANTER_IGNORE_SENSOR)
+			{
+				sIgnoreLineStatus* psIgnLine = pvPayload;
+				memcpy(&GUI_sIgnoreStatus, psIgnLine, sizeof(sIgnoreLineStatus));
+
+				ePubEvt = EVENT_GUI_PLANTER_IGNORE_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
 			break;
 		}
 		case MODULE_CONTROL:
@@ -780,13 +849,6 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
-
-				if ((psPlantData != &AQR_sPubPlantData) || (psPlantData->AQR_sAcumulado != &AQR_sPubAcumulado) ||
-						(psPlantData->AQR_sStatus != &AQR_sPubStatus))
-				{
-
-					psPlantData = NULL;
-				}
 
 				if (psPlantData != NULL)
 				{
