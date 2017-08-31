@@ -187,9 +187,12 @@ eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
 eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
+eIsobusMask eConfigMaskFromX;
 
 bool bCfgClearTotals = false;
 bool bCfgClearSetup = false;
+bool bCOPlanterLineInfo = true;
+bool bCOPlanterSpeedInfo = false;
 
 VTStatus sVTCurrentStatus;                          //!< Holds the current VT status
 peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
@@ -1382,6 +1385,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_INSTALLATION_ID:
 							{
+								ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
 								break;
 							}
 							case ISO_KEY_TEST_MODE_ID:
@@ -1398,6 +1402,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_BACKTO_INSTALLATION_ID:
 							{
+								ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
 								break;
 							}
 							case ISO_KEY_TRIMMING_ID:
@@ -1428,14 +1433,32 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_INFO_ID:
 							{
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-										MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+								if (sPlanterMask.psSpeedKm->dValue > 0)
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+								} else
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+								}
+								bCOPlanterLineInfo = true;
+								bCOPlanterSpeedInfo = false;
 								break;
 							}
 							case ISO_KEY_SPEED_ID:
 							{
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-										MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+								if (sPlanterMask.psSpeedKm->dValue > 0)
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+								} else
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+								}
+								bCOPlanterSpeedInfo = true;
+								bCOPlanterLineInfo = false;
 								break;
 							}
 							default:
@@ -1516,11 +1539,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
@@ -1529,11 +1547,14 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+
+								if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
+								{
+									ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+								} else if (eConfigMaskFromX == DATA_MASK_PLANTER)
+								{
+									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+								}
 
 								if (bCfgClearTotals)
 								{
@@ -1563,8 +1584,17 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+								break;
+							}
+							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID:
+							{
+								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							default:
@@ -1589,6 +1619,36 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 						if ((dAux >= DATA_MASK_CONFIGURATION) && (dAux < DATA_MASK_INVALID))
 						{
 							eCurrentMask = (eIsobusMask)dAux;
+
+							if (eCurrentMask == DATA_MASK_INSTALLATION)
+							{
+								eConfigMaskFromX = DATA_MASK_INSTALLATION;
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+							} else if (eCurrentMask == DATA_MASK_PLANTER)
+							{
+								eConfigMaskFromX = DATA_MASK_PLANTER;
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+							} else if (eCurrentMask == DATA_MASK_TEST_MODE)
+							{
+								eConfigMaskFromX = DATA_MASK_INSTALLATION;
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+							}
+
 							ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
 							WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 							PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
@@ -1804,10 +1864,10 @@ void ISO_vChangeActiveMask (eIsobusMask eNewMask)
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ACTIVE_MASK;
-	sSendMsg.frame.data[1] = ISO_OBJECT_WORKING_SET_ID & 0xFF;
-	sSendMsg.frame.data[2] = (ISO_OBJECT_WORKING_SET_ID & 0xFF00) >> 8;
-	sSendMsg.frame.data[3] = (eNewMask & 0xFF00) >> 8;
-	sSendMsg.frame.data[4] = eNewMask & 0xFF;
+	sSendMsg.frame.data[1] = (ISO_OBJECT_WORKING_SET_ID & 0xFF00) >> 8;
+	sSendMsg.frame.data[2] = ISO_OBJECT_WORKING_SET_ID & 0xFF;
+	sSendMsg.frame.data[3] = eNewMask & 0xFF;
+	sSendMsg.frame.data[4] = (eNewMask & 0xFF00) >> 8;
 	sSendMsg.frame.data[5] = 0xFF;
 	sSendMsg.frame.data[6] = 0xFF;
 	sSendMsg.frame.data[7] = 0xFF;
@@ -1969,6 +2029,26 @@ void ISO_vUpdatePlanterDataMask (void)
 	status = WAIT_MUTEX(ISO_UpdateMask, osWaitForever);
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
+	if (sPlanterMask.psSpeedKm->dValue > 0)
+	{
+		if (bCOPlanterLineInfo) {
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+		} else if (bCOPlanterSpeedInfo) {
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+		}
+	} else
+	{
+		if (bCOPlanterLineInfo) {
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+		} else if (bCOPlanterSpeedInfo) {
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+		}
+	}
 
 	for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
 	{

@@ -669,6 +669,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				if (eCurrMask == DATA_MASK_TEST_MODE)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TRABALHO);
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)

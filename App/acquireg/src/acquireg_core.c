@@ -1353,8 +1353,6 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			AQR_sPubPlantData.AQR_sStatus = &AQR_sPubStatus;
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_UPDATE_PLANT_DATA, EVENT_SET, &AQR_sPubPlantData);
 		}
-
-
 	}
 	osThreadTerminate(NULL);
 }
@@ -1867,6 +1865,9 @@ void AQR_vRepeteTesteSensores (void)
 
 	osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ERRO_INST_SENSOR);
 
+	osFlagClear(UOS_sFlagSis,
+		(UOS_SIS_FLAG_MODO_TESTE | UOS_SIS_FLAG_MODO_TRABALHO));
+
 	osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 }
 
@@ -1895,10 +1896,6 @@ void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored)
 		dCurrLineExt = 1 << (bLineNum - 33);
 	}
 
-
-	status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
-	ASSERT(status == osOK);
-
 	if (bIgnored) {
 		if (bLineNum < 33) {
 			AQR_sStatus.dSementeIgnorado |= dCurrLine;
@@ -1913,11 +1910,8 @@ void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored)
 			AQR_sStatus.dSementeIgnoradoExt &= ~dCurrLineExt;
 			AQR_sStatus.dAduboIgnoradoExt &= ~dCurrLineExt;
 		}
-		AQR_vRepeteTesteSensores();
+		osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 	}
-
-	status = RELEASE_MUTEX(AQR_MTX_sEntradas);
-	ASSERT(status == osOK);
 }
 
 /******************************************************************************
@@ -3018,12 +3012,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				psStatus->bAutoTeste = true;
 
 				//Limpa o flag de fim de instalação
-				osFlagClear(UOS_sFlagSis,
-					(UOS_SIS_FLAG_CONFIRMA_INST | UOS_SIS_FLAG_MODO_TESTE | UOS_SIS_FLAG_MODO_TRABALHO));
 				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
-
-				//Limpa flag
-				//            IHM_bConfirmaInstSensores = eSensoresNaoInstalados;
 
 				//Limpa alguma eventual falha de sensor desconectado,
 				//para evitar que o icone de falha seja ligado durante o teste
