@@ -64,6 +64,7 @@
 #define MA_GOTO_CLEAR_SETUP_MASK             55
 #define MA_SHOW_LINES_INFO                   56
 #define MA_SHOW_SPEED_INFO                   57
+#define MA_GOTO_TRIM_CHANGE_MASK             58
 #define DataMask_Installation              1000
 #define DataMask_Configuration             1001
 #define DataMask_Planter                   1002
@@ -73,6 +74,7 @@
 #define DataMask_ConfirmClearCount         1006
 #define DataMask_ConfirmConfigChanges      1007
 #define DataMask_ConfirmClearSetup         1008
+#define DataMask_ConfirmTrimmingChanges    1009
 #define Container_3000                     3000
 #define Container_3001                     3001
 #define Container_3002                     3002
@@ -323,6 +325,8 @@
 #define CO_LINE_DISABLE_L36                3247
 #define CO_PLANTER_SPEED_INFO              3248
 #define CO_CFG_CHANGE_CANCEL_RET_PLANTER   3249
+#define CO_TRIMMING_LEFT_SIDE              3250
+#define CO_TRIMMING_RIGHT_SIDE             3251
 #define SoftKeyMask_Installation           4000
 #define SoftKeyMask_InstallationCompleted   4001
 #define SoftKeyMask_Planter                4002
@@ -335,6 +339,7 @@
 #define SoftKeyMask_PlanterMoving          4009
 #define SoftKeyMask_PlanterInfoMoving      4010
 #define SoftKeyMask_ConfigToPlanter        4011
+#define SoftKeyMask_TrimmingChange         4012
 #define SoftKey_Config                     5000
 #define SoftKey_Trimming                   5001
 #define SoftKey_ClearTotal                 5002
@@ -350,6 +355,7 @@
 #define SoftKey_EndTest                    5012
 #define SoftKey_Speed                      5013
 #define SoftKey_Info                       5014
+#define SoftKey_BackTrimChanged            5015
 #define BU_CFG_TAB_HOME                    6000
 #define BU_CFG_TAB_PLANTER                 6001
 #define BU_CFG_TAB_ALTER_ROWS              6002
@@ -407,7 +413,12 @@
 #define BU_CLEAR_SETUP_ACCEPT              6054
 #define BU_CLEAR_SETUP_CANCEL              6055
 #define BU_CFG_CHANGE_CANCEL_RET_PLANTER   6056
+#define BU_TRIM_CHANGE_ACCEPT              6057
+#define BU_TRIM_CHANGE_CANCEL              6058
 #define IB_PLANT_IND_LINE_IGNORE_LINE      7000
+#define IB_TRIM_NO_TRIMMING                7001
+#define IB_TRIM_LEFT_SIDE                  7002
+#define IB_TRIM_RIGHT_SIDE                 7003
 #define IN_CFG_VEHICLE_CODE                9000
 #define IN_CFG_IMP_WIDTH                   9001
 #define IN_CFG_SEEDS_P_M                   9002
@@ -568,6 +579,11 @@
 #define OutputString_11143                11143
 #define OutputString_11144                11144
 #define OutputString_11145                11145
+#define OutputString_11146                11146
+#define OutputString_11147                11147
+#define OutputString_11148                11148
+#define OutputString_11149                11149
+#define OutputString_11150                11150
 #define ON_TEST_MODE_L01                  12000
 #define ON_TEST_MODE_L02                  12001
 #define ON_TEST_MODE_L03                  12002
@@ -758,6 +774,8 @@
 #define RT_LINE_DISABLE_L34               14117
 #define RT_LINE_DISABLE_L35               14118
 #define RT_LINE_DISABLE_L36               14119
+#define RT_TRIMMING_LEFT_SIDE             14120
+#define RT_TRIMMING_RIGHT_SIDE            14121
 #define BG_PLANT_UP_L01                   18000
 #define BG_PLANT_DOWN_L01                 18001
 #define BG_PLANT_UP_L02                   18002
@@ -834,6 +852,7 @@
 #define BG_PLANT_IND_LINE_DOWN            18073
 #define PG_AUTEQ_TELEMATICA               20000
 #define pattern_gs3_20001                 20001
+#define TrimmingDataMaskTractor           20002
 #define NV_TEST_MODE_L01                  21000
 #define NV_TEST_MODE_L02                  21001
 #define NV_TEST_MODE_L03                  21002
@@ -1110,6 +1129,9 @@
 #define NV_IND_LINE_IGNORE_L34            21273
 #define NV_IND_LINE_IGNORE_L35            21274
 #define NV_IND_LINE_IGNORE_L36            21275
+#define NV_TRIM_NO_TRIMMING               21276
+#define NV_TRIM_LEFT_SIDE                 21277
+#define NV_TRIM_RIGHT_SIDE                21278
 #define FontAttributes_23000              23000
 #define FontAttributes_23001              23001
 #define FontAttributes_23002              23002

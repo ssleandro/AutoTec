@@ -212,6 +212,7 @@ void AQR_vTimerCallbackImpStopped (void const*);
 void AQR_vRepeteTesteSensores (void);
 void AQR_vApagaInstalacao (void);
 void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored);
+void AQR_vTrimmingLines(eTrimming eTrimmStatus);
 
 /******************************************************************************
  * Module timers
@@ -1494,6 +1495,17 @@ void AQR_vIdentifyEvent (contract_s* contract)
 					WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 				}
 			}
+
+			if (ePubEvt == EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE)
+			{
+				sTrimmingState* psTrimm = pvPubData;
+				if (psTrimm != NULL)
+				{
+					WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+					AQR_vTrimmingLines(psTrimm->eTrimmState);
+					WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+				}
+			}
 			break;
 		}
 		default:
@@ -1912,6 +1924,13 @@ void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored)
 		}
 		osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 	}
+}
+
+void AQR_vTrimmingLines (eTrimming eTrimmStatus)
+{
+	tsStatus *psStatus = &AQR_sStatus;
+
+	psStatus->eArremate = (AQR_teArremate) eTrimmStatus;
 }
 
 /******************************************************************************

@@ -74,9 +74,13 @@ static sInputListObj asConfigInputList[ISO_NUM_INPUT_LIST_OBJECTS];
 static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
 
 static sInstallSensorStatus sInstallStatus;
-static sTrimmingStatus sLinesTrimmingStatus;
 
 static sIgnoreLineStatus sIgnoreStatus;
+
+static sTrimmingState sTrimmState = {
+		.eTrimmState = TRIMMING_NOT_TRIMMED,
+		.eNewTrimmState = TRIMMING_NOT_TRIMMED,
+};
 
 static sConfigurationDataMask sConfigDataMask =
 	{
@@ -187,6 +191,7 @@ eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
 eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
+eChangeTrimmingState eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
 eIsobusMask eConfigMaskFromX;
 
 bool bCfgClearTotals = false;
@@ -218,6 +223,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
 void ISO_vEnableDisableObjCommand (uint16_t wObjID, bool bIsEnable);
 void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNewValue);
 void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask);
+void ISO_vUpdateNumberVariableValue (uint16_t wOutputNumberID, uint32_t dNumericValue);
 void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
 
 /******************************************************************************
@@ -413,6 +419,11 @@ void ISO_vIsobusPublishThread (void const *argument)
 				case EVENT_ISO_PLANTER_IGNORE_SENSOR:
 				{
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &sIgnoreStatus);
+					break;
+				}
+				case EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &sTrimmState);
 					break;
 				}
 				default:
@@ -1158,22 +1169,6 @@ void ISO_vInitObjectStruct (void)
 		}
 	}
 
-	// Initialize sensor trimming status structure
-//	sLinesTrimmingStatus.bNumOfSensor = 36;
-//	sLinesTrimmingStatus.pFillAtributte = &asNumFillAttributesObjects[36];
-//
-//	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++)
-//	{
-//		if (i < *sConfigDataMask.bNumOfRows)
-//		{
-//			sLinesTrimmingStatus.pFillAtributte[i].bColor = STATUS_TRIMMING_NOT_TRIMMED;
-//		}
-//		else
-//		{
-//			sLinesTrimmingStatus.pFillAtributte[i].bColor = STATUS_TRIMMING_NONE;
-//		}
-//	}
-
 	// Initialize input list objects
 	for (int i = 0; i < ARRAY_SIZE(asConfigInputList); i++)
 	{
@@ -1219,7 +1214,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	uint16_t wObjectID = (sRcvMsg->B2 | (sRcvMsg->B3 << 8));
 	uint32_t dValue = (sRcvMsg->B5 | (sRcvMsg->B6 << 8) | (sRcvMsg->B7 << 16) | (sRcvMsg->B8 << 24));
 
-	if ((wObjectID >= NV_TEST_MODE_L01) && (wObjectID <= NV_IND_LINE_IGNORE_L36))
+	if ((wObjectID >= NV_TEST_MODE_L01) && (wObjectID <= NV_TRIM_RIGHT_SIDE))
 	{
 		switch (wObjectID)
 		{
@@ -1240,6 +1235,36 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 			case NV_CFG_IMP_WIDTH:
 			{
 				bCfgClearTotals = true;
+				break;
+			}
+			case NV_TRIM_NO_TRIMMING:
+			{
+				sTrimmState.eNewTrimmState = TRIMMING_NOT_TRIMMED;
+				ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, ISO_INPUT_BOOLEAN_SET);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_LEFT_SIDE, false);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_RIGHT_SIDE, false);
+				break;
+			}
+			case NV_TRIM_LEFT_SIDE:
+			{
+				sTrimmState.eNewTrimmState = TRIMMING_LEFT_SIDE;
+				ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, ISO_INPUT_BOOLEAN_SET);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_LEFT_SIDE, true);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_RIGHT_SIDE, false);
+				break;
+			}
+			case NV_TRIM_RIGHT_SIDE:
+			{
+				sTrimmState.eNewTrimmState = TRIMMING_RIGHT_SIDE;
+				ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, ISO_INPUT_BOOLEAN_SET);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_LEFT_SIDE, false);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_RIGHT_SIDE, true);
 				break;
 			}
 			default:
@@ -1351,6 +1376,13 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, true);
 			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, false);
 		}
+	} else if (eCurrentMask == DATA_MASK_TRIMMING)
+	{
+		if (sTrimmState.eNewTrimmState != sTrimmState.eTrimmState)
+		{
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+					SOFT_KEY_MASK_TRIMMING_CHANGES);
+		}
 	}
 }
 
@@ -1459,6 +1491,11 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								}
 								bCOPlanterSpeedInfo = true;
 								bCOPlanterLineInfo = false;
+								break;
+							}
+							case ISO_KEY_BACKTO_TRIMMING_CHANGES_ID:
+							{
+								eChangeTrimmCurrState = TRIMM_CHANGE_WAIT_CONFIRMATION;
 								break;
 							}
 							default:
@@ -1595,6 +1632,58 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								break;
+							}
+							case ISO_BUTTON_TRIMM_CHANGES_CANCEL_ID:
+							{
+								if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
+								{
+									sTrimmState.eNewTrimmState = sTrimmState.eTrimmState;
+									switch (sTrimmState.eTrimmState)
+									{
+										case TRIMMING_NOT_TRIMMED:
+										{
+											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, true);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
+											break;
+										}
+										case TRIMMING_LEFT_SIDE:
+										{
+											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, true);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
+											break;
+										}
+										case TRIMMING_RIGHT_SIDE:
+										{
+											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, true);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
+											break;
+										}
+										default:
+											break;
+									}
+									eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+								}
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+										SOFT_KEY_MASK_TRIMMING);
+								break;
+							}
+							case ISO_BUTTON_TRIMM_CHANGES_ACCEPT_ID:
+							{
+								if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
+								{
+									sTrimmState.eTrimmState = sTrimmState.eNewTrimmState;
+									ePubEvt = EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+								}
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+										SOFT_KEY_MASK_TRIMMING);
 								break;
 							}
 							default:

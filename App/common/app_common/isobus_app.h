@@ -65,6 +65,7 @@ typedef enum
 	SOFT_KEY_MASK_PLANTER_MOVING,
 	SOFT_KEY_MASK_PLANTER_INFO_MOVING,
 	SOFT_KEY_MASK_CONFIG_TO_PLANTER,
+	SOFT_KEY_MASK_TRIMMING_CHANGES,
 	SOFT_KEY_MASK_INVALID
 } eIsobusSoftKeyMask;
 
@@ -78,6 +79,8 @@ typedef enum
 	DATA_MASK_SYSTEM,
 	DATA_MASK_CONFIRM_CLEAR_COUNTER,
 	DATA_MASK_CONFIRM_CONFIG_CHANGES,
+	DATA_MASK_CONFIRM_CLEAR_SETUP,
+	DATA_MASK_CONFIRM_TRIMMING_CHANGES,
 	DATA_MASK_INVALID
 } eIsobusMask;
 
@@ -155,6 +158,19 @@ typedef enum
 	STATUS_TRIMMING_NONE = 0xFF,
 	STATUS_TRIMMING_INVALID,
 } eTrimmingStatus;
+
+typedef enum
+{
+	TRIMMING_NOT_TRIMMED,
+	TRIMMING_LEFT_SIDE,
+	TRIMMING_RIGHT_SIDE,
+} eTrimming;
+
+typedef struct
+{
+	eTrimming eTrimmState;
+	eTrimming eNewTrimmState;
+} sTrimmingState;
 
 typedef struct sConfigurationData
 {
@@ -277,17 +293,6 @@ typedef struct sPlanterDataMask
 	sNumberVariableObj* psMTEV;
 	sNumberVariableObj* psMaxSpeed;
 } sPlanterDataMask;
-
-typedef struct sTrimmingStatus
-{
-	sFillAttributesObj* pFillAtributte;
-	uint8_t bNumOfSensor;
-} sTrimmingStatus;
-
-typedef struct sTrimmingDataMask
-{
-	sTrimmingStatus* psTrimmedLines;
-} sTrimmingDataMask;
 
 typedef struct sTestModeDataMaskData
 {

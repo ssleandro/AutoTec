@@ -86,6 +86,7 @@ UOS_tsConfiguracao sSISConfiguration;
 GUI_tsConfig GUI_sConfig;
 
 sIgnoreLineStatus GUI_sIgnoreStatus;
+sTrimmingState GUI_sTrimmState;
 
 /******************************************************************************
  * Module typedef
@@ -401,6 +402,13 @@ void GUI_vGuiPublishThread (void const *argument)
 				{
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sIgnoreStatus);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sTrimmState);
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
@@ -769,6 +777,15 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				memcpy(&GUI_sIgnoreStatus, psIgnLine, sizeof(sIgnoreLineStatus));
 
 				ePubEvt = EVENT_GUI_PLANTER_IGNORE_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE)
+			{
+				sTrimmingState* psTrimm = pvPayload;
+				memcpy(&GUI_sTrimmState, psTrimm, sizeof(sTrimmingState));
+
+				ePubEvt = EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
