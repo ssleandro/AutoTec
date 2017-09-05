@@ -1323,6 +1323,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
 					ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, true);
 					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+					eConfigMaskFromX = DATA_MASK_INSTALLATION;
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
 				bCfgClearTotals = true;
@@ -1576,6 +1577,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
@@ -1587,10 +1589,35 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 
 								if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
 								{
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
 									ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-								} else if (eConfigMaskFromX == DATA_MASK_PLANTER)
+								} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
 								{
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+									ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
 									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+								}
+
+								if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
+								{
+									ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
+									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+								}
+
+								if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
+								{
+									ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
+								} else
+								{
+									ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
 								}
 
 								if (bCfgClearTotals)
@@ -1628,6 +1655,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID:
 							{
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
 								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
@@ -2051,8 +2079,45 @@ void ISO_vUpdateConfigurationDataMask (void)
 
 	ISO_vUpdateNumberVariableValue(IL_CFG_LANGUAGE, *sConfigDataMask.eLanguage);
 	ISO_vUpdateNumberVariableValue(IL_CFG_UNIT_SYSTEM, *sConfigDataMask.eUnit);
-	ISO_vUpdateNumberVariableValue(NV_CFG_IMP_WIDTH, *sConfigDataMask.wImplementWidth);
 	ISO_vUpdateNumberVariableValue(NV_CFG_VEHICLE_CODE, *sConfigDataMask.dVehicleID);
+
+	ISO_vUpdateNumberVariableValue(IL_CFG_AREA_MONITOR, *sConfigDataMask.eMonitor);
+	ISO_vUpdateNumberVariableValue(NV_CFG_IMP_WIDTH, *sConfigDataMask.wImplementWidth);
+
+	if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+	{
+		ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_N_ROWS, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, true);
+		ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+		ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+	} else
+	{
+		ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_N_ROWS, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, false);
+		ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
+		ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+	}
+
 	ISO_vUpdateNumberVariableValue(NV_CFG_SEEDS_P_M, *sConfigDataMask.wSeedRate);
 	ISO_vUpdateNumberVariableValue(NV_CFG_N_ROWS, *sConfigDataMask.bNumOfRows);
 
@@ -2081,7 +2146,6 @@ void ISO_vUpdateConfigurationDataMask (void)
 	}
 
 	ISO_vUpdateNumberVariableValue(IL_CFG_RAISED_ROWS, *sConfigDataMask.eAltType);
-
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);

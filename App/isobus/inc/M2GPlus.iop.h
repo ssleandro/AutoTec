@@ -327,6 +327,7 @@
 #define CO_CFG_CHANGE_CANCEL_RET_PLANTER   3249
 #define CO_TRIMMING_LEFT_SIDE              3250
 #define CO_TRIMMING_RIGHT_SIDE             3251
+#define CO_PLANTER_AREA_MONITOR            3252
 #define SoftKeyMask_Installation           4000
 #define SoftKeyMask_InstallationCompleted   4001
 #define SoftKeyMask_Planter                4002
@@ -584,6 +585,11 @@
 #define OutputString_11148                11148
 #define OutputString_11149                11149
 #define OutputString_11150                11150
+#define OutputString_11151                11151
+#define OutputString_11152                11152
+#define OutputString_11153                11153
+#define OutputString_11154                11154
+#define OutputString_11155                11155
 #define ON_TEST_MODE_L01                  12000
 #define ON_TEST_MODE_L02                  12001
 #define ON_TEST_MODE_L03                  12002
@@ -639,6 +645,10 @@
 #define ON_SPEED_INFO_TEV                 12052
 #define ON_SPEED_INFO_MTEV                12053
 #define ON_SPEED_INFO_VMAX                12054
+#define ON_AREA_MON_PWA_HA                12055
+#define ON_AREA_MON_PWA_M                 12056
+#define ON_AREA_MON_WA_HA                 12057
+#define ON_AREA_MON_WA_M                  12058
 #define Line_13000                        13000
 #define Line_13001                        13001
 #define Line_13002                        13002
