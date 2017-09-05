@@ -412,6 +412,13 @@ void GUI_vGuiPublishThread (void const *argument)
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
+				case EVENT_GUI_AREA_MONITOR_PAUSE:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
 				default:
 					break;
 			}
@@ -786,6 +793,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				memcpy(&GUI_sTrimmState, psTrimm, sizeof(sTrimmingState));
 
 				ePubEvt = EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_AREA_MONITOR_PAUSE)
+			{
+				ePubEvt = EVENT_GUI_AREA_MONITOR_PAUSE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;

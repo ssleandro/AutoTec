@@ -341,6 +341,8 @@
 #define SoftKeyMask_PlanterInfoMoving      4010
 #define SoftKeyMask_ConfigToPlanter        4011
 #define SoftKeyMask_TrimmingChange         4012
+#define SoftKeyMask_AreaMonitor            4013
+#define SoftKeyMask_AreaMonitorMoving      4014
 #define SoftKey_Config                     5000
 #define SoftKey_Trimming                   5001
 #define SoftKey_ClearTotal                 5002
@@ -357,6 +359,7 @@
 #define SoftKey_Speed                      5013
 #define SoftKey_Info                       5014
 #define SoftKey_BackTrimChanged            5015
+#define SoftKey_Pause                      5016
 #define BU_CFG_TAB_HOME                    6000
 #define BU_CFG_TAB_PLANTER                 6001
 #define BU_CFG_TAB_ALTER_ROWS              6002
@@ -590,6 +593,7 @@
 #define OutputString_11153                11153
 #define OutputString_11154                11154
 #define OutputString_11155                11155
+#define OutputString_11156                11156
 #define ON_TEST_MODE_L01                  12000
 #define ON_TEST_MODE_L02                  12001
 #define ON_TEST_MODE_L03                  12002

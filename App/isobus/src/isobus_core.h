@@ -68,6 +68,7 @@
 #define ISO_KEY_CLEAR_TOTAL_ID				SoftKey_ClearTotal
 #define ISO_KEY_CLEAR_SUBTOTAL_ID			SoftKey_ClearSubTotal
 #define ISO_KEY_BACKTO_TRIMMING_CHANGES_ID	SoftKey_BackTrimChanged
+#define ISO_KEY_PAUSE_ID					SoftKey_Pause
 
 #define ISO_BUTTON_REPEAT_TEST_ID							BU_SETUP_REPEAT_TEST
 #define ISO_BUTTON_ERASE_INSTALLATION_ID					BU_SETUP_CLEAR_SETUP

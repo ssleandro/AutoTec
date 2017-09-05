@@ -1506,6 +1506,19 @@ void AQR_vIdentifyEvent (contract_s* contract)
 					WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 				}
 			}
+
+			if (ePubEvt == EVENT_GUI_AREA_MONITOR_PAUSE)
+			{
+				if (UOS_sConfiguracao.sMonitor.bTeclaPausaHab != false) {
+					uint32_t dFlags = osFlagGet(AQR_sFlagREG);
+
+					if ((dFlags & AQR_FLAG_PAUSA) > 0) {
+						osFlagClear(AQR_sFlagREG, AQR_FLAG_PAUSA);
+					} else {
+						osFlagSet(AQR_sFlagREG, AQR_FLAG_PAUSA);
+					}
+				}
+			}
 			break;
 		}
 		default:

@@ -402,6 +402,7 @@ void ISO_vIsobusPublishThread (void const *argument)
 				case EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA: //No break
 				case EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL: //No break
 				case EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL:
+				case EVENT_ISO_AREA_MONITOR_PAUSE:
 				{
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, NULL);
 					break;
@@ -1335,7 +1336,6 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 				{
 					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
 					*sConfigDataMask.eAlterRows = ALTERNATE_ROWS_ENABLED;
-					*sConfigDataMask.eAltType = ALTERNATED_ROWS_EVEN;
 				}
 				else
 				{
@@ -1497,6 +1497,14 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							case ISO_KEY_BACKTO_TRIMMING_CHANGES_ID:
 							{
 								eChangeTrimmCurrState = TRIMM_CHANGE_WAIT_CONFIRMATION;
+								break;
+							}
+							case ISO_KEY_PAUSE_ID:
+							{
+								ePubEvt = EVENT_ISO_AREA_MONITOR_PAUSE;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							default:
@@ -2185,50 +2193,77 @@ void ISO_vUpdatePlanterDataMask (void)
 
 	if (sPlanterMask.psSpeedKm->dValue > 0)
 	{
-		if (bCOPlanterLineInfo) {
+		if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+		{
+			if (bCOPlanterLineInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+			} else if (bCOPlanterSpeedInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+			}
+		} else
+		{
 			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
-		} else if (bCOPlanterSpeedInfo) {
-			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_AREA_MONITOR_MOVING);
 		}
 	} else
 	{
-		if (bCOPlanterLineInfo) {
+		if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+		{
+			if (bCOPlanterLineInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+			} else if (bCOPlanterSpeedInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+			}
+		} else {
 			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
-		} else if (bCOPlanterSpeedInfo) {
-			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_AREA_MONITOR);
 		}
 	}
 
-	for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
+	if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
 	{
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
-			sPlanterMask.psLineStatus->psLineAverage[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
-			sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
-			sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
-			sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
-	}
+		for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
+		{
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
+				sPlanterMask.psLineStatus->psLineAverage[i].dValue);
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
+				sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
+				sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
+				sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+		}
 
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+	} else
+	{
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+	}
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);
@@ -2466,7 +2501,7 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 		{
 			if (i < (*sConfigDataMask.bNumOfRows))
 			{
-				if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_EVEN)
+				if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_ODD)
 				{
 					if ((i % 2) == 0)
 					{
@@ -2478,7 +2513,7 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
 					}
 
-				} else if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_ODD)
+				} else if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_EVEN)
 				{
 					if ((i % 2) == 0)
 					{
@@ -2581,27 +2616,37 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 			{
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdatePlanterDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateInstallationDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateTrimmingDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateSystemDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
@@ -2613,7 +2658,9 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 
 					if ((*sConfigDataMask.bNumOfRows) != 36)
 					{
+						WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 						ISO_vUpdatePlanterDataMaskLines();
+						WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					}
 
 					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
@@ -2622,16 +2669,20 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateConfigurationDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vChangeActiveMask(DATA_MASK_CONFIGURATION);
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				default:
