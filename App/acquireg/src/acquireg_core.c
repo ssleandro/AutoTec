@@ -1319,7 +1319,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
 			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
-			| AQR_APL_FLAG_SEND_TOTAL, true, false, osWaitForever);
+			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1353,6 +1353,32 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			AQR_sPubPlantData.AQR_sAcumulado = &AQR_sPubAcumulado;
 			AQR_sPubPlantData.AQR_sStatus = &AQR_sPubStatus;
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_UPDATE_PLANT_DATA, EVENT_SET, &AQR_sPubPlantData);
+		}
+		if ((dFlags & AQR_SIS_FLAG_ALARME) > 0)
+		{
+			if ((AQR_wAlarmes & AQR_SENSOR_DESCONECTADO) > 0)
+			{
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_DISCONNECTED_SENSOR, EVENT_SET, &AQR_sStatus);
+			} else if ((AQR_wAlarmes & AQR_FALHA_LINHA) > 0)
+			{
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_LINE_FAILURE, EVENT_SET, &AQR_sStatus);
+			} else if ((AQR_wAlarmes & AQR_FALHA_INSTALACAO) > 0)
+			{
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_SETUP_FAILURE, EVENT_SET, &AQR_sStatus);
+			} else
+			{
+				if ((AQR_wAlarmes & AQR_EXC_VELOCIDADE) > 0)
+				{
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_EXCEEDED_SPEED, EVENT_SET, &AQR_sStatus);
+				} else if ((AQR_wAlarmes & AQR_FALHA_GPS) > 0)
+				{
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_GPS_FAILURE, EVENT_SET, &AQR_sStatus);
+				}
+			}
+		}
+		if ((dFlags & AQR_SIS_FLAG_ALARME_TOLERANCIA) > 0)
+		{
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -4146,8 +4172,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//
 		//osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 
-		//GPIO_vToggle(&sTimeTest);
-
 		//--------------------------------------------------------------------------
 		// Tratamento do parâmetro Alarmes:
 
@@ -4157,7 +4181,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//Não está em Auto Teste
 		if ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) > 0)
 		{
-
 			if (bLimpaFalhas == true)
 			{
 				bLimpaFalhas = false;
@@ -4215,7 +4238,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			//Se houver algum sensor desconectado aciona o alarme
 			if (psStatus->bSensorDesconectado != false)
 			{
-
 				if (psStatus->bTrabalhando != false)
 				{
 					AQR_wAlarmes |= AQR_SENSOR_DESCONECTADO;
@@ -4431,11 +4453,12 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 			//Se houve alguma destas falhas, então emite um alarme contínuo.
 			if ((AQR_wAlarmes & ( AQR_FALHA_LINHA | AQR_SENSOR_DESCONECTADO |
-			AQR_EXC_VELOCIDADE | AQR_NOVO_SENSOR | AQR_FALHA_INSTALACAO |
-			AQR_FALHA_GPS)) > 0)
+				AQR_EXC_VELOCIDADE | AQR_NOVO_SENSOR | AQR_FALHA_INSTALACAO |
+				AQR_FALHA_GPS)) > 0)
 			{
 				//Se algum está ativo, aciona o alarme:
 				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
+				osFlagSet(xAQR_sFlagSis, AQR_SIS_FLAG_ALARME);
 			}
 
 			//Se houve apenas falha na tolerância do sensor, então emite 2 beeps.
@@ -4443,6 +4466,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			{
 				//Aciona o alarme de linha abaixo da tolerância
 				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_ALARME_TOLERANCIA);
+				osFlagSet(xAQR_sFlagSis, AQR_SIS_FLAG_ALARME_TOLERANCIA);
 			}
 		}
 		else
@@ -4451,13 +4475,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			{
 				//Este flag deve ser reconhecido aqui:
 				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
+				osFlagClear(xAQR_sFlagSis, AQR_SIS_FLAG_ALARME);
 			}
 		}
 
 		// devolve mutex
 		status = RELEASE_MUTEX(AQR_MTX_sEntradas);
 		ASSERT(status == osOK);
-
 	}
 	osThreadTerminate(NULL);
 }

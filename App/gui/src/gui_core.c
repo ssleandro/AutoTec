@@ -419,6 +419,31 @@ void GUI_vGuiPublishThread (void const *argument)
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
 				default:
 					break;
 			}
@@ -606,6 +631,7 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	event_e ePubEvt;
 	uint8_t bConta;
 	uint8_t bSensor = 0;
+	bool bAlarmIntSensor = false;
 
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
@@ -631,6 +657,10 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 					if ((pSensor->eResultadoAutoTeste == Aprovado) ||
 						(pSensor->eResultadoAutoTeste == Nenhum))
 					{
+						if (eSensorStatus[bConta] == STATUS_INSTALL_WAITING)
+						{
+							bAlarmIntSensor = true;
+						}
 						eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
 					}
 					else
@@ -659,6 +689,11 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 
+	if (bAlarmIntSensor)
+	{
+		ePubEvt = EVENT_GUI_ALARM_NEW_SENSOR;
+		PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	}
 }
 
 void GUI_vIdentifyEvent (contract_s* contract)
@@ -691,7 +726,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+				} else if (eCurrMask == DATA_MASK_INSTALLATION)
+				{
+					osFlagClear(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 				}
+
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
 				ASSERT(status == osOK);
@@ -906,14 +945,41 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
-
-//			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
-//			{
-//				// Update test mode data mask number of sensors installed, number of sensors configured
-//				GUI_vSetGuiTestData(ePubEvt, GET_PUBLISHED_PAYLOAD(contract));
-//				ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-//				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
-//			}
+			if (ePubEvt == EVENT_AQR_ALARM_NEW_SENSOR)
+			{
+				ePubEvt = EVENT_AQR_ALARM_NEW_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_DISCONNECTED_SENSOR)
+			{
+				ePubEvt = EVENT_AQR_ALARM_DISCONNECTED_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_LINE_FAILURE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_LINE_FAILURE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_SETUP_FAILURE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_SETUP_FAILURE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_EXCEEDED_SPEED)
+			{
+				ePubEvt = EVENT_AQR_ALARM_EXCEEDED_SPEED;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_GPS_FAILURE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_GPS_FAILURE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_TOLERANCE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_TOLERANCE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
 			break;
 		}
 		default:

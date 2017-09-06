@@ -48,7 +48,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of SENSOR queue
-#define QUEUE_SIZEOFISOBUS (16)
+#define QUEUE_SIZEOFISOBUS (32)
 
 #define THIS_MODULE MODULE_ISOBUS
 
@@ -144,11 +144,11 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
 /*****************************
  * Local messages queue
  *****************************/
-CREATE_LOCAL_QUEUE(PublishQ, event_e, 16)
-CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 32)
-CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 32)
-CREATE_LOCAL_QUEUE(UpdateQ, event_e, 16)
-CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 32)
+CREATE_LOCAL_QUEUE(PublishQ, event_e, 32)
+CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 64)
+CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 64)
+CREATE_LOCAL_QUEUE(UpdateQ, event_e, 32)
+CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 64)
 
 /*****************************
  * Local flag group
@@ -556,6 +556,29 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					break;
 				}
 				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
 				{
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
@@ -1082,41 +1105,43 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 	switch (ISO_wGetPGN(sRcvMsg))
 	{
 		case VT_TO_ECU_PGN:
-		if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 		{
-			switch (sRcvMsg->B1)
+			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 			{
-				case FUNC_LOAD_VERSION:
-				if (sRcvMsg->B6 == 0)
+				switch (sRcvMsg->B1)
 				{
-					eCurrState = OBJECT_POOL_LOADED;
-					osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
+					case FUNC_LOAD_VERSION:
+						if (sRcvMsg->B6 == 0)
+						{
+							eCurrState = OBJECT_POOL_LOADED;
+							osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
+						}
+						else
+						{
+							eCurrState = WAIT_LOAD_VERSION;
+							osSignalSet(xAuxBootThreadId, WAIT_LOAD_VERSION);
+						}
+						break;
+					case FUNC_VT_STATUS:
+						osSignalSet(xAuxBootThreadId, WAIT_VT_STATUS);
+						break;
+					default:
+						break;
 				}
-				else
-				{
-					eCurrState = WAIT_LOAD_VERSION;
-					osSignalSet(xAuxBootThreadId, WAIT_LOAD_VERSION);
-				}
-					break;
-				case FUNC_VT_STATUS:
-				osSignalSet(xAuxBootThreadId, WAIT_VT_STATUS);
-					break;
-				default:
-					break;
 			}
-		}
-		else if (sRcvMsg->PS == BROADCAST_ADDRESS)
-		{
-			switch (sRcvMsg->B1)
+			else if (sRcvMsg->PS == BROADCAST_ADDRESS)
 			{
-				case FUNC_VT_STATUS:
-				osSignalSet(xAuxBootThreadId, WAIT_GLOBAL_VT_STATUS);
-					break;
-				default:
-					break;
+				switch (sRcvMsg->B1)
+				{
+					case FUNC_VT_STATUS:
+						osSignalSet(xAuxBootThreadId, WAIT_GLOBAL_VT_STATUS);
+						break;
+					default:
+						break;
+				}
 			}
-		}
 			break;
+		}
 		case TP_CONN_MANAGE_PGN:
 		if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 		{
@@ -1741,7 +1766,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 					case FUNC_VT_CHANGE_ACTIVE_MASK:
 					{
 						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B2));
-						if ((dAux >= DATA_MASK_CONFIGURATION) && (dAux < DATA_MASK_INVALID))
+						if ((dAux >= DATA_MASK_INSTALLATION) && (dAux < DATA_MASK_INVALID))
 						{
 							eCurrentMask = (eIsobusMask)dAux;
 
@@ -1763,16 +1788,17 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
-							} else if (eCurrentMask == DATA_MASK_TEST_MODE)
-							{
-								eConfigMaskFromX = DATA_MASK_INSTALLATION;
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
 							}
+//							else if (eCurrentMask == DATA_MASK_TEST_MODE)
+//							{
+//								eConfigMaskFromX = DATA_MASK_INSTALLATION;
+//								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+//							}
 
 							ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
 							WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
@@ -2173,7 +2199,8 @@ void ISO_vUpdateInstallationDataMask (void)
 	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++)
 	{
 		sInstallStatus.pFillAttribute[i].bColor = eSensorsIntallStatus[i];
-		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID, sInstallStatus.pFillAttribute[i].bColor);
+		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID,
+				sInstallStatus.pFillAttribute[i].bColor);
 	}
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
@@ -2654,7 +2681,11 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_INSTALLATION_FINISH);
-					ISO_vControlAudioSignalCommand(3, 210, 250, 250);
+					ISO_vControlAudioSignalCommand(
+							ISO_ALARM_SETUP_FINISHED_ACTIVATIONS,
+							ISO_ALARM_SETUP_FINISHED_FREQUENCY_HZ,
+							ISO_ALARM_SETUP_FINISHED_ON_TIME_MS,
+							ISO_ALARM_SETUP_FINISHED_OFF_TIME_MS);
 
 					if ((*sConfigDataMask.bNumOfRows) != 36)
 					{
@@ -2683,6 +2714,34 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
 					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					ISO_vControlAudioSignalCommand(
+							ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS,
+							ISO_ALARM_SETUP_NEW_SENSOR_FREQUENCY_HZ,
+							ISO_ALARM_SETUP_NEW_SENSOR_ON_TIME_MS,
+							ISO_ALARM_SETUP_NEW_SENSOR_OFF_TIME_MS);
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
+				{
+					ISO_vControlAudioSignalCommand(ISO_ALARM_TOLERANCE_ACTIVATIONS,
+							ISO_ALARM_TOLERANCE_FREQUENCY_HZ,
+							ISO_ALARM_TOLERANCE_ON_TIME_MS,
+							ISO_ALARM_TOLERANCE_OFF_TIME_MS);
 					break;
 				}
 				default:

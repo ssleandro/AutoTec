@@ -289,8 +289,8 @@ typedef union
 typedef struct
 {
 	uint8_t bActiveWSM :8;     // Source address of active working set master
-	uint16_t wMaskActWS :16;    // Object ID of visible Data/Alarm Mask of the active working set
-	uint16_t wSoftActWS :16;    // Object ID of visible Soft Key Mask of the active working set
+	eIsobusMask wMaskActWS :16;    // Object ID of visible Data/Alarm Mask of the active working set
+	eIsobusSoftKeyMask wSoftActWS :16;    // Object ID of visible Soft Key Mask of the active working set
 	uint8_t bBusyUpdMask :1;     // VT is busy updating visible mask
 	uint8_t bBusySavMem :1;     // VT is busy saving data to non-volatile memory
 	uint8_t bBusyExcCmd :1;     // VT is busy executing a command

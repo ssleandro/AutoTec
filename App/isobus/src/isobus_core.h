@@ -105,9 +105,6 @@
 #define ISO_INPUT_BOOLEAN_SET				0x01
 #define ISO_INPUT_BOOLEAN_CLEAR				0x00
 
-/******************************************************************************
- * Configuration Constants
- *******************************************************************************/
 #define ISO_OBJECT_WORKING_SET_ID		WorkingSet_0
 #define ISO_OBJECT_PICTURE_GRAPHIC_ID	PG_AUTEQ_TELEMATICA
 #define ISO_OBJECT_SOFT_KEY_MASK_ID		SoftKeyMask_Installation
@@ -127,6 +124,25 @@
 #define ISO_OBJECT_RECTANGLE_ID			Rectangle_14000
 #define ISO_OBJECT_FILL_ATTRIBUTES_ID	FA_SETUP_STAT_L01
 #define ISO_OBJECT_LINE_ATTRIBUTES_ID	LineAttributes_24000
+
+/******************************************************************************
+ * Configuration Constants
+ *******************************************************************************/
+// Alarms
+#define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1
+#define ISO_ALARM_SETUP_NEW_SENSOR_FREQUENCY_HZ	800
+#define ISO_ALARM_SETUP_NEW_SENSOR_ON_TIME_MS 	50
+#define ISO_ALARM_SETUP_NEW_SENSOR_OFF_TIME_MS 	50
+
+#define ISO_ALARM_SETUP_FINISHED_ACTIVATIONS 	3
+#define ISO_ALARM_SETUP_FINISHED_FREQUENCY_HZ 	210
+#define ISO_ALARM_SETUP_FINISHED_ON_TIME_MS 	250
+#define ISO_ALARM_SETUP_FINISHED_OFF_TIME_MS 	250
+
+#define ISO_ALARM_TOLERANCE_ACTIVATIONS 	2
+#define ISO_ALARM_TOLERANCE_FREQUENCY_HZ 	800
+#define ISO_ALARM_TOLERANCE_ON_TIME_MS 		50
+#define ISO_ALARM_TOLERANCE_OFF_TIME_MS 	50
 
 /******************************************************************************
  * Macros

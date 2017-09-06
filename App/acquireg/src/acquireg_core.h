@@ -63,6 +63,8 @@
 #define AQR_APL_FLAG_SAVE_LIST				0x0010
 #define AQR_APL_FLAG_ERASE_LIST				0x0020
 #define AQR_APL_FLAG_SEND_TOTAL				0x0040
+#define AQR_SIS_FLAG_ALARME				 	0x0080
+#define AQR_SIS_FLAG_ALARME_TOLERANCIA		0x0100
 
 /******************************************************************************
  * Configuration Constants
