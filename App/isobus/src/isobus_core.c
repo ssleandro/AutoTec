@@ -39,6 +39,7 @@
 #include "isobus_tools.h"
 #include "debug_tool.h"
 #include "iso11783.h"
+#include "M2GPlus.c.h"
 #include "../../isobus/config/isobus_config.h"
 #include "isobus_ThreadControl.h"
 #include <stdlib.h>
@@ -47,13 +48,17 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of SENSOR queue
-#define QUEUE_SIZEOFISOBUS (16)
+#define QUEUE_SIZEOFISOBUS (32)
 
 #define THIS_MODULE MODULE_ISOBUS
 
 #define ISO_FLAG_STATE_RUNNING 0x00800000
 
 #define TO_UPPER_INDEX(index) ((0x8100 + index) - 0x8000)
+#define IGNORE_LINE_GET_LINE_NUMBER_FROM_ID(id) ((uint8_t)((id - NV_IND_LINE_IGNORE_L01) + 1))
+#define IGNORE_LINE_GET_RECT_ID_FROM_NV_ID(id) ((uint8_t)(id - NV_IND_LINE_IGNORE_L01) + RT_PLANT_L01)
+#define IGNORE_LINE_GET_BG_UP_ID_FROM_NV_ID(id) ((uint8_t)((id - NV_IND_LINE_IGNORE_L01)*2) + BG_PLANT_UP_L01)
+#define IGNORE_LINE_GET_BG_DOWN_ID_FROM_NV_ID(id) ((uint8_t)((id - NV_IND_LINE_IGNORE_L01)*2) + BG_PLANT_DOWN_L01)
 
 /******************************************************************************
  * Module Variable Definitions
@@ -69,7 +74,13 @@ static sInputListObj asConfigInputList[ISO_NUM_INPUT_LIST_OBJECTS];
 static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
 
 static sInstallSensorStatus sInstallStatus;
-static sTrimmingStatus sLinesTrimmingStatus;
+
+static sIgnoreLineStatus sIgnoreStatus;
+
+static sTrimmingState sTrimmState = {
+		.eTrimmState = TRIMMING_NOT_TRIMMED,
+		.eNewTrimmState = TRIMMING_NOT_TRIMMED,
+};
 
 static sConfigurationDataMask sConfigDataMask =
 	{
@@ -133,11 +144,11 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
 /*****************************
  * Local messages queue
  *****************************/
-CREATE_LOCAL_QUEUE(PublishQ, event_e, 16)
-CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 32)
-CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 32)
-CREATE_LOCAL_QUEUE(UpdateQ, event_e, 16)
-CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 32)
+CREATE_LOCAL_QUEUE(PublishQ, event_e, 32)
+CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 64)
+CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 64)
+CREATE_LOCAL_QUEUE(UpdateQ, event_e, 32)
+CREATE_LOCAL_QUEUE(BootQ, ISOBUSMsg, 64)
 
 /*****************************
  * Local flag group
@@ -180,6 +191,13 @@ eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
 eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
+eChangeTrimmingState eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+eIsobusMask eConfigMaskFromX;
+
+bool bCfgClearTotals = false;
+bool bCfgClearSetup = false;
+bool bCOPlanterLineInfo = true;
+bool bCOPlanterSpeedInfo = false;
 
 VTStatus sVTCurrentStatus;                          //!< Holds the current VT status
 peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
@@ -190,7 +208,6 @@ CREATE_MUTEX(MTX_VTStatus);
 CREATE_MUTEX(ISO_UpdateMask);
 
 extern unsigned int POOL_SIZE;
-extern uint8_t isoOP_M2GPlus[];
 
 // Installation
 eInstallationStatus InstallationStatus[36];
@@ -206,6 +223,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
 void ISO_vEnableDisableObjCommand (uint16_t wObjID, bool bIsEnable);
 void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNewValue);
 void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask);
+void ISO_vUpdateNumberVariableValue (uint16_t wOutputNumberID, uint32_t dNumericValue);
 void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
 
 /******************************************************************************
@@ -384,6 +402,7 @@ void ISO_vIsobusPublishThread (void const *argument)
 				case EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA: //No break
 				case EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL: //No break
 				case EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL:
+				case EVENT_ISO_AREA_MONITOR_PAUSE:
 				{
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, NULL);
 					break;
@@ -398,7 +417,16 @@ void ISO_vIsobusPublishThread (void const *argument)
 					ISO_vTreatUpdateDataEvent(ePubEvt);
 					break;
 				}
-
+				case EVENT_ISO_PLANTER_IGNORE_SENSOR:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &sIgnoreStatus);
+					break;
+				}
+				case EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &sTrimmState);
+					break;
+				}
 				default:
 					break;
 			}
@@ -528,6 +556,29 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					break;
 				}
 				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
 				{
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
@@ -1054,41 +1105,43 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 	switch (ISO_wGetPGN(sRcvMsg))
 	{
 		case VT_TO_ECU_PGN:
-		if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 		{
-			switch (sRcvMsg->B1)
+			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 			{
-				case FUNC_LOAD_VERSION:
-				if (sRcvMsg->B6 == 0)
+				switch (sRcvMsg->B1)
 				{
-					eCurrState = OBJECT_POOL_LOADED;
-					osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
+					case FUNC_LOAD_VERSION:
+						if (sRcvMsg->B6 == 0)
+						{
+							eCurrState = OBJECT_POOL_LOADED;
+							osSignalSet(xAuxBootThreadId, OBJECT_POOL_LOADED);
+						}
+						else
+						{
+							eCurrState = WAIT_LOAD_VERSION;
+							osSignalSet(xAuxBootThreadId, WAIT_LOAD_VERSION);
+						}
+						break;
+					case FUNC_VT_STATUS:
+						osSignalSet(xAuxBootThreadId, WAIT_VT_STATUS);
+						break;
+					default:
+						break;
 				}
-				else
-				{
-					eCurrState = WAIT_LOAD_VERSION;
-					osSignalSet(xAuxBootThreadId, WAIT_LOAD_VERSION);
-				}
-					break;
-				case FUNC_VT_STATUS:
-				osSignalSet(xAuxBootThreadId, WAIT_VT_STATUS);
-					break;
-				default:
-					break;
 			}
-		}
-		else if (sRcvMsg->PS == BROADCAST_ADDRESS)
-		{
-			switch (sRcvMsg->B1)
+			else if (sRcvMsg->PS == BROADCAST_ADDRESS)
 			{
-				case FUNC_VT_STATUS:
-				osSignalSet(xAuxBootThreadId, WAIT_GLOBAL_VT_STATUS);
-					break;
-				default:
-					break;
+				switch (sRcvMsg->B1)
+				{
+					case FUNC_VT_STATUS:
+						osSignalSet(xAuxBootThreadId, WAIT_GLOBAL_VT_STATUS);
+						break;
+					default:
+						break;
+				}
 			}
-		}
 			break;
+		}
 		case TP_CONN_MANAGE_PGN:
 		if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 		{
@@ -1142,22 +1195,6 @@ void ISO_vInitObjectStruct (void)
 		}
 	}
 
-	// Initialize sensor trimming status structure
-//	sLinesTrimmingStatus.bNumOfSensor = 36;
-//	sLinesTrimmingStatus.pFillAtributte = &asNumFillAttributesObjects[36];
-//
-//	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++)
-//	{
-//		if (i < *sConfigDataMask.bNumOfRows)
-//		{
-//			sLinesTrimmingStatus.pFillAtributte[i].bColor = STATUS_TRIMMING_NOT_TRIMMED;
-//		}
-//		else
-//		{
-//			sLinesTrimmingStatus.pFillAtributte[i].bColor = STATUS_TRIMMING_NONE;
-//		}
-//	}
-
 	// Initialize input list objects
 	for (int i = 0; i < ARRAY_SIZE(asConfigInputList); i++)
 	{
@@ -1199,28 +1236,93 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	if (sRcvMsg == NULL)
 		return;
 
+	event_e ePubEvt;
 	uint16_t wObjectID = (sRcvMsg->B2 | (sRcvMsg->B3 << 8));
 	uint32_t dValue = (sRcvMsg->B5 | (sRcvMsg->B6 << 8) | (sRcvMsg->B7 << 16) | (sRcvMsg->B8 << 24));
 
-	if ((wObjectID >= NV_TEST_MODE_L01) && (wObjectID < NV_WORKED_AREA_M))
+	if ((wObjectID >= NV_TEST_MODE_L01) && (wObjectID <= NV_TRIM_RIGHT_SIDE))
 	{
-		if (wObjectID == NV_CFG_N_ROWS)
+		switch (wObjectID)
 		{
-			if ((dValue % 2) != 0)
+			case NV_CFG_N_ROWS:
 			{
-				ISO_vEnableDisableObjCommand(0x9005, true);
-			} else
+				if ((dValue % 2) != 0)
+				{
+					ISO_vEnableDisableObjCommand(IL_CFG_CENTER_ROW_SIDE, true);
+				} else
+				{
+					ISO_vEnableDisableObjCommand(IL_CFG_CENTER_ROW_SIDE, false);
+				}
+				bCfgClearTotals = true;
+				bCfgClearSetup = true;
+				break;
+			}
+			case NV_CFG_ROW_SPACING:
+			case NV_CFG_IMP_WIDTH:
 			{
-				ISO_vEnableDisableObjCommand(0x9005, false);
+				bCfgClearTotals = true;
+				break;
+			}
+			case NV_TRIM_NO_TRIMMING:
+			{
+				sTrimmState.eNewTrimmState = TRIMMING_NOT_TRIMMED;
+				ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, ISO_INPUT_BOOLEAN_SET);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_LEFT_SIDE, false);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_RIGHT_SIDE, false);
+				break;
+			}
+			case NV_TRIM_LEFT_SIDE:
+			{
+				sTrimmState.eNewTrimmState = TRIMMING_LEFT_SIDE;
+				ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, ISO_INPUT_BOOLEAN_SET);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_LEFT_SIDE, true);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_RIGHT_SIDE, false);
+				break;
+			}
+			case NV_TRIM_RIGHT_SIDE:
+			{
+				sTrimmState.eNewTrimmState = TRIMMING_RIGHT_SIDE;
+				ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, ISO_INPUT_BOOLEAN_SET);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, ISO_INPUT_BOOLEAN_CLEAR);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_LEFT_SIDE, false);
+				ISO_vHideShowContainerCommand(CO_TRIMMING_RIGHT_SIDE, true);
+				break;
+			}
+			default:
+			{
+				if ((wObjectID >= NV_IND_LINE_IGNORE_L01) && (wObjectID <= NV_IND_LINE_IGNORE_L36))
+				{
+					sIgnoreStatus.bLineIgnored = dValue;
+					sIgnoreStatus.bLineNum = IGNORE_LINE_GET_LINE_NUMBER_FROM_ID(wObjectID);
+
+					if (dValue)
+					{
+						ISO_vChangeAttributeCommand(IGNORE_LINE_GET_RECT_ID_FROM_NV_ID(wObjectID), ISO_RECTANGLE_LINE_ATTRIBUTE, LA_PLANT_IGNORED_LINE);
+						ISO_vChangeAttributeCommand(IGNORE_LINE_GET_BG_UP_ID_FROM_NV_ID(wObjectID), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_GREY);
+						ISO_vChangeAttributeCommand(IGNORE_LINE_GET_BG_DOWN_ID_FROM_NV_ID(wObjectID), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_GREY);
+					} else
+					{
+						ISO_vChangeAttributeCommand(IGNORE_LINE_GET_RECT_ID_FROM_NV_ID(wObjectID), ISO_RECTANGLE_LINE_ATTRIBUTE, LA_PLANT_DEFAULT_LINE);
+						ISO_vChangeAttributeCommand(IGNORE_LINE_GET_BG_UP_ID_FROM_NV_ID(wObjectID), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
+						ISO_vChangeAttributeCommand(IGNORE_LINE_GET_BG_DOWN_ID_FROM_NV_ID(wObjectID), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
+					}
+
+					ePubEvt = EVENT_ISO_PLANTER_IGNORE_SENSOR;
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				}
+				break;
 			}
 		}
 		ISO_vInputNumberVariableValue(wObjectID, dValue);
-		if(eCurrentMask == DATA_MASK_CONFIGURATION)
-		{
-			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
-		}
 	}
-	else if ((wObjectID >= IL_CFG_LANGUAGE) && (wObjectID < IL_CFG_RAISED_ROWS))
+	else if ((wObjectID >= IL_CFG_LANGUAGE) && (wObjectID <= IL_CFG_RAISED_ROWS))
 	{
 		switch (wObjectID)
 		{
@@ -1234,6 +1336,8 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+					ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, false);
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
 				}
 				else
 				{
@@ -1243,8 +1347,12 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+					ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, true);
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+					eConfigMaskFromX = DATA_MASK_INSTALLATION;
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
+				bCfgClearTotals = true;
 				break;
 			}
 			case ISO_INPUT_LIST_ALTERNATE_ROW_ID:
@@ -1253,7 +1361,6 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 				{
 					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
 					*sConfigDataMask.eAlterRows = ALTERNATE_ROWS_ENABLED;
-					*sConfigDataMask.eAltType = ALTERNATED_ROWS_EVEN;
 				}
 				else
 				{
@@ -1261,6 +1368,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					*sConfigDataMask.eAlterRows = ALTERNATE_ROWS_DISABLED;
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
+				ISO_vUpdatePlanterDataMaskLines();
 				break;
 			}
 			case ISO_INPUT_LIST_ALTER_ROW_TYPE_ID:
@@ -1273,6 +1381,8 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 				{
 					*sConfigDataMask.eAltType = ALTERNATED_ROWS_EVEN;
 				}
+				ISO_vInputIndexListValue(wObjectID, dValue);
+				ISO_vUpdatePlanterDataMaskLines();
 				break;
 			}
 			default:
@@ -1281,10 +1391,23 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 				break;
 			}
 		}
+	}
 
-		if(eCurrentMask == DATA_MASK_CONFIGURATION)
+	if(eCurrentMask == DATA_MASK_CONFIGURATION)
+	{
+		ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+
+		if (bCfgClearTotals)
 		{
-			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, true);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, false);
+		}
+	} else if (eCurrentMask == DATA_MASK_TRIMMING)
+	{
+		if (sTrimmState.eNewTrimmState != sTrimmState.eTrimmState)
+		{
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+					SOFT_KEY_MASK_TRIMMING_CHANGES);
 		}
 	}
 }
@@ -1320,6 +1443,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_INSTALLATION_ID:
 							{
+								ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
 								break;
 							}
 							case ISO_KEY_TEST_MODE_ID:
@@ -1336,6 +1460,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_BACKTO_INSTALLATION_ID:
 							{
+								ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
 								break;
 							}
 							case ISO_KEY_TRIMMING_ID:
@@ -1366,14 +1491,45 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_INFO_ID:
 							{
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-										MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+								if (sPlanterMask.psSpeedKm->dValue > 0)
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+								} else
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+								}
+								bCOPlanterLineInfo = true;
+								bCOPlanterSpeedInfo = false;
 								break;
 							}
 							case ISO_KEY_SPEED_ID:
 							{
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-										MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+								if (sPlanterMask.psSpeedKm->dValue > 0)
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+								} else
+								{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+								}
+								bCOPlanterSpeedInfo = true;
+								bCOPlanterLineInfo = false;
+								break;
+							}
+							case ISO_KEY_BACKTO_TRIMMING_CHANGES_ID:
+							{
+								eChangeTrimmCurrState = TRIMM_CHANGE_WAIT_CONFIRMATION;
+								break;
+							}
+							case ISO_KEY_PAUSE_ID:
+							{
+								ePubEvt = EVENT_ISO_AREA_MONITOR_PAUSE;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							default:
@@ -1454,9 +1610,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
@@ -1465,9 +1619,57 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+
+								if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
+								{
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+									ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+								} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
+								{
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+									ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+								}
+
+								if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
+								{
+									ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
+									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
+									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+								}
+
+								if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
+								{
+									ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
+								} else
+								{
+									ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+								}
+
+								if (bCfgClearTotals)
+								{
+									ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									bCfgClearTotals = false;
+								}
+
+								if (bCfgClearSetup)
+								{
+									ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									bCfgClearSetup = false;
+								}
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
@@ -1479,6 +1681,70 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+								break;
+							}
+							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID:
+							{
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								break;
+							}
+							case ISO_BUTTON_TRIMM_CHANGES_CANCEL_ID:
+							{
+								if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
+								{
+									sTrimmState.eNewTrimmState = sTrimmState.eTrimmState;
+									switch (sTrimmState.eTrimmState)
+									{
+										case TRIMMING_NOT_TRIMMED:
+										{
+											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, true);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
+											break;
+										}
+										case TRIMMING_LEFT_SIDE:
+										{
+											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, true);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
+											break;
+										}
+										case TRIMMING_RIGHT_SIDE:
+										{
+											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, true);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
+											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
+											break;
+										}
+										default:
+											break;
+									}
+									eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+								}
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+										SOFT_KEY_MASK_TRIMMING);
+								break;
+							}
+							case ISO_BUTTON_TRIMM_CHANGES_ACCEPT_ID:
+							{
+								if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
+								{
+									sTrimmState.eTrimmState = sTrimmState.eNewTrimmState;
+									ePubEvt = EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+									eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+								}
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+										SOFT_KEY_MASK_TRIMMING);
 								break;
 							}
 							default:
@@ -1500,9 +1766,40 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 					case FUNC_VT_CHANGE_ACTIVE_MASK:
 					{
 						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B2));
-						if ((dAux >= DATA_MASK_CONFIGURATION) && (dAux < DATA_MASK_INVALID))
+						if ((dAux >= DATA_MASK_INSTALLATION) && (dAux < DATA_MASK_INVALID))
 						{
 							eCurrentMask = (eIsobusMask)dAux;
+
+							if (eCurrentMask == DATA_MASK_INSTALLATION)
+							{
+								eConfigMaskFromX = DATA_MASK_INSTALLATION;
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+							} else if (eCurrentMask == DATA_MASK_PLANTER)
+							{
+								eConfigMaskFromX = DATA_MASK_PLANTER;
+								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+							}
+//							else if (eCurrentMask == DATA_MASK_TEST_MODE)
+//							{
+//								eConfigMaskFromX = DATA_MASK_INSTALLATION;
+//								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+//							}
+
 							ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
 							WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 							PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
@@ -1718,10 +2015,10 @@ void ISO_vChangeActiveMask (eIsobusMask eNewMask)
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ACTIVE_MASK;
-	sSendMsg.frame.data[1] = ISO_OBJECT_WORKING_SET_ID & 0xFF;
-	sSendMsg.frame.data[2] = (ISO_OBJECT_WORKING_SET_ID & 0xFF00) >> 8;
-	sSendMsg.frame.data[3] = (eNewMask & 0xFF00) >> 8;
-	sSendMsg.frame.data[4] = eNewMask & 0xFF;
+	sSendMsg.frame.data[1] = (ISO_OBJECT_WORKING_SET_ID & 0xFF00) >> 8;
+	sSendMsg.frame.data[2] = ISO_OBJECT_WORKING_SET_ID & 0xFF;
+	sSendMsg.frame.data[3] = eNewMask & 0xFF;
+	sSendMsg.frame.data[4] = (eNewMask & 0xFF00) >> 8;
 	sSendMsg.frame.data[5] = 0xFF;
 	sSendMsg.frame.data[6] = 0xFF;
 	sSendMsg.frame.data[7] = 0xFF;
@@ -1816,8 +2113,45 @@ void ISO_vUpdateConfigurationDataMask (void)
 
 	ISO_vUpdateNumberVariableValue(IL_CFG_LANGUAGE, *sConfigDataMask.eLanguage);
 	ISO_vUpdateNumberVariableValue(IL_CFG_UNIT_SYSTEM, *sConfigDataMask.eUnit);
-	ISO_vUpdateNumberVariableValue(NV_CFG_IMP_WIDTH, *sConfigDataMask.wImplementWidth);
 	ISO_vUpdateNumberVariableValue(NV_CFG_VEHICLE_CODE, *sConfigDataMask.dVehicleID);
+
+	ISO_vUpdateNumberVariableValue(IL_CFG_AREA_MONITOR, *sConfigDataMask.eMonitor);
+	ISO_vUpdateNumberVariableValue(NV_CFG_IMP_WIDTH, *sConfigDataMask.wImplementWidth);
+
+	if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+	{
+		ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_N_ROWS, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, true);
+		ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+		ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+	} else
+	{
+		ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_N_ROWS, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
+		ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
+		ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, false);
+		ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
+		ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
+		ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+	}
+
 	ISO_vUpdateNumberVariableValue(NV_CFG_SEEDS_P_M, *sConfigDataMask.wSeedRate);
 	ISO_vUpdateNumberVariableValue(NV_CFG_N_ROWS, *sConfigDataMask.bNumOfRows);
 
@@ -1847,7 +2181,6 @@ void ISO_vUpdateConfigurationDataMask (void)
 
 	ISO_vUpdateNumberVariableValue(IL_CFG_RAISED_ROWS, *sConfigDataMask.eAltType);
 
-
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);
 	ASSERT(status == osOK);
@@ -1866,7 +2199,8 @@ void ISO_vUpdateInstallationDataMask (void)
 	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++)
 	{
 		sInstallStatus.pFillAttribute[i].bColor = eSensorsIntallStatus[i];
-		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID, sInstallStatus.pFillAttribute[i].bColor);
+		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID,
+				sInstallStatus.pFillAttribute[i].bColor);
 	}
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
@@ -1884,32 +2218,79 @@ void ISO_vUpdatePlanterDataMask (void)
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-	for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
+	if (sPlanterMask.psSpeedKm->dValue > 0)
 	{
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
-			sPlanterMask.psLineStatus->psLineAverage[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
-			sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
-			sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
-		ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
-			sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+		if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+		{
+			if (bCOPlanterLineInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+			} else if (bCOPlanterSpeedInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+			}
+		} else
+		{
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_AREA_MONITOR_MOVING);
+		}
+	} else
+	{
+		if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+		{
+			if (bCOPlanterLineInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+			} else if (bCOPlanterSpeedInfo) {
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+			}
+		} else {
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_AREA_MONITOR);
+		}
 	}
 
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
-	ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+	if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+	{
+		for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
+		{
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
+				sPlanterMask.psLineStatus->psLineAverage[i].dValue);
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
+				sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
+				sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
+			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
+				sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+		}
+
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+	} else
+	{
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+		ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+	}
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);
@@ -2147,24 +2528,28 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 		{
 			if (i < (*sConfigDataMask.bNumOfRows))
 			{
-				if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_EVEN)
+				if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_ODD)
 				{
 					if ((i % 2) == 0)
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, false);
 					} else
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
 					}
 
-				} else if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_ODD)
+				} else if ((*sConfigDataMask.eAltType) == ALTERNATED_ROWS_EVEN)
 				{
 					if ((i % 2) == 0)
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
 					} else
 					{
 						ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+						ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, false);
 					}
 				}
 			} else
@@ -2174,12 +2559,19 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 			}
 		}
 
-	} else
+	} else if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
 	{
-		for (uint8_t i = (*sConfigDataMask.bNumOfRows); i < CAN_bNUM_DE_LINHAS; i++)
+		for (uint8_t i = 0; i < CAN_bNUM_DE_LINHAS; i++)
 		{
-			ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
-			ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
+			if (i < (*sConfigDataMask.bNumOfRows))
+			{
+				ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, true);
+				ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, false);
+			} else
+			{
+				ISO_vHideShowContainerCommand(CO_PLANTER_L01 + i, false);
+				ISO_vHideShowContainerCommand(CO_LINE_DISABLE_L01 + i, true);
+			}
 		}
 	}
 	ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
@@ -2251,27 +2643,37 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 			{
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdatePlanterDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateInstallationDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateTrimmingDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateSystemDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
@@ -2279,11 +2681,17 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					ISO_vUpdateTestModeDataMask(eRecvPubEvt);
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_INSTALLATION_FINISH);
-					ISO_vControlAudioSignalCommand(3, 210, 250, 250);
+					ISO_vControlAudioSignalCommand(
+							ISO_ALARM_SETUP_FINISHED_ACTIVATIONS,
+							ISO_ALARM_SETUP_FINISHED_FREQUENCY_HZ,
+							ISO_ALARM_SETUP_FINISHED_ON_TIME_MS,
+							ISO_ALARM_SETUP_FINISHED_OFF_TIME_MS);
 
 					if ((*sConfigDataMask.bNumOfRows) != 36)
 					{
+						WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 						ISO_vUpdatePlanterDataMaskLines();
+						WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					}
 
 					event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
@@ -2292,16 +2700,48 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vUpdateConfigurationDataMask();
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
 				{
+					WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 					ISO_vChangeActiveMask(DATA_MASK_CONFIGURATION);
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					ISO_vControlAudioSignalCommand(
+							ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS,
+							ISO_ALARM_SETUP_NEW_SENSOR_FREQUENCY_HZ,
+							ISO_ALARM_SETUP_NEW_SENSOR_ON_TIME_MS,
+							ISO_ALARM_SETUP_NEW_SENSOR_OFF_TIME_MS);
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
+				{
+					ISO_vControlAudioSignalCommand(ISO_ALARM_TOLERANCE_ACTIVATIONS,
+							ISO_ALARM_TOLERANCE_FREQUENCY_HZ,
+							ISO_ALARM_TOLERANCE_ON_TIME_MS,
+							ISO_ALARM_TOLERANCE_OFF_TIME_MS);
 					break;
 				}
 				default:
@@ -2324,7 +2764,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt)
 		case DATA_MASK_CONFIRM_CONFIG_CHANGES:
 		{
 			ISO_vUpdateSisConfigData(&GUIConfigurationData);
-			PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
+		PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
 			break;
 		}
 		default:

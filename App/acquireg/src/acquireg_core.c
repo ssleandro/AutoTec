@@ -211,6 +211,8 @@ void AQR_vTimerCallbackTurnOff (void const*);
 void AQR_vTimerCallbackImpStopped (void const*);
 void AQR_vRepeteTesteSensores (void);
 void AQR_vApagaInstalacao (void);
+void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored);
+void AQR_vTrimmingLines(eTrimming eTrimmStatus);
 
 /******************************************************************************
  * Module timers
@@ -1317,7 +1319,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
 			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
-			| AQR_APL_FLAG_SEND_TOTAL, true, false, osWaitForever);
+			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1352,8 +1354,32 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			AQR_sPubPlantData.AQR_sStatus = &AQR_sPubStatus;
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_UPDATE_PLANT_DATA, EVENT_SET, &AQR_sPubPlantData);
 		}
-
-
+		if ((dFlags & AQR_SIS_FLAG_ALARME) > 0)
+		{
+			if ((AQR_wAlarmes & AQR_SENSOR_DESCONECTADO) > 0)
+			{
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_DISCONNECTED_SENSOR, EVENT_SET, &AQR_sStatus);
+			} else if ((AQR_wAlarmes & AQR_FALHA_LINHA) > 0)
+			{
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_LINE_FAILURE, EVENT_SET, &AQR_sStatus);
+			} else if ((AQR_wAlarmes & AQR_FALHA_INSTALACAO) > 0)
+			{
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_SETUP_FAILURE, EVENT_SET, &AQR_sStatus);
+			} else
+			{
+				if ((AQR_wAlarmes & AQR_EXC_VELOCIDADE) > 0)
+				{
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_EXCEEDED_SPEED, EVENT_SET, &AQR_sStatus);
+				} else if ((AQR_wAlarmes & AQR_FALHA_GPS) > 0)
+				{
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_GPS_FAILURE, EVENT_SET, &AQR_sStatus);
+				}
+			}
+		}
+		if ((dFlags & AQR_SIS_FLAG_ALARME_TOLERANCIA) > 0)
+		{
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
+		}
 	}
 	osThreadTerminate(NULL);
 }
@@ -1483,6 +1509,41 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL)
 			{
 				osFlagSet(AQR_sFlagREG, AQR_FLAG_ZERA_PARCIAIS);
+			}
+
+			if (ePubEvt == EVENT_GUI_PLANTER_IGNORE_SENSOR)
+			{
+				sIgnoreLineStatus *psIgnoreLine = pvPubData;
+				if (psIgnoreLine != NULL)
+				{
+					WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+					AQR_vIgnoreSensors(psIgnoreLine->bLineNum, psIgnoreLine->bLineIgnored);
+					WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+				}
+			}
+
+			if (ePubEvt == EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE)
+			{
+				sTrimmingState* psTrimm = pvPubData;
+				if (psTrimm != NULL)
+				{
+					WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+					AQR_vTrimmingLines(psTrimm->eTrimmState);
+					WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+				}
+			}
+
+			if (ePubEvt == EVENT_GUI_AREA_MONITOR_PAUSE)
+			{
+				if (UOS_sConfiguracao.sMonitor.bTeclaPausaHab != false) {
+					uint32_t dFlags = osFlagGet(AQR_sFlagREG);
+
+					if ((dFlags & AQR_FLAG_PAUSA) > 0) {
+						osFlagClear(AQR_sFlagREG, AQR_FLAG_PAUSA);
+					} else {
+						osFlagSet(AQR_sFlagREG, AQR_FLAG_PAUSA);
+					}
+				}
 			}
 			break;
 		}
@@ -1649,7 +1710,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			fVelocidade *= 3.6f;
 
 			// Verifica Excesso de Velocidade a cada segundo
-			if (fVelocidade > (UOS_sConfiguracao.sMonitor.fLimVel + 0.09f))
+			if (fVelocidade > (UOS_sConfiguracao.sMonitor.fLimVel + 0.01f))
 			{
 				//Indica que está em excesso de velocidade
 				psStatus->bExVel = true;
@@ -1855,10 +1916,13 @@ void AQR_vRepeteTesteSensores (void)
 
 	osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ERRO_INST_SENSOR);
 
+	osFlagClear(UOS_sFlagSis,
+		(UOS_SIS_FLAG_MODO_TESTE | UOS_SIS_FLAG_MODO_TRABALHO));
+
 	osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
 }
 
-void AQR_vApagaInstalacao(void)
+void AQR_vApagaInstalacao (void)
 {
 	AQR_vApagaListaSensores();
 
@@ -1871,6 +1935,43 @@ void AQR_vApagaInstalacao(void)
 	osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_VERIFICANDO);
 
 }
+
+void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored)
+{
+	osStatus status;
+	uint32_t dCurrLine, dCurrLineExt;
+
+	if (bLineNum < 33) {
+		dCurrLine = 1 << (bLineNum - 1);
+	} else if (bLineNum < 37) {
+		dCurrLineExt = 1 << (bLineNum - 33);
+	}
+
+	if (bIgnored) {
+		if (bLineNum < 33) {
+			AQR_sStatus.dSementeIgnorado |= dCurrLine;
+		} else if (bLineNum < 37) {
+			AQR_sStatus.dSementeIgnoradoExt |= dCurrLineExt;
+		}
+	} else {
+		if (bLineNum < 33) {
+			AQR_sStatus.dSementeIgnorado &= ~dCurrLine;
+			AQR_sStatus.dAduboIgnorado &= ~dCurrLine;
+		} else if (bLineNum < 37) {
+			AQR_sStatus.dSementeIgnoradoExt &= ~dCurrLineExt;
+			AQR_sStatus.dAduboIgnoradoExt &= ~dCurrLineExt;
+		}
+		osFlagSet(AQR_sFlagREG, AQR_FLAG_AUTO_TESTE);
+	}
+}
+
+void AQR_vTrimmingLines (eTrimming eTrimmStatus)
+{
+	tsStatus *psStatus = &AQR_sStatus;
+
+	psStatus->eArremate = (AQR_teArremate) eTrimmStatus;
+}
+
 /******************************************************************************
  * Function : AQR_vAcquiregManagementThread(void const *argument)
  *//**
@@ -2969,12 +3070,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				psStatus->bAutoTeste = true;
 
 				//Limpa o flag de fim de instalação
-				osFlagClear(UOS_sFlagSis,
-					(UOS_SIS_FLAG_CONFIRMA_INST | UOS_SIS_FLAG_MODO_TESTE | UOS_SIS_FLAG_MODO_TRABALHO));
 				osFlagClear(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
-
-				//Limpa flag
-				//            IHM_bConfirmaInstSensores = eSensoresNaoInstalados;
 
 				//Limpa alguma eventual falha de sensor desconectado,
 				//para evitar que o icone de falha seja ligado durante o teste
@@ -4076,8 +4172,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//
 		//osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 
-		//GPIO_vToggle(&sTimeTest);
-
 		//--------------------------------------------------------------------------
 		// Tratamento do parâmetro Alarmes:
 
@@ -4087,7 +4181,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		//Não está em Auto Teste
 		if ((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) > 0)
 		{
-
 			if (bLimpaFalhas == true)
 			{
 				bLimpaFalhas = false;
@@ -4145,7 +4238,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			//Se houver algum sensor desconectado aciona o alarme
 			if (psStatus->bSensorDesconectado != false)
 			{
-
 				if (psStatus->bTrabalhando != false)
 				{
 					AQR_wAlarmes |= AQR_SENSOR_DESCONECTADO;
@@ -4361,11 +4453,12 @@ void AQR_vAcquiregManagementThread (void const *argument)
 
 			//Se houve alguma destas falhas, então emite um alarme contínuo.
 			if ((AQR_wAlarmes & ( AQR_FALHA_LINHA | AQR_SENSOR_DESCONECTADO |
-			AQR_EXC_VELOCIDADE | AQR_NOVO_SENSOR | AQR_FALHA_INSTALACAO |
-			AQR_FALHA_GPS)) > 0)
+				AQR_EXC_VELOCIDADE | AQR_NOVO_SENSOR | AQR_FALHA_INSTALACAO |
+				AQR_FALHA_GPS)) > 0)
 			{
 				//Se algum está ativo, aciona o alarme:
 				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
+				osFlagSet(xAQR_sFlagSis, AQR_SIS_FLAG_ALARME);
 			}
 
 			//Se houve apenas falha na tolerância do sensor, então emite 2 beeps.
@@ -4373,6 +4466,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			{
 				//Aciona o alarme de linha abaixo da tolerância
 				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_ALARME_TOLERANCIA);
+				osFlagSet(xAQR_sFlagSis, AQR_SIS_FLAG_ALARME_TOLERANCIA);
 			}
 		}
 		else
@@ -4381,13 +4475,13 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			{
 				//Este flag deve ser reconhecido aqui:
 				osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_ALARME);
+				osFlagClear(xAQR_sFlagSis, AQR_SIS_FLAG_ALARME);
 			}
 		}
 
 		// devolve mutex
 		status = RELEASE_MUTEX(AQR_MTX_sEntradas);
 		ASSERT(status == osOK);
-
 	}
 	osThreadTerminate(NULL);
 }

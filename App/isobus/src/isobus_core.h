@@ -48,24 +48,27 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 240
+#define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
 #define ISO_NUM_INPUT_LIST_OBJECTS 6
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
-#define ISO_KEY_PLANTER_ID				SoftKey_Planter
-#define ISO_KEY_INFO_ID					SoftKey_Info
-#define ISO_KEY_SPEED_ID				SoftKey_Speed
-#define ISO_KEY_CONFIG_ID				SoftKey_Config
-#define ISO_KEY_INSTALLATION_ID			SoftKey_Setup
-#define ISO_KEY_TEST_MODE_ID			SoftKey_TestMode
-#define ISO_KEY_FINISH_TEST_ID			SoftKey_EndTest
-#define ISO_KEY_REPLACE_SENSORS_ID		SoftKey_ReplaceSensor
-#define ISO_KEY_BACKTO_INSTALLATION_ID	SoftKey_BackInstall
-#define ISO_KEY_BACKTO_PLANTER_ID		SoftKey_BackCfgChanged
-#define ISO_KEY_TRIMMING_ID				SoftKey_Trimming
-#define ISO_KEY_SYSTEM_ID				SoftKey_System
-#define ISO_KEY_CLEAR_TOTAL_ID			SoftKey_ClearTotal
-#define ISO_KEY_CLEAR_SUBTOTAL_ID		SoftKey_ClearSubTotal
-//#define ISO_KEY_BACKTO_PLANTER_ID		SoftKey_BackPlanter
+
+#define ISO_KEY_PLANTER_ID					SoftKey_Planter
+#define ISO_KEY_INFO_ID						SoftKey_Info
+#define ISO_KEY_SPEED_ID					SoftKey_Speed
+#define ISO_KEY_CONFIG_ID					SoftKey_Config
+#define ISO_KEY_INSTALLATION_ID				SoftKey_Setup
+#define ISO_KEY_TEST_MODE_ID				SoftKey_TestMode
+#define ISO_KEY_FINISH_TEST_ID				SoftKey_EndTest
+#define ISO_KEY_REPLACE_SENSORS_ID			SoftKey_ReplaceSensor
+#define ISO_KEY_BACKTO_INSTALLATION_ID		SoftKey_BackInstall
+#define ISO_KEY_BACKTO_PLANTER_ID			SoftKey_BackCfgChanged
+#define ISO_KEY_BACKTO_PLANT_FROM_CFG_ID	SoftKeyMask_ConfigToPlanter
+#define ISO_KEY_TRIMMING_ID					SoftKey_Trimming
+#define ISO_KEY_SYSTEM_ID					SoftKey_System
+#define ISO_KEY_CLEAR_TOTAL_ID				SoftKey_ClearTotal
+#define ISO_KEY_CLEAR_SUBTOTAL_ID			SoftKey_ClearSubTotal
+#define ISO_KEY_BACKTO_TRIMMING_CHANGES_ID	SoftKey_BackTrimChanged
+#define ISO_KEY_PAUSE_ID					SoftKey_Pause
 
 #define ISO_BUTTON_REPEAT_TEST_ID							BU_SETUP_REPEAT_TEST
 #define ISO_BUTTON_ERASE_INSTALLATION_ID					BU_SETUP_CLEAR_SETUP
@@ -76,6 +79,9 @@
 #define ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_INSTALL_ID		BU_CFG_CHANGE_CANCEL_RET_SETUP
 #define ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID					BU_CFG_CHANGE_ACCEPT
 #define ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID		BU_CFG_CHANGE_CANCEL_RET_CONFIG
+#define ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID		BU_CFG_CHANGE_CANCEL_RET_PLANTER
+#define ISO_BUTTON_TRIMM_CHANGES_CANCEL_ID					BU_TRIM_CHANGE_CANCEL
+#define ISO_BUTTON_TRIMM_CHANGES_ACCEPT_ID					BU_TRIM_CHANGE_ACCEPT
 
 #define ISO_INPUT_LIST_LANGUAGUE_ID			IL_CFG_LANGUAGE
 #define ISO_INPUT_LIST_UNIT_SYSTEM_ID		IL_CFG_UNIT_SYSTEM
@@ -90,13 +96,15 @@
 #define ISO_INPUT_LIST_DISABLE				0x00
 
 #define ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE	0x0F
-
 #define ISO_INPUT_NUMBER_ENABLE				0x01
 #define ISO_INPUT_NUMBER_DISABLE			0x00
 
-/******************************************************************************
- * Configuration Constants
- *******************************************************************************/
+#define ISO_RECTANGLE_LINE_ATTRIBUTE		0x01
+#define ISO_BAR_GRAPH_COLOUR_ATTRIBUTE		0x03
+
+#define ISO_INPUT_BOOLEAN_SET				0x01
+#define ISO_INPUT_BOOLEAN_CLEAR				0x00
+
 #define ISO_OBJECT_WORKING_SET_ID		WorkingSet_0
 #define ISO_OBJECT_PICTURE_GRAPHIC_ID	PG_AUTEQ_TELEMATICA
 #define ISO_OBJECT_SOFT_KEY_MASK_ID		SoftKeyMask_Installation
@@ -116,6 +124,25 @@
 #define ISO_OBJECT_RECTANGLE_ID			Rectangle_14000
 #define ISO_OBJECT_FILL_ATTRIBUTES_ID	FA_SETUP_STAT_L01
 #define ISO_OBJECT_LINE_ATTRIBUTES_ID	LineAttributes_24000
+
+/******************************************************************************
+ * Configuration Constants
+ *******************************************************************************/
+// Alarms
+#define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1
+#define ISO_ALARM_SETUP_NEW_SENSOR_FREQUENCY_HZ	800
+#define ISO_ALARM_SETUP_NEW_SENSOR_ON_TIME_MS 	50
+#define ISO_ALARM_SETUP_NEW_SENSOR_OFF_TIME_MS 	50
+
+#define ISO_ALARM_SETUP_FINISHED_ACTIVATIONS 	3
+#define ISO_ALARM_SETUP_FINISHED_FREQUENCY_HZ 	210
+#define ISO_ALARM_SETUP_FINISHED_ON_TIME_MS 	250
+#define ISO_ALARM_SETUP_FINISHED_OFF_TIME_MS 	250
+
+#define ISO_ALARM_TOLERANCE_ACTIVATIONS 	2
+#define ISO_ALARM_TOLERANCE_FREQUENCY_HZ 	800
+#define ISO_ALARM_TOLERANCE_ON_TIME_MS 		50
+#define ISO_ALARM_TOLERANCE_OFF_TIME_MS 	50
 
 /******************************************************************************
  * Macros
@@ -159,6 +186,13 @@ typedef enum
 	CLEAR_SETUP_WAIT_CONFIRMATION,
 	CLEAR_SETUP,
 } eClearSetupStates;
+
+typedef enum
+{
+	TRIMM_CHANGE_IDLE,
+	TRIMM_CHANGE_WAIT_CONFIRMATION,
+	TRIMM_CHANGE,
+} eChangeTrimmingState;
 
 /******************************************************************************
  * Variables

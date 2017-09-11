@@ -47,7 +47,7 @@
 #define M2GGPSCOMM_UART_CHANNEL         UART2                   /*!< UART channel to be used by the device */
 #define M2GGPSCOMM_UART_BAUD            UART_B9600              /*!< Standard baudrate to be used in UART */
 
-#define M2GGPSCOMM_BUF_SIZE             256                     /*!< Fixed receive buffer size in bytes */
+#define M2GGPSCOMM_BUF_SIZE             512                     /*!< Fixed receive buffer size in bytes */
 
 /*
  * Macros

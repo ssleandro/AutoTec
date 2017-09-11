@@ -46,6 +46,8 @@
 #define GPS_QUEUE_WAIT   0           //!< No timeout - wait forever
 #define GPS_DEFAULT_MSGSIZE  (sizeof(uint32_t) + sizeof(GPS_tsDadosGPS))       //!< Default output format - 16 bytes
 
+#define GPS_UART_BAUD UART_B115200
+
 #define GPS_RX_BUFFER_SIZE 256
 
 /******************************************************************************

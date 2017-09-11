@@ -56,12 +56,18 @@ typedef enum
 	SOFT_KEY_MASK_INSTALLATION = SoftKeyMask_Installation,
 	SOFT_KEY_MASK_INSTALLATION_FINISH,
 	SOFT_KEY_MASK_PLANTER,
-	SOFT_KEY_MASK_CONFIGURATION,
+	SOFT_KEY_MASK_CONFIG_TO_SETUP,
 	SOFT_KEY_MASK_CONFIGURATION_CHANGES,
 	SOFT_KEY_MASK_TEST_MODE,
 	SOFT_KEY_MASK_TRIMMING,
 	SOFT_KEY_MASK_SYSTEM,
 	SOFT_KEY_MASK_PLANTER_INFO,
+	SOFT_KEY_MASK_PLANTER_MOVING,
+	SOFT_KEY_MASK_PLANTER_INFO_MOVING,
+	SOFT_KEY_MASK_CONFIG_TO_PLANTER,
+	SOFT_KEY_MASK_TRIMMING_CHANGES,
+	SOFT_KEY_MASK_AREA_MONITOR,
+	SOFT_KEY_MASK_AREA_MONITOR_MOVING,
 	SOFT_KEY_MASK_INVALID
 } eIsobusSoftKeyMask;
 
@@ -75,6 +81,8 @@ typedef enum
 	DATA_MASK_SYSTEM,
 	DATA_MASK_CONFIRM_CLEAR_COUNTER,
 	DATA_MASK_CONFIRM_CONFIG_CHANGES,
+	DATA_MASK_CONFIRM_CLEAR_SETUP,
+	DATA_MASK_CONFIRM_TRIMMING_CHANGES,
 	DATA_MASK_INVALID
 } eIsobusMask;
 
@@ -94,6 +102,12 @@ typedef enum
 	STATUS_INSTALL_NONE = 0x07,
 	STATUS_INSTALL_INVALID
 } eInstallationStatus;
+
+typedef struct
+{
+	uint8_t bLineNum;
+	bool bLineIgnored;
+} sIgnoreLineStatus;
 
 typedef enum
 {
@@ -146,6 +160,19 @@ typedef enum
 	STATUS_TRIMMING_NONE = 0xFF,
 	STATUS_TRIMMING_INVALID,
 } eTrimmingStatus;
+
+typedef enum
+{
+	TRIMMING_NOT_TRIMMED,
+	TRIMMING_LEFT_SIDE,
+	TRIMMING_RIGHT_SIDE,
+} eTrimming;
+
+typedef struct
+{
+	eTrimming eTrimmState;
+	eTrimming eNewTrimmState;
+} sTrimmingState;
 
 typedef struct sConfigurationData
 {
@@ -268,17 +295,6 @@ typedef struct sPlanterDataMask
 	sNumberVariableObj* psMTEV;
 	sNumberVariableObj* psMaxSpeed;
 } sPlanterDataMask;
-
-typedef struct sTrimmingStatus
-{
-	sFillAttributesObj* pFillAtributte;
-	uint8_t bNumOfSensor;
-} sTrimmingStatus;
-
-typedef struct sTrimmingDataMask
-{
-	sTrimmingStatus* psTrimmedLines;
-} sTrimmingDataMask;
 
 typedef struct sTestModeDataMaskData
 {

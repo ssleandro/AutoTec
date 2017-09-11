@@ -260,11 +260,18 @@ uint32_t Chip_UART_SetBaud (LPC_USART_T *pUART, uint32_t baudrate)
 void Chip_UART_RXIntHandlerRB (LPC_USART_T *pUART, RINGBUFF_T *pRB)
 {
 	uint8_t bRxCount = 0;
+
 	/* New data will be ignored if data not popped in time */
 	while ((Chip_UART_ReadLineStatus(pUART) & UART_LSR_RDR) && (bRxCount++ < UART_RX_FIFO_SIZE))
 	{
 		uint8_t ch = Chip_UART_ReadByte(pUART);
 		RingBuffer_Insert(pRB, &ch);
+	}
+	if (bRxCount >= UART_RX_FIFO_SIZE) {
+		if (Chip_UART_ReadLineStatus(pUART) & (UART_LSR_RXFE | UART_LSR_TXFE) != 0) {
+			Chip_UART_SetupFIFOS(pUART, UART_FCR_RX_RS | UART_FCR_TX_RS);
+			RingBuffer_Flush(pRB);
+		}
 	}
 }
 

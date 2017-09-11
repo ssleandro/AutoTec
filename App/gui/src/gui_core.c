@@ -85,6 +85,9 @@ UOS_tsConfiguracao sSISConfiguration;
 
 GUI_tsConfig GUI_sConfig;
 
+sIgnoreLineStatus GUI_sIgnoreStatus;
+sTrimmingState GUI_sTrimmState;
+
 /******************************************************************************
  * Module typedef
  *******************************************************************************/
@@ -395,7 +398,52 @@ void GUI_vGuiPublishThread (void const *argument)
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
-
+				case EVENT_GUI_PLANTER_IGNORE_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sIgnoreStatus);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sTrimmState);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_AREA_MONITOR_PAUSE:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
 				default:
 					break;
 			}
@@ -469,7 +517,6 @@ void GUI_SetSisConfiguration(void)
 	sSISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
 	sSISConfiguration.dVeiculo = GUIConfigurationData.dVehicleID;
 
-	GUIConfigurationData.eAltType = (eAlternatedRowsType)sSISConfiguration.sMonitor.eIntercala;
 	if (GUIConfigurationData.eAlterRows == ALTERNATE_ROWS_DISABLED)
 	{
 		sSISConfiguration.sMonitor.eIntercala = Sem_Intercalacao;
@@ -481,6 +528,24 @@ void GUI_SetSisConfiguration(void)
 
 	sSISConfiguration.sMonitor.bDivLinhas = GUIConfigurationData.eCentralRowSide;
 	sSISConfiguration.sMonitor.bMonitorArea = GUIConfigurationData.eMonitorArea;
+
+
+    // If area monitor is enable, disable auto pause
+	if (GUIConfigurationData.eMonitorArea == AREA_MONITOR_ENABLED) {
+		sSISConfiguration.sMonitor.bPausaAuto = false;
+	} else {
+		sSISConfiguration.sMonitor.bPausaAuto = true;
+	}
+
+	// If auto pause is enable, disable pause button and calculate the of lines to auto pause
+	if (sSISConfiguration.sMonitor.bPausaAuto != false) {
+		sSISConfiguration.sMonitor.bTeclaPausaHab = false;
+		sSISConfiguration.sMonitor.bLinhasFalhaPausaAuto =
+				(GUIConfigurationData.bNumOfRows > 1) ? (((GUIConfigurationData.bNumOfRows + 1) >> 1) + 1) : GUIConfigurationData.bNumOfRows;
+	} else {
+		sSISConfiguration.sMonitor.bTeclaPausaHab = true;
+	}
+
 	sSISConfiguration.sIHM.eLanguage = GUIConfigurationData.eLanguage;
 	sSISConfiguration.sIHM.eUnit = GUIConfigurationData.eUnit;
 
@@ -500,6 +565,43 @@ void GUI_SetSisConfiguration(void)
 		sSISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
 		sSISConfiguration.sMonitor.wDistLinhas = IN2MM(GUIConfigurationData.wDistBetweenLines);
 	}
+
+	if (sSISConfiguration.sGPS.wDistanciaEntreFixos < (AQR_wEspacamento / 10))
+	{
+		sSISConfiguration.sGPS.wDistanciaEntreFixos = (AQR_wEspacamento / 10);
+	} else
+	{
+		if (GUIConfigurationData.eMonitorArea != AREA_MONITOR_DISABLED)
+		{
+			if (sSISConfiguration.sGPS.wDistanciaEntreFixos > (AQR_wEspacamento / 10))
+			{
+				sSISConfiguration.sGPS.wDistanciaEntreFixos = (AQR_wEspacamento / 10);
+			}
+		} else
+		{
+			if (sSISConfiguration.sGPS.wDistanciaEntreFixos > (AQR_wEspacamento * GUIConfigurationData.bNumOfRows) / 10)
+			{
+				sSISConfiguration.sGPS.wDistanciaEntreFixos = (AQR_wEspacamento
+						* GUIConfigurationData.bNumOfRows) / 10;
+			}
+		}
+	}
+	if (sSISConfiguration.sGPS.wDistanciaEntreFixos < 100)
+	{
+		sSISConfiguration.sGPS.wDistanciaEntreFixos = 100;
+	}
+
+	if (sSISConfiguration.sGPS.wAnguloEntreFixos < 15)
+	{
+		sSISConfiguration.sGPS.wAnguloEntreFixos = 15;
+	} else
+	{
+		if (sSISConfiguration.sGPS.wAnguloEntreFixos > 180)
+		{
+			sSISConfiguration.sGPS.wAnguloEntreFixos = 180;
+		}
+	}
+
 	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
@@ -529,6 +631,7 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	event_e ePubEvt;
 	uint8_t bConta;
 	uint8_t bSensor = 0;
+	bool bAlarmIntSensor = false;
 
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
@@ -554,6 +657,10 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 					if ((pSensor->eResultadoAutoTeste == Aprovado) ||
 						(pSensor->eResultadoAutoTeste == Nenhum))
 					{
+						if (eSensorStatus[bConta] == STATUS_INSTALL_WAITING)
+						{
+							bAlarmIntSensor = true;
+						}
 						eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
 					}
 					else
@@ -582,11 +689,13 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 
+	if (bAlarmIntSensor)
+	{
+		ePubEvt = EVENT_GUI_ALARM_NEW_SENSOR;
+		PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	}
 }
 
-extern tsAcumulados AQR_sPubAcumulado;
-extern tsStatus AQR_sPubStatus;
-extern tsPubPlantData AQR_sPubPlantData;
 void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osStatus status;
@@ -610,13 +719,18 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				if (eCurrMask == DATA_MASK_TEST_MODE)
 				{
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TESTE);
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_MODO_TRABALHO);
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 				}
 				else if (eCurrMask == DATA_MASK_PLANTER)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+				} else if (eCurrMask == DATA_MASK_INSTALLATION)
+				{
+					osFlagClear(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 				}
+
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
 				ASSERT(status == osOK);
@@ -702,6 +816,30 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ePubEvt = EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
+
+			if (ePubEvt == EVENT_ISO_PLANTER_IGNORE_SENSOR)
+			{
+				sIgnoreLineStatus* psIgnLine = pvPayload;
+				memcpy(&GUI_sIgnoreStatus, psIgnLine, sizeof(sIgnoreLineStatus));
+
+				ePubEvt = EVENT_GUI_PLANTER_IGNORE_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE)
+			{
+				sTrimmingState* psTrimm = pvPayload;
+				memcpy(&GUI_sTrimmState, psTrimm, sizeof(sTrimmingState));
+
+				ePubEvt = EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_AREA_MONITOR_PAUSE)
+			{
+				ePubEvt = EVENT_GUI_AREA_MONITOR_PAUSE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
 			break;
 		}
 		case MODULE_CONTROL:
@@ -782,13 +920,6 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-				if ((psPlantData != &AQR_sPubPlantData) || (psPlantData->AQR_sAcumulado != &AQR_sPubAcumulado) ||
-						(psPlantData->AQR_sStatus != &AQR_sPubStatus))
-				{
-
-					psPlantData = NULL;
-				}
-
 				if (psPlantData != NULL)
 				{
 					if (psPlantData->AQR_sAcumulado != NULL)
@@ -814,14 +945,41 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
-
-//			if (ePubEvt == EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION)
-//			{
-//				// Update test mode data mask number of sensors installed, number of sensors configured
-//				GUI_vSetGuiTestData(ePubEvt, GET_PUBLISHED_PAYLOAD(contract));
-//				ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-//				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
-//			}
+			if (ePubEvt == EVENT_AQR_ALARM_NEW_SENSOR)
+			{
+				ePubEvt = EVENT_AQR_ALARM_NEW_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_DISCONNECTED_SENSOR)
+			{
+				ePubEvt = EVENT_AQR_ALARM_DISCONNECTED_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_LINE_FAILURE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_LINE_FAILURE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_SETUP_FAILURE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_SETUP_FAILURE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_EXCEEDED_SPEED)
+			{
+				ePubEvt = EVENT_AQR_ALARM_EXCEEDED_SPEED;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_GPS_FAILURE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_GPS_FAILURE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_ALARM_TOLERANCE)
+			{
+				ePubEvt = EVENT_AQR_ALARM_TOLERANCE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
 			break;
 		}
 		default:
@@ -1623,7 +1781,7 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 			GUI_dCONV(GUI_dMETERS, GUI_dKILOMETERS));
 
 	// Gets the speed value in kilometers per hour
-	*dSpeedKm = (uint32_t) fVel;
+	*dSpeedKm = (uint32_t) roundf(fVel * 10);
 
 	//--------------------------------------------------------------------------
 	// Convert productivity to ha/h or acre/h
@@ -1661,5 +1819,5 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 	fVel = (float) GUI_fConvertUnit((AQR_sVelocidade.fVelMax),
 			GUI_dCONV(GUI_dKILOMETERS, GUI_dKILOMETERS));
 
-	*dMaxSpeed = (uint32_t) fVel;
+	*dMaxSpeed = (uint32_t) roundf(fVel * 10);
 }
