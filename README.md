@@ -1,18 +1,18 @@
-# Introdução
+# IntroduÃ§Ã£o
 
 # Release Notes
 ## v0.1.003
 1.	GUI / Isobus
     a.	Adicionado suporte a arremate
-    b.	Adicionado suporte a monitor de área
-    c.	Adicionado à tela de configuração suporte para monitor de área. Ao selecionar monitor de área sim, o sistema retorna para a tela monitor de área.
-    d.	Adicionado novas soft key masks para o modo monitor de área.
-    e.	Adicionado alarmes no momento da instalação (beep quanto um sensor é instalado)
-    f.	Corrigido bug no popup de velocidade (imprecisão na velocidade apresentada)
+    b.	Adicionado suporte a monitor de Ã rea
+    c.	Adicionado Ã  tela de configuraÃ§Ã£o suporte para monitor de Ã rea. Ao selecionar monitor de Ã rea sim, o sistema retorna para a tela monitor de Ã rea.
+    d.	Adicionado novas soft key masks para o modo monitor de Ã rea.
+    e.	Adicionado alarmes no momento da instalaÃ§Ã£po (beep quanto um sensor Ã© instalado)
+    f.	Corrigido bug no popup de velocidade (imprecisÃ£o na velocidade apresentada)
     g.	Corrigido bug ao alternar linhas (bloqueio de acesso a linhas errado)
     h.	Corrigido bug em ignorar linha (ao cancelar ignorar linha ocorria um erro ao atualizar a tela plantadeira)
-    i.	Corrigido bug na tela confirmar alterações de configuração (ao modificar certas configurações zera os totais, ao modificar o número de linhas zera a instalação)
-    j.	Corrigido bug na instalação, após mudança na configuração ou quando a instalação era apagada
+    i.	Corrigido bug na tela confirmar alteraÃ§Ãµes de configuraÃ§Ã£o (ao modificar certas configuraÃ§Ãµes zera os totais, ao modificar o nï¿½mero de linhas zera a instalaÃ§Ã£o)
+    j.	Corrigido bug na instalaÃ§Ã£o, apÃ³s mudanÃ§a na configuraÃ§Ã£o ou quando a instalaÃ§Ã£o era apagada
 2.	GPS
-    a.	Corrigido bug na configuração do GPS
-    b.	Corrigido bug na recepção das mensagens do GPS
+    a.	Corrigido bug na configuraÃ§Ã£o do GPS
+    b.	Corrigido bug na recepÃ§Ã£o das mensagens do GPS
