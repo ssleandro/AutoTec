@@ -1,9 +1,8 @@
-﻿# Introdução
-
-# Release Notes
+﻿# Release Notes
 
 ## v0.1.003
-1.	GUI / Isobus
+## 1.	GUI / Isobus
+
     a.	Adicionado suporte a arremate
 
     b.	Adicionado suporte a monitor de àrea
@@ -24,7 +23,8 @@
 
     j.	Corrigido bug na instalação, após mudança na configuração ou quando a instalação era apagada
 
-2.	GPS
+## 2.	GPS
+
     a.	Corrigido bug na configuração do GPS
 
     b.	Corrigido bug na recepção das mensagens do GPS
