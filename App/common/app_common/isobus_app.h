@@ -34,6 +34,7 @@
  * Includes
  *******************************************************************************/
 #include "acquireg_app.h"
+#include "M2GPlus.iop.h"
 
 /******************************************************************************
  * Preprocessor Constants
@@ -50,19 +51,40 @@
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
-
 typedef enum
 {
-	SOFT_KEY_MASK_INSTALLATION = 0x2001,
+	SOFT_KEY_MASK_INSTALLATION = SoftKeyMask_Installation,
+	SOFT_KEY_MASK_INSTALLATION_FINISH,
 	SOFT_KEY_MASK_PLANTER,
-	SOFT_KEY_MASK_CONFIGURATION,
+	SOFT_KEY_MASK_CONFIG_TO_SETUP,
+	SOFT_KEY_MASK_CONFIGURATION_CHANGES,
 	SOFT_KEY_MASK_TEST_MODE,
 	SOFT_KEY_MASK_TRIMMING,
 	SOFT_KEY_MASK_SYSTEM,
-	SOFT_KEY_MASK_INSTALLATION_FINISH,
-	SOFT_KEY_MASK_CONFIGURATION_CHANGES,
+	SOFT_KEY_MASK_PLANTER_INFO,
+	SOFT_KEY_MASK_PLANTER_MOVING,
+	SOFT_KEY_MASK_PLANTER_INFO_MOVING,
+	SOFT_KEY_MASK_CONFIG_TO_PLANTER,
+	SOFT_KEY_MASK_TRIMMING_CHANGES,
+	SOFT_KEY_MASK_AREA_MONITOR,
+	SOFT_KEY_MASK_AREA_MONITOR_MOVING,
 	SOFT_KEY_MASK_INVALID
 } eIsobusSoftKeyMask;
+
+typedef enum
+{
+	DATA_MASK_INSTALLATION = DataMask_Installation,
+	DATA_MASK_CONFIGURATION,
+	DATA_MASK_PLANTER,
+	DATA_MASK_TEST_MODE,
+	DATA_MASK_TRIMMING,
+	DATA_MASK_SYSTEM,
+	DATA_MASK_CONFIRM_CLEAR_COUNTER,
+	DATA_MASK_CONFIRM_CONFIG_CHANGES,
+	DATA_MASK_CONFIRM_CLEAR_SETUP,
+	DATA_MASK_CONFIRM_TRIMMING_CHANGES,
+	DATA_MASK_INVALID
+} eIsobusMask;
 
 typedef enum
 {
@@ -73,20 +95,6 @@ typedef enum
 
 typedef enum
 {
-	DATA_MASK_CONFIGURATION = 0x5000,
-	DATA_MASK_INSTALLATION,
-	DATA_MASK_PLANTER,
-	DATA_MASK_TEST_MODE,
-	DATA_MASK_TRIMMING,
-	DATA_MASK_SYSTEM,
-	DATA_MASK_CONFIRM_CLEAR_COUNTER,
-	DATA_MASK_CONFIRM_CONFIG_CHANGES,
-	ALARM_MASK_CONFIRM_INSTALLATION = 0x50F0,
-	DATA_MASK_INVALID
-} eIsobusMask;
-
-typedef enum
-{
 	STATUS_INSTALL_WAITING = 0xE6,
 	STATUS_INSTALL_INSTALLING = 0x0E,
 	STATUS_INSTALL_INSTALLED = 0x0A,
@@ -94,6 +102,12 @@ typedef enum
 	STATUS_INSTALL_NONE = 0x07,
 	STATUS_INSTALL_INVALID
 } eInstallationStatus;
+
+typedef struct
+{
+	uint8_t bLineNum;
+	bool bLineIgnored;
+} sIgnoreLineStatus;
 
 typedef enum
 {
@@ -120,6 +134,13 @@ typedef enum
 
 typedef enum
 {
+	CENTRAL_ROW_SIDE_LEFT,
+	CENTRAL_ROW_SIDE_RIGHT,
+	CENTRAL_ROW_SIDE_INVALID
+} eCentralRowSide;
+
+typedef enum
+{
 	ALTERNATE_ROWS_DISABLED,
 	ALTERNATE_ROWS_ENABLED,
 	ALTERNATE_ROWS_INVALID
@@ -140,6 +161,19 @@ typedef enum
 	STATUS_TRIMMING_INVALID,
 } eTrimmingStatus;
 
+typedef enum
+{
+	TRIMMING_NOT_TRIMMED,
+	TRIMMING_LEFT_SIDE,
+	TRIMMING_RIGHT_SIDE,
+} eTrimming;
+
+typedef struct
+{
+	eTrimming eTrimmState;
+	eTrimming eNewTrimmState;
+} sTrimmingState;
+
 typedef struct sConfigurationData
 {
 	eSelectedLanguage eLanguage;
@@ -148,6 +182,7 @@ typedef struct sConfigurationData
 	eAreaMonitor eMonitorArea;
 	uint16_t wSeedRate;
 	uint8_t bNumOfRows;
+	eCentralRowSide eCentralRowSide;
 	uint32_t wImplementWidth;
 	uint32_t wEvaluationDistance;
 	uint32_t wDistBetweenLines;
@@ -165,6 +200,7 @@ typedef struct sConfigurationDataMask
 	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;
 	uint8_t* bNumOfRows;
+	eCentralRowSide* eCentralRowSide;
 	uint32_t* wImplementWidth;
 	uint32_t* wEvaluationDistance;
 	uint32_t* wDistBetweenLines;
@@ -226,6 +262,11 @@ typedef struct sPlanterDataMaskData
 	uint32_t dWorkedAreaHa;
 	uint32_t dTotalMt;
 	uint32_t dTotalHa;
+	uint32_t dSpeedKm;
+	uint32_t dSpeedHa;
+	uint32_t dTEV;
+	uint32_t dMTEV;
+	uint32_t dMaxSpeed;
 } sPlanterDataMaskData;
 
 typedef struct sPlanterIndividualLines
@@ -248,18 +289,12 @@ typedef struct sPlanterDataMask
 	sNumberVariableObj* psWorkedAreaHa;
 	sNumberVariableObj* psTotalMt;
 	sNumberVariableObj* psTotalHa;
+	sNumberVariableObj* psSpeedKm;
+	sNumberVariableObj* psSpeedHa;
+	sNumberVariableObj* psTEV;
+	sNumberVariableObj* psMTEV;
+	sNumberVariableObj* psMaxSpeed;
 } sPlanterDataMask;
-
-typedef struct sTrimmingStatus
-{
-	sFillAttributesObj* pFillAtributte;
-	uint8_t bNumOfSensor;
-} sTrimmingStatus;
-
-typedef struct sTrimmingDataMask
-{
-	sTrimmingStatus* psTrimmedLines;
-} sTrimmingDataMask;
 
 typedef struct sTestModeDataMaskData
 {

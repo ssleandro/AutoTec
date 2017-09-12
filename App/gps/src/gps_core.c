@@ -1055,7 +1055,7 @@ void GPS_vGPSConfig (void)
 
 				if (bAlternaBaud != false)
 				{
-					wBaudRate = 115200;
+					wBaudRate = GPS_UART_BAUD;
 					DEV_ioctl(pGPSHandle, IOCTL_M2GGPSCOMM_CHANGE_BAUD_RATE,
 						&wBaudRate);
 				}
@@ -1102,7 +1102,7 @@ void GPS_vGPSConfig (void)
 					NO_PARITY | //UART Mode: Parity
 					STOP_BIT_1    //UART Mode: Number of stop bits
 				);
-				GPS_sConfigUART.dBaudRate = 115200;  // Baudrate (bits/s)
+				GPS_sConfigUART.dBaudRate = GPS_UART_BAUD;  // Baudrate (bits/s)
 				GPS_sConfigUART.wInProtoMask = UBX;  // Input active protocols
 				GPS_sConfigUART.wOutProtoMask = UBX; // Output active protocols
 
@@ -1115,14 +1115,14 @@ void GPS_vGPSConfig (void)
 
 				//Se a alteração do baud rate do GPS ainda não respondeu satisfatóriamente
 				//altera o baud da UART0 para estabelecer uma comunicação
-				if (GPS_sDadosGPS.dBaud != 115200)
+				if (GPS_sDadosGPS.dBaud != GPS_UART_BAUD)
 				{
 					GPS_eConfigura = VerificaPort;
 					bAlternaBaud = true;
 				}
 				else
 				{
-					//Se conseguiu mudar o baud rate do GPS para 115200, altera o status
+					//Se conseguiu mudar o baud rate do GPS para GPS_UART_BAUD, altera o status
 					//para prosseguir com a configuração
 					GPS_eStatusConfig = GPS_eConfigura;
 				}
@@ -1131,7 +1131,7 @@ void GPS_vGPSConfig (void)
 			else // alternativa para quando o GPS não enviar ACK para o comando de CFG do Port
 			{
 				//Verifica se está com o Baud desejado
-				if (GPS_sDadosGPS.dBaud == 115200)
+				if (GPS_sDadosGPS.dBaud == GPS_UART_BAUD)
 				{
 					GPS_eConfigura = CfgTimePulse;
 				}
@@ -1785,7 +1785,7 @@ void GPS_vIdentMsgRxGPS (void)
 										{
 											if ((GPS_eStatusConfig == CfgPort)
 												&& (GPS_sDadosGPS.dBaud
-													== 115200))
+													== GPS_UART_BAUD))
 											{
 												GPS_eConfigura = CfgTimePulse;
 											}
@@ -1883,15 +1883,13 @@ void GPS_vIdentMsgRxGPS (void)
 											case CfgMsgMonHw:
 											{
 
-												if (GPS_eStatusConfig
-													== CfgMsgMonHw)
+												if (GPS_eStatusConfig == CfgMsgMonHw)
 												{
 													//Atualiza o status da Bateria
 													//OneWire_LeID();  //Retirada esta função, pois utiliza o timer 0, que também é utilizado pela rotina do GPS,
 
 													//Finaliza a configuração do GPS
-													GPS_sDadosGPS.bConfigura_FIM =
-													true;
+													GPS_sDadosGPS.bConfigura_FIM = true;
 												}
 
 												break;
@@ -3014,7 +3012,7 @@ void GPS_vGPSManagementThread (void const *argument)
 						GPS_sDadosGPS.bConfigura_FIM = false;
 
 						//Reinicia timer
-						GPS_sTimeoutMsg.bNavVelNed = 5;
+						GPS_sTimeoutMsg.bNavVelNed = 15;
 					}
 
 				}
@@ -3169,7 +3167,7 @@ void GPS_vGPSRecvThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSRCV, WDT_SLEEP);
-		osDelayUntil(&wTicks, 50);
+		osDelayUntil(&wTicks, 25);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));

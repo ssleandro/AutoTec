@@ -34,6 +34,7 @@
 
 #include <stdint.h>
 #include "auteq_os.h"
+#include "board.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -324,7 +325,10 @@ static INLINE void spifi_HW_ResetController (LPC_SPIFI_CHIPHW_T *pSpifi)
 		if (osKernelRunning()) {
 			__enable_irq();
 			if (count++ % 100 == 0)
+			{
+				Chip_WWDT_Feed(LPC_WWDT);
 				osDelay(1);
+			}
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
 		}
@@ -342,13 +346,7 @@ static INLINE void spifi_HW_WaitCMD (LPC_SPIFI_CHIPHW_T *pSpifi)
 	uint32_t count = 0;
 	while ((spifi_HW_GetStat(pSpifi) & SPIFI_STAT_CMD) != 0)
 	{
-		if (osKernelRunning()) {
-			__enable_irq();
-			if (count++ % 100 == 0)
-				osDelay(1);
-			if (wIrq != 0) // Check if it was disabled before enable
-				__disable_irq();
-		}
+
 	}
 }
 
@@ -360,6 +358,7 @@ static INLINE void spifiFramWaitCMD (LPC_SPIFI_CHIPHW_T *pSpifi)
 	{
 		if (osKernelRunning()) {
 			__enable_irq();
+			Chip_WWDT_Feed(LPC_WWDT);
 			osDelay(5);
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
@@ -375,11 +374,16 @@ static INLINE void spifiFramWaitCMD (LPC_SPIFI_CHIPHW_T *pSpifi)
 static INLINE void spifi_HW_WaitRESET (LPC_SPIFI_CHIPHW_T *pSpifi)
 {
 	uint32_t wIrq = __get_PRIMASK();
+	uint32_t wCount = 0;
 	while ((spifi_HW_GetStat(pSpifi) & SPIFI_STAT_RESET) != 0)
 	{
 		if (osKernelRunning()) {
 			__enable_irq();
-			osDelay(5);
+			if (wCount++ == 5000)
+			{
+				Chip_WWDT_Feed(LPC_WWDT);
+				osDelay(5);
+			}
 			if (wIrq != 0) // Check if it was disabled before enable
 				__disable_irq();
 		}

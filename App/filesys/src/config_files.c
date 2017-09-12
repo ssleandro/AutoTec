@@ -42,13 +42,11 @@
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
-//Nome do arquivo de configuração:
+//Nome do arquivo de configuracao:
 const uint8_t FFS_abConfigName[] = "MPA2500.CFG";
 const uint8_t FFS_abSensorCfgName[] = "SENSORES.CAN";
-//Nome do arquivo de registro estático:
+//Nome do arquivo de registro estatico:
 const uint8_t FFS_abStaticRegCfgName[] = "ESTATICO.REG";
-//Nome do arquivo de registros combinados (estáticos e dinâmicos):
-//const uint8_t abNomeRegDat[] = "REGISTRO.DAT";
 
 EXTERN_MUTEX(FFS_AccesControl);
 
@@ -79,6 +77,83 @@ extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
  * Function Prototypes
  *******************************************************************************/
 
+uint8_t FFS_bSaveFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
+{
+	osFlags dFlagsSis;
+	F_FIND xFindStruct;
+	F_FILE *xFileHandle;
+	uint8_t bErr = 1;
+	uint8_t bRet = 0;
+
+	//Verifica se o sistema de arquivo foi inicializado:
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
+
+	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	{
+
+		xFileHandle = f_open(bFileName, "w+");
+		ASSERT(xFileHandle != NULL);
+
+		bErr = f_rewind(xFileHandle);
+		ASSERT(bErr == F_NO_ERROR);
+
+		bErr = f_write(bData, wLen, 1, xFileHandle);
+		ASSERT(bErr == 1);
+
+		f_close(xFileHandle);
+
+		if (bErr == 1)
+		{
+			bRet = 1;
+		}
+		bErr = f_filelength(bFileName);
+	}
+	return bRet;
+}
+
+
+uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
+{
+	osFlags dFlagsSis;
+	uint8_t bErr;
+	uint8_t bErroCfg = true;
+	F_FIND xFindStruct;
+	F_FILE *xFileHandle;
+	uint8_t bRet = F_NO_ERROR;
+
+	//Verifica se o sistema de arquivo foi inicializado:
+	dFlagsSis = osFlagGet(FFS_sFlagSis);
+
+	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	{
+		//Procura pelo arquivo de configuracao:
+		bErr = f_findfirst(bFileName, &xFindStruct);
+		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
+
+		if (bErr == F_NO_ERROR)
+		{
+			xFileHandle = f_open(bFileName, "r");
+			ASSERT(xFileHandle != NULL);
+
+			//Verifica se o tamanho consiste:
+			if ((xFindStruct.filesize == wLen) && (xFileHandle != NULL))
+			{
+				//Le o arquivo de configuracao do sistema de arquivos:
+				bErr = f_read(bData, wLen, 1, xFileHandle);
+				ASSERT(bErr == 1);
+			}
+
+			//Fecha o arquivo de configuracao:
+			bErr = f_close(xFileHandle);
+			ASSERT(bErr == F_NO_ERROR);
+		} else
+		{
+			bRet = bErr;
+		}
+	}
+	return bRet;
+}
+
 /*****************************************************************************
  void FFS_vLoadConfigFile( void )
  Descricao : funcao para carregar a configuracao do sistema a partir do
@@ -88,67 +163,42 @@ extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
  ******************************************************************************/
 eAPPError_s FFS_vLoadConfigFile (void)
 {
-	osFlags dFlagsSis;
 	uint16_t wCRC16_C;
 	uint8_t bErr;
-	uint8_t bErroCfg = true;
-	F_FIND xFindStruct;
-	F_FILE *xFileHandle;
-	eAPPError_s ret;
+	eAPPError_s eRet;
 
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
-	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet(FFS_sFlagSis);
+	bErr = FFS_bReadFile(FFS_abConfigName, (uint8_t * )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
+	ASSERT(bErr == 1);
 
-	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	if (bErr == F_NO_ERROR)
 	{
-		//Procura pelo arquivo de configuracao:
-		bErr = f_findfirst(FFS_abConfigName, &xFindStruct);
-		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
-
-		if (bErr == F_NO_ERROR)
+		//Confere o CRC da configuracao:
+		TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
+		//Se o CRC esta OK:
+		if (wCRC16_C == 0)
 		{
-			xFileHandle = f_open(FFS_abConfigName, "r");
-			ASSERT(xFileHandle != NULL);
-
-			//Verifica se o tamanho consiste:
-			if (xFindStruct.filesize == sizeof(FFS_sConfiguracao) && (xFileHandle != NULL))
-			{
-				//Le o arquivo de configuracao do sistema de arquivos:
-				bErr = f_read((uint8_t * )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao), 1, xFileHandle);
-				ASSERT(bErr == 1);
-
-				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
-				//Se o CRC esta OK:
-				if (wCRC16_C == 0)
-				{
-					bErroCfg = false;
-				}
-			}
-			//Fecha o arquivo de configuracao:
-			bErr = f_close(xFileHandle);
-			ASSERT(bErr == F_NO_ERROR);
+			osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
+			eRet = APP_ERROR_SUCCESS;
+		} else
+		{
+			bErr = F_ERR_READ;
 		}
 	}
+
+	if (bErr != F_NO_ERROR)
 	//Carrega arquivo de configuracao default
-	if (bErroCfg == true)
 	{
 		memcpy(&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
 
 		osFlagClear(FFS_sFlagSis, FFS_FLAG_CFG);
-		ret = APP_ERROR_ERROR;
-	}
-	else
-	{
-		osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
-		ret = APP_ERROR_SUCCESS;
+		eRet = APP_ERROR_ERROR;
 	}
 
 	RELEASE_MUTEX(FFS_AccesControl);
 
-	return ret;
+	return eRet;
 }
 
 /*****************************************************************************
@@ -162,12 +212,8 @@ eAPPError_s FFS_vLoadConfigFile (void)
  ******************************************************************************/
 eAPPError_s FFS_vSaveConfigFile (void)
 {
-	osFlags dFlagsSis;
-	uint16_t wCRC16;
 	uint8_t bErr;
-	uint8_t bErroCfg = true;
-	F_FIND xFindStruct;
-	F_FILE *xFileHandle;
+	uint16_t wCRC16;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
@@ -179,27 +225,12 @@ eAPPError_s FFS_vSaveConfigFile (void)
 	//Atualiza o valor do crc na estrutura:
 	FFS_sConfiguracao.wCRC16 = wCRC16;
 
-	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet(FFS_sFlagSis);
-
-	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	bErr = FFS_bSaveFile(FFS_abConfigName, (uint8_t*) &FFS_sConfiguracao,
+			sizeof(FFS_sConfiguracao));
+	ASSERT(bErr == 1);
+	if (bErr == 1)
 	{
-		xFileHandle = f_open(FFS_abConfigName, "w+");
-		ASSERT(xFileHandle != NULL);
-
-		bErr = f_rewind(xFileHandle);
-		ASSERT(bErr == F_NO_ERROR);
-
-		bErr = f_write((uint8_t* )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao), 1, xFileHandle);
-		ASSERT(bErr == 1);
-
-		f_close(xFileHandle);
-
-		if (bErr == 1)
-		{
-			ErroReturn = APP_ERROR_SUCCESS;
-		}
-
+		ErroReturn = APP_ERROR_SUCCESS;
 	}
 
 	RELEASE_MUTEX(FFS_AccesControl);
@@ -255,12 +286,8 @@ eAPPError_s FFS_vRemoveSensorCfg (void)
  ******************************************************************************/
 eAPPError_s FFS_vSaveSensorCfg (void)
 {
-	osFlags dFlagsSis;
-	uint16_t wCRC16;
 	uint8_t bErr;
-	uint8_t bErroCfg = true;
-	F_FIND xFindStruct;
-	F_FILE *xFileHandle;
+	uint16_t wCRC16;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
@@ -276,31 +303,11 @@ eAPPError_s FFS_vSaveSensorCfg (void)
 	//Atualiza o valor do crc na estrutura:
 	FFS_sCtrlListaSens.wCRC16 = wCRC16;
 
-	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet(FFS_sFlagSis);
-
-	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	bErr = FFS_bSaveFile(FFS_abSensorCfgName, (uint8_t* )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
+	ASSERT(bErr == 1);
+	if (bErr == 1)
 	{
-		xFileHandle = f_open(FFS_abSensorCfgName, "w+");
-		ASSERT(xFileHandle != NULL);
-
-		bErr = f_rewind(xFileHandle);
-		ASSERT(bErr == F_NO_ERROR);
-
-		bErr = f_write((uint8_t* )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens), 1, xFileHandle);
-		ASSERT(bErr == 1);
-
-		f_close(xFileHandle);
-
-		if (bErr == 1)
-		{
-			ErroReturn = APP_ERROR_SUCCESS;
-		}
-		else
-		{
-			ErroReturn = APP_ERROR_ERROR;
-		}
-
+		ErroReturn = APP_ERROR_SUCCESS;
 	}
 
 	RELEASE_MUTEX(FFS_AccesControl);
@@ -320,55 +327,28 @@ eAPPError_s FFS_vSaveSensorCfg (void)
  */
 eAPPError_s FFS_vLoadSensorCfg (void)
 {
-	osFlags dFlagsSis;
 	uint16_t wCRC16_C;
 	uint8_t bErr;
-	uint8_t bErroCfg = true;
-	F_FIND xFindStruct;
-	F_FILE *xFileHandle;
-	eAPPError_s ret;
+	eAPPError_s eRet;
 
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
-	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet(FFS_sFlagSis);
+	bErr = FFS_bReadFile(FFS_abSensorCfgName, (uint8_t * )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
+	ASSERT(bErr == 1);
 
-	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
-	{
-		//Procura pelo arquivo de configuracao:
-		bErr = f_findfirst(FFS_abSensorCfgName, &xFindStruct);
-		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
+	//Confere o CRC da configuracao:
+	TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
 
-		if (bErr == F_NO_ERROR)
-		{
-			xFileHandle = f_open(FFS_abSensorCfgName, "r");
-			ASSERT(xFileHandle != NULL);
-
-			//Verifica se o tamanho consiste:
-			if (xFindStruct.filesize == sizeof(FFS_sCtrlListaSens) && (xFileHandle != NULL))
-			{
-				//Le o arquivo de configuracao do sistema de arquivos:
-				bErr = f_read((uint8_t * )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens), 1, xFileHandle);
-				ASSERT(bErr == 1);
-
-				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
-				//Se o CRC esta OK:
-				if (wCRC16_C == 0)
-				{
-					bErroCfg = false;
-				}
-			}
-			//Fecha o arquivo de configuracao:
-			bErr = f_close(xFileHandle);
-			ASSERT(bErr == F_NO_ERROR);
-		}
-	}
 	//Limpa a estrutura de novo sensor
 	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
 				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
 
-	if (bErroCfg == true)
+	//Se o CRC esta OK:
+	if ((wCRC16_C == 0) && (bErr == F_NO_ERROR))
+	{
+		eRet = APP_ERROR_SUCCESS;
+	}
+	else
 	{
 		uint8_t bNumTotalSensores, bCount;
 
@@ -383,17 +363,14 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 			FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista[bCount].eEstado = Novo;
 		}
 
-		ret = APP_ERROR_ERROR;
-	}
-	else
-	{
-		ret = APP_ERROR_SUCCESS;
+		eRet = APP_ERROR_ERROR;
 	}
 
 	RELEASE_MUTEX(FFS_AccesControl);
 
-	return ret;
+	return eRet;
 }
+
 
 /*
  ================================================================================
@@ -408,12 +385,10 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 eAPPError_s FFS_vSaveStaticReg (void)
 {
 
-	osFlags dFlagsSis;
 	uint16_t wCRC16;
-	uint8_t bErr = 1;
+	uint8_t bErr;
 	uint8_t bErroCfg = true;
-	F_FIND xFindStruct;
-	F_FILE *xFileHandle;
+
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
@@ -425,31 +400,12 @@ eAPPError_s FFS_vSaveStaticReg (void)
 	//Atualiza o valor do crc na estrutura:
 	FFS_sRegEstaticoCRC.wCRC16 = wCRC16;
 
-	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet(FFS_sFlagSis);
+	bErr = FFS_bSaveFile(FFS_abStaticRegCfgName, (uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
+	ASSERT(bErr == 1);
 
-	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	if (bErr > 0)
 	{
-
-		xFileHandle = f_open(FFS_abStaticRegCfgName, "w+");
-		ASSERT(xFileHandle != NULL);
-
-		bErr = f_rewind(xFileHandle);
-		ASSERT(bErr == F_NO_ERROR);
-
-		bErr = f_write((uint8_t* )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
-		ASSERT(bErr == 1);
-
-		f_close(xFileHandle);
-
-		if (bErr == 1)
-		{
-			ErroReturn = APP_ERROR_SUCCESS;
-		}
-		else
-		{
-			ErroReturn = APP_ERROR_ERROR;
-		}
+		ErroReturn = APP_ERROR_SUCCESS;
 	}
 
 	RELEASE_MUTEX(FFS_AccesControl);
@@ -469,65 +425,41 @@ eAPPError_s FFS_vSaveStaticReg (void)
  */
 eAPPError_s FFS_vLoadStaticReg (void)
 {
-	osFlags dFlagsSis;
-	uint16_t wCRC16_C, wCRC16;
+
+	uint16_t wCRC16_C;
 	uint8_t bErr;
-	uint8_t bErroCfg = true;
-	F_FIND xFindStruct;
-	F_FILE *xFileHandle;
-	eAPPError_s ret;
+	uint8_t bCount;
+	eAPPError_s eRet;
+	uint8_t const *Filename = FFS_abStaticRegCfgName;
 
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
-	//Verifica se o sistema de arquivo foi inicializado:
-	dFlagsSis = osFlagGet(FFS_sFlagSis);
+	bErr = FFS_bReadFile(Filename, (uint8_t *) &FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
+	ASSERT(bErr == 1);
 
-	if ((dFlagsSis & FFS_FLAG_STATUS) > 0)
+	//Confere o CRC da configuracao:
+	TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *) &FFS_sCtrlListaSens,
+			sizeof(FFS_sCtrlListaSens));
+
+	//Limpa a estrutura de novo sensor
+	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
+				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
+
+	//Se o CRC esta OK:
+	if((bErr == F_NO_ERROR) && (wCRC16_C == 0))
 	{
-		//Procura pelo arquivo de configuracao:
-		bErr = f_findfirst(FFS_abStaticRegCfgName, &xFindStruct);
-		ASSERT((bErr == F_NO_ERROR) || (bErr == F_ERR_NOTFOUND));
-
-		if (bErr == F_NO_ERROR)
-		{
-			xFileHandle = f_open(FFS_abStaticRegCfgName, "r");
-			ASSERT(xFileHandle != NULL);
-
-			//Verifica se o tamanho consiste:
-			if (xFindStruct.filesize == sizeof(FFS_sRegEstaticoCRC) && (xFileHandle != NULL))
-			{
-				//Le o arquivo de configuracao do sistema de arquivos:
-				bErr = f_read((uint8_t * )&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC), 1, xFileHandle);
-				ASSERT(bErr == 1);
-
-				//Confere o CRC da configuracao:
-				TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
-				//Se o CRC esta OK:
-				if (wCRC16_C == 0)
-				{
-					bErroCfg = false;
-				}
-			}
-			//Fecha o arquivo de configuracao:
-			bErr = f_close(xFileHandle);
-			ASSERT(bErr == F_NO_ERROR);
-		}
-	}
-
-	if (bErroCfg == true)
-	{
-		//Limpa a estrutura do registro estático:
-		memset(&FFS_sRegEstaticoCRC, 0x00, sizeof(FFS_sRegEstaticoCRC));
-
-		ret = APP_ERROR_ERROR;
+		osFlagSet(FFS_sFlagSis, FFS_FLAG_STATIC_REG);
+		eRet = APP_ERROR_SUCCESS;
 	}
 	else
 	{
-		ret = APP_ERROR_SUCCESS;
+		//Limpa a estrutura do registro estático:
+		memset(&FFS_sRegEstaticoCRC, 0x00, sizeof(FFS_sRegEstaticoCRC));
+		osFlagClear(FFS_sFlagSis, FFS_FLAG_STATIC_REG);
+		eRet = APP_ERROR_ERROR;
 	}
-	osFlagSet(FFS_sFlagSis, FFS_FLAG_STATIC_REG);
 
 	RELEASE_MUTEX(FFS_AccesControl);
 
-	return ret;
+	return eRet;
 }

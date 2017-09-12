@@ -45,9 +45,9 @@ its value back to 0. */
 #define configUSE_MALLOC_FAILED_HOOK            1
 
 /* Run time and task stats gathering related definitions. */
-#define configGENERATE_RUN_TIME_STATS				1
+#define configGENERATE_RUN_TIME_STATS				0
 #define configUSE_TRACE_FACILITY                1
-#define configUSE_STATS_FORMATTING_FUNCTIONS    1
+#define configUSE_STATS_FORMATTING_FUNCTIONS    0
 #define configGENERATE_RUN_TIME_STATS_USE_TICKS   1
 
 /* Co-routine related definitions. */
@@ -57,7 +57,7 @@ its value back to 0. */
 /* Software timer related definitions. */
 #define configUSE_TIMERS                        1
 #define configTIMER_TASK_PRIORITY               5
-#define configTIMER_QUEUE_LENGTH                16
+#define configTIMER_QUEUE_LENGTH                32
 #define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE * 8
 
 // Cortex-M specific definitions.

@@ -45,7 +45,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFBUZZER (5)
+#define QUEUE_SIZEOFBUZZER (10)
 
 #define THIS_MODULE MODULE_BUZZER
 
@@ -224,7 +224,7 @@ void BUZ_vBuzzerPublishThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(BUZPUB, WDT_SLEEP);
-		osDelay(500);
+		osDelay(10000);
 		WATCHDOG_STATE(BUZPUB, WDT_ACTIVE);
 	}
 	osThreadTerminate(NULL);
@@ -286,10 +286,51 @@ eAPPError_s BUZ_vInitDeviceLayer ()
 	return eError;
 }
 
+void BUZ_vIdentifyEvent (contract_s* contract)
+{
+	event_e eEvt =  GET_PUBLISHED_EVENT(contract);
+	void * pvPayData = GET_PUBLISHED_PAYLOAD(contract);
+
+	switch (contract->eOrigin)
+	{
+		case MODULE_GUI:
+		{
+			switch (eEvt)
+			{
+				case EVENT_GUI_ALARM_NEW_SENSOR:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
+				case EVENT_GUI_ALARM_LINE_FAILURE:
+				case EVENT_GUI_ALARM_SETUP_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
+				case EVENT_GUI_ALARM_GPS_FAILURE:
+				{
+					break;
+				}
+				case EVENT_GUI_ALARM_TOLERANCE:
+				{
+					break;
+				}
+				default:
+					break;
+			}
+			break;
+		}
+		default:
+			break;
+	}
+}
+
 /* ************************* Main thread ************************************ */
 #ifndef UNITY_TEST
 void BUZ_vBuzzerThread (void const *argument)
 {
+	osEvent evt;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Buzzer Thread Created");
@@ -302,7 +343,7 @@ void BUZ_vBuzzerThread (void const *argument)
 	BUZ_vInitDeviceLayer();
 
 	/* Prepare the signature - struture that notify the broker about subscribers */
-	SIGNATURE_HEADER(Buzzer, THIS_MODULE, TOPIC_DIAGNOSTIC, BuzzerQueue);
+	SIGNATURE_HEADER(Buzzer, THIS_MODULE, TOPIC_GUI, BuzzerQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(Buzzer), 0) == osOK);
 
 	//Create subthreads
@@ -315,58 +356,17 @@ void BUZ_vBuzzerThread (void const *argument)
 	osThreadId xMainFromIsobusID = (osThreadId)argument;
 	osSignalSet(xMainFromIsobusID, MODULE_BUZZER);
 
-	uint8_t *pRecvBuffer;
-	messageType_e eMsgType;
-	uint16_t hMsgSize;
-	bool bOnBuzzer = false;
-
 	/* Start the main functions of the application */
 	while (1)
 	{
 		/* Blocks until any message is published on any topic */
 		WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
-		osEvent evt = RECEIVE(BuzzerQueue, osWaitForever);
+		evt = RECEIVE(BuzzerQueue, osWaitForever);
 		WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
 		if (evt.status == osEventMessage)
 		{
-			eMsgType = GET_MESSAGE(GET_CONTRACT(evt))->eMessageType;
-
-			hMsgSize = GET_MESSAGE(GET_CONTRACT(evt))->hMessageSize;
-
-			pRecvBuffer = (uint8_t *)GET_MESSAGE(GET_CONTRACT(evt))->pvMessage;
-
-			switch (pRecvBuffer[0])
-			{
-				case 'A':
-				bOnBuzzer = true;
-				DEV_ioctl(pIntBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-					break;
-				case 'B':
-				bOnBuzzer = false;
-				DEV_ioctl(pIntBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-					break;
-				case 'C':
-				bOnBuzzer = true;
-				DEV_ioctl(pExtBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-					break;
-				case 'D':
-				bOnBuzzer = false;
-				DEV_ioctl(pExtBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-					break;
-				case 'F':
-				bOnBuzzer = true;
-				DEV_ioctl(pIntBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-				DEV_ioctl(pExtBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-					break;
-				case 'G':
-				bOnBuzzer = false;
-				DEV_ioctl(pIntBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-				DEV_ioctl(pExtBuzzerHandle, IOCTL_CBT_TURN_ON_OFF, &bOnBuzzer);
-					break;
-				default:
-					break;
-			}
-			(void)evt;
+			BUZ_vIdentifyEvent(GET_CONTRACT(evt));
 		}
 	}
 	/* Unreachable */
