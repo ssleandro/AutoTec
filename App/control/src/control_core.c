@@ -67,7 +67,7 @@ const UOS_tsVersaoCod UOS_sVersaoCodDef = {
 	5,                //Modelo MPA2500
 	1,                //Versão
 	1,                //Revisão
-	1002,              //Build
+	1003,              //Build
 	0x00,             //Número de série do hardware
 	0x00,             //(6 bytes)
 	0x00,
