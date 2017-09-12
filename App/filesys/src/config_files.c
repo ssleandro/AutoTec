@@ -119,7 +119,7 @@ uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 	uint8_t bErroCfg = true;
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
-	uint8_t bRet= 0;
+	uint8_t bRet = F_NO_ERROR;
 
 	//Verifica se o sistema de arquivo foi inicializado:
 	dFlagsSis = osFlagGet(FFS_sFlagSis);
@@ -140,16 +140,15 @@ uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 			{
 				//Le o arquivo de configuracao do sistema de arquivos:
 				bErr = f_read(bData, wLen, 1, xFileHandle);
-
-				if (bErr == 1)
-				{
-					bRet = 1;
-				}
+				ASSERT(bErr == 1);
 			}
 
 			//Fecha o arquivo de configuracao:
 			bErr = f_close(xFileHandle);
 			ASSERT(bErr == F_NO_ERROR);
+		} else
+		{
+			bRet = bErr;
 		}
 	}
 	return bRet;
@@ -172,15 +171,23 @@ eAPPError_s FFS_vLoadConfigFile (void)
 
 	bErr = FFS_bReadFile(FFS_abConfigName, (uint8_t * )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
 	ASSERT(bErr == 1);
-	//Confere o CRC da configuracao:
-	TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
-	//Se o CRC esta OK:
-	if (wCRC16_C == 0)
+
+	if (bErr == F_NO_ERROR)
 	{
-		osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
-		eRet = APP_ERROR_SUCCESS;
+		//Confere o CRC da configuracao:
+		TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
+		//Se o CRC esta OK:
+		if (wCRC16_C == 0)
+		{
+			osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
+			eRet = APP_ERROR_SUCCESS;
+		} else
+		{
+			bErr = F_ERR_READ;
+		}
 	}
-	else
+
+	if (bErr != F_NO_ERROR)
 	//Carrega arquivo de configuracao default
 	{
 		memcpy(&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
@@ -337,7 +344,7 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
 
 	//Se o CRC esta OK:
-	if (wCRC16_C == 0)
+	if ((wCRC16_C == 0) && (bErr == F_NO_ERROR))
 	{
 		eRet = APP_ERROR_SUCCESS;
 	}
@@ -439,7 +446,7 @@ eAPPError_s FFS_vLoadStaticReg (void)
 				sizeof(FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor));
 
 	//Se o CRC esta OK:
-	if((bErr == 1) && (wCRC16_C == 0))
+	if((bErr == F_NO_ERROR) && (wCRC16_C == 0))
 	{
 		osFlagSet(FFS_sFlagSis, FFS_FLAG_STATIC_REG);
 		eRet = APP_ERROR_SUCCESS;
