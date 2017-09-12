@@ -121,10 +121,10 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*INT16U wSementesPorMetro;*/15, //Meta de Sementes por Metro. (sementes/m)*10
 		/*INT16U wInsensibilidade;*/100, //Distância de insensibilidade para falhas. (metros)*10
 		/*INT16U wAvalia;*/1000, //Distância para avaliacao de aplicacao. (metros)*10
-		/*INT16U wDistLinhas;*/0, //Distância entre linhas. (centímetros)*10
+		/*INT16U wDistLinhas;*/100, //Distância entre linhas. (centímetros)*10
 		/*INT16U wLargImpl;*/10, //Largura do implemento. (centímetros)*10
 		/*uint8_t  bMonitorArea;*/false, //Se está em modo monitor de área. (0 = false, 1 = true )
-		/*uint8_t  bNumLinhas;*/36, //No. Linhas (1-36)
+		/*uint8_t  bNumLinhas;*/1, //No. Linhas (1-36)
 		/*uint8_t  bDivLinhas;*/0, //Divisão da plantadeira (bNumLinhas/2 ou bNumLinhas/2+1)
 		/*uint8_t  bSensorAdubo;*/false, //Indica presença de sensor de adubo. (bSensorAdubo = 1)
 		/*uint8_t  bTolerancia;*/20, //Tolerância ao espaçamento entre sementes. (porcentagem)
@@ -148,7 +148,7 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 		/*eSelectedUnitMeasurement eUnit;*/UNIT_INTERNATIONAL_SYSTEM,
 
 		//------------------------------------------------------------------------------
-		/*uint32_t dVeiculo;*/2500,
+		/*uint32_t dVeiculo;*/0,
 
 		//------------------------------------------------------------------------------
 		/*INT16U wCRC16;*/0
@@ -157,8 +157,6 @@ const UOS_tsConfiguracao UOS_sConfiguracaoDefault =
 /******************************************************************************
  * Module typedef
  *******************************************************************************/
-typedef uint16_t (*changeTest) (uint16_t data, uint8_t step);
-
 /**
  * Module Threads
  */
@@ -387,12 +385,6 @@ void CTL_vControlThread (void const *argument)
 		CTL_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-	//SIGNATURE_HEADER(ControlAcquireg, THIS_MODULE, TOPIC_ACQUIREG, ControlQueue);
-	//ASSERT(SUBSCRIBE(SIGNATURE(ControlAcquireg), 0) == osOK);
-
-	//SIGNATURE_HEADER(ControlSensor, THIS_MODULE, TOPIC_GPS, ControlQueue);
-	//ASSERT(SUBSCRIBE(SIGNATURE(ControlSensor), 0) == osOK);
-
 	SIGNATURE_HEADER(ControlFileSys, THIS_MODULE, TOPIC_FILESYS, ControlQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(ControlFileSys), 0) == osOK);
 
@@ -440,9 +432,6 @@ void CTL_vControlEmergencyThread (void const *argument)
 	__disable_irq();
 
 	// Turn off peripheral and sensors power source
-	// DISABLE PS9
-	// DISABLE PS5
-	// DISABLE GPS??
 
 	//Verifica os flags de sistema:
 	dFlagsSis = osFlagGet(UOS_sFlagSis);

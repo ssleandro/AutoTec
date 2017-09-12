@@ -1674,16 +1674,16 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
 							{
-								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID:
@@ -1789,16 +1789,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
 							}
-//							else if (eCurrentMask == DATA_MASK_TEST_MODE)
-//							{
-//								eConfigMaskFromX = DATA_MASK_INSTALLATION;
-//								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
-//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
-//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-//								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
-//							}
 
 							ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
 							WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
@@ -2155,7 +2145,7 @@ void ISO_vUpdateConfigurationDataMask (void)
 	ISO_vUpdateNumberVariableValue(NV_CFG_SEEDS_P_M, *sConfigDataMask.wSeedRate);
 	ISO_vUpdateNumberVariableValue(NV_CFG_N_ROWS, *sConfigDataMask.bNumOfRows);
 
-	if (((*sConfigDataMask.bNumOfRows) % 2) != 0)
+	if ((((*sConfigDataMask.bNumOfRows) % 2) != 0) && ((*sConfigDataMask.bNumOfRows) > 1))
 	{
 		ISO_vEnableDisableObjCommand(IL_CFG_CENTER_ROW_SIDE, true);
 	} else
@@ -2713,6 +2703,9 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 						SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
 					WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 					break;
 				}
@@ -2764,7 +2757,7 @@ void ISO_vTreatUpdateDataEvent (event_e ePubEvt)
 		case DATA_MASK_CONFIRM_CONFIG_CHANGES:
 		{
 			ISO_vUpdateSisConfigData(&GUIConfigurationData);
-		PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
+			PUBLISH_MESSAGE(Isobus, EVENT_ISO_UPDATE_CURRENT_CONFIGURATION, EVENT_CLEAR, &GUIConfigurationData);
 			break;
 		}
 		default:
