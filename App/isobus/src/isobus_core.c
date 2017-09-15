@@ -70,16 +70,28 @@ extern osFlagsGroupId UOS_sFlagSis;
 static sNumberVariableObj asNumVarObjects[ISO_NUM_NUMBER_VARIABLE_OBJECTS];
 static sFillAttributesObj asNumFillAttributesObjects[ISO_NUM_FILL_ATTRIBUTES_OBJECTS];
 static sInputListObj asConfigInputList[ISO_NUM_INPUT_LIST_OBJECTS];
+static eLineAlarm aeLineAlarmStatus[CAN_bNUM_DE_LINHAS];
+static uint8_t bClearAlarmLineX;
+static bool bKeepLineHighPrioAlarm = false;
+static bool bKeepLineMediumPrioAlarm = false;
+static bool bHighPrioAudioInProcess = false;
+static bool bMediumPrioAudioInProcess = false;
 
+// Installation
 static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
-
 static sInstallSensorStatus sInstallStatus;
+eInstallationStatus InstallationStatus[36];
 
 static sIgnoreLineStatus sIgnoreStatus;
 
 static sTrimmingState sTrimmState = {
 		.eTrimmState = TRIMMING_NOT_TRIMMED,
 		.eNewTrimmState = TRIMMING_NOT_TRIMMED,
+};
+
+static sUpdatePlanterMaskStates sUptPlanterMask = {
+		.eUpdateState = UPDATE_PLANTER_NO_ALARM,
+		.eAlarmEvent = EVENT_GUI_ALARM_TOLERANCE,
 };
 
 static sConfigurationDataMask sConfigDataMask =
@@ -113,6 +125,7 @@ static sPlanterIndividualLines sPlanterLines =
 		.psLineSemPerUnit = &(asNumVarObjects[118]),
 		.psLineSemPerHa = &(asNumVarObjects[154]),
 		.psLineTotalSeeds = &(asNumVarObjects[190]),
+		.peLineAlarmStatus = &(aeLineAlarmStatus[0]),
 	};
 
 const sPlanterDataMask sPlanterMask =
@@ -204,13 +217,12 @@ peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
 
 // Mutex to VT status control structure
 CREATE_MUTEX(MTX_VTStatus);
-
 CREATE_MUTEX(ISO_UpdateMask);
 
 extern unsigned int POOL_SIZE;
 
-// Installation
-eInstallationStatus InstallationStatus[36];
+void ISO_vTimerCallbackAlarmTimeout (const void *argument);
+CREATE_TIMER(AlarmTimeoutTimer, ISO_vTimerCallbackAlarmTimeout);
 
 /******************************************************************************
  * Function Prototypes
@@ -425,6 +437,11 @@ void ISO_vIsobusPublishThread (void const *argument)
 				case EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE:
 				{
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &sTrimmState);
+					break;
+				}
+				case EVENT_ISO_ALARM_CLEAR_ALARM:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &bClearAlarmLineX);
 					break;
 				}
 				default:
@@ -1748,7 +1765,21 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 								break;
 							}
 							default:
+							{
+								if ((dAux >= BU_PLANTER_L01) && (dAux <= BU_PLANTER_L36))
+								{
+									bClearAlarmLineX = (dAux - BU_PLANTER_L01);
+									ISO_vChangeAttributeCommand(BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
+									ISO_vChangeAttributeCommand(BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
+									ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_RECTANGLE_LINE_ATTRIBUTE, COLOR_BLACK);
+									ePubEvt = EVENT_ISO_ALARM_CLEAR_ALARM;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+
+								}
 								break;
+							}
 						}
 						break;
 					}
@@ -2199,6 +2230,15 @@ void ISO_vUpdateInstallationDataMask (void)
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 }
 
+void ISO_vUpdateAlarmStatus (uint8_t bNumLine, eLineAlarm eAlarmStatus)
+{
+	uint8_t bColor = (eAlarmStatus == LINE_ALARM_NO_SEED) ? COLOR_RED : ((eAlarmStatus == LINE_ALARM_TOLERANCE) ? COLOR_OLIVE : COLOR_BLACK);
+	uint16_t wRectID = (bColor == COLOR_BLACK) ? LA_PLANT_DEFAULT_LINE : ((bColor == COLOR_RED) ? LA_PLANT_ALARM_RED : LA_PLANT_ALARM_YELLOW);
+	ISO_vChangeAttributeCommand(BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, bColor);
+	ISO_vChangeAttributeCommand(BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, bColor);
+	ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_RECTANGLE_LINE_ATTRIBUTE, wRectID);
+}
+
 void ISO_vUpdatePlanterDataMask (void)
 {
 	osStatus status;
@@ -2247,12 +2287,17 @@ void ISO_vUpdatePlanterDataMask (void)
 		{
 			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
 				sPlanterMask.psLineStatus->psLineAverage[i].dValue);
-			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
-				sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
-			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
-				sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
-			ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
-				sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+
+			if (i < (*sConfigDataMask.bNumOfRows))
+			{
+				ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
+					sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
+				ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
+					sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
+				ISO_vUpdateNumberVariableValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
+					sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+				ISO_vUpdateAlarmStatus(i, sPlanterMask.psLineStatus->peLineAlarmStatus[i]);
+			}
 		}
 
 		ISO_vUpdateNumberVariableValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
@@ -2280,6 +2325,23 @@ void ISO_vUpdatePlanterDataMask (void)
 		ISO_vUpdateNumberVariableValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
 		ISO_vUpdateNumberVariableValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
 		ISO_vUpdateNumberVariableValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+	}
+
+	if (sUptPlanterMask.eUpdateState == UPDATE_PLANTER_ALARM)
+	{
+		switch (sUptPlanterMask.eAlarmEvent) {
+			case EVENT_GUI_ALARM_TOLERANCE:
+			{
+				ISO_vControlAudioSignalCommand(ISO_ALARM_TOLERANCE_ACTIVATIONS,
+						ISO_ALARM_TOLERANCE_FREQUENCY_HZ,
+						ISO_ALARM_TOLERANCE_ON_TIME_MS,
+						ISO_ALARM_TOLERANCE_OFF_TIME_MS);
+				break;
+			}
+			default:
+				break;
+		}
+		sUptPlanterMask.eUpdateState = UPDATE_PLANTER_NO_ALARM;
 	}
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
@@ -2486,7 +2548,7 @@ void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData)
 		sPlanterMask.psLineStatus->psLineSemPerUnit[bI].dValue = psPlanterData->asLineStatus[bI].dLineSemPerUnit;
 		sPlanterMask.psLineStatus->psLineSemPerHa[bI].dValue = psPlanterData->asLineStatus[bI].dLineSemPerHa;
 		sPlanterMask.psLineStatus->psLineTotalSeeds[bI].dValue = psPlanterData->asLineStatus[bI].dLineTotalSeeds;
-
+		sPlanterMask.psLineStatus->peLineAlarmStatus[bI] = psPlanterData->asLineStatus[bI].eLineAlarmStatus;
 	}
 
 	sPlanterMask.psProductivity->dValue = psPlanterData->dProductivity;
@@ -2567,6 +2629,39 @@ void ISO_vUpdatePlanterDataMaskLines (void)
 	ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
 }
 
+void ISO_vTimerCallbackAlarmTimeout (void const *argument)
+{
+	if (bKeepLineHighPrioAlarm && bHighPrioAudioInProcess)
+	{
+		ISO_vControlAudioSignalCommand(
+				ISO_ALARM_LINE_FAILURE_ACTIVATIONS,
+				ISO_ALARM_LINE_FAILURE_FREQUENCY_HZ,
+				ISO_ALARM_LINE_FAILURE_ON_TIME_MS,
+				ISO_ALARM_LINE_FAILURE_OFF_TIME_MS);
+		START_TIMER(AlarmTimeoutTimer,
+			((ISO_ALARM_LINE_FAILURE_ON_TIME_MS + ISO_ALARM_LINE_FAILURE_OFF_TIME_MS)*ISO_ALARM_LINE_FAILURE_ACTIVATIONS) - 5);
+		bHighPrioAudioInProcess = true;
+		bKeepLineHighPrioAlarm = false;
+	} else if (bKeepLineMediumPrioAlarm && bMediumPrioAudioInProcess)
+	{
+		ISO_vControlAudioSignalCommand(
+				ISO_ALARM_EXCEEDED_SPEED_ACTIVATIONS,
+				ISO_ALARM_EXCEEDED_SPEED_FREQUENCY_HZ,
+				ISO_ALARM_EXCEEDED_SPEED_ON_TIME_MS,
+				ISO_ALARM_EXCEEDED_SPEED_OFF_TIME_MS);
+		START_TIMER(AlarmTimeoutTimer,
+			((ISO_ALARM_EXCEEDED_SPEED_ON_TIME_MS + ISO_ALARM_EXCEEDED_SPEED_OFF_TIME_MS)*ISO_ALARM_EXCEEDED_SPEED_ACTIVATIONS) - 5);
+		bMediumPrioAudioInProcess = true;
+		bKeepLineMediumPrioAlarm = false;
+	} else
+	{
+		bHighPrioAudioInProcess = false;
+		bMediumPrioAudioInProcess = false;
+		bKeepLineHighPrioAlarm = false;
+		bKeepLineMediumPrioAlarm = false;
+	}
+}
+
 /******************************************************************************
  * Function : ISO_vIsobusUpdateOPThread(void const *argument)
  *//**
@@ -2598,6 +2693,7 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 	event_e eRecvPubEvt;
 
 	INITIALIZE_LOCAL_QUEUE(UpdateQ);
+	INITIALIZE_TIMER(AlarmTimeoutTimer, osTimerOnce);
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Isobus UpdateOP Thread Created");
@@ -2722,19 +2818,60 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				case EVENT_GUI_ALARM_LINE_FAILURE:
 				case EVENT_GUI_ALARM_SETUP_FAILURE:
 				{
+					if (!bHighPrioAudioInProcess)
+					{
+						if (bMediumPrioAudioInProcess)
+						{
+							ISO_vControlAudioSignalCommand(
+									ISO_ALARM_DEACTIVATE,
+									ISO_ALARM_EXCEEDED_SPEED_FREQUENCY_HZ,
+									ISO_ALARM_EXCEEDED_SPEED_ON_TIME_MS,
+									ISO_ALARM_EXCEEDED_SPEED_OFF_TIME_MS);
+						}
+						ISO_vControlAudioSignalCommand(
+								ISO_ALARM_LINE_FAILURE_ACTIVATIONS,
+								ISO_ALARM_LINE_FAILURE_FREQUENCY_HZ,
+								ISO_ALARM_LINE_FAILURE_ON_TIME_MS,
+								ISO_ALARM_LINE_FAILURE_OFF_TIME_MS);
+						STOP_TIMER(AlarmTimeoutTimer);
+						START_TIMER(AlarmTimeoutTimer,
+							((ISO_ALARM_LINE_FAILURE_ON_TIME_MS + ISO_ALARM_LINE_FAILURE_OFF_TIME_MS)*ISO_ALARM_LINE_FAILURE_ACTIVATIONS) - 5);
+						bHighPrioAudioInProcess = true;
+						bKeepLineHighPrioAlarm = false;
+					} else
+					{
+						bKeepLineHighPrioAlarm = true;
+					}
 					break;
 				}
 				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
 				case EVENT_GUI_ALARM_GPS_FAILURE:
 				{
+					if (!bHighPrioAudioInProcess && !bMediumPrioAudioInProcess)
+					{
+						ISO_vControlAudioSignalCommand(
+								ISO_ALARM_EXCEEDED_SPEED_ACTIVATIONS,
+								ISO_ALARM_EXCEEDED_SPEED_FREQUENCY_HZ,
+								ISO_ALARM_EXCEEDED_SPEED_ON_TIME_MS,
+								ISO_ALARM_EXCEEDED_SPEED_OFF_TIME_MS);
+						STOP_TIMER(AlarmTimeoutTimer);
+						START_TIMER(AlarmTimeoutTimer,
+							((ISO_ALARM_EXCEEDED_SPEED_ON_TIME_MS + ISO_ALARM_EXCEEDED_SPEED_OFF_TIME_MS)*ISO_ALARM_EXCEEDED_SPEED_ACTIVATIONS) - 5);
+						bMediumPrioAudioInProcess = true;
+						bKeepLineMediumPrioAlarm = false;
+					} else
+					{
+						bKeepLineMediumPrioAlarm = true;
+					}
 					break;
 				}
 				case EVENT_GUI_ALARM_TOLERANCE:
 				{
-					ISO_vControlAudioSignalCommand(ISO_ALARM_TOLERANCE_ACTIVATIONS,
-							ISO_ALARM_TOLERANCE_FREQUENCY_HZ,
-							ISO_ALARM_TOLERANCE_ON_TIME_MS,
-							ISO_ALARM_TOLERANCE_OFF_TIME_MS);
+					if (!bHighPrioAudioInProcess && !bMediumPrioAudioInProcess)
+					{
+						sUptPlanterMask.eUpdateState = UPDATE_PLANTER_ALARM;
+						sUptPlanterMask.eAlarmEvent = EVENT_GUI_ALARM_TOLERANCE;
+					}
 					break;
 				}
 				default:

@@ -128,26 +128,44 @@
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
+#define ISO_ALARM_FREQUENCY_HZ	2900
+//#define ISO_ALARM_FREQUENCY_HZ	800
+
 // Alarms
 #define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1
-#define ISO_ALARM_SETUP_NEW_SENSOR_FREQUENCY_HZ	800
-#define ISO_ALARM_SETUP_NEW_SENSOR_ON_TIME_MS 	50
-#define ISO_ALARM_SETUP_NEW_SENSOR_OFF_TIME_MS 	50
+#define ISO_ALARM_SETUP_NEW_SENSOR_FREQUENCY_HZ	ISO_ALARM_FREQUENCY_HZ
+#define ISO_ALARM_SETUP_NEW_SENSOR_ON_TIME_MS 	250
+#define ISO_ALARM_SETUP_NEW_SENSOR_OFF_TIME_MS 	750
 
 #define ISO_ALARM_SETUP_FINISHED_ACTIVATIONS 	3
-#define ISO_ALARM_SETUP_FINISHED_FREQUENCY_HZ 	210
+#define ISO_ALARM_SETUP_FINISHED_FREQUENCY_HZ 	ISO_ALARM_FREQUENCY_HZ
 #define ISO_ALARM_SETUP_FINISHED_ON_TIME_MS 	250
 #define ISO_ALARM_SETUP_FINISHED_OFF_TIME_MS 	250
 
 #define ISO_ALARM_TOLERANCE_ACTIVATIONS 	2
-#define ISO_ALARM_TOLERANCE_FREQUENCY_HZ 	800
-#define ISO_ALARM_TOLERANCE_ON_TIME_MS 		50
-#define ISO_ALARM_TOLERANCE_OFF_TIME_MS 	50
+#define ISO_ALARM_TOLERANCE_FREQUENCY_HZ 	ISO_ALARM_FREQUENCY_HZ
+#define ISO_ALARM_TOLERANCE_ON_TIME_MS 		250
+#define ISO_ALARM_TOLERANCE_OFF_TIME_MS 	250
+
+#define ISO_ALARM_EXCEEDED_SPEED_ACTIVATIONS 	1
+#define ISO_ALARM_EXCEEDED_SPEED_FREQUENCY_HZ 	ISO_ALARM_FREQUENCY_HZ
+#define ISO_ALARM_EXCEEDED_SPEED_ON_TIME_MS 	250
+#define ISO_ALARM_EXCEEDED_SPEED_OFF_TIME_MS 	750
+
+#define ISO_ALARM_LINE_FAILURE_ACTIVATIONS		1
+#define ISO_ALARM_LINE_FAILURE_FREQUENCY_HZ 	ISO_ALARM_FREQUENCY_HZ
+#define ISO_ALARM_LINE_FAILURE_ON_TIME_MS 		850
+#define ISO_ALARM_LINE_FAILURE_OFF_TIME_MS 		150
+
+#define ISO_ALARM_DEACTIVATE	0
 
 /******************************************************************************
  * Macros
  *******************************************************************************/
 #define INPUT_LIST_GET_INDEX_FROM_ID(id) (id - IL_CFG_LANGUAGE)
+#define BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)((line > 0) ? (BG_PLANT_UP_L02 + (2 * (line - 1))) : BG_PLANT_UP_L01)
+#define BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)((line > 0) ? (BG_PLANT_DOWN_L02 + (2 * (line - 1))) : BG_PLANT_DOWN_L01)
+#define RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)(RT_PLANT_L01 + line)
 #define GET_FLOAT_VALUE(value) ((float)(value/10.0f))
 #define GET_UNSIGNED_INT_VALUE(value) ((uint32_t)(value*10))
 
@@ -193,6 +211,18 @@ typedef enum
 	TRIMM_CHANGE_WAIT_CONFIRMATION,
 	TRIMM_CHANGE,
 } eChangeTrimmingState;
+
+typedef enum
+{
+	UPDATE_PLANTER_NO_ALARM,
+	UPDATE_PLANTER_ALARM,
+} eUpdatePlanterMaskStates;
+
+typedef struct
+{
+	eUpdatePlanterMaskStates eUpdateState;
+	event_e eAlarmEvent;
+} sUpdatePlanterMaskStates;
 
 /******************************************************************************
  * Variables

@@ -174,6 +174,13 @@ typedef struct
 	eTrimming eNewTrimmState;
 } sTrimmingState;
 
+typedef enum
+{
+	LINE_ALARM_NONE,
+	LINE_ALARM_TOLERANCE,
+	LINE_ALARM_NO_SEED,
+} eLineAlarm;
+
 typedef struct sConfigurationData
 {
 	eSelectedLanguage eLanguage;
@@ -248,6 +255,7 @@ typedef struct sPlanterIndividualLinesData
 	uint32_t dLineSemPerUnit;
 	uint32_t dLineSemPerHa;
 	uint32_t dLineTotalSeeds;
+	eLineAlarm eLineAlarmStatus;
 } sPlanterIndividualLinesData;
 
 typedef struct sPlanterDataMaskData
@@ -275,6 +283,7 @@ typedef struct sPlanterIndividualLines
 	sNumberVariableObj* psLineSemPerUnit;
 	sNumberVariableObj* psLineSemPerHa;
 	sNumberVariableObj* psLineTotalSeeds;
+	eLineAlarm* peLineAlarmStatus;
 } sPlanterIndividualLines;
 
 typedef struct sPlanterDataMask
