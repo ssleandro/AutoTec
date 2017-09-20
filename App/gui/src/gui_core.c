@@ -464,6 +464,39 @@ void GUI_vGuiPublishThread (void const *argument)
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
+				case EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+
+					ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sSISConfiguration);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
 				default:
 					break;
 			}
@@ -716,6 +749,28 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	}
 }
 
+void GUI_vCheckPassword (uint16_t wPassword)
+{
+	event_e ePubEvt;
+	ePubEvt = (wPassword == sSISConfiguration.sIHM.wPasswd) ? EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK : EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK;
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+}
+
+void GUI_vChangePassword (uint16_t wNewPasswd)
+{
+	event_e ePubEvt;
+
+	if ((wNewPasswd <= 9999) && (wNewPasswd >= 0))
+	{
+		sSISConfiguration.sIHM.wPasswd = wNewPasswd;
+		ePubEvt = EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK;
+	} else
+	{
+		ePubEvt = EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK;
+	}
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+}
+
 void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osStatus status;
@@ -865,6 +920,18 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				uint8_t* psClearAlarmLineX = pvPayload;
 				dBitsTolerance &= (0 << *psClearAlarmLineX);
+			}
+
+			if (ePubEvt == EVENT_ISO_CONFIG_CHECK_PASSWORD)
+			{
+				uint16_t* wPassword = pvPayload;
+				GUI_vCheckPassword(*wPassword);
+			}
+
+			if (ePubEvt == EVENT_ISO_CONFIG_CHANGE_PASSWORD)
+			{
+				uint16_t* wNewPasswd = pvPayload;
+				GUI_vChangePassword(*wNewPasswd);
 			}
 			break;
 		}

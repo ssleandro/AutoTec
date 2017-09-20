@@ -357,6 +357,10 @@ typedef enum event_e
 	EVENT_GUI_ALARM_EXCEEDED_SPEED,
 	EVENT_GUI_ALARM_GPS_FAILURE,
 	EVENT_GUI_ALARM_TOLERANCE,
+	EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK,
+	EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK,
+	EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK,
+	EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
@@ -369,6 +373,8 @@ typedef enum event_e
 	EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE,
 	EVENT_ISO_CONFIG_UPDATE_DATA,
 	EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA,
+	EVENT_ISO_CONFIG_CHECK_PASSWORD,
+	EVENT_ISO_CONFIG_CHANGE_PASSWORD,
 	EVENT_ISO_AREA_MONITOR_PAUSE,
 	EVENT_ISO_ALARM_CLEAR_ALARM,
 	EVENT_CTL_UPDATE_CONFIG,
@@ -539,17 +545,9 @@ typedef struct
 
 typedef struct
 {
-	//Senha para operacoes de seguranca:
-	uint32_t abSenha;
-
-	//Idioma:
+	uint16_t wPasswd;
 	eSelectedLanguage eLanguage;
-
-	// Se egit  sistema imperial ou internacional
 	eSelectedUnitMeasurement eUnit;
-
-	//uint8_t alinhamento[2];
-
 } tsCfgIHM;
 
 //Receptor GPS interno:
@@ -570,19 +568,14 @@ typedef struct
 {
 	//Configuracao Monitor
 	UOS_tsCfgMonitor sMonitor;
-
 	//Receptor GPS interno:
 	tsCfgGPS sGPS;
-
 	//Configuracao IHM
 	tsCfgIHM sIHM;
-
 	//Identificacao do veiculo:
 	uint32_t dVeiculo;
-
 	//CRC16 desta estrutura:
 	uint16_t wCRC16;
-
 } __attribute__((aligned(1), packed)) UOS_tsConfiguracao;
 
 
