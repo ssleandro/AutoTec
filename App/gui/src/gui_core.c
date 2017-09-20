@@ -88,6 +88,10 @@ GUI_tsConfig GUI_sConfig;
 sIgnoreLineStatus GUI_sIgnoreStatus;
 sTrimmingState GUI_sTrimmState;
 
+// Keeps the alarm line status
+static uint64_t dBitsTolerance = 0;
+static uint64_t dBitsNoSeed = 0;
+
 /******************************************************************************
  * Module typedef
  *******************************************************************************/
@@ -212,12 +216,28 @@ void GUI_vRandomValuesToPlanterDataMask (void)
 
 void GUI_vGetValuesToPlanterDataMask (void)
 {
+	dBitsTolerance |= (GUI_sStatus.dSementeFalhaIHM | GUI_sStatus.dAduboFalha |
+									((uint64_t)(GUI_sStatus.dSementeFalhaIHMExt | GUI_sStatus.dAduboFalhaExt) << 32));
+	dBitsNoSeed = (GUI_sStatus.dMemLinhaDesconectada | GUI_sStatus.dSementeZeroIHM |
+								 ((uint64_t)(GUI_sStatus.dMemLinhaDesconectadaExt | GUI_sStatus.dSementeZeroIHMExt) << 32));
+
 	for (uint8_t dNumSensor = 0; dNumSensor < sSISConfiguration.sMonitor.bNumLinhas; dNumSensor++)
 	{
 		GUI_vLinesPartialPopulation((dNumSensor + 1), &sGUIPlanterData.asLineStatus[dNumSensor].dsLineAverage,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerUnit,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerHa,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineTotalSeeds);
+
+		if (dBitsNoSeed & (1 << dNumSensor))
+		{
+			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_ALARM_NO_SEED;
+		} else if (dBitsTolerance & (1 << dNumSensor))
+		{
+			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_ALARM_TOLERANCE;
+		} else
+		{
+			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_ALARM_NONE;
+		}
 	}
 
 	GUI_vGetProductivity(&sGUIPlanterData.dProductivity, &sGUIPlanterData.dWorkedTime);
@@ -230,16 +250,10 @@ void GUI_vGetValuesToPlanterDataMask (void)
 			&sGUIPlanterData.dMaxSpeed);
 }
 
-//#define RANDOM_VALUES
-
 void GUI_vUptPlanter (void)
 {
 	event_e ePubEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
-#if defined (RANDOM_VALUES)
-	GUI_vRandomValuesToPlanterDataMask();
-#else
 	GUI_vGetValuesToPlanterDataMask();
-#endif
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
@@ -430,11 +444,17 @@ void GUI_vGuiPublishThread (void const *argument)
 				case EVENT_GUI_ALARM_LINE_FAILURE:
 				case EVENT_GUI_ALARM_SETUP_FAILURE:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
 				case EVENT_GUI_ALARM_GPS_FAILURE:
 				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_ALARM_TOLERANCE:
@@ -840,6 +860,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ePubEvt = EVENT_GUI_AREA_MONITOR_PAUSE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
+
+			if (ePubEvt == EVENT_ISO_ALARM_CLEAR_ALARM)
+			{
+				uint8_t* psClearAlarmLineX = pvPayload;
+				dBitsTolerance &= (0 << *psClearAlarmLineX);
+			}
 			break;
 		}
 		case MODULE_CONTROL:
@@ -952,32 +978,32 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_DISCONNECTED_SENSOR)
 			{
-				ePubEvt = EVENT_AQR_ALARM_DISCONNECTED_SENSOR;
+				ePubEvt = EVENT_GUI_ALARM_DISCONNECTED_SENSOR;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_LINE_FAILURE)
 			{
-				ePubEvt = EVENT_AQR_ALARM_LINE_FAILURE;
+				ePubEvt = EVENT_GUI_ALARM_LINE_FAILURE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_SETUP_FAILURE)
 			{
-				ePubEvt = EVENT_AQR_ALARM_SETUP_FAILURE;
+				ePubEvt = EVENT_GUI_ALARM_SETUP_FAILURE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_EXCEEDED_SPEED)
 			{
-				ePubEvt = EVENT_AQR_ALARM_EXCEEDED_SPEED;
+				ePubEvt = EVENT_GUI_ALARM_EXCEEDED_SPEED;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_GPS_FAILURE)
 			{
-				ePubEvt = EVENT_AQR_ALARM_GPS_FAILURE;
+				ePubEvt = EVENT_GUI_ALARM_GPS_FAILURE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_TOLERANCE)
 			{
-				ePubEvt = EVENT_AQR_ALARM_TOLERANCE;
+				ePubEvt = EVENT_GUI_ALARM_TOLERANCE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
@@ -1428,20 +1454,6 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 		if(dsAverage != NULL)
 		{
 			*dsAverage = (int32_t) GUI_dGetBarGraphValue(fMedia);
-		}
-
-		if (dNumSensor > 0)
-		{
-			const uint32_t dBits = (GUI_sStatus.dMemLinhaDesconectada | GUI_sStatus.dSementeFalhaIHM
-				| GUI_sStatus.dAduboFalha | GUI_sStatus.dSementeZeroIHM);
-			const uint32_t dBitsExt = (GUI_sStatus.dMemLinhaDesconectadaExt | GUI_sStatus.dSementeFalhaIHMExt
-				| GUI_sStatus.dAduboFalhaExt | GUI_sStatus.dSementeZeroIHMExt);
-
-			if (((dBits & (1 << (dNumSensor - 1))) && (dNumSensor < 33)) ||
-				((dBitsExt & (1 << (dNumSensor - 33))) && (dNumSensor >= 33)))
-			{
-//        LCD_vRetanguloPreenchido( pabBuffer, 1, 32, 1 + 17, 32 + 86, DISPLAY_wXOR );
-			}
 		}
 	}
 
