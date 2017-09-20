@@ -76,6 +76,7 @@ static bool bKeepLineHighPrioAlarm = false;
 static bool bKeepLineMediumPrioAlarm = false;
 static bool bHighPrioAudioInProcess = false;
 static bool bMediumPrioAudioInProcess = false;
+static uint8_t bPasswsNumDigits;
 
 // Installation
 static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
@@ -206,6 +207,9 @@ eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
 eChangeTrimmingState eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
 eIsobusMask eConfigMaskFromX;
+eIsobusMask ePasswdMaskFromX;
+eTreatPasswordState ePasswordManager = PASSWD_IDLE;
+uint16_t wPubPasswd = 0;
 
 bool bCfgClearTotals = false;
 bool bCfgClearSetup = false;
@@ -444,6 +448,16 @@ void ISO_vIsobusPublishThread (void const *argument)
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &bClearAlarmLineX);
 					break;
 				}
+				case EVENT_ISO_CONFIG_CHECK_PASSWORD:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &wPubPasswd);
+					break;
+				}
+				case EVENT_ISO_CONFIG_CHANGE_PASSWORD:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &wPubPasswd);
+					break;
+				}
 				default:
 					break;
 			}
@@ -516,6 +530,7 @@ eAPPError_s ISO_vInitDeviceLayer (uint32_t wSelectedInterface)
 void ISO_vIdentifyEvent (contract_s* contract)
 {
 	event_e eEvt =  GET_PUBLISHED_EVENT(contract);
+	eEventType eEvtType= GET_PUBLISHED_TYPE(contract);
 	void * pvPayData = GET_PUBLISHED_PAYLOAD(contract);
 
 	switch (contract->eOrigin)
@@ -597,6 +612,48 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_ALARM_TOLERANCE:
 				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK:
+				{
+					if (ePasswordManager == PASSWD_ENTER_PASSWORD)
+					{
+						ePasswordManager = PASSWD_ACCEPTED;
+					} else if (ePasswordManager == PASSWD_CHANGE_PASSWD_CURRENT_PASSWD)
+					{
+						ePasswordManager = PASSWD_CHANGE_PASSWD_NEW_PASSWD;
+					}
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK:
+				{
+					if (ePasswordManager == PASSWD_ENTER_PASSWORD)
+					{
+						ePasswordManager = PASSWD_NOT_ACCEPTED;
+					} else if (ePasswordManager == PASSWD_CHANGE_PASSWD_CURRENT_PASSWD)
+					{
+						ePasswordManager = PASSWD_CHANGE_NOT_ACCEPTED;
+					}
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK:
+				{
+					if (ePasswordManager == PASSWD_CHANGE_PASSWD_NEW_PASSWD)
+					{
+						ePasswordManager = PASSWD_CHANGE_ACCEPTED;
+					}
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK:
+				{
+					if (ePasswordManager == PASSWD_CHANGE_PASSWD_NEW_PASSWD)
+					{
+						ePasswordManager = PASSWD_CHANGE_NOT_ACCEPTED;
+					}
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -1431,6 +1488,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 
 void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 {
+	static uint8_t bPasswd[4];
 	uint16_t dAux;
 	event_e ePubEvt;
 
@@ -1456,6 +1514,13 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_KEY_CONFIG_ID:
 							{
+								ePasswdMaskFromX = eCurrentMask;
+								ePasswordManager = PASSWD_ENTER_PASSWORD;
+								ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
+								ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+								ISO_vChangeActiveMask(DATA_MASK_PASSWORD);
 								break;
 							}
 							case ISO_KEY_INSTALLATION_ID:
@@ -1557,6 +1622,10 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 					case FUNC_BUTTON_ACTIVATION:
 					{
 						dAux = ((sRcvMsg->B4 << 8) | (sRcvMsg->B3));
+
+						if (sRcvMsg->B2 != ISO_BUTTON_ACTIVATION_PRESSED)
+							break;
+
 						switch (dAux)
 						{
 							case ISO_BUTTON_REPEAT_TEST_ID:
@@ -1632,65 +1701,80 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
 							{
+								if (ePasswordManager != PASSWD_CHANGE_PASSWD_NEW_PASSWD)
+								{
+									if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
+									{
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+										ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+									} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
+									{
+										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
+										ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+										ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+										ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+									}
+
+									if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
+									{
+										ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
+										ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
+										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
+										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
+										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
+										ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+									}
+
+									if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
+									{
+										ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
+									} else
+									{
+										ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+									}
+
+									if (bCfgClearTotals)
+									{
+										ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
+										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+										bCfgClearTotals = false;
+									}
+
+									if (bCfgClearSetup)
+									{
+										ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+										bCfgClearSetup = false;
+									}
+
+								} else
+								{
+									ePubEvt = EVENT_ISO_CONFIG_CHANGE_PASSWORD;
+									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+								}
 								ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-
-								if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
-								{
-									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-									ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-								} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
-								{
-									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
-									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
-									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
-									ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
-									ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
-									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
-									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
-								}
-
-								if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
-								{
-									ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
-									ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
-									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
-									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
-									ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
-									ISO_vChangeActiveMask(DATA_MASK_PLANTER);
-								}
-
-								if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
-								{
-									ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
-								} else
-								{
-									ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
-								}
-
-								if (bCfgClearTotals)
-								{
-									ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									bCfgClearTotals = false;
-								}
-
-								if (bCfgClearSetup)
-								{
-									ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									bCfgClearSetup = false;
-								}
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
 							{
+								bPasswsNumDigits = 0;
+								ePasswordManager = PASSWD_IDLE;
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
 								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
 								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
@@ -1764,6 +1848,70 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 										SOFT_KEY_MASK_TRIMMING);
 								break;
 							}
+							case ISO_BUTTON_CHANGE_PASSWORD_ID:
+							{
+								ePasswdMaskFromX = eCurrentMask;
+								ePasswordManager = PASSWD_CHANGE_PASSWD_CURRENT_PASSWD;
+								ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, true);
+								ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+								ISO_vChangeActiveMask(DATA_MASK_PASSWORD);
+								break;
+							}
+							case ISO_BUTTON_PASSWORD_CANCEL_ID:
+							{
+								wPubPasswd = 0;
+								bPasswsNumDigits = 0;
+								ePasswordManager = PASSWD_IDLE;
+								ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
+								ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
+								ISO_vChangeActiveMask(ePasswdMaskFromX);
+								break;
+							}
+							case ISO_BUTTON_PASSWORD_ACCEPT_ID:
+							{
+								wPubPasswd = atoi(bPasswd);
+								switch (ePasswordManager)
+								{
+									case PASSWD_ENTER_PASSWORD:
+									{
+										ePubEvt = EVENT_ISO_CONFIG_CHECK_PASSWORD;
+										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+										break;
+									}
+									case PASSWD_CHANGE_PASSWD_CURRENT_PASSWD:
+									{
+										ePubEvt = EVENT_ISO_CONFIG_CHECK_PASSWORD;
+										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+										break;
+									}
+									case PASSWD_CHANGE_PASSWD_NEW_PASSWD:
+									{
+										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
+										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+										ISO_vChangeActiveMask(DATA_MASK_CONFIRM_CONFIG_CHANGES);
+										break;
+									}
+									default:
+										break;
+								}
+								break;
+							}
 							default:
 							{
 								if ((dAux >= BU_PLANTER_L01) && (dAux <= BU_PLANTER_L36))
@@ -1777,6 +1925,34 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
+								}
+
+								if ((dAux >= BU_PASSWD_DIGIT_0) && (dAux <= BU_PASSWD_DIGIT_9))
+								{
+									if (bPasswsNumDigits < 4)
+									{
+										bPasswd[bPasswsNumDigits] = (dAux - BU_PASSWD_DIGIT_0) + 48; // To ascii
+										ISO_vHideShowContainerCommand((CO_PASSWD_DIGIT_1 + bPasswsNumDigits), true);
+										bPasswsNumDigits++;
+
+										if (bPasswsNumDigits == 4)
+										{
+											ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, true);
+										}
+									}
+
+								} else if ((dAux == BU_PASSWD_BACKSPACE))
+								{
+									if (bPasswsNumDigits > 0)
+									{
+										bPasswsNumDigits--;
+										ISO_vHideShowContainerCommand((CO_PASSWD_DIGIT_1 + bPasswsNumDigits), false);
+
+										if (bPasswsNumDigits < 4)
+										{
+											ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+										}
+									}
 								}
 								break;
 							}
@@ -2871,6 +3047,66 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 					{
 						sUptPlanterMask.eUpdateState = UPDATE_PLANTER_ALARM;
 						sUptPlanterMask.eAlarmEvent = EVENT_GUI_ALARM_TOLERANCE;
+					}
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK:
+				{
+					if (ePasswordManager == PASSWD_ACCEPTED)
+					{
+						bPasswsNumDigits = 0;
+						ePasswordManager = PASSWD_IDLE;
+						ISO_vChangeActiveMask(DATA_MASK_CONFIGURATION);
+						ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
+					} else if (ePasswordManager == PASSWD_CHANGE_PASSWD_NEW_PASSWD)
+					{
+						bPasswsNumDigits = 0;
+						ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, true);
+						ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
+					}
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK:
+				{
+					if ((ePasswordManager == PASSWD_NOT_ACCEPTED) || (ePasswordManager == PASSWD_CHANGE_NOT_ACCEPTED))
+					{
+						ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, true);
+						ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
+						bPasswsNumDigits = 0;
+						ePasswordManager = (ePasswordManager == PASSWD_NOT_ACCEPTED) ? PASSWD_ENTER_PASSWORD : PASSWD_CHANGE_PASSWD_CURRENT_PASSWD;
+					}
+					break;
+				}
+				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK:
+				{
+					if (ePasswordManager == PASSWD_CHANGE_ACCEPTED)
+					{
+						bPasswsNumDigits = 0;
+						ePasswordManager = PASSWD_IDLE;
+						ISO_vChangeActiveMask(DATA_MASK_CONFIGURATION);
+						ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+						ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
 					}
 					break;
 				}
