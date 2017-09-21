@@ -141,6 +141,9 @@ uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 				//Le o arquivo de configuracao do sistema de arquivos:
 				bErr = f_read(bData, wLen, 1, xFileHandle);
 				ASSERT(bErr == 1);
+			} else
+			{
+				bRet = F_ERR_READ;
 			}
 
 			//Fecha o arquivo de configuracao:

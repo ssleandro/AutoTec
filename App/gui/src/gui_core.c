@@ -924,13 +924,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_CONFIG_CHECK_PASSWORD)
 			{
-				uint16_t* wPassword = pvPayload;
+				uint32_t* wPassword = pvPayload;
 				GUI_vCheckPassword(*wPassword);
 			}
 
 			if (ePubEvt == EVENT_ISO_CONFIG_CHANGE_PASSWORD)
 			{
-				uint16_t* wNewPasswd = pvPayload;
+				uint32_t* wNewPasswd = pvPayload;
 				GUI_vChangePassword(*wNewPasswd);
 			}
 			break;

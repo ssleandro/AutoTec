@@ -209,7 +209,7 @@ eChangeTrimmingState eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
 eIsobusMask eConfigMaskFromX;
 eIsobusMask ePasswdMaskFromX;
 eTreatPasswordState ePasswordManager = PASSWD_IDLE;
-uint16_t wPubPasswd = 0;
+uint32_t wPubPasswd = 0;
 
 bool bCfgClearTotals = false;
 bool bCfgClearSetup = false;
@@ -1687,6 +1687,8 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 									eClearSetupCurrState = CLEAR_SETUP_IDLE;
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
+																  SOFT_KEY_MASK_INSTALLATION);
 								}
 								break;
 							}
@@ -1701,6 +1703,11 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
 							{
+								ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
+								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+
 								if (ePasswordManager != PASSWD_CHANGE_PASSWD_NEW_PASSWD)
 								{
 									if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
@@ -1715,7 +1722,16 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 										ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
 										ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
 										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
-										ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+
+										(bCfgClearSetup) ? ISO_vChangeActiveMask(DATA_MASK_INSTALLATION) : ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+									}
+
+									if (bCfgClearSetup)
+									{
+										ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 									}
 
 									if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
@@ -1752,6 +1768,8 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 										bCfgClearSetup = false;
+										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
+																	  SOFT_KEY_MASK_INSTALLATION);
 									}
 
 								} else
@@ -1761,10 +1779,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								}
-								ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 								break;
 							}
 							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
