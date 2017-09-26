@@ -890,7 +890,6 @@ uint8_t AQR_vContaSensores (CAN_teEstadoSensor eEstado)
 		//Conta sensores em um determinado estado
 		if (psAQR_Sensor[bConta].eEstado == eEstado)
 		{
-
 			bContaSensor++;
 
 			if (eEstado == Desconectado)
@@ -1319,7 +1318,8 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
 			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
-			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA, true, false, osWaitForever);
+			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA
+			| AQR_APL_FLAG_ERASE_INSTALLATION, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1379,6 +1379,11 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		if ((dFlags & AQR_SIS_FLAG_ALARME_TOLERANCIA) > 0)
 		{
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
+		}
+
+		if ((dFlags & AQR_APL_FLAG_ERASE_INSTALLATION) > 0)
+		{
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_ERASE_INSTALLATION, EVENT_SET, NULL);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -1493,6 +1498,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_GUI_INSTALLATION_ERASE_INSTALLATION)
 			{
 				AQR_vApagaInstalacao();
+				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_ERASE_INSTALLATION);
 			}
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK)

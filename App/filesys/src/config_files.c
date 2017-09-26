@@ -141,6 +141,9 @@ uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 				//Le o arquivo de configuracao do sistema de arquivos:
 				bErr = f_read(bData, wLen, 1, xFileHandle);
 				ASSERT(bErr == 1);
+			} else
+			{
+				bRet = F_ERR_READ;
 			}
 
 			//Fecha o arquivo de configuracao:
@@ -177,7 +180,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
 		//Confere o CRC da configuracao:
 		TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
 		//Se o CRC esta OK:
-		if (wCRC16_C == 0)
+		if ((wCRC16_C == 0) && (FFS_sConfiguracao.sMonitor.bNumLinhas != 0))
 		{
 			osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
 			eRet = APP_ERROR_SUCCESS;

@@ -525,7 +525,13 @@ void SEN_vIdentifyEvent (contract_s* contract)
 				SEN_vSensorsParameters(CAN_APL_CMD_PARAMETROS_EXTENDED, CAN_APL_LINHA_TODAS,
 				CAN_APL_SENSOR_SEMENTE, abParametrosExt, CAN_MSG_DLC_8);
 			}
+
 			if (ePubEvt == EVENT_FFS_SENSOR_CFG &&  ePubEvType == EVENT_CLEAR)
+			{
+				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
+			}
+
+			if (ePubEvt == EVENT_AQR_INSTALLATION_ERASE_INSTALLATION)
 			{
 				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
 			}
