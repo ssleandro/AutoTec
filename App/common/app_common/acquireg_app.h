@@ -223,6 +223,27 @@ typedef struct
 	tsStatus *AQR_sStatus;
 }tsPubPlantData;
 
+typedef enum
+{
+	SENSOR_SEMENTE = 0,
+	SENSOR_ADUBO,
+	SENSOR_ADICIONAL
+}eTipoSensor;
+
+typedef enum
+{
+	TROCA_OK = 0,
+	TROCA_MUITOS_SENSORES,
+	TROCA_NENHUM_SENSOR
+}eEstadoTroca;
+
+typedef struct
+{
+	eEstadoTroca eStTroca;
+	eTipoSensor eTipo;
+	uint8_t bLinhaDisponivel;
+}tsPubTrocaSensor;
+
 /******************************************************************************
  * Variables
  *******************************************************************************/

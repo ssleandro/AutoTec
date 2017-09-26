@@ -121,6 +121,7 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds);
 void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, uint32_t* dMTEV, uint32_t* dMaxSpeed);
 void GUI_vUptTestMode(void);
 void GUI_vUptPlanter(void);
+void GUI_vUptReplaceSensor(tsPubTrocaSensor *);
 
 /******************************************************************************
  * Function Definitions
@@ -254,6 +255,34 @@ void GUI_vUptPlanter (void)
 {
 	event_e ePubEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
 	GUI_vGetValuesToPlanterDataMask();
+	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+}
+
+void GUI_vUptReplaceSensor(tsPubTrocaSensor *sTrocaSensor)
+{
+	uint8_t bSensor;
+	event_e ePubEvt = EVENT_GUI_UPDATE_REPLACE_SENSOR;
+
+	switch (sTrocaSensor->eStTroca)
+	{
+		case TROCA_OK:
+		{
+			bSensor = sTrocaSensor->bLinhaDisponivel;
+			//Habilitar botão de confirma
+			// Mostrar texto com  o numero de sensor
+			break;
+		}
+		case TROCA_MUITOS_SENSORES:
+		{
+			// Mostra mensagem de erro com muitos sensores
+			break;
+		}
+		case TROCA_NENHUM_SENSOR:
+		{
+			// Mostra mensagem de erro de nenhum sensor para troca
+			break;
+		}
+	}
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
@@ -491,6 +520,27 @@ void GUI_vGuiPublishThread (void const *argument)
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_REPLACE_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR:
 				{
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
@@ -933,6 +983,22 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				uint32_t* wNewPasswd = pvPayload;
 				GUI_vChangePassword(*wNewPasswd);
 			}
+
+			if (ePubEvt == EVENT_ISO_INSTALLATION_REPLACE_SENSOR)
+			{
+				ePubEvt = EVENT_GUI_INSTALLATION_REPLACE_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_REPLACE_SENSOR)
+			{
+				if (ePubEvType == EVENT_SET)
+					ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR;
+				else
+					ePubEvt = EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
 			break;
 		}
 		case MODULE_CONTROL:
@@ -1072,6 +1138,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			{
 				ePubEvt = EVENT_GUI_ALARM_TOLERANCE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			if (ePubEvt == EVENT_AQR_INSTALLATION_SENSOR_REPLACE)
+			{
+				tsPubTrocaSensor *psTrocaSensor = pvPayload;
+				GUI_vUptReplaceSensor(psTrocaSensor);
 			}
 			break;
 		}
