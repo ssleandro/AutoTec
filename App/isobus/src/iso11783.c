@@ -423,7 +423,6 @@ uint8_t ISO_vInitPointersToTranfer (const uint8_t* pbAuxPointer, uint32_t tBuffe
 
 void ISO_vSendObjectPool (uint8_t bNumPacketsToSend, uint32_t wNextPacketNumber, uint8_t bProtocol)
 {
-
 	uint8_t bIterator;
 	uint16_t bSentPackets;                   // Number of packets sent in this CTS message
 

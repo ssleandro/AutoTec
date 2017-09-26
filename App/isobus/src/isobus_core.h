@@ -85,6 +85,8 @@
 #define ISO_BUTTON_CHANGE_PASSWORD_ID						BU_CFG_CHANGE_PASSWD
 #define ISO_BUTTON_PASSWORD_CANCEL_ID						BU_PASSWD_CANCEL
 #define ISO_BUTTON_PASSWORD_ACCEPT_ID						BU_PASSWD_ACCEPT
+#define ISO_BUTTON_REPLACE_SENSOR_CANCEL_ID					BU_REPLACE_SENSOR_CANCEL
+#define ISO_BUTTON_REPLACE_SENSOR_ACCEPT_ID					BU_REPLACE_SENSOR_ACCEPT
 
 #define ISO_INPUT_LIST_LANGUAGUE_ID			IL_CFG_LANGUAGE
 #define ISO_INPUT_LIST_UNIT_SYSTEM_ID		IL_CFG_UNIT_SYSTEM
@@ -133,8 +135,8 @@
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
-#define ISO_ALARM_FREQUENCY_HZ	2900
-//#define ISO_ALARM_FREQUENCY_HZ	800
+//#define ISO_ALARM_FREQUENCY_HZ	2900
+#define ISO_ALARM_FREQUENCY_HZ	800
 
 // Alarms
 #define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1

@@ -1486,9 +1486,500 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	}
 }
 
-void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
+void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
+{
+	event_e ePubEvt;
+
+	switch (wObjectID)
+	{
+		case ISO_KEY_PLANTER_ID:
+		{
+			break;
+		}
+		case ISO_KEY_CONFIG_ID:
+		{
+			ePasswdMaskFromX = eCurrentMask;
+			ePasswordManager = PASSWD_ENTER_PASSWORD;
+			ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
+			ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+			ISO_vChangeActiveMask(DATA_MASK_PASSWORD);
+			break;
+		}
+		case ISO_KEY_INSTALLATION_ID:
+		{
+			ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+			break;
+		}
+		case ISO_KEY_TEST_MODE_ID:
+		{
+			break;
+		}
+		case ISO_KEY_FINISH_TEST_ID:
+		{
+			break;
+		}
+		case ISO_KEY_REPLACE_SENSORS_ID:
+		{
+			ISO_vChangeActiveMask(DATA_MASK_REPLACE_SENSOR);
+			break;
+		}
+		case ISO_KEY_BACKTO_INSTALLATION_ID:
+		{
+			ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+			break;
+		}
+		case ISO_KEY_TRIMMING_ID:
+		{
+			break;
+		}
+		case ISO_KEY_SYSTEM_ID:
+		{
+			break;
+		}
+		case ISO_KEY_CLEAR_TOTAL_ID:
+		{
+			ePlanterCounterCurrState = CLEAR_TOTAL_WAIT_CONFIRMATION;
+			ISO_vHideShowContainerCommand(CO_CLEAR_TOTAL, true);
+			ISO_vHideShowContainerCommand(CO_CLEAR_SUB_TOTAL, false);
+			break;
+		}
+		case ISO_KEY_CLEAR_SUBTOTAL_ID:
+		{
+			ePlanterCounterCurrState = CLEAR_SUBTOTAL_WAIT_CONFIRMATION;
+			ISO_vHideShowContainerCommand(CO_CLEAR_TOTAL, false);
+			ISO_vHideShowContainerCommand(CO_CLEAR_SUB_TOTAL, true);
+			break;
+		}
+		case ISO_KEY_BACKTO_PLANTER_ID:
+		{
+			break;
+		}
+		case ISO_KEY_INFO_ID:
+		{
+			if (sPlanterMask.psSpeedKm->dValue > 0)
+			{
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+			} else
+			{
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+			}
+			bCOPlanterLineInfo = true;
+			bCOPlanterSpeedInfo = false;
+			break;
+		}
+		case ISO_KEY_SPEED_ID:
+		{
+			if (sPlanterMask.psSpeedKm->dValue > 0)
+			{
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+			} else
+			{
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+			}
+			bCOPlanterSpeedInfo = true;
+			bCOPlanterLineInfo = false;
+			break;
+		}
+		case ISO_KEY_BACKTO_TRIMMING_CHANGES_ID:
+		{
+			eChangeTrimmCurrState = TRIMM_CHANGE_WAIT_CONFIRMATION;
+			break;
+		}
+		case ISO_KEY_PAUSE_ID:
+		{
+			ePubEvt = EVENT_ISO_AREA_MONITOR_PAUSE;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+void ISO_vUpdateStringVariable (uint8_t* pbNewStrValue)
+{
+
+}
+
+void ISO_vTreatButtonActivation (uint16_t wObjectID)
 {
 	static uint8_t bPasswd[4];
+	event_e ePubEvt;
+
+	switch (wObjectID)
+	{
+		case ISO_BUTTON_REPEAT_TEST_ID:
+		{
+			ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		case ISO_BUTTON_ERASE_INSTALLATION_ID:
+		{
+			eClearSetupCurrState = CLEAR_SETUP_WAIT_CONFIRMATION;
+			break;
+		}
+		case ISO_BUTTON_CLEAR_COUNT_CANCEL_ID:
+		{
+			if ((ePlanterCounterCurrState == CLEAR_TOTAL_WAIT_CONFIRMATION)
+				|| (ePlanterCounterCurrState == CLEAR_SUBTOTAL_WAIT_CONFIRMATION))
+			{
+				ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+			}
+			break;
+		}
+		case ISO_BUTTON_CLEAR_COUNT_ACCEPT_ID:
+		{
+			if (ePlanterCounterCurrState == CLEAR_TOTAL_WAIT_CONFIRMATION)
+			{
+				ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+			}
+			else if (ePlanterCounterCurrState == CLEAR_SUBTOTAL_WAIT_CONFIRMATION)
+			{
+				ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
+			}
+			break;
+		}
+		case ISO_BUTTON_CLEAR_SETUP_CANCEL_ID:
+		{
+			if (eClearSetupCurrState == CLEAR_SETUP_WAIT_CONFIRMATION)
+			{
+				eClearSetupCurrState = CLEAR_SETUP_IDLE;
+			}
+			break;
+		}
+		case ISO_BUTTON_CLEAR_SETUP_ACCEPT_ID:
+		{
+			if (eClearSetupCurrState == CLEAR_SETUP_WAIT_CONFIRMATION)
+			{
+				ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				eClearSetupCurrState = CLEAR_SETUP_IDLE;
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
+											  SOFT_KEY_MASK_INSTALLATION);
+			}
+			break;
+		}
+		case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_INSTALL_ID:
+		{
+			ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+			break;
+		}
+		case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
+		{
+			ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+
+			if (ePasswordManager != PASSWD_CHANGE_PASSWD_NEW_PASSWD)
+			{
+				if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
+				{
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+					ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+				} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
+				{
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+					ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+
+					(bCfgClearSetup) ? ISO_vChangeActiveMask(DATA_MASK_INSTALLATION) : ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+				}
+
+				if (bCfgClearSetup)
+				{
+					ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				}
+
+				if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
+				{
+					ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
+					ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+				}
+
+				if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
+				{
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
+				} else
+				{
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+				}
+
+				if (bCfgClearTotals)
+				{
+					ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+					bCfgClearTotals = false;
+				}
+
+				if (bCfgClearSetup)
+				{
+					ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+					bCfgClearSetup = false;
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
+												  SOFT_KEY_MASK_INSTALLATION);
+				}
+
+			} else
+			{
+				ePubEvt = EVENT_ISO_CONFIG_CHANGE_PASSWORD;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			}
+			break;
+		}
+		case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
+		{
+			bPasswsNumDigits = 0;
+			ePasswordManager = PASSWD_IDLE;
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+			ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+			ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID:
+		{
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+			ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		case ISO_BUTTON_TRIMM_CHANGES_CANCEL_ID:
+		{
+			if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
+			{
+				sTrimmState.eNewTrimmState = sTrimmState.eTrimmState;
+				switch (sTrimmState.eTrimmState)
+				{
+					case TRIMMING_NOT_TRIMMED:
+					{
+						ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, true);
+						ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
+						ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
+						break;
+					}
+					case TRIMMING_LEFT_SIDE:
+					{
+						ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, true);
+						ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
+						ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
+						break;
+					}
+					case TRIMMING_RIGHT_SIDE:
+					{
+						ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, true);
+						ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
+						ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
+						break;
+					}
+					default:
+						break;
+				}
+				eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+			}
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+					SOFT_KEY_MASK_TRIMMING);
+			break;
+		}
+		case ISO_BUTTON_TRIMM_CHANGES_ACCEPT_ID:
+		{
+			if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
+			{
+				sTrimmState.eTrimmState = sTrimmState.eNewTrimmState;
+				ePubEvt = EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
+			}
+			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
+					SOFT_KEY_MASK_TRIMMING);
+			break;
+		}
+		case ISO_BUTTON_CHANGE_PASSWORD_ID:
+		{
+			ePasswdMaskFromX = eCurrentMask;
+			ePasswordManager = PASSWD_CHANGE_PASSWD_CURRENT_PASSWD;
+			ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, true);
+			ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+			ISO_vChangeActiveMask(DATA_MASK_PASSWORD);
+			break;
+		}
+		case ISO_BUTTON_PASSWORD_CANCEL_ID:
+		{
+			wPubPasswd = 0;
+			bPasswsNumDigits = 0;
+			ePasswordManager = PASSWD_IDLE;
+			ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
+			ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
+			ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
+			ISO_vChangeActiveMask(ePasswdMaskFromX);
+			break;
+		}
+		case ISO_BUTTON_PASSWORD_ACCEPT_ID:
+		{
+			wPubPasswd = atoi(bPasswd);
+			switch (ePasswordManager)
+			{
+				case PASSWD_ENTER_PASSWORD:
+				{
+					ePubEvt = EVENT_ISO_CONFIG_CHECK_PASSWORD;
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+					break;
+				}
+				case PASSWD_CHANGE_PASSWD_CURRENT_PASSWD:
+				{
+					ePubEvt = EVENT_ISO_CONFIG_CHECK_PASSWORD;
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+					break;
+				}
+				case PASSWD_CHANGE_PASSWD_NEW_PASSWD:
+				{
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+					ISO_vChangeActiveMask(DATA_MASK_CONFIRM_CONFIG_CHANGES);
+					break;
+				}
+				default:
+					break;
+			}
+			break;
+		}
+		case ISO_BUTTON_REPLACE_SENSOR_CANCEL_ID:
+		{
+			ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
+//			ePubEvt = EVENT_ISO_INSTALLATION_REPLACE_SENSOR;
+//			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+//			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+//			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		case ISO_BUTTON_REPLACE_SENSOR_ACCEPT_ID:
+		{
+			ePubEvt = EVENT_ISO_INSTALLATION_REPLACE_SENSOR;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		default:
+		{
+			if ((wObjectID >= BU_PLANTER_L01) && (wObjectID <= BU_PLANTER_L36))
+			{
+				bClearAlarmLineX = (wObjectID - BU_PLANTER_L01);
+				ISO_vChangeAttributeCommand(BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
+				ISO_vChangeAttributeCommand(BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
+				ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_RECTANGLE_LINE_ATTRIBUTE, COLOR_BLACK);
+				ePubEvt = EVENT_ISO_ALARM_CLEAR_ALARM;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+
+			}
+
+			if ((wObjectID >= BU_PASSWD_DIGIT_0) && (wObjectID <= BU_PASSWD_DIGIT_9))
+			{
+				if (bPasswsNumDigits < 4)
+				{
+					bPasswd[bPasswsNumDigits] = (wObjectID - BU_PASSWD_DIGIT_0) + 48; // To ascii
+					ISO_vHideShowContainerCommand((CO_PASSWD_DIGIT_1 + bPasswsNumDigits), true);
+					bPasswsNumDigits++;
+
+					if (bPasswsNumDigits == 4)
+					{
+						ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, true);
+					}
+				}
+
+			} else if ((wObjectID == BU_PASSWD_BACKSPACE))
+			{
+				if (bPasswsNumDigits > 0)
+				{
+					bPasswsNumDigits--;
+					ISO_vHideShowContainerCommand((CO_PASSWD_DIGIT_1 + bPasswsNumDigits), false);
+
+					if (bPasswsNumDigits < 4)
+					{
+						ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
+					}
+				}
+			}
+			break;
+		}
+	}
+}
+
+void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
+{
 	uint16_t dAux;
 	event_e ePubEvt;
 
@@ -1501,476 +1992,20 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 		{
 			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 			{
+				dAux = ((sRcvMsg->B4 << 8) | (sRcvMsg->B3));
 				switch (sRcvMsg->B1)
 				{
 					case FUNC_SOFT_KEY_ACTIVATION:
 					{
-						dAux = ((sRcvMsg->B4 << 8) | (sRcvMsg->B3));
-						switch (dAux)
-						{
-							case ISO_KEY_PLANTER_ID:
-							{
-								break;
-							}
-							case ISO_KEY_CONFIG_ID:
-							{
-								ePasswdMaskFromX = eCurrentMask;
-								ePasswordManager = PASSWD_ENTER_PASSWORD;
-								ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
-								ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
-								ISO_vChangeActiveMask(DATA_MASK_PASSWORD);
-								break;
-							}
-							case ISO_KEY_INSTALLATION_ID:
-							{
-								ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-								break;
-							}
-							case ISO_KEY_TEST_MODE_ID:
-							{
-								break;
-							}
-							case ISO_KEY_FINISH_TEST_ID:
-							{
-								break;
-							}
-							case ISO_KEY_REPLACE_SENSORS_ID:
-							{
-								break;
-							}
-							case ISO_KEY_BACKTO_INSTALLATION_ID:
-							{
-								ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-								break;
-							}
-							case ISO_KEY_TRIMMING_ID:
-							{
-								break;
-							}
-							case ISO_KEY_SYSTEM_ID:
-							{
-								break;
-							}
-							case ISO_KEY_CLEAR_TOTAL_ID:
-							{
-								ePlanterCounterCurrState = CLEAR_TOTAL_WAIT_CONFIRMATION;
-								ISO_vHideShowContainerCommand(CO_CLEAR_TOTAL, true);
-								ISO_vHideShowContainerCommand(CO_CLEAR_SUB_TOTAL, false);
-								break;
-							}
-							case ISO_KEY_CLEAR_SUBTOTAL_ID:
-							{
-								ePlanterCounterCurrState = CLEAR_SUBTOTAL_WAIT_CONFIRMATION;
-								ISO_vHideShowContainerCommand(CO_CLEAR_TOTAL, false);
-								ISO_vHideShowContainerCommand(CO_CLEAR_SUB_TOTAL, true);
-								break;
-							}
-							case ISO_KEY_BACKTO_PLANTER_ID:
-							{
-								break;
-							}
-							case ISO_KEY_INFO_ID:
-							{
-								if (sPlanterMask.psSpeedKm->dValue > 0)
-								{
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
-								} else
-								{
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
-								}
-								bCOPlanterLineInfo = true;
-								bCOPlanterSpeedInfo = false;
-								break;
-							}
-							case ISO_KEY_SPEED_ID:
-							{
-								if (sPlanterMask.psSpeedKm->dValue > 0)
-								{
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
-								} else
-								{
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-												MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
-								}
-								bCOPlanterSpeedInfo = true;
-								bCOPlanterLineInfo = false;
-								break;
-							}
-							case ISO_KEY_BACKTO_TRIMMING_CHANGES_ID:
-							{
-								eChangeTrimmCurrState = TRIMM_CHANGE_WAIT_CONFIRMATION;
-								break;
-							}
-							case ISO_KEY_PAUSE_ID:
-							{
-								ePubEvt = EVENT_ISO_AREA_MONITOR_PAUSE;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								break;
-							}
-							default:
-								break;
-						}
+						ISO_vTreatSoftKeyActivation(dAux);
 						break;
 					}
 					case FUNC_BUTTON_ACTIVATION:
 					{
-						dAux = ((sRcvMsg->B4 << 8) | (sRcvMsg->B3));
-
 						if (sRcvMsg->B2 != ISO_BUTTON_ACTIVATION_PRESSED)
 							break;
 
-						switch (dAux)
-						{
-							case ISO_BUTTON_REPEAT_TEST_ID:
-							{
-								ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								break;
-							}
-							case ISO_BUTTON_ERASE_INSTALLATION_ID:
-							{
-								eClearSetupCurrState = CLEAR_SETUP_WAIT_CONFIRMATION;
-								break;
-							}
-							case ISO_BUTTON_CLEAR_COUNT_CANCEL_ID:
-							{
-								if ((ePlanterCounterCurrState == CLEAR_TOTAL_WAIT_CONFIRMATION)
-									|| (ePlanterCounterCurrState == CLEAR_SUBTOTAL_WAIT_CONFIRMATION))
-								{
-									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
-								}
-								break;
-							}
-							case ISO_BUTTON_CLEAR_COUNT_ACCEPT_ID:
-							{
-								if (ePlanterCounterCurrState == CLEAR_TOTAL_WAIT_CONFIRMATION)
-								{
-									ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
-								}
-								else if (ePlanterCounterCurrState == CLEAR_SUBTOTAL_WAIT_CONFIRMATION)
-								{
-									ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
-								}
-								break;
-							}
-							case ISO_BUTTON_CLEAR_SETUP_CANCEL_ID:
-							{
-								if (eClearSetupCurrState == CLEAR_SETUP_WAIT_CONFIRMATION)
-								{
-									eClearSetupCurrState = CLEAR_SETUP_IDLE;
-								}
-								break;
-							}
-							case ISO_BUTTON_CLEAR_SETUP_ACCEPT_ID:
-							{
-								if (eClearSetupCurrState == CLEAR_SETUP_WAIT_CONFIRMATION)
-								{
-									ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									eClearSetupCurrState = CLEAR_SETUP_IDLE;
-									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
-																  SOFT_KEY_MASK_INSTALLATION);
-								}
-								break;
-							}
-							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_INSTALL_ID:
-							{
-								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-								break;
-							}
-							case ISO_BUTTON_CONFIG_CHANGES_ACCEPT_ID:
-							{
-								ePubEvt = EVENT_ISO_CONFIG_UPDATE_DATA;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-
-								if (ePasswordManager != PASSWD_CHANGE_PASSWD_NEW_PASSWD)
-								{
-									if (eConfigMaskFromX == DATA_MASK_INSTALLATION)
-									{
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-										ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-									} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
-									{
-										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
-										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
-										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
-										ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
-										ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
-
-										(bCfgClearSetup) ? ISO_vChangeActiveMask(DATA_MASK_INSTALLATION) : ISO_vChangeActiveMask(DATA_MASK_PLANTER);
-									}
-
-									if (bCfgClearSetup)
-									{
-										ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									}
-
-									if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_ENABLED)
-									{
-										ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, true);
-										ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, true);
-										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, false);
-										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
-										ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
-										ISO_vChangeActiveMask(DATA_MASK_PLANTER);
-									}
-
-									if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
-									{
-										ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
-									} else
-									{
-										ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
-									}
-
-									if (bCfgClearTotals)
-									{
-										ePubEvt = EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL;
-										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-										bCfgClearTotals = false;
-									}
-
-									if (bCfgClearSetup)
-									{
-										ePubEvt = EVENT_ISO_INSTALLATION_ERASE_INSTALLATION;
-										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-										bCfgClearSetup = false;
-										ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
-																	  SOFT_KEY_MASK_INSTALLATION);
-									}
-
-								} else
-								{
-									ePubEvt = EVENT_ISO_CONFIG_CHANGE_PASSWORD;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								}
-								break;
-							}
-							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_CONFIG_ID:
-							{
-								bPasswsNumDigits = 0;
-								ePasswordManager = PASSWD_IDLE;
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIGURATION_CHANGES);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
-								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								break;
-							}
-							case ISO_BUTTON_CONFIG_CHANGES_CANCEL_RET_PLANTER_ID:
-							{
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
-								ePubEvt = EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA;
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-								break;
-							}
-							case ISO_BUTTON_TRIMM_CHANGES_CANCEL_ID:
-							{
-								if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
-								{
-									sTrimmState.eNewTrimmState = sTrimmState.eTrimmState;
-									switch (sTrimmState.eTrimmState)
-									{
-										case TRIMMING_NOT_TRIMMED:
-										{
-											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, true);
-											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
-											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
-											break;
-										}
-										case TRIMMING_LEFT_SIDE:
-										{
-											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, true);
-											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
-											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, false);
-											break;
-										}
-										case TRIMMING_RIGHT_SIDE:
-										{
-											ISO_vUpdateNumberVariableValue(NV_TRIM_RIGHT_SIDE, true);
-											ISO_vUpdateNumberVariableValue(NV_TRIM_LEFT_SIDE, false);
-											ISO_vUpdateNumberVariableValue(NV_TRIM_NO_TRIMMING, false);
-											break;
-										}
-										default:
-											break;
-									}
-									eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
-								}
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
-										SOFT_KEY_MASK_TRIMMING);
-								break;
-							}
-							case ISO_BUTTON_TRIMM_CHANGES_ACCEPT_ID:
-							{
-								if (eChangeTrimmCurrState == TRIMM_CHANGE_WAIT_CONFIRMATION)
-								{
-									sTrimmState.eTrimmState = sTrimmState.eNewTrimmState;
-									ePubEvt = EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-									eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
-								}
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_TRIMMING, MASK_TYPE_DATA_MASK,
-										SOFT_KEY_MASK_TRIMMING);
-								break;
-							}
-							case ISO_BUTTON_CHANGE_PASSWORD_ID:
-							{
-								ePasswdMaskFromX = eCurrentMask;
-								ePasswordManager = PASSWD_CHANGE_PASSWD_CURRENT_PASSWD;
-								ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, true);
-								ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
-								ISO_vChangeActiveMask(DATA_MASK_PASSWORD);
-								break;
-							}
-							case ISO_BUTTON_PASSWORD_CANCEL_ID:
-							{
-								wPubPasswd = 0;
-								bPasswsNumDigits = 0;
-								ePasswordManager = PASSWD_IDLE;
-								ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
-								ISO_vHideShowContainerCommand(CO_PASSWD_CURRENT_PASSWD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_INCORRECT_PASSWORD, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_1, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_2, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
-								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
-								ISO_vChangeActiveMask(ePasswdMaskFromX);
-								break;
-							}
-							case ISO_BUTTON_PASSWORD_ACCEPT_ID:
-							{
-								wPubPasswd = atoi(bPasswd);
-								switch (ePasswordManager)
-								{
-									case PASSWD_ENTER_PASSWORD:
-									{
-										ePubEvt = EVENT_ISO_CONFIG_CHECK_PASSWORD;
-										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-										break;
-									}
-									case PASSWD_CHANGE_PASSWD_CURRENT_PASSWD:
-									{
-										ePubEvt = EVENT_ISO_CONFIG_CHECK_PASSWORD;
-										WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-										PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-										WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-										break;
-									}
-									case PASSWD_CHANGE_PASSWD_NEW_PASSWD:
-									{
-										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, true);
-										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
-										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
-										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-										ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
-										ISO_vChangeActiveMask(DATA_MASK_CONFIRM_CONFIG_CHANGES);
-										break;
-									}
-									default:
-										break;
-								}
-								break;
-							}
-							default:
-							{
-								if ((dAux >= BU_PLANTER_L01) && (dAux <= BU_PLANTER_L36))
-								{
-									bClearAlarmLineX = (dAux - BU_PLANTER_L01);
-									ISO_vChangeAttributeCommand(BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
-									ISO_vChangeAttributeCommand(BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, COLOR_BLACK);
-									ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bClearAlarmLineX), ISO_RECTANGLE_LINE_ATTRIBUTE, COLOR_BLACK);
-									ePubEvt = EVENT_ISO_ALARM_CLEAR_ALARM;
-									WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-									PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-									WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-
-								}
-
-								if ((dAux >= BU_PASSWD_DIGIT_0) && (dAux <= BU_PASSWD_DIGIT_9))
-								{
-									if (bPasswsNumDigits < 4)
-									{
-										bPasswd[bPasswsNumDigits] = (dAux - BU_PASSWD_DIGIT_0) + 48; // To ascii
-										ISO_vHideShowContainerCommand((CO_PASSWD_DIGIT_1 + bPasswsNumDigits), true);
-										bPasswsNumDigits++;
-
-										if (bPasswsNumDigits == 4)
-										{
-											ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, true);
-										}
-									}
-
-								} else if ((dAux == BU_PASSWD_BACKSPACE))
-								{
-									if (bPasswsNumDigits > 0)
-									{
-										bPasswsNumDigits--;
-										ISO_vHideShowContainerCommand((CO_PASSWD_DIGIT_1 + bPasswsNumDigits), false);
-
-										if (bPasswsNumDigits < 4)
-										{
-											ISO_vHideShowContainerCommand(CO_PASSWD_ACCEPT_BUTTON, false);
-										}
-									}
-								}
-								break;
-							}
-						}
+						ISO_vTreatButtonActivation(dAux);
 						break;
 					}
 					case FUNC_POINTING_EVENT:
