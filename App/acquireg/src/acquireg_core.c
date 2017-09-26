@@ -148,6 +148,7 @@ CAN_tsCtrlListaSens AQR_sPubCtrlLista;
 tsAcumulados AQR_sPubAcumulado;
 tsStatus AQR_sPubStatus;
 tsPubPlantData AQR_sPubPlantData;
+tsPubTrocaSensor AQR_sPubTrocaSensor;
 
 /******************************************************************************
  * Module Variable Definitions
@@ -213,6 +214,8 @@ void AQR_vRepeteTesteSensores (void);
 void AQR_vApagaInstalacao (void);
 void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored);
 void AQR_vTrimmingLines(eTrimming eTrimmStatus);
+void AQR_vTrocaSensores(eEventType);
+void AQR_vVerificarTrocaSensores(void);
 
 /******************************************************************************
  * Module timers
@@ -1318,8 +1321,9 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
 			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
-			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA
-			| AQR_APL_FLAG_ERASE_INSTALLATION, true, false, osWaitForever);
+			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA |
+			AQR_APL_FLAG_SENSOR_CHANGE | AQR_APL_FLAG_ERASE_INSTALLATION, true, false, osWaitForever);
+
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1379,6 +1383,11 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		if ((dFlags & AQR_SIS_FLAG_ALARME_TOLERANCIA) > 0)
 		{
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
+		}
+		
+		if ((dFlags & AQR_APL_FLAG_SENSOR_CHANGE > 0))
+		{
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_SENSOR_REPLACE, EVENT_SET, &AQR_sPubTrocaSensor);
 		}
 
 		if ((dFlags & AQR_APL_FLAG_ERASE_INSTALLATION) > 0)
@@ -1550,6 +1559,21 @@ void AQR_vIdentifyEvent (contract_s* contract)
 						osFlagSet(AQR_sFlagREG, AQR_FLAG_PAUSA);
 					}
 				}
+			}
+
+			if (ePubEvt == EVENT_GUI_INSTALLATION_REPLACE_SENSOR)
+			{
+				AQR_vVerificarTrocaSensores();
+			}
+
+			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR)
+			{
+				AQR_vTrocaSensores(EVENT_SET);
+			}
+
+			if ( EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR)
+			{
+				AQR_vTrocaSensores(EVENT_CLEAR);
 			}
 			break;
 		}
@@ -1976,6 +2000,75 @@ void AQR_vTrimmingLines (eTrimming eTrimmStatus)
 	tsStatus *psStatus = &AQR_sStatus;
 
 	psStatus->eArremate = (AQR_teArremate) eTrimmStatus;
+}
+
+void AQR_vVerificarTrocaSensores (void)
+{
+	osFlags dFlags;
+	AQR_vRepeteTesteSensores();
+
+	while( AQR_sStatus.bAutoTeste != false )
+	{
+		osDelay(50);
+	}
+
+	dFlags = osFlagGet(AQR_sFlagREG);
+
+	if( dFlags & AQR_FLAG_NOVO_SENSOR )
+	{
+		AQR_sPubTrocaSensor.eStTroca = TROCA_OK;
+		switch( AQR_sDadosCAN.sNovoSensor.bTipoSensor )
+		{
+
+			case CAN_APL_SENSOR_ADUBO:
+			{
+				AQR_sPubTrocaSensor.eTipo = SENSOR_ADUBO;
+				break;
+			}
+			case CAN_APL_SENSOR_SIMULADOR:
+			case CAN_APL_SENSOR_DIGITAL_2:
+			case CAN_APL_SENSOR_DIGITAL_3:
+			case CAN_APL_SENSOR_DIGITAL_4:
+			case CAN_APL_SENSOR_DIGITAL_5:
+			case CAN_APL_SENSOR_DIGITAL_6:
+			{
+				AQR_sPubTrocaSensor.eTipo = SENSOR_ADICIONAL;
+				break;
+			}
+			case CAN_APL_SENSOR_SEMENTE:
+			default:
+			{
+				AQR_sPubTrocaSensor.eTipo = SENSOR_SEMENTE;
+			}
+		}
+
+		AQR_sPubTrocaSensor.bLinhaDisponivel = AQR_sStatus.bLinhaDisponivel;
+	}
+	else
+	{
+		if (AQR_sDadosCAN.sNovoSensor.bNovo != false)
+		{
+			AQR_sPubTrocaSensor.eStTroca = TROCA_MUITOS_SENSORES;
+		}
+		else
+		{
+			AQR_sPubTrocaSensor.eStTroca = TROCA_NENHUM_SENSOR;
+		}
+	}
+	osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SENSOR_CHANGE);
+}
+
+void AQR_vTrocaSensores (eEventType ev)
+{
+	if (ev == EVENT_SET)
+	{
+      osFlagSet( AQR_sFlagREG, AQR_FLAG_TROCA_SENSOR );
+      osFlagClear( UOS_sFlagSis, UOS_SIS_FLAG_VERSAO_SW_OK);
+	}
+	else
+	{
+		osFlagClear(AQR_sFlagREG, (AQR_FLAG_TROCA_SENSOR |	AQR_FLAG_NOVO_SENSOR));
+	}
 }
 
 /******************************************************************************

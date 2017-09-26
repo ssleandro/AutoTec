@@ -458,6 +458,11 @@ void ISO_vIsobusPublishThread (void const *argument)
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &wPubPasswd);
 					break;
 				}
+				case EVENT_ISO_INSTALLATION_REPLACE_SENSOR:
+				{
+					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &wPubPasswd);
+					break;
+				}
 				default:
 					break;
 			}
