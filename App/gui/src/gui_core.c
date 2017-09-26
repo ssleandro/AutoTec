@@ -992,10 +992,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_REPLACE_SENSOR)
 			{
-				if (ePubEvType == EVENT_SET)
-					ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR;
-				else
-					ePubEvt = EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR;
+				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+
+			if (ePubEvt == EVENT_ISO_INSTALLATION_CANCEL_REPLACE_SENSOR)
+			{
+				ePubEvt = EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 

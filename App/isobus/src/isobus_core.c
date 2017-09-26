@@ -458,11 +458,6 @@ void ISO_vIsobusPublishThread (void const *argument)
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &wPubPasswd);
 					break;
 				}
-				case EVENT_ISO_INSTALLATION_REPLACE_SENSOR:
-				{
-					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, &wPubPasswd);
-					break;
-				}
 				default:
 					break;
 			}
@@ -1528,6 +1523,10 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 		case ISO_KEY_REPLACE_SENSORS_ID:
 		{
 			ISO_vChangeActiveMask(DATA_MASK_REPLACE_SENSOR);
+			ePubEvt = EVENT_ISO_INSTALLATION_REPLACE_SENSOR;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 			break;
 		}
 		case ISO_KEY_BACKTO_INSTALLATION_ID:
@@ -1565,12 +1564,12 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 		{
 			if (sPlanterMask.psSpeedKm->dValue > 0)
 			{
-					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_MOVING);
 			} else
 			{
-					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER);
 			}
 			bCOPlanterLineInfo = true;
 			bCOPlanterSpeedInfo = false;
@@ -1580,12 +1579,12 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 		{
 			if (sPlanterMask.psSpeedKm->dValue > 0)
 			{
-					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO_MOVING);
 			} else
 			{
-					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
-							MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
+				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
+						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
 			}
 			bCOPlanterSpeedInfo = true;
 			bCOPlanterLineInfo = false;
@@ -1611,7 +1610,6 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 
 void ISO_vUpdateStringVariable (uint8_t* pbNewStrValue)
 {
-
 }
 
 void ISO_vTreatButtonActivation (uint16_t wObjectID)
@@ -1922,15 +1920,15 @@ void ISO_vTreatButtonActivation (uint16_t wObjectID)
 		case ISO_BUTTON_REPLACE_SENSOR_CANCEL_ID:
 		{
 			ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-//			ePubEvt = EVENT_ISO_INSTALLATION_REPLACE_SENSOR;
-//			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-//			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-//			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			ePubEvt = EVENT_ISO_INSTALLATION_CANCEL_REPLACE_SENSOR;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 			break;
 		}
 		case ISO_BUTTON_REPLACE_SENSOR_ACCEPT_ID:
 		{
-			ePubEvt = EVENT_ISO_INSTALLATION_REPLACE_SENSOR;
+			ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
 			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
