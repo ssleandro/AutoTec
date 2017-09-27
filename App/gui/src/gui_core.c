@@ -88,6 +88,9 @@ GUI_tsConfig GUI_sConfig;
 sIgnoreLineStatus GUI_sIgnoreStatus;
 sTrimmingState GUI_sTrimmState;
 
+static sLanguageCommandData sGUILanguageCommandData;
+static tsPubSensorReplacement sPubReplacState;
+
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
 static uint64_t dBitsNoSeed = 0;
@@ -121,7 +124,7 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds);
 void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, uint32_t* dMTEV, uint32_t* dMaxSpeed);
 void GUI_vUptTestMode(void);
 void GUI_vUptPlanter(void);
-void GUI_vUptReplaceSensor(tsPubTrocaSensor *);
+void GUI_vUptReplaceSensor(tsPubSensorReplacement *);
 
 /******************************************************************************
  * Function Definitions
@@ -258,31 +261,15 @@ void GUI_vUptPlanter (void)
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
-void GUI_vUptReplaceSensor(tsPubTrocaSensor *sTrocaSensor)
+void GUI_vUptReplaceSensor(tsPubSensorReplacement *sSensorReplac)
 {
 	uint8_t bSensor;
 	event_e ePubEvt = EVENT_GUI_UPDATE_REPLACE_SENSOR;
 
-	switch (sTrocaSensor->eStTroca)
-	{
-		case TROCA_OK:
-		{
-			bSensor = sTrocaSensor->bLinhaDisponivel;
-			//Habilitar botão de confirma
-			// Mostrar texto com  o numero de sensor
-			break;
-		}
-		case TROCA_MUITOS_SENSORES:
-		{
-			// Mostra mensagem de erro com muitos sensores
-			break;
-		}
-		case TROCA_NENHUM_SENSOR:
-		{
-			// Mostra mensagem de erro de nenhum sensor para troca
-			break;
-		}
-	}
+	if (sSensorReplac == NULL)
+		return;
+
+	sPubReplacState = *sSensorReplac;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
@@ -529,21 +516,28 @@ void GUI_vGuiPublishThread (void const *argument)
 				case EVENT_GUI_INSTALLATION_REPLACE_SENSOR:
 				{
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR:
 				{
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR:
 				{
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_UPDATE_REPLACE_SENSOR:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sPubReplacState);
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
@@ -799,20 +793,23 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	}
 }
 
-void GUI_vCheckPassword (uint16_t wPassword)
+void GUI_vCheckPassword (uint32_t wPassword)
 {
 	event_e ePubEvt;
 	ePubEvt = (wPassword == sSISConfiguration.sIHM.wPasswd) ? EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK : EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 }
 
-void GUI_vChangePassword (uint16_t wNewPasswd)
+void GUI_vChangePassword (uint32_t wNewPasswd)
 {
 	event_e ePubEvt;
 
 	if ((wNewPasswd <= 9999) && (wNewPasswd >= 0))
 	{
 		sSISConfiguration.sIHM.wPasswd = wNewPasswd;
+		ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
+		PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+		osDelay(20);
 		ePubEvt = EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK;
 	} else
 	{
@@ -984,6 +981,26 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				GUI_vChangePassword(*wNewPasswd);
 			}
 
+			if (ePubEvt == EVENT_ISO_LANGUAGE_COMMAND)
+			{
+				sGUILanguageCommandData = *((sLanguageCommandData*) pvPayload);
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
+				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+
+//				if (psConfig != NULL)
+//				{
+//					GUIConfigurationData.eLanguage = psConfig->eLanguage;
+//					GUIConfigurationData.eUnit = psConfig->eUnit;
+//					GUI_SetSisConfiguration();
+//				}
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				status = RELEASE_MUTEX(GUI_UpdateMask);
+				ASSERT(status == osOK);
+			} 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_REPLACE_SENSOR)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPLACE_SENSOR;
@@ -1144,7 +1161,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			}
 			if (ePubEvt == EVENT_AQR_INSTALLATION_SENSOR_REPLACE)
 			{
-				tsPubTrocaSensor *psTrocaSensor = pvPayload;
+				tsPubSensorReplacement *psTrocaSensor = pvPayload;
 				GUI_vUptReplaceSensor(psTrocaSensor);
 			}
 			break;
@@ -1598,19 +1615,18 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 		}
 	}
 
-  //--------------------------------------------------------------------------
-  // Seeds per meter/feets:
-  if( ( dFlagSis & UOS_SIS_FLAG_MODO_TRABALHO ) != 0 )
-  {
-    if( bLinhaLevantada == false )
-    {
-      // Arredonda unidade:
-      dSem += 5;
-      dSem /= 10;
+	//--------------------------------------------------------------------------
+	// Seeds per meter/feets:
+	if ((dFlagSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0)
+	{
+		if (bLinhaLevantada == false) {
+			// Arredonda unidade:
+			dSem += 5;
+			dSem /= 10;
 
-      *dSeedsPerUnit = dSem;
-    }
-  }
+			*dSeedsPerUnit = dSem;
+		}
+	}
 
   //--------------------------------------------------------------------------
   // Seeds per ha/acre:

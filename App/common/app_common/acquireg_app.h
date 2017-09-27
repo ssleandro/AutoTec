@@ -221,28 +221,28 @@ typedef struct
 {
 	tsAcumulados *AQR_sAcumulado;
 	tsStatus *AQR_sStatus;
-}tsPubPlantData;
+} tsPubPlantData;
 
 typedef enum
 {
-	SENSOR_SEMENTE = 0,
-	SENSOR_ADUBO,
-	SENSOR_ADICIONAL
-}eTipoSensor;
+	SEED_SENSOR = 0,
+	FERTILIZER_SENSOR,
+	ADDITIONAL_SENSOR
+} eSensorType;
 
 typedef enum
 {
-	TROCA_OK = 0,
-	TROCA_MUITOS_SENSORES,
-	TROCA_NENHUM_SENSOR
-}eEstadoTroca;
+	REPLACEMENT_NO_ERROR = 0,
+	REPLACEMENT_ERR_NOT_ALLOWED,
+	REPLACEMENT_ERR_NO_SENSOR
+} eReplacementState;
 
 typedef struct
 {
-	eEstadoTroca eStTroca;
-	eTipoSensor eTipo;
-	uint8_t bLinhaDisponivel;
-}tsPubTrocaSensor;
+	eReplacementState eReplacState;
+	eSensorType eType;
+	uint8_t bAvailableLine;
+} tsPubSensorReplacement;
 
 /******************************************************************************
  * Variables

@@ -341,6 +341,10 @@
 #define CO_PASSWD_DIGIT_3                  3261
 #define CO_PASSWD_DIGIT_4                  3262
 #define CO_REPLACE_SENSOR_ACCEPT           3263
+#define CO_REPLACE_SENSOR_WAIT             3264
+#define CO_REPLACE_SENSOR_ERR_NOT_ALLOWED   3265
+#define CO_REPLACE_SENSOR_ERR_NO_SENSORS   3266
+#define CO_REPLACE_SENSOR_DESCRIPTION      3267
 #define SoftKeyMask_Installation           4000
 #define SoftKeyMask_InstallationCompleted   4001
 #define SoftKeyMask_Planter                4002
@@ -643,6 +647,9 @@
 #define OutputString_11175                11175
 #define OutputString_11176                11176
 #define OutputString_11177                11177
+#define OutputString_11178                11178
+#define OutputString_11179                11179
+#define OutputString_11180                11180
 #define ON_TEST_MODE_L01                  12000
 #define ON_TEST_MODE_L02                  12001
 #define ON_TEST_MODE_L03                  12002
@@ -702,6 +709,7 @@
 #define ON_AREA_MON_PWA_M                 12056
 #define ON_AREA_MON_WA_HA                 12057
 #define ON_AREA_MON_WA_M                  12058
+#define ON_REPLACE_NUMBER_LINE_NUMBER     12059
 #define Line_13000                        13000
 #define Line_13001                        13001
 #define Line_13002                        13002
@@ -1199,7 +1207,6 @@
 #define NV_TRIM_NO_TRIMMING               21276
 #define NV_TRIM_LEFT_SIDE                 21277
 #define NV_TRIM_RIGHT_SIDE                21278
-#define SV_REPLACE_SENSOR_DESCRIPTION     22000
 #define FontAttributes_23000              23000
 #define FontAttributes_23001              23001
 #define FontAttributes_23002              23002

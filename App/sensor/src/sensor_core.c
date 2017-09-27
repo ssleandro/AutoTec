@@ -60,7 +60,6 @@
 static eAPPError_s eError;                   		//!< Error variable
 
 osThreadId xRecvThreadId;               // Holds the RecvThread ID
-osThreadId xManagementThreadId;         // Holds the WriteThread ID
 osThreadId xAqrRegThreadId;              // Holds the AqrRegThread ID
 
 /******************************************************************************
@@ -956,9 +955,6 @@ void SEN_vSensorNetworkManagementThread (void const *argument)
 
 	osThreadId xSenMainID = (osThreadId)argument;
 	osSignalSet(xSenMainID, THREADS_RETURN_SIGNAL(bSENMGTThreadArrayPosition));   //Task created, inform core
-
-	// Gets the Recv Thread ID
-	xManagementThreadId = osThreadGetId();
 
 	psApl = &CAN_sCtrlMPA.sCtrlApl;
 

@@ -219,6 +219,12 @@ typedef struct sConfigurationDataMask
 	eAlternatedRowsType* eAltType;
 } sConfigurationDataMask;
 
+typedef struct sLanguageCommandData
+{
+	eSelectedLanguage eLanguage;
+	eSelectedUnitMeasurement eUnit;
+} sLanguageCommandData;
+
 typedef struct sNumberVariableObj
 {
 	uint16_t wObjID;

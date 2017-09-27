@@ -148,7 +148,7 @@ CAN_tsCtrlListaSens AQR_sPubCtrlLista;
 tsAcumulados AQR_sPubAcumulado;
 tsStatus AQR_sPubStatus;
 tsPubPlantData AQR_sPubPlantData;
-tsPubTrocaSensor AQR_sPubTrocaSensor;
+tsPubSensorReplacement AQR_sPubTrocaSensor;
 
 /******************************************************************************
  * Module Variable Definitions
@@ -1321,9 +1321,8 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		osFlags dFlags = osFlagWait(xAQR_sFlagSis,
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
 			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
-			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA |
-			AQR_APL_FLAG_SENSOR_CHANGE | AQR_APL_FLAG_ERASE_INSTALLATION, true, false, osWaitForever);
-
+			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA
+			| AQR_APL_FLAG_SENSOR_CHANGE | AQR_APL_FLAG_ERASE_INSTALLATION, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1385,7 +1384,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
 		}
 		
-		if ((dFlags & AQR_APL_FLAG_SENSOR_CHANGE > 0))
+		if ((dFlags & AQR_APL_FLAG_SENSOR_CHANGE) > 0)
 		{
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_SENSOR_REPLACE, EVENT_SET, &AQR_sPubTrocaSensor);
 		}
@@ -1571,7 +1570,7 @@ void AQR_vIdentifyEvent (contract_s* contract)
 				AQR_vTrocaSensores(EVENT_SET);
 			}
 
-			if ( EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR)
+			if (ePubEvt == EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR)
 			{
 				AQR_vTrocaSensores(EVENT_CLEAR);
 			}
@@ -2009,20 +2008,20 @@ void AQR_vVerificarTrocaSensores (void)
 
 	while( AQR_sStatus.bAutoTeste != false )
 	{
-		osDelay(50);
+		osDelay(500);
 	}
 
 	dFlags = osFlagGet(AQR_sFlagREG);
 
 	if( dFlags & AQR_FLAG_NOVO_SENSOR )
 	{
-		AQR_sPubTrocaSensor.eStTroca = TROCA_OK;
+		AQR_sPubTrocaSensor.eReplacState = REPLACEMENT_NO_ERROR;
 		switch( AQR_sDadosCAN.sNovoSensor.bTipoSensor )
 		{
 
 			case CAN_APL_SENSOR_ADUBO:
 			{
-				AQR_sPubTrocaSensor.eTipo = SENSOR_ADUBO;
+				AQR_sPubTrocaSensor.eType = FERTILIZER_SENSOR;
 				break;
 			}
 			case CAN_APL_SENSOR_SIMULADOR:
@@ -2032,27 +2031,27 @@ void AQR_vVerificarTrocaSensores (void)
 			case CAN_APL_SENSOR_DIGITAL_5:
 			case CAN_APL_SENSOR_DIGITAL_6:
 			{
-				AQR_sPubTrocaSensor.eTipo = SENSOR_ADICIONAL;
+				AQR_sPubTrocaSensor.eType = ADDITIONAL_SENSOR;
 				break;
 			}
 			case CAN_APL_SENSOR_SEMENTE:
 			default:
 			{
-				AQR_sPubTrocaSensor.eTipo = SENSOR_SEMENTE;
+				AQR_sPubTrocaSensor.eType = SEED_SENSOR;
 			}
 		}
 
-		AQR_sPubTrocaSensor.bLinhaDisponivel = AQR_sStatus.bLinhaDisponivel;
+		AQR_sPubTrocaSensor.bAvailableLine = AQR_sStatus.bLinhaDisponivel;
 	}
 	else
 	{
 		if (AQR_sDadosCAN.sNovoSensor.bNovo != false)
 		{
-			AQR_sPubTrocaSensor.eStTroca = TROCA_MUITOS_SENSORES;
+			AQR_sPubTrocaSensor.eReplacState = REPLACEMENT_ERR_NOT_ALLOWED;
 		}
 		else
 		{
-			AQR_sPubTrocaSensor.eStTroca = TROCA_NENHUM_SENSOR;
+			AQR_sPubTrocaSensor.eReplacState = REPLACEMENT_ERR_NO_SENSOR;
 		}
 	}
 	osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SENSOR_CHANGE);

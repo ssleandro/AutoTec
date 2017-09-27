@@ -43,6 +43,7 @@
 #include "../isobus/inc/interface_isobus.h"
 #else
 #include "M2GPlus.iop.h"
+#include "M2GPlus.c.h"
 #include "interface_isobus.h"
 #endif
 /******************************************************************************
@@ -166,6 +167,8 @@
 
 #define ISO_ALARM_DEACTIVATE	0
 
+#define TIMER_PERIOD_MS_WS_MAINTENANCE	850
+
 /******************************************************************************
  * Macros
  *******************************************************************************/
@@ -185,7 +188,8 @@ typedef enum
 	WAIT_VT_STATUS,
 	WAIT_LOAD_VERSION,
 	WAIT_SEND_POOL,
-	OBJECT_POOL_SENDED,
+	OBJECT_POOL_SENT,
+	OBJECT_POOL_LANG_PKG_SENT,
 	OBJECT_POOL_LOADED,
 	BOOT_COMPLETED
 } eBootStates;
@@ -193,7 +197,9 @@ typedef enum
 typedef enum
 {
 	BOOT,
-	RUNNING
+	RUNNING,
+	UPDATING_LANGUAGE,
+	UPDATING_STRING,
 } eModuleStates;
 
 typedef enum
@@ -251,6 +257,7 @@ typedef struct
  * Function Prototypes
  *******************************************************************************/
 void ISO_vTimerCallbackWSMaintenance (void const *arg);
+void ISO_vTimerCallbackAlarmTimeout (void const *arg);
 
 #ifdef __cplusplus
 extern "C"
