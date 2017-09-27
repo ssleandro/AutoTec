@@ -36,6 +36,7 @@
 #include <M2GISOCOMM_config.h>
 #include <M2GISOCOMM.h>
 #include "ring_buffer.h"
+#include "can.h"
 
 #ifndef UNITY_TEST
 #include "mculib.h"
@@ -108,6 +109,8 @@ static can_config_s sMCU_CAN_Handle =
 		.vpPrivateData = NULL
 	};
 
+static canStatusStruct_s sMCU_CANIsobus_Status;
+
 /*
  * @brief Private handler used to manage the TERMDEV instance
  * */
@@ -130,7 +133,12 @@ static eDEVError_s M2GISO_eDisable (uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GISO_eCANAddID (uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GISO_eCANAddAllID (uint32_t wRequest, void * vpValue);
 static eDEVError_s M2GISO_eCANChangeSendID (uint32_t wRequest, void * vpValue);
+static eDEVError_s M2GISO_eCANGetStatus (uint32_t wRequest, void * vpValue);
+static eDEVError_s M2GISO_eCANClearStatus (uint32_t wRequest, void * vpValue);
 static void M2GISO_CANCallback (eCANStatus_s eErrorCode, canMSGStruct_s CANMessage);
+
+void M2GISO_vSetStatus(eCANStatus_s eErrorCode);
+void M2GISO_vClearStatus(void);
 
 #define X(a, b) b,
 fpIOCTLFunction M2GISO_pIOCTLFunction[] = //!< IOCTL array of function mapping
@@ -260,8 +268,10 @@ void M2GISO_CANCallback (eCANStatus_s eErrorCode, canMSGStruct_s CANMessage)
 	M2GISOCOMM_Handle.bDeviceStatus = M2GISOCOMM_STATUS_BUSY;
 	/* Insert message to RB */
 	M2GISO_vRBSafeInsert(&CANMessage);
+	M2GISO_vSetStatus(eErrorCode);
 	/* Signals that the handler is not busy anymore */
 	M2GISOCOMM_Handle.bDeviceStatus = M2GISOCOMM_STATUS_ENABLED;
+
 }
 
 /******************************************************************************
@@ -314,6 +324,8 @@ eDEVError_s M2GISO_eSetActive (uint32_t wRequest, void * vpValue)
 	{
 		return DEV_ERROR_INVALID_PERIPHERAL;
 	}
+
+	M2GISO_vClearStatus();
 
 	switch (wActiveIface)
 	{
@@ -460,6 +472,24 @@ eDEVError_s M2GISO_eCANChangeSendID (uint32_t wRequest, void * vpValue)
 	return DEV_ERROR_SUCCESS;
 }
 
+eDEVError_s M2GISO_eCANGetStatus (uint32_t wRequest, void * vpValue)
+{
+	if (vpValue == NULL)
+	{
+		return DEV_ERROR_INVALID_IOCTL;
+	}
+	*((canStatusStruct_s *)vpValue) = sMCU_CANIsobus_Status;
+	//memcpy(vpValue, &sMCU_CAN_Status, sizeof(sMCU_CAN_Status));
+	return DEV_ERROR_SUCCESS;
+}
+
+eDEVError_s M2GISO_eCANClearStatus (uint32_t wRequest, void * vpValue)
+{
+	M2GISO_vClearStatus();
+	return DEV_ERROR_SUCCESS;
+}
+
+
 /* ************************************************
  *	Public functions 
  ** ************************************************ */
@@ -536,6 +566,8 @@ uint32_t M2GISO_write (struct peripheral_descriptor_s* const this,
 
 			/* Send CAN frame */
 			CAN_vSendMessage(&sMCU_CAN_Handle, sCANMessage);
+			sMCU_CANIsobus_Status.wTxCount++;
+
 		}
 	}
 	return wSentBytes;
@@ -563,4 +595,62 @@ eDEVError_s M2GISO_close (struct peripheral_descriptor_s* const this)
 		M2GISOCOMM_Handle.dReservedInterfaces &= ~M2GISOCOMM_CAN;
 	}
 	return DEV_ERROR_SUCCESS;
+}
+
+void M2GISO_vClearStatus(void)
+{
+	sMCU_CANIsobus_Status.bRxError = 0;
+	sMCU_CANIsobus_Status.bTxError = 0;
+	sMCU_CANIsobus_Status.dArbitrationLost = 0;
+	sMCU_CANIsobus_Status.dBusError = 0;
+	sMCU_CANIsobus_Status.dDataOverrun = 0;
+	sMCU_CANIsobus_Status.dErrorPassive = 0;
+	sMCU_CANIsobus_Status.dErrorWarning = 0;
+	sMCU_CANIsobus_Status.wRxCount = 0;
+	sMCU_CANIsobus_Status.wTxCount = 0;
+}
+
+void M2GISO_vSetStatus(eCANStatus_s eErrorCode)
+{
+	sMCU_CANIsobus_Status.bRxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
+	sMCU_CANIsobus_Status.bTxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
+//	if (sMCU_CAN_Status.bTxError > 0)
+//	{
+//		eErrorCode = 0;
+//	}
+
+	if (eErrorCode & (CAN_STAT_STUFFERROR | CAN_STAT_FORMERROR | CAN_STAT_CRCERROR))
+	{
+		sMCU_CANIsobus_Status.dDataOverrun++;
+	}
+
+	if (eErrorCode & (CAN_STAT_BIT1ERROR | CAN_STAT_BIT0ERROR))
+	{
+		sMCU_CANIsobus_Status.dArbitrationLost++;
+	}
+
+	if (eErrorCode & CAN_STAT_TXOK)
+	{
+		sMCU_CANIsobus_Status.wTxCount++;
+	}
+
+	if (eErrorCode & (CAN_STAT_NOERROR | CAN_STAT_RXOK))
+	{
+		sMCU_CANIsobus_Status.wRxCount++;
+	}
+
+	if (eErrorCode & CAN_STAT_EPASS)
+	{
+		sMCU_CANIsobus_Status.dErrorPassive++;
+	}
+
+	if (eErrorCode & CAN_STAT_EWARN)
+	{
+		sMCU_CANIsobus_Status.dErrorWarning++;
+	}
+
+	if (eErrorCode & CAN_STAT_BOFF)
+	{
+		sMCU_CANIsobus_Status.dBusError++;
+	}
 }
