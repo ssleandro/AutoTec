@@ -50,7 +50,7 @@
  * Preprocessor Constants
  *******************************************************************************/
 #define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
-#define ISO_NUM_INPUT_LIST_OBJECTS 6
+#define ISO_NUM_INPUT_LIST_OBJECTS 4
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
 
 #define ISO_KEY_PLANTER_ID					SoftKey_Planter
@@ -128,7 +128,7 @@
 #define ISO_OBJECT_NUMBER_VARIABLE_ID	NV_TEST_MODE_L01
 #define ISO_OBJECT_INPUT_NUMBER_ID		IN_CFG_VEHICLE_CODE
 #define ISO_OBJECT_OUTPUT_LINE_ID		Line_13000
-#define ISO_OBJECT_INPUT_LIST_ID		IL_CFG_LANGUAGE
+#define ISO_OBJECT_INPUT_LIST_ID		IL_CFG_AREA_MONITOR
 #define ISO_OBJECT_RECTANGLE_ID			Rectangle_14000
 #define ISO_OBJECT_FILL_ATTRIBUTES_ID	FA_SETUP_STAT_L01
 #define ISO_OBJECT_LINE_ATTRIBUTES_ID	LineAttributes_24000
@@ -172,7 +172,7 @@
 /******************************************************************************
  * Macros
  *******************************************************************************/
-#define INPUT_LIST_GET_INDEX_FROM_ID(id) (id - IL_CFG_LANGUAGE)
+#define INPUT_LIST_GET_INDEX_FROM_ID(id) (id - IL_CFG_AREA_MONITOR)
 #define BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)((line > 0) ? (BG_PLANT_UP_L02 + (2 * (line - 1))) : BG_PLANT_UP_L01)
 #define BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)((line > 0) ? (BG_PLANT_DOWN_L02 + (2 * (line - 1))) : BG_PLANT_DOWN_L01)
 #define RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)(RT_PLANT_L01 + line)

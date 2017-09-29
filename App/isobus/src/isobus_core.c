@@ -1594,7 +1594,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 		}
 		ISO_vInputNumberVariableValue(wObjectID, dValue);
 	}
-	else if ((wObjectID >= IL_CFG_LANGUAGE) && (wObjectID <= IL_CFG_RAISED_ROWS))
+	else if ((wObjectID >= IL_CFG_AREA_MONITOR) && (wObjectID <= IL_CFG_RAISED_ROWS))
 	{
 		switch (wObjectID)
 		{
@@ -2604,8 +2604,8 @@ void ISO_vUpdateConfigurationDataMask (void)
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-	ISO_vChangeNumericValue(IL_CFG_LANGUAGE, *sConfigDataMask.eLanguage);
-	ISO_vChangeNumericValue(IL_CFG_UNIT_SYSTEM, *sConfigDataMask.eUnit);
+//	ISO_vChangeNumericValue(IL_CFG_LANGUAGE, *sConfigDataMask.eLanguage);
+//	ISO_vChangeNumericValue(IL_CFG_UNIT_SYSTEM, *sConfigDataMask.eUnit);
 	ISO_vChangeNumericValue(NV_CFG_VEHICLE_CODE, *sConfigDataMask.dVehicleID);
 
 	ISO_vChangeNumericValue(IL_CFG_AREA_MONITOR, *sConfigDataMask.eMonitor);

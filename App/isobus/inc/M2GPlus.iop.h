@@ -15,7 +15,6 @@
 #define Macro_6                               6
 #define Macro_7                               7
 #define Macro_8                               8
-#define Macro_9                               9
 #define MA_GOTO_PLANTER_MASK                 10
 #define MA_GOTO_TEST_MODE_MASK               11
 #define MA_GOTO_SETUP_MASK                   12
@@ -345,6 +344,8 @@
 #define CO_REPLACE_SENSOR_ERR_NOT_ALLOWED   3265
 #define CO_REPLACE_SENSOR_ERR_NO_SENSORS   3266
 #define CO_REPLACE_SENSOR_DESCRIPTION      3267
+#define CO_CFG_MEMORY_USED                 3268
+#define Container_3269                     3269
 #define SoftKeyMask_Installation           4000
 #define SoftKeyMask_InstallationCompleted   4001
 #define SoftKeyMask_Planter                4002
@@ -383,8 +384,8 @@
 #define BU_SYS_TAB_GPS                     6003
 #define BU_SYS_TAB_CAN                     6004
 #define BU_SYS_TAB_SENSORS                 6005
-#define BU_SYS_TAB_DIRECTORIES             6006
-#define BU_SYS_TAB_FW_MEM                  6007
+#define BU_CFG_TAB_VERSION_MEMORY          6006
+#define BU_CFG_ERASE_DATA                  6007
 #define BU_SETUP_REPEAT_TEST               6008
 #define BU_SETUP_CLEAR_SETUP               6009
 #define BU_CLEAR_COUNT_CANCEL              6010
@@ -463,8 +464,6 @@
 #define IN_CFG_EVAL_DISTANCE               9005
 #define IN_CFG_TOLERANCE                   9006
 #define IN_CFG_MAX_SPEED                   9007
-#define IL_CFG_LANGUAGE                   10000
-#define IL_CFG_UNIT_SYSTEM                10001
 #define IL_CFG_AREA_MONITOR               10002
 #define IL_CFG_CENTER_ROW_SIDE            10003
 #define IL_CFG_ALTERNATE_ROWS             10004
@@ -546,13 +545,6 @@
 #define OutputString_11074                11074
 #define OutputString_11075                11075
 #define OutputString_11076                11076
-#define OutputString_11077                11077
-#define OutputString_11078                11078
-#define OutputString_11079                11079
-#define OutputString_11080                11080
-#define OutputString_11081                11081
-#define OutputString_11082                11082
-#define OutputString_11083                11083
 #define OutputString_11084                11084
 #define OutputString_11085                11085
 #define OutputString_11086                11086
@@ -650,6 +642,10 @@
 #define OutputString_11178                11178
 #define OutputString_11179                11179
 #define OutputString_11180                11180
+#define OutputString_11181                11181
+#define OutputString_11182                11182
+#define OutputString_11183                11183
+#define OutputString_11184                11184
 #define ON_TEST_MODE_L01                  12000
 #define ON_TEST_MODE_L02                  12001
 #define ON_TEST_MODE_L03                  12002
@@ -717,7 +713,6 @@
 #define Line_13004                        13004
 #define Line_13005                        13005
 #define Line_13006                        13006
-#define Line_13007                        13007
 #define Line_13008                        13008
 #define Line_13009                        13009
 #define Line_13010                        13010
@@ -849,6 +844,10 @@
 #define RT_TRIMMING_RIGHT_SIDE            14121
 #define RT_PASSWD_TITLE                   14122
 #define Rectangle_14123                   14123
+#define Rectangle_14124                   14124
+#define Rectangle_14125                   14125
+#define Rectangle_14126                   14126
+#define Rectangle_14127                   14127
 #define BG_PLANT_UP_L01                   18000
 #define BG_PLANT_DOWN_L01                 18001
 #define BG_PLANT_UP_L02                   18002
@@ -923,6 +922,7 @@
 #define BG_PLANT_DOWN_L36                 18071
 #define BG_PLANT_IND_LINE_UP              18072
 #define BG_PLANT_IND_LINE_DOWN            18073
+#define LinearBargraph_18074              18074
 #define PG_AUTEQ_TELEMATICA               20000
 #define pattern_gs3_20001                 20001
 #define TrimmingDataMaskTractor           20002
@@ -1270,4 +1270,5 @@
 #define FillAttributes_25037              25037
 #define FA_PASSWD_TITLE                   25038
 #define FA_PASSWD_BACKGROUND              25039
+#define FA_CONFIG_HOME_SECTIONS           25040
 #define OP_PLANTER_IND_LINE_NUM           27000

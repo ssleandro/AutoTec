@@ -1000,6 +1000,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
 				ASSERT(status == osOK);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			} 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_REPLACE_SENSOR)
 			{
@@ -1364,7 +1365,7 @@ void GUI_vUpdateWorkedArea (void)
 			GUI_dHECTARES));
 
 	// Partial population Ha
-	sGUIPlanterData.dWorkedAreaHa = fAreaTrab * 10;
+	sGUIPlanterData.dWorkedAreaHa = roundf(fAreaTrab * 100);
 
 	// Converte de cent�metros para km/mi:
 	fAreaTrab = (float)GUI_fConvertUnit(
@@ -1373,7 +1374,7 @@ void GUI_vUpdateWorkedArea (void)
 			psParcEsq->dDistancia),
 		GUI_dCONV( GUI_dCENTIMETERS, GUI_dMETERS));
 
-	sGUIPlanterData.dWorkedAreaMt = fAreaTrab * 10;
+	sGUIPlanterData.dWorkedAreaMt = roundf(fAreaTrab * 10);
 
 	// Totals
 	//--------------------------------------------------------------------------
@@ -1411,7 +1412,7 @@ void GUI_vUpdateWorkedArea (void)
 		GUI_dCONV(GUI_dMETERS,
 			GUI_dHECTARES));
 
-	sGUIPlanterData.dTotalHa = fAreaTrab * 10;
+	sGUIPlanterData.dTotalHa = roundf(fAreaTrab * 100);
 
 	// Converte de cent�metros para km/mi:
 	fAreaTrab = (float)GUI_fConvertUnit(
@@ -1419,7 +1420,7 @@ void GUI_vUpdateWorkedArea (void)
 		GUI_dCONV(GUI_dCENTIMETERS,
 			GUI_dMETERS));
 
-	sGUIPlanterData.dTotalMt = fAreaTrab * 10;
+	sGUIPlanterData.dTotalMt = roundf(fAreaTrab * 10);
 }
 
 void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint32_t* dSeedsPerUnit, uint32_t* dSeedsPerHa, uint32_t* dTotalSeeds)
@@ -1567,12 +1568,14 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 	// If imperial mode, convert to seeds per feet:
 	if (GUI_sConfig.bSistImperial != false)
 	{
-		dSem = (uint32_t)(GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f);
+		fSem = (GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f);
 	}
 	else
 	{
-		dSem = (uint32_t)(fSem * 100.0f);
+		fSem = (fSem * 100.0f);
 	}
+
+	dSem = (uint32_t) roundf(fSem);
 
 	//--------------------------------------------------------------------------
 	// Barra lateral:
@@ -1808,7 +1811,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
                                           GUI_dCONV(GUI_dHECTARES,
                                                     GUI_dMETERS ) );
       fSem *= 0.001f;
-      *dSeedsPerHa = fSem;
+      *dSeedsPerHa = roundf(fSem * 100);
     }
   }
 
@@ -1919,10 +1922,7 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 		}
 	}
 
-	//Arredonda para exibir
-	fAreaTrab += 0.05f;
-
-	*pdProductivity = fAreaTrab;
+	*pdProductivity = roundf(fAreaTrab * 100);
 
 	//--------------------------------------------------------------------------
 	// Tempo trabalhando:

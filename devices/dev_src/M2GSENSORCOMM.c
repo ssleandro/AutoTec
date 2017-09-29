@@ -484,7 +484,7 @@ eDEVError_s M2GSEN_eCANGetStatus (uint32_t wRequest, void * vpValue)
 
 eDEVError_s M2GSEN_eCANClearStatus (uint32_t wRequest, void * vpValue)
 {
-	M2GISO_vClearStatus();
+	M2GSEN_vClearStatus();
 	return DEV_ERROR_SUCCESS;
 }
 
