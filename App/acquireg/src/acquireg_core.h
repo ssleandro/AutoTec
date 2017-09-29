@@ -65,7 +65,7 @@
 #define AQR_APL_FLAG_SEND_TOTAL				0x0040
 #define AQR_SIS_FLAG_ALARME				 	0x0080
 #define AQR_SIS_FLAG_ALARME_TOLERANCIA		0x0100
-#define AQR_APL_FLAG_ERASE_INSTALLATION		0x0200
+#define AQR_APL_FLAG_ENABLE_SENSOR_PNP		0x0200
 #define AQR_APL_FLAG_SENSOR_CHANGE			0x0400
 
 /******************************************************************************

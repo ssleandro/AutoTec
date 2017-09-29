@@ -243,8 +243,8 @@ void FSM_vFileSysPublishThread (void const *argument)
 	osSignalSet((osThreadId)argument, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition)); //Task created, inform core
 
 	WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
-	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-	osDelay(200);
+	//osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	//osDelay(200);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 
@@ -488,6 +488,7 @@ void FSM_vFileSysThread (void const *argument)
 	error = FFS_vLoadStaticReg();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATIC_REG);
+
 
 	/* Start the main functions of the application */
 	while (1)

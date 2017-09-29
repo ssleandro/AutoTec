@@ -77,6 +77,7 @@ static bool bKeepLineMediumPrioAlarm = false;
 static bool bHighPrioAudioInProcess = false;
 static bool bMediumPrioAudioInProcess = false;
 static uint8_t bPasswsNumDigits;
+static uint8_t bLanguageChRcv = 0;
 
 // Installation
 static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
@@ -205,6 +206,7 @@ eBootStates eCurrState;
 // Holds the current module state
 eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
+eIsobusMask ePrevMask = DATA_MASK_INSTALLATION;
 eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
 eChangeTrimmingState eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
@@ -224,6 +226,7 @@ peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
 // Mutex to VT status control structure
 CREATE_MUTEX(MTX_VTStatus);
 CREATE_MUTEX(ISO_UpdateMask);
+
 
 extern unsigned int POOL_SIZE;
 extern unsigned int PT_PACKAGE_SIZE;
@@ -831,7 +834,7 @@ void ISO_vIsobusDispatcher (ISOBUSMsg* RcvMsg)
 			{
 				if (eCurrState == BOOT_COMPLETED)
 					eModCurrState = UPDATING_LANGUAGE;
-
+				bLanguageChRcv = 1;
 				WATCHDOG_STATE(ISORCV, WDT_SLEEP);
 				PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
 				WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
@@ -1270,7 +1273,7 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 //				} while (!bUpdateObjectPool);
 //
 //				ISO_vSendEndObjectPool();
-
+				osFlagSet(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED);
 				eModCurrState = RUNNING;
 				bUpdateObjectPool = false;
 				break;
@@ -2204,6 +2207,7 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 	uint16_t dAux;
 	event_e ePubEvt;
 
+
 	if (sRcvMsg == NULL)
 		return;
 
@@ -2245,20 +2249,36 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B2));
 						if ((dAux >= DATA_MASK_INSTALLATION) && (dAux < DATA_MASK_INVALID))
 						{
+							if (eCurrentMask == (eIsobusMask)dAux)
+							{
+								bLanguageChRcv = 0;
+							}
+							ePrevMask = eCurrentMask;
 							eCurrentMask = (eIsobusMask)dAux;
 
 							if (eCurrentMask == DATA_MASK_INSTALLATION)
 							{
-								eConfigMaskFromX = DATA_MASK_INSTALLATION;
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION);
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+								// Ao trocar as configurações regionais do GS3, o mesmo força uma mudança de tela
+								// para a tela default do pool. A ideia é monitorar esse comando e voltar a tela
+								// anterior.
+								if (bLanguageChRcv)
+								{
+									bLanguageChRcv = 0;
+									ISO_vChangeActiveMask(ePrevMask);
+								}
+								else
+								{
+									eConfigMaskFromX = DATA_MASK_INSTALLATION;
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION);
+									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
 
-								ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
+									ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
+								}
 								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
@@ -2305,7 +2325,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 		case LANGUAGE_PGN:
 		{
 			ISO_vTreatLanguageCommandMessage(*sRcvMsg);
-
 			event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
 			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
@@ -3193,6 +3212,10 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 		evt = RECEIVE_LOCAL_QUEUE(UpdateQ, &eRecvPubEvt, osWaitForever);
+		if(eModCurrState == UPDATING_LANGUAGE)
+		{
+			osFlagWait(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED, true, false, osWaitForever);
+		}
 		WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
 		if (evt.status == osEventMessage)

@@ -530,7 +530,7 @@ void SEN_vIdentifyEvent (contract_s* contract)
 				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
 			}
 
-			if (ePubEvt == EVENT_AQR_INSTALLATION_ERASE_INSTALLATION)
+			if (ePubEvt == EVENT_AQR_INSTALLATION_ENABLE_SENSOR_PNP)
 			{
 				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
 			}
