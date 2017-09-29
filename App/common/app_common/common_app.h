@@ -193,16 +193,19 @@
 
 
 // Converter Macros
-#define MM2IN(value) 	((value) * 0.0393701)
-#define IN2MM(value) 	((uint16_t)(value * 25.41))
-#define DM2IN(value) 	((value) * 3.93701)
-#define IN2DM(value) 	((uint16_t)(value * 0.2541))
+#define MM2IN(value) 	((value) * 0.0393701f)
+#define IN2MM(value) 	((uint16_t)(value * 25.41f))
+#define DM2IN(value) 	((value) * 3.93701f)
+#define IN2DM(value) 	((uint16_t)(value * 0.2541f))
 
-#define KMH2MLH(value) 	(value * 0.621371)
-#define MLH2KMH(value) 	(value * 1.60934)
+#define DM2FT(value) 	((value) * 3.28084f)
+#define FT2DM(value) 	((value) / 3.28084f)
 
-#define SDM2SP(value) 	((value) / 3.93701)
-#define SP2SDM(value) 	((uint16_t)(value * 3.93701))
+#define KMH2MLH(value) 	(value * 0.621371f)
+#define MLH2KMH(value) 	(value * 1.60934f)
+
+#define SDM2SP(value) 	((value) / 3.28084f)
+#define SP2SDM(value) 	((uint16_t)(value * 3.28084f))
 
 /******************************************************************************
  * Typedefs
@@ -660,47 +663,6 @@ typedef struct
 	uint16_t awBufDis;
 	uint8_t abBufSem[CAN_bNUM_DE_LINHAS];
 } tsFalhaInstantanea;
-
-typedef struct
-{
-	//Senha para operacoes de seguranca:
-	uint8_t abSenha[4];
-	//Contraste do LCD:
-	uint8_t bContraste;
-	//Brilho do LCD:
-	uint8_t bBrilho;
-
-
-	//Idioma:
-	uint8_t bIdioma;
-
-	// Se egit  sistema imperial ou internacional
-	uint8_t bSistImperial;
-
-	// Tipo de medida para velocidade do veiculo
-	uint8_t bVelocidade;
-	uint8_t bTxtVel;
-	uint8_t bTxtVelPorHora;
-	// Medida da superficie trabalhada
-	uint8_t bAreaTrabalhada;
-	uint8_t bTxtAreaTrab;
-	uint8_t bTxtAreaTrabPorHora;
-
-	// Sementes por cm/pol..
-	uint8_t bSementes;
-	uint8_t bTxtSementes;
-	uint8_t bTxtSemPorDist;
-	uint8_t bImgSemPorDist;
-	// distancia em km/mi..
-	uint8_t bDistPerc;
-	uint8_t bTxtDistPerc;
-	// caractere usado para fracao e milhar:
-	uint8_t bCharFrac;
-	uint8_t bCharMilhar;
-
-	// CRC da estrutura
-	uint16_t wCRC16;
-} __attribute__((aligned(1), packed)) IHM_tsConfig;
 
 //Estrutura do registro estático:
 typedef struct

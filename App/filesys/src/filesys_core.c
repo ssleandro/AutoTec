@@ -378,7 +378,8 @@ void FFS_vIdentifyEvent (contract_s* contract)
 				UOS_tsConfiguracao *psConfig =pvPubData;
 				if ((ePubEvType == EVENT_SET) && ( psConfig != NULL))
 				{
-					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0)
+					if ((memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0) &&
+							(psConfig->sMonitor.bNumLinhas != 0))
 					{
 						FFS_sConfiguracao = *psConfig;
 						error = FFS_vSaveConfigFile();

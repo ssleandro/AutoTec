@@ -49,6 +49,8 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
+#define ISO_FLAG_LANGUAGE_UPDATED	0x0001
+
 #define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
 #define ISO_NUM_INPUT_LIST_OBJECTS 4
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36

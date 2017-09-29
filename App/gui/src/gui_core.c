@@ -63,11 +63,14 @@ CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 16);
 
 CREATE_MUTEX(GUI_UpdateMask);
 
+
+
 eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
 
 tsAcumulados GUI_sAcumulado;
 tsStatus GUI_sStatus;
 
+osFlagsGroupId GUI_sFlags;
 extern osFlagsGroupId UOS_sFlagSis;
 
 extern uint16_t AQR_wEspacamento;
@@ -125,10 +128,59 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 void GUI_vUptTestMode(void);
 void GUI_vUptPlanter(void);
 void GUI_vUptReplaceSensor(tsPubSensorReplacement *);
+void GUI_vUptSetUnit(GUI_tsConfig *psCfg);
 
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
+void GUI_vUptSetUnit(GUI_tsConfig *psCfg)
+{
+
+	if (psCfg->bSistImperial == false)
+	{
+		psCfg->bVelocidade = GUI_dKILOMETERS;
+		psCfg->bTxtVel = GUI_eAbbrKilometers;
+		psCfg->bTxtVelPorHora = GUI_eAbbrKilometerPerHour;
+		psCfg->bAreaTrabalhada = GUI_dHECTARES;
+		psCfg->bTxtAreaTrab = GUI_eAbbrHectare;
+		psCfg->bTxtAreaTrabPorHora = GUI_eAbbrHectaresPerHour;
+		psCfg->bSementes = GUI_dCENTIMETERS;
+		psCfg->bTxtSementes = GUI_eAbbrSeeed;
+		psCfg->bDistPerc = GUI_dMETERS;
+		psCfg->bTxtDistPerc = GUI_eAbbrMeters;
+
+		psCfg->bTxtSemPorDist = GUI_eAbbrSeedPerHectare;
+
+	}
+	else
+	{
+		psCfg->bVelocidade = GUI_dMILES;
+		psCfg->bTxtVel = GUI_eAbbrMiles;
+		psCfg->bTxtVelPorHora = GUI_eAbbrMilesPerHour;
+		psCfg->bAreaTrabalhada = GUI_dACRES;
+		psCfg->bTxtAreaTrab = GUI_eAbbrAcres;
+		psCfg->bTxtAreaTrabPorHora = GUI_eAbbrAcresPerHour;
+		psCfg->bSementes = GUI_dINCHES;
+		psCfg->bTxtSementes = GUI_eAbbrSeeed;
+		psCfg->bDistPerc = GUI_dFEETS;
+		psCfg->bTxtDistPerc = GUI_eAbbrFeeds;
+
+		psCfg->bTxtSemPorDist = GUI_eAbbrSeedPerAcre;
+	}
+
+	if (psCfg->bIdioma == LANGUAGE_ENGLISH)
+	{
+		psCfg->bCharFrac = '.';
+		psCfg->bCharMilhar = ',';
+	}
+	else
+	{
+		psCfg->bCharFrac = ',';
+		psCfg->bCharMilhar = '.';
+	}
+
+}
+
 uint8_t * GUI_WDTData (uint8_t * pbNumberOfThreads)
 {
 	*pbNumberOfThreads = ((sizeof(WATCHDOG_FLAG_ARRAY) / sizeof(WATCHDOG_FLAG_ARRAY[0]) - 0)); //-1 = remove core thread from list, -0 = keep it
@@ -596,13 +648,13 @@ void GUI_SetGuiConfiguration(void)
 	}
 	else
 	{
-		GUIConfigurationData.wEvaluationDistance = DM2IN(sSISConfiguration.sMonitor.wAvalia);
+		GUIConfigurationData.wEvaluationDistance = DM2FT(sSISConfiguration.sMonitor.wAvalia);
 		GUIConfigurationData.fMaxSpeed = KMH2MLH(sSISConfiguration.sMonitor.fLimVel);
 		GUIConfigurationData.wSeedRate = SDM2SP(sSISConfiguration.sMonitor.wSementesPorMetro);
 		GUIConfigurationData.wImplementWidth = MM2IN(sSISConfiguration.sMonitor.wLargImpl);
 		GUIConfigurationData.wDistBetweenLines = MM2IN(sSISConfiguration.sMonitor.wDistLinhas);
 	}
-	ePublish = EVENT_GUI_UPDATE_CONFIG;;
+	ePublish = EVENT_GUI_UPDATE_CONFIG;
 	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
 }
 
@@ -656,7 +708,7 @@ void GUI_SetSisConfiguration(void)
 	}
 	else
 	{
-		sSISConfiguration.sMonitor.wAvalia = IN2DM(GUIConfigurationData.wEvaluationDistance);
+		sSISConfiguration.sMonitor.wAvalia = DM2FT(GUIConfigurationData.wEvaluationDistance);
 		sSISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
 		sSISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
 		sSISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
@@ -851,6 +903,8 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				} else if (eCurrMask == DATA_MASK_INSTALLATION)
 				{
 					osFlagClear(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
+					ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
+					PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 				}
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
@@ -988,14 +1042,20 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
 				ASSERT(status == osOK);
+				osFlagWait(GUI_sFlags, GUI_FLAG_SYSTEM_CFG_OK, false, false, osWaitForever);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-//				if (psConfig != NULL)
-//				{
-//					GUIConfigurationData.eLanguage = psConfig->eLanguage;
-//					GUIConfigurationData.eUnit = psConfig->eUnit;
-//					GUI_SetSisConfiguration();
-//				}
+				sSISConfiguration.sIHM.eLanguage = sGUILanguageCommandData.eLanguage;
+				sSISConfiguration.sIHM.eUnit = sGUILanguageCommandData.eUnit;
+				GUI_sConfig.bIdioma = sGUILanguageCommandData.eLanguage;
+				GUI_sConfig.bSistImperial = (sGUILanguageCommandData.eUnit == UNIT_IMPERIAL_SYSTEM);
+				GUI_vUptSetUnit(&GUI_sConfig);
+
+				GUI_SetGuiConfiguration();
+
+				ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
@@ -1035,6 +1095,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 				if (psConfig != NULL)
 				{
+					osFlagSet(GUI_sFlags, GUI_FLAG_SYSTEM_CFG_OK);
+					GUI_sConfig.bIdioma = psConfig->sIHM.eLanguage;
+					GUI_sConfig.bSistImperial = (psConfig->sIHM.eUnit== UNIT_IMPERIAL_SYSTEM);
+					GUI_vUptSetUnit(&GUI_sConfig);
+
 					if (memcmp(&sSISConfiguration, psConfig, sizeof(UOS_tsConfiguracao)) != 0)
 					{
 						memcpy(&sSISConfiguration, psConfig, sizeof(UOS_tsConfiguracao));
@@ -1045,6 +1110,9 @@ void GUI_vIdentifyEvent (contract_s* contract)
 							ePubEvt = EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK;
 							PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 						}
+
+						//ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
+						//PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 					}
 				}
 
@@ -1200,6 +1268,9 @@ void GUI_vGuiThread (void const *argument)
 	INITIALIZE_QUEUE(GuiQueue);
 
 	INITIALIZE_MUTEX(GUI_UpdateMask);
+
+	status = osFlagGroupCreate(&GUI_sFlags);
+	ASSERT(status == osOK);
 
 	GUI_eInitGuiPublisher();
 
@@ -1362,7 +1433,7 @@ void GUI_vUpdateWorkedArea (void)
 	// Converte de centimetros para ha/acre:
 	fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada,
 		GUI_dCONV(GUI_dMETERS,
-			GUI_dHECTARES));
+					 GUI_sConfig.bAreaTrabalhada));
 
 	// Partial population Ha
 	sGUIPlanterData.dWorkedAreaHa = roundf(fAreaTrab * 100);
@@ -1372,7 +1443,7 @@ void GUI_vUpdateWorkedArea (void)
 		(psParcial->dDistancia +
 			psParcDir->dDistancia +
 			psParcEsq->dDistancia),
-		GUI_dCONV( GUI_dCENTIMETERS, GUI_dMETERS));
+		GUI_dCONV( GUI_dCENTIMETERS, GUI_sConfig.bDistPerc));
 
 	sGUIPlanterData.dWorkedAreaMt = roundf(fAreaTrab * 10);
 
@@ -1410,7 +1481,7 @@ void GUI_vUpdateWorkedArea (void)
 	// Converte de cent�metros para ha/acre:
 	fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada,
 		GUI_dCONV(GUI_dMETERS,
-			GUI_dHECTARES));
+					 GUI_sConfig.bAreaTrabalhada));
 
 	sGUIPlanterData.dTotalHa = roundf(fAreaTrab * 100);
 
@@ -1418,7 +1489,7 @@ void GUI_vUpdateWorkedArea (void)
 	fAreaTrab = (float)GUI_fConvertUnit(
 		(psAcum->dDistancia + psAcumDir->dDistancia + psAcumEsq->dDistancia),
 		GUI_dCONV(GUI_dCENTIMETERS,
-			GUI_dMETERS));
+					 GUI_sConfig.bDistPerc));
 
 	sGUIPlanterData.dTotalMt = roundf(fAreaTrab * 10);
 }
@@ -1568,14 +1639,14 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 	// If imperial mode, convert to seeds per feet:
 	if (GUI_sConfig.bSistImperial != false)
 	{
-		fSem = (GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f);
+		fSem = GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f;
 	}
 	else
 	{
-		fSem = (fSem * 100.0f);
+		fSem = fSem * 100.0f;
 	}
 
-	dSem = (uint32_t) roundf(fSem);
+	dSem = (uint32_t)roundf(fSem);
 
 	//--------------------------------------------------------------------------
 	// Barra lateral:
@@ -1733,7 +1804,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
       }
       else
       {
-        // ATEN��O:
+        // ATENCAO:
         // M�dia de sementes est� em sem/m * 100 e dist�ncia entre linhas
         // est� em mil�metros, ent�o:
         // sem/m� = ( sem/m / 100 ) / ( dist_entre_linhas / 1000 )
@@ -1808,7 +1879,7 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
       }
       // Calcula invertendo os parametros de entrada e saida para calcular 1/medida
       fSem = ( float )GUI_fConvertUnit(fSem,
-                                          GUI_dCONV(GUI_dHECTARES,
+                                          GUI_dCONV(GUI_sConfig.bAreaTrabalhada,
                                                     GUI_dMETERS ) );
       fSem *= 0.001f;
       *dSeedsPerHa = roundf(fSem * 100);
@@ -1912,7 +1983,7 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 		(fAreaTrabalhadaDir + fAreaTrabalhadaEsq + psParcial->fArea + psParcDir->fArea + psParcEsq->fArea);
 
 	// Converte de m� para ha/acre:
-	float fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada, GUI_dCONV(GUI_dMETERS, GUI_dHECTARES));
+	float fAreaTrab = (float)GUI_fConvertUnit(fAreaTrabalhada, GUI_dCONV(GUI_dMETERS, GUI_sConfig.bAreaTrabalhada));
 	{
 		if (GUI_sAcumulado.sTrabParcial.dSegundos > 0)
 		{
@@ -1921,6 +1992,10 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 			fAreaTrab /= fHoras;
 		}
 	}
+
+
+	//Arredonda para exibir
+	//fAreaTrab += 0.05f;
 
 	*pdProductivity = roundf(fAreaTrab * 100);
 
@@ -1947,7 +2022,7 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 	//--------------------------------------------------------------------------
 	// Convert speed from m/h to km/h or mi/h:
 	float fVel = (float) GUI_fConvertUnit(fModVel,
-			GUI_dCONV(GUI_dMETERS, GUI_dKILOMETERS));
+			GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
 
 	// Gets the speed value in kilometers per hour
 	*dSpeedKm = (uint32_t) roundf(fVel * 10);
@@ -1971,7 +2046,7 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 	fVel *= ((float) (bFator * AQR_wEspacamento) * (1.0f / 1000.0f));
 
 	fVel = (float) GUI_fConvertUnit(fVel,
-			GUI_dCONV(GUI_dMETERS, GUI_dHECTARES));
+			GUI_dCONV(GUI_dMETERS, GUI_sConfig.bAreaTrabalhada));
 
 	// Gets the speed in hectares per hour
 	*dSpeedHa = (uint32_t) fVel;
@@ -1986,7 +2061,7 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 	// fVelMax == m/s?
 	// Total (MEV)
 	fVel = (float) GUI_fConvertUnit((AQR_sVelocidade.fVelMax),
-			GUI_dCONV(GUI_dKILOMETERS, GUI_dKILOMETERS));
+			GUI_dCONV(GUI_dKILOMETERS, GUI_sConfig.bVelocidade));
 
 	*dMaxSpeed = (uint32_t) roundf(fVel * 10);
 }

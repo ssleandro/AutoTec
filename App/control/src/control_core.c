@@ -92,9 +92,6 @@ UOS_tsVersaoCod UOS_sVersaoCod;
 //Estrutura da configuracao operacional:
 UOS_tsConfiguracao UOS_sConfiguracao;
 
-//Estrutura da configuracao IHM:
-IHM_tsConfig IHM_sConfig;
-
 //Flags para indicar o status do sistema:
 extern osFlagsGroupId UOS_sFlagSis;
 osFlagsGroupId CTL_sFlagSis;
