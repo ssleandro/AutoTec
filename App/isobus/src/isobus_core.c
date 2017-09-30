@@ -85,7 +85,6 @@ static sInstallSensorStatus sInstallStatus;
 eInstallationStatus InstallationStatus[36];
 
 static sIgnoreLineStatus sIgnoreStatus;
-
 static sLanguageCommandData sCommandLanguage;
 
 static sTrimmingState sTrimmState = {
@@ -150,6 +149,10 @@ const sPlanterDataMask sPlanterMask =
 		.psMTEV = &(asNumVarObjects[238]),
 		.psMaxSpeed = &(asNumVarObjects[239]),
 	};
+
+static canStatusStruct_s sCANIsobusStatus;
+static canStatusStruct_s sCANSensorStatus;
+static eSelectedCANStatus* eCANSelectedStatus = &asConfigInputList[4].bSelectedIndex;
 
 #ifndef UNITY_TEST
 DECLARE_QUEUE(IsobusQueue, QUEUE_SIZEOFISOBUS);     //!< Declaration of Interface Queue
@@ -227,7 +230,6 @@ peripheral_descriptor_p pISOHandle = NULL;          //!< ISO Handler
 CREATE_MUTEX(MTX_VTStatus);
 CREATE_MUTEX(ISO_UpdateMask);
 
-
 extern unsigned int POOL_SIZE;
 extern unsigned int PT_PACKAGE_SIZE;
 extern unsigned int EN_PACKAGE_SIZE;
@@ -238,6 +240,7 @@ extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es[];
 
 CREATE_TIMER(AlarmTimeoutTimer, ISO_vTimerCallbackAlarmTimeout);
 CREATE_TIMER(WSMaintenanceTimer, ISO_vTimerCallbackWSMaintenance);
+CREATE_TIMER(IsobusCANStatusTimer, ISO_vTimerCallbackIsobusCANStatus);
 
 /******************************************************************************
  * Function Prototypes
@@ -545,6 +548,7 @@ eAPPError_s ISO_vInitDeviceLayer (uint32_t wSelectedInterface)
 		eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_ADD_ALL_CAN_ID, (void*)&wCANInitID);
 		ASSERT(eError == APP_ERROR_SUCCESS);
 	}
+	START_TIMER(IsobusCANStatusTimer, ISO_TIMER_PERIOD_MS_CAN_STATUS);
 	return eError;
 }
 
@@ -586,7 +590,19 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
-				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
+				case EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE:
+				{
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE:
+				{
+					canStatusStruct_s *psCANSensorStatus = pvPayData;
+					memcpy(&sCANSensorStatus, psCANSensorStatus, sizeof(canStatusStruct_s));
+					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE:
 				{
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
@@ -711,6 +727,8 @@ void ISO_vIsobusThread (void const *argument)
 
 	INITIALIZE_MUTEX(MTX_VTStatus);
 	INITIALIZE_MUTEX(ISO_UpdateMask);
+
+	INITIALIZE_TIMER(IsobusCANStatusTimer, osTimerPeriodic);
 
 	status = osFlagGroupCreate(&ISO_sFlags);
 	ASSERT(status == osOK);
@@ -1206,7 +1224,7 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 						}
 						case OBJECT_POOL_LOADED:
 						{
-							START_TIMER(WSMaintenanceTimer, TIMER_PERIOD_MS_WS_MAINTENANCE);
+							START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
 
 							eCurrState = BOOT_COMPLETED;
 							eModCurrState = RUNNING;
@@ -1604,7 +1622,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 		}
 		ISO_vInputNumberVariableValue(wObjectID, dValue);
 	}
-	else if ((wObjectID >= IL_CFG_AREA_MONITOR) && (wObjectID <= IL_CFG_RAISED_ROWS))
+	else if ((wObjectID >= IL_CFG_AREA_MONITOR) && (wObjectID <= IL_SYSTEM_CAN_BUS_SELECT))
 	{
 		switch (wObjectID)
 		{
@@ -1667,6 +1685,15 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 				ISO_vUpdatePlanterDataMaskLines();
 				break;
 			}
+			case ISO_INPUT_LIST_CAN_STATUS_ID:
+			{
+				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(UpdateQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				ISO_vInputIndexListValue(wObjectID, dValue);
+				break;
+			}
 			default:
 			{
 				ISO_vInputIndexListValue(wObjectID, dValue);
@@ -1700,7 +1727,7 @@ void ISO_vTreatAcknowledgementMessage (ISOBUSMsg sRcvMsg)
 
 	STOP_TIMER(WSMaintenanceTimer);
 	ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
-	START_TIMER(WSMaintenanceTimer, TIMER_PERIOD_MS_WS_MAINTENANCE);
+	START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
 
 //	switch (eCurrentMask) {
 //		case DATA_MASK_CONFIGURATION:
@@ -2900,7 +2927,68 @@ void ISO_vUpdateTrimmingDataMask (void)
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 }
 
-void ISO_vUpdateSystemDataMask (void)
+void ISO_vUpdateSystemGPSMask (void)
+{
+	osStatus status;
+
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	status = WAIT_MUTEX(ISO_UpdateMask, osWaitForever);
+	ASSERT(status == osOK);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	status = RELEASE_MUTEX(ISO_UpdateMask);
+	ASSERT(status == osOK);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+}
+
+void ISO_vUpdateSystemCANMask (void)
+{
+	osStatus status;
+
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	status = WAIT_MUTEX(ISO_UpdateMask, osWaitForever);
+	ASSERT(status == osOK);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
+	switch (*eCANSelectedStatus)
+	{
+		case CAN_STATUS_ISOBUS:
+		{
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_BAUD_RATE, sCANIsobusStatus.wBaudRateKbps);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_TX_COUNT, sCANIsobusStatus.wTxCount);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_RX_COUNT, sCANIsobusStatus.wRxCount);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_TOTAL_COUNT, (sCANIsobusStatus.wTxCount + sCANIsobusStatus.wRxCount));
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_OVER_ERR_COUNT, sCANIsobusStatus.dDataOverrun);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_PASS_ERR_COUNT, sCANIsobusStatus.dErrorPassive);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_WARN_ERR_COUNT, sCANIsobusStatus.dErrorWarning);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_BUS_OFF_ERR_COUNT, sCANIsobusStatus.dBusError);
+
+			break;
+		}
+		case CAN_STATUS_SENSORS:
+		{
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_BAUD_RATE, sCANSensorStatus.wBaudRateKbps);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_TX_COUNT, sCANSensorStatus.wTxCount);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_RX_COUNT, sCANSensorStatus.wRxCount);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_TOTAL_COUNT, (sCANSensorStatus.wTxCount + sCANSensorStatus.wRxCount));
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_OVER_ERR_COUNT, sCANSensorStatus.dDataOverrun);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_PASS_ERR_COUNT, sCANSensorStatus.dErrorPassive);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_WARN_ERR_COUNT, sCANSensorStatus.dErrorWarning);
+			ISO_vChangeNumericValue(ON_SYSTEM_CAN_BUS_OFF_ERR_COUNT, sCANSensorStatus.dBusError);
+			break;
+		}
+		default:
+			break;
+	}
+
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	status = RELEASE_MUTEX(ISO_UpdateMask);
+	ASSERT(status == osOK);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+}
+
+void ISO_vUpdateSystemSensorsMask (void)
 {
 	osStatus status;
 
@@ -3160,6 +3248,16 @@ void ISO_vTimerCallbackAlarmTimeout (void const *arg)
 	}
 }
 
+void ISO_vTimerCallbackIsobusCANStatus (void const *arg)
+{
+	event_e eEvt;
+
+	DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_GET_STATUS, (void*) &sCANIsobusStatus);
+
+	eEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
+	PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+}
+
 /******************************************************************************
  * Function : ISO_vIsobusUpdateOPThread(void const *argument)
  *//**
@@ -3261,10 +3359,24 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 							WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 							break;
 						}
-						case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
+						case EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE:
 						{
 							WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
-							ISO_vUpdateSystemDataMask();
+							ISO_vUpdateSystemGPSMask();
+							WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+							break;
+						}
+						case EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE:
+						{
+							WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+							ISO_vUpdateSystemCANMask();
+							WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+							break;
+						}
+						case EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE:
+						{
+							WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+							ISO_vUpdateSystemSensorsMask();
 							WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 							break;
 						}

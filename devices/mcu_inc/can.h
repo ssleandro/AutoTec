@@ -118,6 +118,7 @@ typedef struct canMSGStruct_s
 
 typedef struct canStatusStruct_s
 {
+	uint16_t wBaudRateKbps;
 	uint32_t wRxCount;
 	uint8_t bRxError;
 	uint32_t wTxCount;

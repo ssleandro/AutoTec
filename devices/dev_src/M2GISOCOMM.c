@@ -612,6 +612,7 @@ void M2GISO_vClearStatus(void)
 
 void M2GISO_vSetStatus(eCANStatus_s eErrorCode)
 {
+	sMCU_CANIsobus_Status.wBaudRateKbps = M2GISOCOMM_CAN_BITRATE / 1000;
 	sMCU_CANIsobus_Status.bRxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
 	sMCU_CANIsobus_Status.bTxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
 //	if (sMCU_CAN_Status.bTxError > 0)
@@ -634,7 +635,7 @@ void M2GISO_vSetStatus(eCANStatus_s eErrorCode)
 		sMCU_CANIsobus_Status.wTxCount++;
 	}
 
-	if (eErrorCode & (CAN_STAT_NOERROR | CAN_STAT_RXOK))
+	if (((eErrorCode & 0x07) == CAN_STAT_NOERROR) || (eErrorCode & CAN_STAT_RXOK))
 	{
 		sMCU_CANIsobus_Status.wRxCount++;
 	}

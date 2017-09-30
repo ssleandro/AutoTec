@@ -571,6 +571,7 @@ uint32_t M2GSEN_write (struct peripheral_descriptor_s* const this,
 			}
 			/* Send CAN frame */
 			CAN_vSendMessage(&sMCU_CAN_Handle, sCANMessage);
+			sMCU_CANSensor_Status.wTxCount++;
 		}
 	}
 	return wSentBytes;
@@ -615,6 +616,7 @@ void M2GSEN_vClearStatus(void)
 
 void M2GSEN_vSetStatus(eCANStatus_s eErrorCode)
 {
+	sMCU_CANSensor_Status.wBaudRateKbps = M2GSENSORCOMM_CAN_BITRATE / 1000;
 	sMCU_CANSensor_Status.bRxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
 	sMCU_CANSensor_Status.bTxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
 //	if (sMCU_CAN_Status.bTxError > 0)
@@ -637,7 +639,7 @@ void M2GSEN_vSetStatus(eCANStatus_s eErrorCode)
 		sMCU_CANSensor_Status.wTxCount++;
 	}
 
-	if (eErrorCode & (CAN_STAT_NOERROR | CAN_STAT_RXOK))
+	if (((eErrorCode & 0x07) == CAN_STAT_NOERROR) || (eErrorCode & CAN_STAT_RXOK))
 	{
 		sMCU_CANSensor_Status.wRxCount++;
 	}

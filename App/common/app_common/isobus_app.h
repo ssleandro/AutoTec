@@ -225,6 +225,12 @@ typedef struct sLanguageCommandData
 	eSelectedUnitMeasurement eUnit;
 } sLanguageCommandData;
 
+typedef enum eSelectedCANStatus
+{
+	CAN_STATUS_ISOBUS,
+	CAN_STATUS_SENSORS
+} eSelectedCANStatus;
+
 typedef struct sNumberVariableObj
 {
 	uint16_t wObjID;

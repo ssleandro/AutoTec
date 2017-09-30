@@ -52,7 +52,7 @@
 #define ISO_FLAG_LANGUAGE_UPDATED	0x0001
 
 #define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
-#define ISO_NUM_INPUT_LIST_OBJECTS 4
+#define ISO_NUM_INPUT_LIST_OBJECTS 5
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
 
 #define ISO_KEY_PLANTER_ID					SoftKey_Planter
@@ -97,6 +97,7 @@
 #define ISO_INPUT_LIST_CENT_LINE_SIDE_ID	IL_CFG_CENTER_ROW_SIDE
 #define ISO_INPUT_LIST_ALTERNATE_ROW_ID		IL_CFG_ALTERNATE_ROWS
 #define ISO_INPUT_LIST_ALTER_ROW_TYPE_ID	IL_CFG_RAISED_ROWS
+#define ISO_INPUT_LIST_CAN_STATUS_ID		IL_SYSTEM_CAN_BUS_SELECT
 
 #define ISO_INPUT_LIST_OPTION_ATTRIBUTE		0x06
 
@@ -138,8 +139,8 @@
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
-//#define ISO_ALARM_FREQUENCY_HZ	2900
-#define ISO_ALARM_FREQUENCY_HZ	800
+#define ISO_ALARM_FREQUENCY_HZ	2900
+//#define ISO_ALARM_FREQUENCY_HZ	800
 
 // Alarms
 #define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1
@@ -169,7 +170,8 @@
 
 #define ISO_ALARM_DEACTIVATE	0
 
-#define TIMER_PERIOD_MS_WS_MAINTENANCE	850
+#define ISO_TIMER_PERIOD_MS_WS_MAINTENANCE	850
+#define ISO_TIMER_PERIOD_MS_CAN_STATUS		2500
 
 /******************************************************************************
  * Macros
@@ -260,6 +262,7 @@ typedef struct
  *******************************************************************************/
 void ISO_vTimerCallbackWSMaintenance (void const *arg);
 void ISO_vTimerCallbackAlarmTimeout (void const *arg);
+void ISO_vTimerCallbackIsobusCANStatus (void const *arg);
 
 #ifdef __cplusplus
 extern "C"

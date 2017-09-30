@@ -93,6 +93,7 @@ sTrimmingState GUI_sTrimmState;
 
 static sLanguageCommandData sGUILanguageCommandData;
 static tsPubSensorReplacement sPubReplacState;
+static canStatusStruct_s sGUISensorCANStatus;
 
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
@@ -412,7 +413,21 @@ void GUI_vGuiPublishThread (void const *argument)
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE: //No break
-				case EVENT_GUI_UPDATE_SYSTEM_INTERFACE:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, NULL);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, NULL);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, &sGUISensorCANStatus);
+					break;
+				}
+				case EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE:
 				{
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, NULL);
 					break;
@@ -1235,6 +1250,18 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			}
 			break;
 		}
+		case MODULE_SENSOR:
+		{
+			if (ePubEvt == EVENT_SEN_CAN_STATUS)
+			{
+				canStatusStruct_s *psSensorCANStatus = pvPayload;
+				memcpy(&sGUISensorCANStatus, psSensorCANStatus, sizeof(canStatusStruct_s));
+
+				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			break;
+		}
 		default:
 			break;
 	}
@@ -1250,6 +1277,9 @@ eAPPError_s GUI_eInitGuiSubs (void)
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiAcquireg), 0) == osOK);
 
 	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_CONTROL, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK);
+
+	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_SEN_CAN_STATUS, GuiQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK);
 
 	return APP_ERROR_SUCCESS;
