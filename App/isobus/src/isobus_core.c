@@ -231,8 +231,10 @@ CREATE_MUTEX(ISO_UpdateMask);
 extern unsigned int POOL_SIZE;
 extern unsigned int PT_PACKAGE_SIZE;
 extern unsigned int EN_PACKAGE_SIZE;
+extern unsigned int ES_PACKAGE_SIZE;
 extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en[];
 extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_pt[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es[];
 
 CREATE_TIMER(AlarmTimeoutTimer, ISO_vTimerCallbackAlarmTimeout);
 CREATE_TIMER(WSMaintenanceTimer, ISO_vTimerCallbackWSMaintenance);
@@ -1074,6 +1076,11 @@ void ISO_vObjectPoolRequestToSend (void)
 			break;
 		}
 		case LANGUAGE_SPANISH:
+		{
+			ISO_vSendRequestToSend(ES_PACKAGE_SIZE);
+			ISO_vInitPointersToTranfer(isoOP_M2GPlus_es, ES_PACKAGE_SIZE);
+			break;
+		}
 		case LANGUAGE_RUSSIAN:
 		case LANGUAGE_ENGLISH:
 		default:
