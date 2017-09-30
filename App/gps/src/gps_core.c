@@ -397,6 +397,7 @@ DECLARE_QUEUE(GPSQueue, QUEUE_SIZEOFGPS);    //!< Declaration of Interface Queue
 CREATE_SIGNATURE(GPS);//!< Signature Declarations
 CREATE_CONTRACT(GPS);//!< Create contract for buzzer msg publication
 CREATE_CONTRACT(GPSMetro);//!< Create contract for buzzer msg publication
+CREATE_CONTRACT(GPSStatus);//!< Create contract for buzzer msg publication
 
 /**
  * Module Threads
@@ -473,7 +474,6 @@ uint16_t wDataByte;
 float GPS_fDistancia;
 uint8_t GPS_bDistanciaPercorrida;
 
-uint8_t bContaSegundo;
 uint8_t bTimeSync;
 
 uint8_t bAlternaBaud = false;
@@ -490,6 +490,7 @@ extern uint32_t CAN_dLeituraSensor;
 extern uint8_t CAN_bSensorSimulador;
 
 GPS_sPubDadosGPS GPS_sPublishGPS;
+GPS_sStatus GPS_sPublishStats;
 
 /******************************************************************************
  * Function Prototypes
@@ -613,9 +614,11 @@ eAPPError_s GPS_eInitGPSPublisher (void)
 	MESSAGE_HEADER(GPS, GPS_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
 	CONTRACT_HEADER(GPS, 1, THIS_MODULE, TOPIC_GPS);
 
-
 	MESSAGE_HEADER(GPSMetro, GPS_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
 	CONTRACT_HEADER(GPSMetro, 1, THIS_MODULE, TOPIC_GPS_METRO);
+
+	MESSAGE_HEADER(GPSStatus, GPS_DEFAULT_MSGSIZE, 1, MT_ARRAYBYTE); // MT_ARRAYBYTE
+	CONTRACT_HEADER(GPSStatus, 1, THIS_MODULE, TOPIC_GPS_STATUS);
 
 	return APP_ERROR_SUCCESS;
 }
@@ -697,6 +700,12 @@ void GPS_vGPSPublishThread (void const *argument)
 		{
 			// Este evento interessa ao modulo ACQUIREG, AQR_vAcquiregManagementThread
 			PUBLISH_MESSAGE(GPS, GPS_FLAG_TIMEOUT_MTR, EVENT_SET, &GPS_sPublishGPS);
+		}
+
+		if ((dValorGPS & GPS_FLAG_STATUS) > 0)
+		{
+			GUI_vItemStatusGPS(&GPS_sPublishStats);
+			PUBLISH_MESSAGE(GPSStatus, GPS_FLAG_STATUS, EVENT_SET, &GPS_sPublishStats);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -876,6 +885,8 @@ void GPS_vConfigExtInterrupt (void)
 void GPS_vGPSTimePulseThread (void const *argument)
 {
 	osFlags dFlags;
+	uint8_t bContaSegundo = 0;
+	uint8_t bConta2S5 = 0;
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("GPS Timepulse Thread Created");
@@ -904,12 +915,18 @@ void GPS_vGPSTimePulseThread (void const *argument)
 			if ((dFlags & GPS_FLAG_INT_TIMEPULSE) > 0)
 			{
 				bContaSegundo++;
+				bConta2S5++;
 
 				if (bContaSegundo > 7)
 				{
 					bContaSegundo = 0;
 
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
+				}
+				if (bConta2S5 > 20)
+				{
+					bConta2S5 = 0;
+					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
 				}
 			}
 			//Acumula a distância percorrida.
@@ -3114,6 +3131,106 @@ void GPS_vGPSManagementThread (void const *argument)
 	/* Unreachable */
 	osThreadSuspend(NULL);
 }
+
+void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
+{
+	static const uint8_t pacModos[][4] = { " NF", "DRO", " 2D", " 3D", "DRC", "TOF" };
+	static const uint8_t pacAntena[][3] = { "IN", "DN", "OK", "SH", "OP" };
+
+	GPS_teFix eGpsFix;
+	GPS_teAnt eStsAnt;
+	int32_t dLat, dLon, dTmp;
+
+	/* latitude */
+	dLat = GPS_sDadosGPS.lLat;
+	psGPSStatus->bLatDir = (dLat < 0) ? 'S':'N';
+
+	dLat = abs(dLat);
+
+	// Pega apenas parte inteira da latitude:
+	dTmp  = dLat / 10000000;
+	dLat -= dTmp * 10000000;
+
+	psGPSStatus->wLatDgr = dTmp;
+
+	// arcmin
+	dLat = ( dLat << 2 ) + ( dLat << 1 ); //dLat *= 6;
+	dTmp  = dLat / 1000000;
+	dLat -= dTmp * 1000000;
+	psGPSStatus->wLatMin = dTmp;
+
+	// arcseg
+	dLat = ( dLat << 2 ) + ( dLat << 1 ); //dLat *= 6;
+	dLat /= 100000;
+	psGPSStatus->wLatSec = dLat;
+
+	/* longitude */
+	dLon = GPS_sDadosGPS.lLon;
+	psGPSStatus->bLonDir = (dLon < 0) ? 'S':'N';
+
+	dLon = abs(dLon);
+
+	// Pega apenas parte inteira da latitude:
+	dTmp  = dLon / 10000000;
+	dLon -= dTmp * 10000000;
+
+	psGPSStatus->wLonDgr = dTmp;
+
+	// arcmin
+	dLon = ( dLon << 2 ) + ( dLon << 1 ); //dLat *= 6;
+	dTmp  = dLon / 1000000;
+	dLon -= dTmp * 1000000;
+	psGPSStatus->wLonMin = dTmp;
+
+			// arcseg
+	dLon = ( dLon << 2 ) + ( dLon << 1 ); //dLat *= 6;
+	dLon /= 100000;
+	psGPSStatus->wLonSec = dLon;
+
+	/* PDOP */
+	psGPSStatus->dPDOP = GPS_sDadosGPS.wPDOP; //0.01f
+
+	/* NSV */
+	psGPSStatus->bNSV = GPS_sDadosGPS.bNSV;
+
+	/* MODE */
+	memcpy(psGPSStatus->bMode, &pacModos[ GPS_sDadosGPS.eGpsFix ], 3);
+
+	if (GPS_sDadosGPS.eGpsFix == No_Fix)
+	{
+		psGPSStatus->dERRP = 0;
+		psGPSStatus->dERRV = 0;
+	}
+	else
+	{
+		/* ERRP Erro estimado de Posição*/
+		psGPSStatus->dERRP = GPS_sDadosGPS.dHAcc; //0.001f
+
+		/* ERRV - Erro estimado de Velocidade */
+		psGPSStatus->dERRV = GPS_sDadosGPS.dSpeedAcc; // 0.01f
+	}
+	/* Antena */
+	memcpy(psGPSStatus->bAnt, &pacAntena[ GPS_sDadosGPS.eStsAntena ], 2);
+
+	/* Velocidade */
+	psGPSStatus->dModVel = GPS_sDadosGPS.dGroundSpeed;
+/*
+	float fModVel = GPS_sDadosGPS.dGroundSpeed;
+	fModVel *= 36.0f;
+	float fVel = (float)GUI_fConvertUnit(fModVel,
+		GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
+
+	psGPSStatus->dModVel = (uint32_t)roundf(fVel * 10);*/
+
+	/* BBRAM */
+	memcpy(psGPSStatus->bBBRAM, (GPS_sDadosGPS.bBateria) ? " OK" : "NOK", 3);
+
+	/* vERfw */
+	psGPSStatus->vVerFW = (GPS_sDadosGPS.bSwVersion[0] - 0x30) * 100 +
+			(GPS_sDadosGPS.bSwVersion[2] - 0x30) * 10 + GPS_sDadosGPS.bSwVersion[3] - 0x30;
+}
+
+
 #else
 void GPS_vGPSManagementThread (void const *argument)
 {}

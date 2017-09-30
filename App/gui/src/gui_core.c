@@ -55,6 +55,8 @@ DECLARE_QUEUE(GuiQueue, QUEUE_SIZEOFGUI);      //!< Declaration of Interface Que
 CREATE_SIGNATURE(GuiIsobus);//!< Signature Declarations
 CREATE_SIGNATURE(GuiAcquireg);
 CREATE_SIGNATURE(GuiControl);
+CREATE_SIGNATURE(GuiGPS);
+
 
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 CREATE_CONTRACT(GuiPubAquireg);
@@ -98,6 +100,7 @@ static canStatusStruct_s sGUISensorCANStatus;
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
 static uint64_t dBitsNoSeed = 0;
+GPS_sStatus GUI_sGPSStats;
 
 /******************************************************************************
  * Module typedef
@@ -130,6 +133,7 @@ void GUI_vUptTestMode(void);
 void GUI_vUptPlanter(void);
 void GUI_vUptReplaceSensor(tsPubSensorReplacement *);
 void GUI_vUptSetUnit(GUI_tsConfig *psCfg);
+double GUI_fConvertUnit (double gValue, uint32_t dFlags);
 
 /******************************************************************************
  * Function Definitions
@@ -1249,7 +1253,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				GUI_vUptReplaceSensor(psTrocaSensor);
 			}
 			break;
-		}
+		}		
 		case MODULE_SENSOR:
 		{
 			if (ePubEvt == EVENT_SEN_CAN_STATUS)
@@ -1259,6 +1263,25 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
+			break;
+		}
+case MODULE_GPS:
+		{
+			if (ePubEvt == GPS_FLAG_STATUS)
+			{
+				GPS_sStatus *psGPSStats = pvPayload;
+				GUI_sGPSStats = *psGPSStats;
+				//Convert Velocidade
+				float fModVel = GUI_sGPSStats.dModVel;
+				fModVel *= 36.0f;
+				float fVel = (float)GUI_fConvertUnit(fModVel,
+																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
+
+				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
+				ePubEvt = EVENT_GUI_ALARM_TOLERANCE;
+								PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+
 			}
 			break;
 		}
@@ -1279,8 +1302,11 @@ eAPPError_s GUI_eInitGuiSubs (void)
 	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_CONTROL, GuiQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK);
 
+	SIGNATURE_HEADER(GuiGPS, THIS_MODULE, TOPIC_GPS_STATUS, GuiQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiGPS), 0) == osOK); 
+
 	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_SEN_CAN_STATUS, GuiQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK);
+	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK); 
 
 	return APP_ERROR_SUCCESS;
 }
@@ -2093,3 +2119,5 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 
 	*dMaxSpeed = (uint32_t) roundf(fVel * 10);
 }
+
+
