@@ -3867,12 +3867,17 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					}
 
 					//----------------------------------------------------------------------------
-					//Arredonda Distância para Avaliação
 
+					if (GPS_bDistanciaPercorrida==0 || AQR_bDistanciaPercorrida == 0)
+					{
+						wPtrAux = 0;
+					}
+					//Arredonda Distância para Avaliação
 					//Arredonda variável de avaliação para um número inteiro.
-					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100) / GPS_bDistanciaPercorrida;
+					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100) / AQR_bDistanciaPercorrida;
 					AQR_sStatus.wAvaliaArred = ((AQR_sStatus.wAvaliaArred + 5) / 10);
 					GPS_bDistanciaPercorrida = 0;
+					AQR_bDistanciaPercorrida = 0;
 
 					//Se a posição de retirado do buffer for zero, Aponta para o fim
 					if (sSegmentos.wPosRet == 0)

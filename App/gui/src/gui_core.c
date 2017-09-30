@@ -1352,25 +1352,26 @@ int32_t GUI_dGetBarGraphValue (float fAverage)
 	uint8_t bTolerance = sSISConfiguration.sMonitor.bTolerancia;
 	int32_t dValue = 0;
 
-	if((fabsf(fAverage)) <= bTolerance)
+	fAverage = roundf(fabsf(fAverage));
+	if(fAverage <= bTolerance)
 	{
 		dValue = 0;
-	} else if(((fabsf(fAverage)) > bTolerance) && ((fabsf(fAverage)) <= (1.5f *bTolerance)))
+	} else if((fAverage > bTolerance) && (fAverage <= (1.5f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 30 : -30;
-	} else if(((fabsf(fAverage)) > (1.5f *bTolerance)) && ((fabsf(fAverage)) <= (2.0f *bTolerance)))
+	} else if((fAverage > (1.5f *bTolerance)) && (fAverage <= (2.0f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 44 : -44;
-	} else if(((fabsf(fAverage)) > (2.0f *bTolerance)) && ((fabsf(fAverage)) <= (2.5f *bTolerance)))
+	} else if((fAverage > (2.0f *bTolerance)) && (fAverage <= (2.5f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 58 : -58;
-	} else if(((fabsf(fAverage)) > (2.5f *bTolerance)) && ((fabsf(fAverage)) <= (3.0f *bTolerance)))
+	} else if((fAverage > (2.5f *bTolerance)) && (fAverage <= (3.0f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 72 : -72;
-	} else if(((fabsf(fAverage)) > (3.0f *bTolerance)) && ((fabsf(fAverage)) <= (3.5f *bTolerance)))
+	} else if((fAverage > (3.0f *bTolerance)) && (fAverage <= (3.5f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 82 : -82;
-	} else if(((fabsf(fAverage)) > (3.5f *bTolerance)))
+	} else if(((fAverage) > (3.5f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 100 : -100;
 	}
@@ -1639,14 +1640,14 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 	// If imperial mode, convert to seeds per feet:
 	if (GUI_sConfig.bSistImperial != false)
 	{
-		fSem = GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f;
+		dSem = (uint32_t)roundf(GUI_fConvertUnit(fSem, GUI_dCONV(GUI_dFEETS, GUI_dMETERS)) * 100.0f);
 	}
 	else
 	{
-		fSem = fSem * 100.0f;
+		dSem = (uint32_t)roundf(fSem * 100.0f);
 	}
 
-	dSem = (uint32_t)roundf(fSem);
+	fSem = roundf(fSem * 100.0f);
 
 	//--------------------------------------------------------------------------
 	// Barra lateral:
@@ -1655,15 +1656,12 @@ void GUI_vLinesPartialPopulation (uint32_t dNumSensor, int32_t* dsAverage, uint3
 		float fMedia = 0.0f;
 		uint32_t dMetaPop = psMonitor->wSementesPorMetro;
 
-		//Arredonda
-		fSem *= 100.0f;
-		fSem = (((uint32_t)fSem + 5) / 10) * 10;
 
 		if (dMetaPop > 0)
 		{
 			// multiplica fSem por 10 para compensar dMetaPop ser sem/m * 10
 			fMedia = fSem * 10.0f;
-			fMedia = (fMedia / dMetaPop) - 100.0f;
+			fMedia = (fMedia / (float)dMetaPop) - 100.0f;
 			if (psMonitor->bTolerancia > 0)
 			{
 				fMedia = (fMedia / (float)psMonitor->bTolerancia * 20.0f);
@@ -2049,7 +2047,7 @@ void GUI_vSpeedInfos (uint32_t* dSpeedKm, uint32_t* dSpeedHa, uint32_t* dTEV, ui
 			GUI_dCONV(GUI_dMETERS, GUI_sConfig.bAreaTrabalhada));
 
 	// Gets the speed in hectares per hour
-	*dSpeedHa = (uint32_t) fVel;
+	*dSpeedHa = (uint32_t) roundf(fVel * 100);
 
 	// Total (TEV)
 	*dTEV = (uint32_t) AQR_sVelocidade.dTEV;
