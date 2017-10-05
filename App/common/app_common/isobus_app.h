@@ -181,6 +181,7 @@ typedef enum
 	LINE_ALARM_NONE,
 	LINE_ALARM_TOLERANCE,
 	LINE_ALARM_NO_SEED,
+	LINE_IGNORED,
 } eLineAlarm;
 
 typedef struct sConfigurationData

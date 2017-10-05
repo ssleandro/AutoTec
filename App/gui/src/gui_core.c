@@ -96,6 +96,7 @@ static canStatusStruct_s sGUISensorCANStatus;
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
 static uint64_t dBitsNoSeed = 0;
+static uint64_t dBitsIgnoredLines = 0;
 GPS_sStatus GUI_sGPSStats;
 
 /******************************************************************************
@@ -275,6 +276,8 @@ void GUI_vGetValuesToPlanterDataMask (void)
 									((uint64_t)(GUI_sStatus.dSementeFalhaIHMExt | GUI_sStatus.dAduboFalhaExt) << 32));
 	dBitsNoSeed = (GUI_sStatus.dMemLinhaDesconectada | GUI_sStatus.dSementeZeroIHM |
 								 ((uint64_t)(GUI_sStatus.dMemLinhaDesconectadaExt | GUI_sStatus.dSementeZeroIHMExt) << 32));
+	dBitsIgnoredLines = (GUI_sStatus.dSementeIgnorado | GUI_sStatus.dAduboIgnorado |
+								 ((uint64_t)(GUI_sStatus.dSementeIgnoradoExt | GUI_sStatus.dAduboIgnoradoExt) << 32));
 
 	for (uint8_t dNumSensor = 0; dNumSensor < sSISConfiguration.sMonitor.bNumLinhas; dNumSensor++)
 	{
@@ -283,7 +286,10 @@ void GUI_vGetValuesToPlanterDataMask (void)
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerHa,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineTotalSeeds);
 
-		if (dBitsNoSeed & (1 << dNumSensor))
+		if (dBitsIgnoredLines & (1 << dNumSensor))
+		{
+			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_IGNORED;
+		}	else if (dBitsNoSeed & (1 << dNumSensor))
 		{
 			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_ALARM_NO_SEED;
 		} else if (dBitsTolerance & (1 << dNumSensor))
@@ -1387,15 +1393,15 @@ int32_t GUI_dGetBarGraphValue (float fAverage)
 	int32_t dValue = 0;
 
 	fAverage = roundf(fabsf(fAverage));
-	if(fAverage == 0)
+	if(fAverage <= 2)
 	{
 		dValue = 0;
-	} else if((fAverage > bTolerance) && (fAverage <= (0.5f *bTolerance)))
+	} else if((fAverage > 2) && (fAverage <= (0.5f *bTolerance)))
 	{
-		dValue = (bAboveAverage) ? 12 : -12;
+		dValue = (bAboveAverage) ? 17 : -17;
 	} else if((fAverage > (0.5f *bTolerance)) && (fAverage <= bTolerance))
 	{
-		dValue = (bAboveAverage) ? 25 : -25;
+		dValue = (bAboveAverage) ? 35 : -35;
 	} else if((fAverage > bTolerance) && (fAverage <= (1.5f *bTolerance)))
 	{
 		dValue = (bAboveAverage) ? 50 : -50;

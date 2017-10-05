@@ -2791,8 +2791,8 @@ void ISO_vUpdateInstallationDataMask (void)
 
 void ISO_vUpdateAlarmStatus (uint8_t bNumLine, eLineAlarm eAlarmStatus)
 {
-	uint8_t bColor = (eAlarmStatus == LINE_ALARM_NO_SEED) ? COLOR_RED : ((eAlarmStatus == LINE_ALARM_TOLERANCE) ? COLOR_OLIVE : COLOR_BLACK);
-	uint16_t wRectID = (bColor == COLOR_BLACK) ? LA_PLANT_DEFAULT_LINE : ((bColor == COLOR_RED) ? LA_PLANT_ALARM_RED : LA_PLANT_ALARM_YELLOW);
+	uint8_t bColor = (eAlarmStatus == LINE_ALARM_NO_SEED) ? COLOR_RED : ((eAlarmStatus == LINE_ALARM_TOLERANCE) ? COLOR_OLIVE : (eAlarmStatus == LINE_IGNORED) ? COLOR_GREY :COLOR_BLACK);
+	uint16_t wRectID = (bColor == COLOR_BLACK) ? LA_PLANT_DEFAULT_LINE : ((bColor == COLOR_RED) ? LA_PLANT_ALARM_RED : (bColor == COLOR_GREY)?LA_PLANT_IGNORED_LINE : LA_PLANT_ALARM_YELLOW);
 	ISO_vChangeAttributeCommand(BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, bColor);
 	ISO_vChangeAttributeCommand(BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_BAR_GRAPH_COLOUR_ATTRIBUTE, bColor);
 	ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_RECTANGLE_LINE_ATTRIBUTE, wRectID);
