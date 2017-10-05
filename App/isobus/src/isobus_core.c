@@ -150,9 +150,10 @@ const sPlanterDataMask sPlanterMask =
 		.psMaxSpeed = &(asNumVarObjects[239]),
 	};
 
+static eSelectedCANStatus* eCANSelectedStatus = &asConfigInputList[4].bSelectedIndex;
 static canStatusStruct_s sCANIsobusStatus;
 static canStatusStruct_s sCANSensorStatus;
-static eSelectedCANStatus* eCANSelectedStatus = &asConfigInputList[4].bSelectedIndex;
+static GPS_sStatus sISOGPSStatus;
 
 #ifndef UNITY_TEST
 DECLARE_QUEUE(IsobusQueue, QUEUE_SIZEOFISOBUS);     //!< Declaration of Interface Queue
@@ -437,6 +438,7 @@ void ISO_vIsobusPublishThread (void const *argument)
 				case EVENT_ISO_INSTALLATION_REPLACE_SENSOR:
 				case EVENT_ISO_INSTALLATION_CONFIRM_REPLACE_SENSOR:
 				case EVENT_ISO_INSTALLATION_CANCEL_REPLACE_SENSOR:
+				case EVENT_ISO_CONFIG_GET_MEMORY_USED:
 				{
 					PUBLISH_MESSAGE(Isobus, ePubEvt, EVENT_SET, NULL);
 					break;
@@ -592,6 +594,10 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE:
 				{
+					if (pvPayData == NULL)
+						return;
+
+					sISOGPSStatus = *((GPS_sStatus*) pvPayData);
 					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 					break;
 				}
@@ -1863,8 +1869,26 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 	}
 }
 
-void ISO_vUpdateStringVariable (uint8_t* pbNewStrValue)
+void ISO_vUpdateStringVariable (uint16_t wStrVarID, uint8_t* pbNewStrValue, uint16_t wNumBytes)
 {
+	ISOBUSMsg sSendMsg;
+
+	if (pbNewStrValue == NULL)
+		return;
+
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.dlc = 8;
+
+	sSendMsg.frame.data[0] = FUNC_CHANGE_STRING_VALUE;
+	sSendMsg.frame.data[1] = wStrVarID & 0xFF;
+	sSendMsg.frame.data[2] = (wStrVarID & 0xFF00) >> 8;
+	sSendMsg.frame.data[3] = wNumBytes & 0xFF;
+	sSendMsg.frame.data[4] = (wNumBytes & 0xFF00) >> 8;
+	sSendMsg.frame.data[5] = pbNewStrValue[0];
+	sSendMsg.frame.data[6] = pbNewStrValue[1];
+	sSendMsg.frame.data[7] = pbNewStrValue[2];
+
+	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
 }
 
 void ISO_vTreatButtonActivation (uint16_t wObjectID)
@@ -1961,7 +1985,8 @@ void ISO_vTreatButtonActivation (uint16_t wObjectID)
 				{
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
 					ISO_vChangeActiveMask(DATA_MASK_INSTALLATION);
-				} else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
+				}
+				else if ((eConfigMaskFromX == DATA_MASK_PLANTER) && ((*sConfigDataMask.eMonitor) != AREA_MONITOR_ENABLED))
 				{
 					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
 					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
@@ -1994,7 +2019,8 @@ void ISO_vTreatButtonActivation (uint16_t wObjectID)
 				if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
 				{
 					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, false);
-				} else
+				}
+				else
 				{
 					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
 				}
@@ -2184,6 +2210,14 @@ void ISO_vTreatButtonActivation (uint16_t wObjectID)
 			ISO_vHideShowContainerCommand(CO_REPLACE_SENSOR_ACCEPT, false);
 			ePubEvt = (wObjectID == ISO_BUTTON_REPLACE_SENSOR_ACCEPT_ID) ? EVENT_ISO_INSTALLATION_CONFIRM_REPLACE_SENSOR :
 																		   EVENT_ISO_INSTALLATION_CANCEL_REPLACE_SENSOR;
+			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			break;
+		}
+		case ISO_BUTTON_CONFIG_MEMORY_TAB_ID:
+		{
+			ePubEvt = EVENT_ISO_CONFIG_GET_MEMORY_USED;
 			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
@@ -2936,6 +2970,27 @@ void ISO_vUpdateSystemGPSMask (void)
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
+	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_LAT_DIRECTION, &sISOGPSStatus.bLatDir, sizeof(sISOGPSStatus.bLatDir));
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_DEGREES, sISOGPSStatus.wLatDgr);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_MINUTES, sISOGPSStatus.wLatDgr);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_SECONDS, sISOGPSStatus.wLatDgr);
+	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_LNG_DIRECTION, &sISOGPSStatus.bLonDir, sizeof(sISOGPSStatus.bLonDir));
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_DEGREES, sISOGPSStatus.wLonDgr);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_MINUTES, sISOGPSStatus.wLonDgr);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_SECONDS, sISOGPSStatus.wLonDgr);
+
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_PDOP, sISOGPSStatus.dPDOP);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_NSV, sISOGPSStatus.bNSV);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_ERRP, sISOGPSStatus.dERRP);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_ERRV, sISOGPSStatus.dERRV);
+
+	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_MODE, sISOGPSStatus.bMode, sizeof(sISOGPSStatus.bMode));
+	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_ANT, sISOGPSStatus.bAnt, sizeof(sISOGPSStatus.bAnt));
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_SPEED, sISOGPSStatus.dModVel);
+
+	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_ANT, sISOGPSStatus.bBBRAM, sizeof(sISOGPSStatus.bBBRAM));
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_VER_FW, sISOGPSStatus.vVerFW);
+
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = RELEASE_MUTEX(ISO_UpdateMask);
 	ASSERT(status == osOK);
@@ -2963,7 +3018,6 @@ void ISO_vUpdateSystemCANMask (void)
 			ISO_vChangeNumericValue(ON_SYSTEM_CAN_PASS_ERR_COUNT, sCANIsobusStatus.dErrorPassive);
 			ISO_vChangeNumericValue(ON_SYSTEM_CAN_WARN_ERR_COUNT, sCANIsobusStatus.dErrorWarning);
 			ISO_vChangeNumericValue(ON_SYSTEM_CAN_BUS_OFF_ERR_COUNT, sCANIsobusStatus.dBusError);
-
 			break;
 		}
 		case CAN_STATUS_SENSORS:

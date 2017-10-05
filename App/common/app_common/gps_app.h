@@ -207,8 +207,8 @@ typedef struct
 	uint16_t wLatSec;
 	uint16_t wLonDgr;
 	uint16_t wLonMin;
-	uint16_t vVerFW;
 	uint16_t wLonSec;
+	uint16_t vVerFW;
 	uint8_t bLatDir;
 	uint8_t bLonDir;
 	uint8_t bNSV;

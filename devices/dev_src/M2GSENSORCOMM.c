@@ -619,10 +619,6 @@ void M2GSEN_vSetStatus(eCANStatus_s eErrorCode)
 	sMCU_CANSensor_Status.wBaudRateKbps = M2GSENSORCOMM_CAN_BITRATE / 1000;
 	sMCU_CANSensor_Status.bRxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
 	sMCU_CANSensor_Status.bTxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
-//	if (sMCU_CAN_Status.bTxError > 0)
-//	{
-//		eErrorCode = 0;
-//	}
 
 	if (eErrorCode & (CAN_STAT_STUFFERROR | CAN_STAT_FORMERROR | CAN_STAT_CRCERROR))
 	{

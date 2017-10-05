@@ -423,7 +423,7 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE:
 				{
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, NULL);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, &GUI_sGPSStats);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE:
@@ -609,6 +609,13 @@ void GUI_vGuiPublishThread (void const *argument)
 				{
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sPubReplacState);
+					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
+					break;
+				}
+				case EVENT_GUI_CONFIG_GET_MEMORY_USED:
+				{
+					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
@@ -1099,6 +1106,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 
+			if (ePubEvt == EVENT_ISO_CONFIG_GET_MEMORY_USED)
+			{
+				ePubEvt = EVENT_GUI_CONFIG_GET_MEMORY_USED;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+			}
 			break;
 		}
 		case MODULE_CONTROL:
@@ -1266,7 +1278,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			}
 			break;
 		}
-case MODULE_GPS:
+		case MODULE_GPS:
 		{
 			if (ePubEvt == GPS_FLAG_STATUS)
 			{
@@ -1279,9 +1291,8 @@ case MODULE_GPS:
 																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
 
 				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
-				ePubEvt = EVENT_GUI_ALARM_TOLERANCE;
-								PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
-
+				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
+				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
 			}
 			break;
 		}
