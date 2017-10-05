@@ -534,6 +534,7 @@ uint32_t M2GSEN_write (struct peripheral_descriptor_s* const this,
 		sCANMessage.id = wCANSendID | CAN_ID_IDE_Msk;
 		sCANMessage.dlc = 0;
 		/* Send CAN frame */
+		sMCU_CANSensor_Status.wTxCount++;
 		CAN_vSendMessage(&sMCU_CAN_Handle, sCANMessage);
 		return 0;
 	}
