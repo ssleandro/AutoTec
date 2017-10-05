@@ -57,15 +57,11 @@ CREATE_SIGNATURE(GuiAcquireg);
 CREATE_SIGNATURE(GuiControl);
 CREATE_SIGNATURE(GuiGPS);
 
-
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 CREATE_CONTRACT(GuiPubAquireg);
 
-CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 16);
-
+CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 64);
 CREATE_MUTEX(GUI_UpdateMask);
-
-
 
 eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
 
@@ -135,12 +131,13 @@ void GUI_vUptReplaceSensor(tsPubSensorReplacement *);
 void GUI_vUptSetUnit(GUI_tsConfig *psCfg);
 double GUI_fConvertUnit (double gValue, uint32_t dFlags);
 
+void GUI_vGuiThreadPutEventOnGuiPublishQ (event_e eEvt);
+
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
 void GUI_vUptSetUnit(GUI_tsConfig *psCfg)
 {
-
 	if (psCfg->bSistImperial == false)
 	{
 		psCfg->bVelocidade = GUI_dKILOMETERS;
@@ -155,7 +152,6 @@ void GUI_vUptSetUnit(GUI_tsConfig *psCfg)
 		psCfg->bTxtDistPerc = GUI_eAbbrMeters;
 
 		psCfg->bTxtSemPorDist = GUI_eAbbrSeedPerHectare;
-
 	}
 	else
 	{
@@ -183,7 +179,6 @@ void GUI_vUptSetUnit(GUI_tsConfig *psCfg)
 		psCfg->bCharFrac = ',';
 		psCfg->bCharMilhar = '.';
 	}
-
 }
 
 uint8_t * GUI_WDTData (uint8_t * pbNumberOfThreads)
@@ -222,14 +217,13 @@ eAPPError_s GUI_eInitGuiPublisher (void)
 	MESSAGE_HEADER(GuiPubAquireg, 1, GUI_DEFAULT_MSGSIZE, MT_ARRAYBYTE); // MT_ARRAYBYTE
 	CONTRACT_HEADER(GuiPubAquireg, 1, THIS_MODULE, TOPIC_GUI_AQR);
 
-
 	return APP_ERROR_SUCCESS;
 }
 
 void GUI_vUptTestMode(void)
 {
 	event_e ePubEvt = EVENT_GUI_UPDATE_TEST_MODE_INTERFACE;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_vRandomValuesToPlanterDataMask (void)
@@ -315,7 +309,7 @@ void GUI_vUptPlanter (void)
 {
 	event_e ePubEvt = EVENT_GUI_UPDATE_PLANTER_INTERFACE;
 	GUI_vGetValuesToPlanterDataMask();
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_vUptReplaceSensor(tsPubSensorReplacement *sSensorReplac)
@@ -327,7 +321,7 @@ void GUI_vUptReplaceSensor(tsPubSensorReplacement *sSensorReplac)
 		return;
 
 	sPubReplacState = *sSensorReplac;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_vGuiPublishThread (void const *argument)
@@ -501,122 +495,88 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_PLANTER_IGNORE_SENSOR:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sIgnoreStatus);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, &GUI_sTrimmState);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_AREA_MONITOR_PAUSE:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_ALARM_NEW_SENSOR:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
 				case EVENT_GUI_ALARM_LINE_FAILURE:
 				case EVENT_GUI_ALARM_SETUP_FAILURE:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
 				case EVENT_GUI_ALARM_GPS_FAILURE:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_ALARM_TOLERANCE:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
 					ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sSISConfiguration);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_REPLACE_SENSOR:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(GuiPubAquireg, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_UPDATE_REPLACE_SENSOR:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sPubReplacState);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				case EVENT_GUI_CONFIG_GET_MEMORY_USED:
 				{
-					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
-					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 					break;
 				}
 				default:
@@ -626,6 +586,13 @@ void GUI_vGuiPublishThread (void const *argument)
 
 	}
 	osThreadTerminate(NULL);
+}
+
+void GUI_vGuiThreadPutEventOnGuiPublishQ (event_e eEvt)
+{
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	PUT_LOCAL_QUEUE(GuiPublishQ, eEvt, osWaitForever);
+	WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 }
 
 void GUI_vSetGuiTestData(event_e eEvt, void* vPayload)
@@ -650,7 +617,7 @@ void GUI_vSetGuiTestData(event_e eEvt, void* vPayload)
 
 void GUI_SetGuiConfiguration(void)
 {
-	event_e ePublish;
+	event_e ePubEvt;
 
 	GUIConfigurationData.bNumOfRows = sSISConfiguration.sMonitor.bNumLinhas;
 	GUIConfigurationData.bTolerance = sSISConfiguration.sMonitor.bTolerancia;
@@ -680,13 +647,13 @@ void GUI_SetGuiConfiguration(void)
 		GUIConfigurationData.wImplementWidth = MM2IN(sSISConfiguration.sMonitor.wLargImpl);
 		GUIConfigurationData.wDistBetweenLines = MM2IN(sSISConfiguration.sMonitor.wDistLinhas);
 	}
-	ePublish = EVENT_GUI_UPDATE_CONFIG;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
+	ePubEvt = EVENT_GUI_UPDATE_CONFIG;
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_SetSisConfiguration(void)
 {
-	event_e ePublish;
+	event_e ePubEvt;
 
 	sSISConfiguration.sMonitor.bNumLinhas = GUIConfigurationData.bNumOfRows;
 	sSISConfiguration.sMonitor.bTolerancia = GUIConfigurationData.bTolerance;
@@ -777,8 +744,8 @@ void GUI_SetSisConfiguration(void)
 		}
 	}
 
-	ePublish = EVENT_GUI_UPDATE_SYS_CONFIG;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePublish, osWaitForever);
+	ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_InitSensorStatus (void)
@@ -798,7 +765,7 @@ void GUI_InitSensorStatus (void)
 		}
 	}
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
@@ -862,12 +829,12 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 		}
 	}
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 
 	if (bAlarmIntSensor)
 	{
 		ePubEvt = EVENT_GUI_ALARM_NEW_SENSOR;
-		PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+		GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 	}
 }
 
@@ -875,7 +842,7 @@ void GUI_vCheckPassword (uint32_t wPassword)
 {
 	event_e ePubEvt;
 	ePubEvt = (wPassword == sSISConfiguration.sIHM.wPasswd) ? EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK : EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK;
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_vChangePassword (uint32_t wNewPasswd)
@@ -886,14 +853,14 @@ void GUI_vChangePassword (uint32_t wNewPasswd)
 	{
 		sSISConfiguration.sIHM.wPasswd = wNewPasswd;
 		ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
-		PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+		GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 		osDelay(20);
 		ePubEvt = EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK;
 	} else
 	{
 		ePubEvt = EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK;
 	}
-	PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
 void GUI_vIdentifyEvent (contract_s* contract)
@@ -930,7 +897,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagClear(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
-					PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 				}
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
@@ -962,13 +929,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA)
 			{
 				ePubEvt = EVENT_GUI_UPDATE_CONFIG;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_REPEAT_TEST)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
@@ -986,7 +953,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_ISO_INSTALLATION_ERASE_INSTALLATION)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_ERASE_INSTALLATION;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = WAIT_MUTEX(GUI_UpdateMask, osWaitForever);
@@ -1004,19 +971,19 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL)
 			{
 				ePubEvt = EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL)
 			{
 				ePubEvt = EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_PLANTER_IGNORE_SENSOR)
@@ -1025,7 +992,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				memcpy(&GUI_sIgnoreStatus, psIgnLine, sizeof(sIgnoreLineStatus));
 
 				ePubEvt = EVENT_GUI_PLANTER_IGNORE_SENSOR;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE)
@@ -1034,13 +1001,13 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				memcpy(&GUI_sTrimmState, psTrimm, sizeof(sTrimmingState));
 
 				ePubEvt = EVENT_GUI_TRIMMING_TRIMMING_MODE_CHANGE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_AREA_MONITOR_PAUSE)
 			{
 				ePubEvt = EVENT_GUI_AREA_MONITOR_PAUSE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_ALARM_CLEAR_ALARM)
@@ -1080,7 +1047,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				GUI_SetGuiConfiguration();
 
 				ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
@@ -1091,25 +1058,25 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_ISO_INSTALLATION_REPLACE_SENSOR)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_REPLACE_SENSOR;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CONFIRM_REPLACE_SENSOR)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_INSTALLATION_CANCEL_REPLACE_SENSOR)
 			{
 				ePubEvt = EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 
 			if (ePubEvt == EVENT_ISO_CONFIG_GET_MEMORY_USED)
 			{
 				ePubEvt = EVENT_GUI_CONFIG_GET_MEMORY_USED;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			break;
 		}
@@ -1139,7 +1106,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 						if (ePubEvType == EVENT_CLEAR)
 						{
 							ePubEvt = EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK;
-							PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+							GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 						}
 
 						//ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
@@ -1182,7 +1149,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				// Update test mode data mask number of sensors installed, number of sensors configured
 				GUI_vSetGuiTestData(ePubEvt, pvPayload);
 				ePubEvt = EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
@@ -1227,37 +1194,37 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_AQR_ALARM_NEW_SENSOR)
 			{
 				ePubEvt = EVENT_AQR_ALARM_NEW_SENSOR;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_DISCONNECTED_SENSOR)
 			{
 				ePubEvt = EVENT_GUI_ALARM_DISCONNECTED_SENSOR;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_LINE_FAILURE)
 			{
 				ePubEvt = EVENT_GUI_ALARM_LINE_FAILURE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_SETUP_FAILURE)
 			{
 				ePubEvt = EVENT_GUI_ALARM_SETUP_FAILURE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_EXCEEDED_SPEED)
 			{
 				ePubEvt = EVENT_GUI_ALARM_EXCEEDED_SPEED;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_GPS_FAILURE)
 			{
 				ePubEvt = EVENT_GUI_ALARM_GPS_FAILURE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_ALARM_TOLERANCE)
 			{
 				ePubEvt = EVENT_GUI_ALARM_TOLERANCE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			if (ePubEvt == EVENT_AQR_INSTALLATION_SENSOR_REPLACE)
 			{
@@ -1274,7 +1241,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				memcpy(&sGUISensorCANStatus, psSensorCANStatus, sizeof(canStatusStruct_s));
 
 				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			break;
 		}
@@ -1282,17 +1249,17 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == GPS_FLAG_STATUS)
 			{
-				GPS_sStatus *psGPSStats = pvPayload;
-				GUI_sGPSStats = *psGPSStats;
-				//Convert Velocidade
-				float fModVel = GUI_sGPSStats.dModVel;
-				fModVel *= 36.0f;
-				float fVel = (float)GUI_fConvertUnit(fModVel,
-																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
-
-				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
-				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
-				PUT_LOCAL_QUEUE(GuiPublishQ, ePubEvt, osWaitForever);
+//				GPS_sStatus *psGPSStats = pvPayload;
+//				GUI_sGPSStats = *psGPSStats;
+//				//Convert Velocidade
+//				float fModVel = GUI_sGPSStats.dModVel;
+//				fModVel *= 36.0f;
+//				float fVel = (float)GUI_fConvertUnit(fModVel,
+//																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
+//
+//				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
+//				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
+//				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			break;
 		}
@@ -1420,29 +1387,28 @@ int32_t GUI_dGetBarGraphValue (float fAverage)
 	int32_t dValue = 0;
 
 	fAverage = roundf(fabsf(fAverage));
-	if(fAverage <= bTolerance)
+	if(fAverage == 0)
 	{
 		dValue = 0;
+	} else if((fAverage > bTolerance) && (fAverage <= (0.5f *bTolerance)))
+	{
+		dValue = (bAboveAverage) ? 12 : -12;
+	} else if((fAverage > (0.5f *bTolerance)) && (fAverage <= bTolerance))
+	{
+		dValue = (bAboveAverage) ? 25 : -25;
 	} else if((fAverage > bTolerance) && (fAverage <= (1.5f *bTolerance)))
 	{
-		dValue = (bAboveAverage) ? 30 : -30;
+		dValue = (bAboveAverage) ? 50 : -50;
 	} else if((fAverage > (1.5f *bTolerance)) && (fAverage <= (2.0f *bTolerance)))
 	{
-		dValue = (bAboveAverage) ? 44 : -44;
+		dValue = (bAboveAverage) ? 65 : -65;
 	} else if((fAverage > (2.0f *bTolerance)) && (fAverage <= (2.5f *bTolerance)))
 	{
-		dValue = (bAboveAverage) ? 58 : -58;
-	} else if((fAverage > (2.5f *bTolerance)) && (fAverage <= (3.0f *bTolerance)))
-	{
-		dValue = (bAboveAverage) ? 72 : -72;
-	} else if((fAverage > (3.0f *bTolerance)) && (fAverage <= (3.5f *bTolerance)))
-	{
-		dValue = (bAboveAverage) ? 82 : -82;
-	} else if(((fAverage) > (3.5f *bTolerance)))
+		dValue = (bAboveAverage) ? 80 : -80;
+	} else
 	{
 		dValue = (bAboveAverage) ? 100 : -100;
 	}
-
 	return dValue;
 }
 
