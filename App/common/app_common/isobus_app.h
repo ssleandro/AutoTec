@@ -181,6 +181,7 @@ typedef enum
 	LINE_ALARM_NONE,
 	LINE_ALARM_TOLERANCE,
 	LINE_ALARM_NO_SEED,
+	LINE_IGNORED,
 } eLineAlarm;
 
 typedef struct sConfigurationData
@@ -203,8 +204,6 @@ typedef struct sConfigurationData
 
 typedef struct sConfigurationDataMask
 {
-	eSelectedLanguage* eLanguage;
-	eSelectedUnitMeasurement* eUnit;
 	uint32_t* dVehicleID;
 	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;
@@ -218,6 +217,18 @@ typedef struct sConfigurationDataMask
 	eAlternateRows* eAlterRows;
 	eAlternatedRowsType* eAltType;
 } sConfigurationDataMask;
+
+typedef struct sLanguageCommandData
+{
+	eSelectedLanguage eLanguage;
+	eSelectedUnitMeasurement eUnit;
+} sLanguageCommandData;
+
+typedef enum eSelectedCANStatus
+{
+	CAN_STATUS_ISOBUS,
+	CAN_STATUS_SENSORS
+} eSelectedCANStatus;
 
 typedef struct sNumberVariableObj
 {

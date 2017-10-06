@@ -148,6 +148,7 @@ CAN_tsCtrlListaSens AQR_sPubCtrlLista;
 tsAcumulados AQR_sPubAcumulado;
 tsStatus AQR_sPubStatus;
 tsPubPlantData AQR_sPubPlantData;
+tsPubSensorReplacement AQR_sPubTrocaSensor;
 
 /******************************************************************************
  * Module Variable Definitions
@@ -213,6 +214,8 @@ void AQR_vRepeteTesteSensores (void);
 void AQR_vApagaInstalacao (void);
 void AQR_vIgnoreSensors(uint8_t bLineNum, bool bIgnored);
 void AQR_vTrimmingLines(eTrimming eTrimmStatus);
+void AQR_vTrocaSensores(eEventType);
+void AQR_vVerificarTrocaSensores(void);
 
 /******************************************************************************
  * Module timers
@@ -1319,7 +1322,7 @@ void AQR_vAcquiregPublishThread (void const *argument)
 			AQR_APL_FLAG_FINISH_INSTALLATION | AQR_APL_FLAG_SAVE_STATIC_REG | AQR_APL_FLAG_UPDATE_INSTALLATION
 			| AQR_APL_FLAG_CONFIRM_INSTALLATION | AQR_APL_FLAG_SAVE_LIST | AQR_APL_FLAG_ERASE_LIST
 			| AQR_APL_FLAG_SEND_TOTAL | AQR_SIS_FLAG_ALARME | AQR_SIS_FLAG_ALARME_TOLERANCIA
-			| AQR_APL_FLAG_ERASE_INSTALLATION, true, false, osWaitForever);
+			| AQR_APL_FLAG_SENSOR_CHANGE | AQR_APL_FLAG_ENABLE_SENSOR_PNP, true, false, osWaitForever);
 		WATCHDOG_STATE(AQRPUB, WDT_ACTIVE);
 
 		if ((dFlags & AQR_APL_FLAG_FINISH_INSTALLATION) > 0)
@@ -1380,10 +1383,15 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		{
 			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
 		}
-
-		if ((dFlags & AQR_APL_FLAG_ERASE_INSTALLATION) > 0)
+		
+		if ((dFlags & AQR_APL_FLAG_SENSOR_CHANGE) > 0)
 		{
-			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_ERASE_INSTALLATION, EVENT_SET, NULL);
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_SENSOR_REPLACE, EVENT_SET, &AQR_sPubTrocaSensor);
+		}
+
+		if ((dFlags & AQR_APL_FLAG_ENABLE_SENSOR_PNP) > 0)
+		{
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_INSTALLATION_ENABLE_SENSOR_PNP, EVENT_SET, NULL);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -1493,12 +1501,13 @@ void AQR_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_GUI_INSTALLATION_REPEAT_TEST)
 			{
 				AQR_vRepeteTesteSensores();
+				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_ENABLE_SENSOR_PNP);
 			}
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_ERASE_INSTALLATION)
 			{
 				AQR_vApagaInstalacao();
-				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_ERASE_INSTALLATION);
+				osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_ENABLE_SENSOR_PNP);
 			}
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK)
@@ -1550,6 +1559,27 @@ void AQR_vIdentifyEvent (contract_s* contract)
 						osFlagSet(AQR_sFlagREG, AQR_FLAG_PAUSA);
 					}
 				}
+			}
+
+			if (ePubEvt == EVENT_GUI_INSTALLATION_REPLACE_SENSOR)
+			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				AQR_vVerificarTrocaSensores();
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+			}
+
+			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR)
+			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				AQR_vTrocaSensores(EVENT_SET);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+			}
+
+			if (ePubEvt == EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR)
+			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				AQR_vTrocaSensores(EVENT_CLEAR);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 			break;
 		}
@@ -1615,8 +1645,6 @@ void AQR_vAcquiregThread (void const *argument)
 
 	SIGNATURE_HEADER(AcquiregGUI, THIS_MODULE, TOPIC_GUI_AQR, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGUI), 0) == osOK);
-
-	// TODO: Wait for system is ready to work event
 
 	/* Start the main functions of the application */
 	while (1)
@@ -1978,6 +2006,75 @@ void AQR_vTrimmingLines (eTrimming eTrimmStatus)
 	psStatus->eArremate = (AQR_teArremate) eTrimmStatus;
 }
 
+void AQR_vVerificarTrocaSensores (void)
+{
+	osFlags dFlags;
+	AQR_vRepeteTesteSensores();
+
+	while( AQR_sStatus.bAutoTeste != false )
+	{
+		osDelay(50);
+	}
+
+	dFlags = osFlagGet(AQR_sFlagREG);
+
+	if( dFlags & AQR_FLAG_NOVO_SENSOR )
+	{
+		AQR_sPubTrocaSensor.eReplacState = REPLACEMENT_NO_ERROR;
+		switch( AQR_sDadosCAN.sNovoSensor.bTipoSensor )
+		{
+
+			case CAN_APL_SENSOR_ADUBO:
+			{
+				AQR_sPubTrocaSensor.eType = FERTILIZER_SENSOR;
+				break;
+			}
+			case CAN_APL_SENSOR_SIMULADOR:
+			case CAN_APL_SENSOR_DIGITAL_2:
+			case CAN_APL_SENSOR_DIGITAL_3:
+			case CAN_APL_SENSOR_DIGITAL_4:
+			case CAN_APL_SENSOR_DIGITAL_5:
+			case CAN_APL_SENSOR_DIGITAL_6:
+			{
+				AQR_sPubTrocaSensor.eType = ADDITIONAL_SENSOR;
+				break;
+			}
+			case CAN_APL_SENSOR_SEMENTE:
+			default:
+			{
+				AQR_sPubTrocaSensor.eType = SEED_SENSOR;
+			}
+		}
+
+		AQR_sPubTrocaSensor.bAvailableLine = AQR_sStatus.bLinhaDisponivel;
+	}
+	else
+	{
+		if (AQR_sDadosCAN.sNovoSensor.bNovo != false)
+		{
+			AQR_sPubTrocaSensor.eReplacState = REPLACEMENT_ERR_NOT_ALLOWED;
+		}
+		else
+		{
+			AQR_sPubTrocaSensor.eReplacState = REPLACEMENT_ERR_NO_SENSOR;
+		}
+	}
+	osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SENSOR_CHANGE);
+}
+
+void AQR_vTrocaSensores (eEventType ev)
+{
+	if (ev == EVENT_SET)
+	{
+      osFlagSet( AQR_sFlagREG, AQR_FLAG_TROCA_SENSOR );
+      osFlagClear( UOS_sFlagSis, UOS_SIS_FLAG_VERSAO_SW_OK);
+	}
+	else
+	{
+		osFlagClear(AQR_sFlagREG, (AQR_FLAG_TROCA_SENSOR |	AQR_FLAG_NOVO_SENSOR));
+	}
+}
+
 /******************************************************************************
  * Function : AQR_vAcquiregManagementThread(void const *argument)
  *//**
@@ -2020,8 +2117,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	osFlags dValorGPS;
 	osFlags dFlagCAN;
 	osFlags dFlagSensor;
-
-	//      FFS_teErros       wErro;
 
 	tsStatus *psStatus = &AQR_sStatus;
 	CAN_tsLista *psAQR_Sensor = AQR_sDadosCAN.asLista;
@@ -2082,7 +2177,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	// TODO: Copia para variável auxiliar a opção de configuração que ativa gravação de registros
 	AQR_bSalvaRegistro = UOS_sConfiguracao.sGPS.bSalvaRegistro;
 
-	// TODO: external functions
 	//Prepara a data/hora do ciclo agora pois será usada na
 	//recuperação do registro anterior à falha de energia:
 	//Formato BCD:
@@ -2126,7 +2220,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	//----------------------------------------------------------------------------
 	//Prioridade de trabalho:
 
-	// TODO: task priority
 	//Muda a prioridade de inicialização para o valor de trabalho antes
 	//de se pendurar no flag enviado a cada metro percorrido:
 	//      bErr = OSTaskChangePrio( OS_PRIO_SELF, AQR_TRF_PRINCIPAL_PRIORIDADE );
@@ -2596,11 +2689,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					//Liga flag de fim de instalação
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 					osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
-					//Atualiza flag para avisar a IHM que já pode confirmar o teste dos sensores
-//                    if ( IHM_bConfirmaInstSensores == eSensoresNaoInstalados )
-//                    {
-//                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
-//                    }
 
 					for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 					{
@@ -2613,10 +2701,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			}
 		}
 
-		/* *******************************************************************************
-		 * // TODO: SENSOR module publish on TOPIC_SENSOR that occurs these following events
-		 * SENSOR module generate these events and send a pointer to CAN_sCtrlLista structure
-		 ********************************************************************************* */
 		WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
 		dFlagSensor = osFlagWait(xSEN_sFlagApl, (CAN_APL_FLAG_TODOS_SENS_RESP_PNP |
 		CAN_APL_FLAG_DET_NOVO_SENSOR |
@@ -2626,7 +2710,8 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		CAN_APL_FLAG_SENSOR_NAO_RESPONDEU |
 		CAN_APL_FLAG_DET_SENSOR_RECONECTADO |
 		CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO |
-		CAN_APL_FLAG_CFG_SENSOR_RESPONDEU),
+		CAN_APL_FLAG_CFG_SENSOR_RESPONDEU |
+		CAN_APL_FLAG_CAN_STATUS),
 		true, false, 0);
 		WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
 
@@ -2943,7 +3028,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
 					ASSERT(status == osOK);
 
-					// TODO: Clean new sensor flag CAN_sCtrlLista. This should be done using broker.
 					//Limpa indicação de novo sensor
 					CAN_sCtrlLista.sNovoSensor.bNovo = false;
 
@@ -3398,7 +3482,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		{
 			if (psMonitor->bMonitorArea == false)
 			{
-				// TODO: Envia comando de Leitura de dados dos Sensores
 				SEN_vReadDataFromSensors();
 			}
 		}
@@ -3774,12 +3857,17 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					}
 
 					//----------------------------------------------------------------------------
-					//Arredonda Distância para Avaliação
 
+					if (GPS_bDistanciaPercorrida==0 || AQR_bDistanciaPercorrida == 0)
+					{
+						wPtrAux = 0;
+					}
+					//Arredonda Distância para Avaliação
 					//Arredonda variável de avaliação para um número inteiro.
-					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100) / GPS_bDistanciaPercorrida;
+					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100) / AQR_bDistanciaPercorrida;
 					AQR_sStatus.wAvaliaArred = ((AQR_sStatus.wAvaliaArred + 5) / 10);
 					GPS_bDistanciaPercorrida = 0;
+					AQR_bDistanciaPercorrida = 0;
 
 					//Se a posição de retirado do buffer for zero, Aponta para o fim
 					if (sSegmentos.wPosRet == 0)

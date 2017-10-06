@@ -92,9 +92,6 @@ UOS_tsVersaoCod UOS_sVersaoCod;
 //Estrutura da configuracao operacional:
 UOS_tsConfiguracao UOS_sConfiguracao;
 
-//Estrutura da configuracao IHM:
-IHM_tsConfig IHM_sConfig;
-
 //Flags para indicar o status do sistema:
 extern osFlagsGroupId UOS_sFlagSis;
 osFlagsGroupId CTL_sFlagSis;
@@ -260,6 +257,10 @@ void CTL_vControlPublishThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLPUBThreadArrayPosition)); //Task created, inform core
 
+	WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
+
 	while (1)
 	{
 		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
@@ -362,7 +363,6 @@ void CTL_vControlThread (void const *argument)
 
 	INITIALIZE_MUTEX(UOS_MTX_sDataHora);
 
-	// TODO: This is executed after file system initialization
 	// Copy default configurations to start; because we don't have file system
 	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
 

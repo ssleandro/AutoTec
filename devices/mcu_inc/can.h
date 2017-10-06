@@ -115,6 +115,22 @@ typedef struct canMSGStruct_s
 	uint8_t data[8];/**< Message data */
 } canMSGStruct_s;
 
+
+typedef struct canStatusStruct_s
+{
+	uint16_t wBaudRateKbps;
+	uint32_t wRxCount;
+	uint8_t bRxError;
+	uint32_t wTxCount;
+	uint8_t bTxError;
+	uint32_t dDataOverrun;
+	uint32_t dArbitrationLost;
+	uint32_t dErrorPassive;
+	uint32_t dErrorWarning;
+	uint32_t dBusError;
+} canStatusStruct_s;
+
+
 typedef void (*canCallBack) (eCANStatus_s eErrorCode, canMSGStruct_s CANMessage);  //!< CAN Callback typedef
 
 /**
@@ -148,6 +164,12 @@ typedef struct can_config_s
 	canCallBack fpCallback;       //!< CAN Callback Function
 	void * vpPrivateData;         //!< CAN Private data
 } can_config_s;
+
+typedef enum
+{
+	eCAN_RX_DIR,
+	eCAN_TX_DIR,
+} can_transfer_id;
 
 /******************************************************************************
  * Variables
@@ -365,6 +387,8 @@ void CAN_vRemoveMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID);
 void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage);
 
 void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage);
+
+uint8_t CAN_bGetErCount(const can_config_s *pCCAN, can_transfer_id dir);
 
 #ifdef __cplusplus
 } // extern "C"

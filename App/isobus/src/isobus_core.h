@@ -43,13 +43,16 @@
 #include "../isobus/inc/interface_isobus.h"
 #else
 #include "M2GPlus.iop.h"
+#include "M2GPlus.c.h"
 #include "interface_isobus.h"
 #endif
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
+#define ISO_FLAG_LANGUAGE_UPDATED	0x0001
+
 #define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
-#define ISO_NUM_INPUT_LIST_OBJECTS 6
+#define ISO_NUM_INPUT_LIST_OBJECTS 5
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
 
 #define ISO_KEY_PLANTER_ID					SoftKey_Planter
@@ -85,6 +88,9 @@
 #define ISO_BUTTON_CHANGE_PASSWORD_ID						BU_CFG_CHANGE_PASSWD
 #define ISO_BUTTON_PASSWORD_CANCEL_ID						BU_PASSWD_CANCEL
 #define ISO_BUTTON_PASSWORD_ACCEPT_ID						BU_PASSWD_ACCEPT
+#define ISO_BUTTON_REPLACE_SENSOR_CANCEL_ID					BU_REPLACE_SENSOR_CANCEL
+#define ISO_BUTTON_REPLACE_SENSOR_ACCEPT_ID					BU_REPLACE_SENSOR_ACCEPT
+#define ISO_BUTTON_CONFIG_MEMORY_TAB_ID						BU_CFG_TAB_MEMORY
 
 #define ISO_INPUT_LIST_LANGUAGUE_ID			IL_CFG_LANGUAGE
 #define ISO_INPUT_LIST_UNIT_SYSTEM_ID		IL_CFG_UNIT_SYSTEM
@@ -92,6 +98,7 @@
 #define ISO_INPUT_LIST_CENT_LINE_SIDE_ID	IL_CFG_CENTER_ROW_SIDE
 #define ISO_INPUT_LIST_ALTERNATE_ROW_ID		IL_CFG_ALTERNATE_ROWS
 #define ISO_INPUT_LIST_ALTER_ROW_TYPE_ID	IL_CFG_RAISED_ROWS
+#define ISO_INPUT_LIST_CAN_STATUS_ID		IL_SYSTEM_CAN_BUS_SELECT
 
 #define ISO_INPUT_LIST_OPTION_ATTRIBUTE		0x06
 
@@ -125,7 +132,7 @@
 #define ISO_OBJECT_NUMBER_VARIABLE_ID	NV_TEST_MODE_L01
 #define ISO_OBJECT_INPUT_NUMBER_ID		IN_CFG_VEHICLE_CODE
 #define ISO_OBJECT_OUTPUT_LINE_ID		Line_13000
-#define ISO_OBJECT_INPUT_LIST_ID		IL_CFG_LANGUAGE
+#define ISO_OBJECT_INPUT_LIST_ID		IL_CFG_AREA_MONITOR
 #define ISO_OBJECT_RECTANGLE_ID			Rectangle_14000
 #define ISO_OBJECT_FILL_ATTRIBUTES_ID	FA_SETUP_STAT_L01
 #define ISO_OBJECT_LINE_ATTRIBUTES_ID	LineAttributes_24000
@@ -133,8 +140,8 @@
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
-#define ISO_ALARM_FREQUENCY_HZ	2900
-//#define ISO_ALARM_FREQUENCY_HZ	800
+//#define ISO_ALARM_FREQUENCY_HZ	2900
+#define ISO_ALARM_FREQUENCY_HZ	800
 
 // Alarms
 #define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1
@@ -164,10 +171,13 @@
 
 #define ISO_ALARM_DEACTIVATE	0
 
+#define ISO_TIMER_PERIOD_MS_WS_MAINTENANCE	850
+#define ISO_TIMER_PERIOD_MS_CAN_STATUS		2500
+
 /******************************************************************************
  * Macros
  *******************************************************************************/
-#define INPUT_LIST_GET_INDEX_FROM_ID(id) (id - IL_CFG_LANGUAGE)
+#define INPUT_LIST_GET_INDEX_FROM_ID(id) (id - IL_CFG_AREA_MONITOR)
 #define BARGRAPH_UP_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)((line > 0) ? (BG_PLANT_UP_L02 + (2 * (line - 1))) : BG_PLANT_UP_L01)
 #define BARGRAPH_DOWN_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)((line > 0) ? (BG_PLANT_DOWN_L02 + (2 * (line - 1))) : BG_PLANT_DOWN_L01)
 #define RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(line) (uint16_t)(RT_PLANT_L01 + line)
@@ -183,7 +193,8 @@ typedef enum
 	WAIT_VT_STATUS,
 	WAIT_LOAD_VERSION,
 	WAIT_SEND_POOL,
-	OBJECT_POOL_SENDED,
+	OBJECT_POOL_SENT,
+	OBJECT_POOL_LANG_PKG_SENT,
 	OBJECT_POOL_LOADED,
 	BOOT_COMPLETED
 } eBootStates;
@@ -191,7 +202,9 @@ typedef enum
 typedef enum
 {
 	BOOT,
-	RUNNING
+	RUNNING,
+	UPDATING_LANGUAGE,
+	UPDATING_STRING,
 } eModuleStates;
 
 typedef enum
@@ -249,6 +262,8 @@ typedef struct
  * Function Prototypes
  *******************************************************************************/
 void ISO_vTimerCallbackWSMaintenance (void const *arg);
+void ISO_vTimerCallbackAlarmTimeout (void const *arg);
+void ISO_vTimerCallbackIsobusCANStatus (void const *arg);
 
 #ifdef __cplusplus
 extern "C"
