@@ -551,7 +551,6 @@ void SEN_vIdentifyEvent (contract_s* contract)
 		{
 			if ((ePubEvt & GPS_FLAG_METRO) > 0)
 			{
-				// TODO: Se nao esta em monitor de area nao pede a leitura dos sensores e nao esta em modo instalacao
 				SEN_vReadDataFromSensors();
 			}
 			break;
@@ -657,8 +656,6 @@ void SEN_vSensorThread (void const *argument)
 
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-
-	// TODO: Wait for system is ready to work event
 
 	/* Start the main functions of the application */
 	while (1)

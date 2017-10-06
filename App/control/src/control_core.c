@@ -363,7 +363,6 @@ void CTL_vControlThread (void const *argument)
 
 	INITIALIZE_MUTEX(UOS_MTX_sDataHora);
 
-	// TODO: This is executed after file system initialization
 	// Copy default configurations to start; because we don't have file system
 	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
 

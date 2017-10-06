@@ -413,9 +413,6 @@ typedef struct
 /******************************************************************************
  * Conversion from MPA
  *******************************************************************************/
-// TODO: This variables is just for test
-// TODO: common from GPS
-
 extern gpio_config_s sEnablePS9;
 #define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
 #define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
@@ -439,7 +436,6 @@ extern gpio_config_s sEnablePS9;
 
 #define CAN_ENL_QTDE_BYTES_MSG        8
 
-// TODO: Resolve this dependencies
 // Listagem de comandos utilizados na rede CAN
 #define CAN_APL_CMD_PNP                           0x01 //Comando de PnP
 #define CAN_APL_CMD_LEITURA_DADOS                 0x02 //Comando de leitura de dados

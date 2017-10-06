@@ -1563,17 +1563,23 @@ void AQR_vIdentifyEvent (contract_s* contract)
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_REPLACE_SENSOR)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				AQR_vVerificarTrocaSensores();
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				AQR_vTrocaSensores(EVENT_SET);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
 			if (ePubEvt == EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR)
 			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				AQR_vTrocaSensores(EVENT_CLEAR);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 			break;
 		}
@@ -1639,8 +1645,6 @@ void AQR_vAcquiregThread (void const *argument)
 
 	SIGNATURE_HEADER(AcquiregGUI, THIS_MODULE, TOPIC_GUI_AQR, AcquiregQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(AcquiregGUI), 0) == osOK);
-
-	// TODO: Wait for system is ready to work event
 
 	/* Start the main functions of the application */
 	while (1)
@@ -2009,7 +2013,7 @@ void AQR_vVerificarTrocaSensores (void)
 
 	while( AQR_sStatus.bAutoTeste != false )
 	{
-		osDelay(500);
+		osDelay(50);
 	}
 
 	dFlags = osFlagGet(AQR_sFlagREG);
@@ -2114,8 +2118,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	osFlags dFlagCAN;
 	osFlags dFlagSensor;
 
-	//      FFS_teErros       wErro;
-
 	tsStatus *psStatus = &AQR_sStatus;
 	CAN_tsLista *psAQR_Sensor = AQR_sDadosCAN.asLista;
 	UOS_tsCfgMonitor *psMonitor = &UOS_sConfiguracao.sMonitor;
@@ -2175,7 +2177,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	// TODO: Copia para variável auxiliar a opção de configuração que ativa gravação de registros
 	AQR_bSalvaRegistro = UOS_sConfiguracao.sGPS.bSalvaRegistro;
 
-	// TODO: external functions
 	//Prepara a data/hora do ciclo agora pois será usada na
 	//recuperação do registro anterior à falha de energia:
 	//Formato BCD:
@@ -2219,7 +2220,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	//----------------------------------------------------------------------------
 	//Prioridade de trabalho:
 
-	// TODO: task priority
 	//Muda a prioridade de inicialização para o valor de trabalho antes
 	//de se pendurar no flag enviado a cada metro percorrido:
 	//      bErr = OSTaskChangePrio( OS_PRIO_SELF, AQR_TRF_PRINCIPAL_PRIORIDADE );
@@ -2689,11 +2689,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					//Liga flag de fim de instalação
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
 					osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_CONFIRM_INSTALLATION);
-					//Atualiza flag para avisar a IHM que já pode confirmar o teste dos sensores
-//                    if ( IHM_bConfirmaInstSensores == eSensoresNaoInstalados )
-//                    {
-//                    	IHM_bConfirmaInstSensores = eSensoresInstaladosMasNaoConfirmados;
-//                    }
 
 					for (bConta = 0; bConta < CAN_bTAMANHO_LISTA; bConta++)
 					{
@@ -2706,10 +2701,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			}
 		}
 
-		/* *******************************************************************************
-		 * // TODO: SENSOR module publish on TOPIC_SENSOR that occurs these following events
-		 * SENSOR module generate these events and send a pointer to CAN_sCtrlLista structure
-		 ********************************************************************************* */
 		WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
 		dFlagSensor = osFlagWait(xSEN_sFlagApl, (CAN_APL_FLAG_TODOS_SENS_RESP_PNP |
 		CAN_APL_FLAG_DET_NOVO_SENSOR |
@@ -3037,7 +3028,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					status = WAIT_MUTEX(CAN_MTX_sBufferListaSensores, osWaitForever);
 					ASSERT(status == osOK);
 
-					// TODO: Clean new sensor flag CAN_sCtrlLista. This should be done using broker.
 					//Limpa indicação de novo sensor
 					CAN_sCtrlLista.sNovoSensor.bNovo = false;
 
@@ -3492,7 +3482,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		{
 			if (psMonitor->bMonitorArea == false)
 			{
-				// TODO: Envia comando de Leitura de dados dos Sensores
 				SEN_vReadDataFromSensors();
 			}
 		}

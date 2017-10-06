@@ -56,7 +56,7 @@ osFlagsGroupId UOS_sFlagSis;
 #define STARTING_MODULES \
         X("Diagnostic" , 512  , osPriorityLow			, DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
         X("Broker"     , 256  , osPriorityHigh			, BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
-        X("Isobus"     , 1024  , osPriorityHigh       	, ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
+        X("Isobus"     , 1536 , osPriorityHigh       	, ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
 		X("Gui"        , 512  , osPriorityNormal    	, GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
 		X("Acquireg"   , 512  , osPriorityHigh    		, AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
 		X("Sensor"     , 512  , osPriorityHigh    		, SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \

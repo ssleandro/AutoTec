@@ -204,8 +204,6 @@ typedef struct sConfigurationData
 
 typedef struct sConfigurationDataMask
 {
-	eSelectedLanguage* eLanguage;
-	eSelectedUnitMeasurement* eUnit;
 	uint32_t* dVehicleID;
 	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;

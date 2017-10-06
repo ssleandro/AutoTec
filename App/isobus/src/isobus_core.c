@@ -99,20 +99,18 @@ static sUpdatePlanterMaskStates sUptPlanterMask = {
 
 static sConfigurationDataMask sConfigDataMask =
 	{
-		.eLanguage = (eSelectedLanguage*)(&asConfigInputList[0].bSelectedIndex),
-		.eUnit = (eSelectedUnitMeasurement*)(&asConfigInputList[1].bSelectedIndex),
 		.dVehicleID = &(asNumVarObjects[38].dValue),
-		.eMonitor = (eAreaMonitor*)(&asConfigInputList[2].bSelectedIndex),
+		.eMonitor = (eAreaMonitor*)(&asConfigInputList[0].bSelectedIndex),
 		.wSeedRate = &(asNumVarObjects[40].dValue),
 		.bNumOfRows = (uint8_t*)(&asNumVarObjects[41].dValue),
-		.eCentralRowSide = (eCentralRowSide*)(&asConfigInputList[3].bSelectedIndex),
+		.eCentralRowSide = (eCentralRowSide*)(&asConfigInputList[1].bSelectedIndex),
 		.wDistBetweenLines = &(asNumVarObjects[42].dValue),
 		.wEvaluationDistance = &(asNumVarObjects[43].dValue),
 		.bTolerance = (uint8_t*)(&asNumVarObjects[44].dValue),
 		.fMaxSpeed = &(asNumVarObjects[45].fValue),
 		.wImplementWidth = &(asNumVarObjects[39].dValue),
-		.eAlterRows = (eAlternateRows*)(&asConfigInputList[4].bSelectedIndex),
-		.eAltType = (eAlternatedRowsType*)(&asConfigInputList[5].bSelectedIndex)
+		.eAlterRows = (eAlternateRows*)(&asConfigInputList[2].bSelectedIndex),
+		.eAltType = (eAlternatedRowsType*)(&asConfigInputList[3].bSelectedIndex)
 	};
 
 static sTestModeDataMask sTestDataMask =
@@ -1080,8 +1078,12 @@ void ISO_vObjectPoolMemoryRequired (void)
 			break;
 		}
 		case LANGUAGE_SPANISH:
-		case LANGUAGE_RUSSIAN:
+		{
+			ISO_vSendGetMemory(POOL_SIZE + ES_PACKAGE_SIZE);
+			break;
+		}
 		case LANGUAGE_ENGLISH:
+		case LANGUAGE_RUSSIAN:
 		default:
 		{
 			ISO_vSendGetMemory(POOL_SIZE + EN_PACKAGE_SIZE);
@@ -1105,8 +1107,8 @@ void ISO_vObjectPoolRequestToSend (void)
 			ISO_vInitPointersToTranfer(isoOP_M2GPlus_es, ES_PACKAGE_SIZE);
 			break;
 		}
-		case LANGUAGE_RUSSIAN:
 		case LANGUAGE_ENGLISH:
+		case LANGUAGE_RUSSIAN:
 		default:
 		{
 			ISO_vSendRequestToSend(EN_PACKAGE_SIZE);
@@ -1360,7 +1362,7 @@ void ISO_vTreatLanguageCommandMessage (ISOBUSMsg sRcvMsg)
 		sCommandLanguage.eLanguage = LANGUAGE_ENGLISH;
 	} else if ((sRcvMsg.B1 == 'e') && (sRcvMsg.B2 == 's'))
 	{
-		sCommandLanguage.eLanguage = LANGUAGE_ENGLISH;
+		sCommandLanguage.eLanguage = LANGUAGE_SPANISH;
 	} else if ((sRcvMsg.B1 == 'p') && (sRcvMsg.B2 == 't'))
 	{
 		sCommandLanguage.eLanguage = LANGUAGE_PORTUGUESE;
@@ -1654,7 +1656,7 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 					ISO_vChangeAttributeCommand(IN_CFG_TOLERANCE, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_ENABLE);
 					ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_OPTION2_ATTRIBUTE, ISO_INPUT_NUMBER_DISABLE);
 					ISO_vEnableDisableObjCommand(IL_CFG_ALTERNATE_ROWS, true);
-					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, true);
+					ISO_vEnableDisableObjCommand(IL_CFG_RAISED_ROWS, (*(sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_ENABLED));
 					eConfigMaskFromX = DATA_MASK_INSTALLATION;
 				}
 				ISO_vInputIndexListValue(wObjectID, dValue);
@@ -1735,15 +1737,6 @@ void ISO_vTreatAcknowledgementMessage (ISOBUSMsg sRcvMsg)
 	ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
 	START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
 
-//	switch (eCurrentMask) {
-//		case DATA_MASK_CONFIGURATION:
-//		{
-//			eEvt = EVENT_ISO_UPDA
-//			break;
-//		}
-//		default:
-//			break;
-//	}
 	PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 }
 
@@ -2014,6 +2007,13 @@ void ISO_vTreatButtonActivation (uint16_t wObjectID)
 					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, false);
 					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, false);
 					ISO_vChangeActiveMask(DATA_MASK_PLANTER);
+				} else
+				{
+					ISO_vHideShowContainerCommand(CO_PLANTER_AREA_MONITOR, false);
+					ISO_vHideShowContainerCommand(CO_PLANTER_SPEED_INFO, false);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_INFO, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_MASTER, true);
+					ISO_vHideShowContainerCommand(CO_PLANTER_LINES_DISABLE_ALL, true);
 				}
 
 				if ((*sConfigDataMask.eAlterRows) == ALTERNATE_ROWS_DISABLED)
@@ -2691,8 +2691,6 @@ void ISO_vUpdateConfigurationDataMask (void)
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-//	ISO_vChangeNumericValue(IL_CFG_LANGUAGE, *sConfigDataMask.eLanguage);
-//	ISO_vChangeNumericValue(IL_CFG_UNIT_SYSTEM, *sConfigDataMask.eUnit);
 	ISO_vChangeNumericValue(NV_CFG_VEHICLE_CODE, *sConfigDataMask.dVehicleID);
 
 	ISO_vChangeNumericValue(IL_CFG_AREA_MONITOR, *sConfigDataMask.eMonitor);
@@ -3062,8 +3060,6 @@ void ISO_vUpdateSisConfigData (sConfigurationData *psCfgDataMask)
 	if (psCfgDataMask == NULL)
 		return;
 
-	psCfgDataMask->eLanguage = *sConfigDataMask.eLanguage;
-	psCfgDataMask->eUnit = *sConfigDataMask.eUnit;
 	psCfgDataMask->dVehicleID = *sConfigDataMask.dVehicleID;
 	psCfgDataMask->eMonitorArea = *sConfigDataMask.eMonitor;
 	psCfgDataMask->wSeedRate = *sConfigDataMask.wSeedRate;
@@ -3090,8 +3086,6 @@ void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask)
 	ASSERT(status == osOK);
 	WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 
-	*sConfigDataMask.eLanguage = psCfgDataMask->eLanguage;
-	*sConfigDataMask.eUnit = psCfgDataMask->eUnit;
 	*sConfigDataMask.dVehicleID = psCfgDataMask->dVehicleID;
 	*sConfigDataMask.eMonitor = psCfgDataMask->eMonitorArea;
 	*sConfigDataMask.wSeedRate = psCfgDataMask->wSeedRate;

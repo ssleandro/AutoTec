@@ -44,12 +44,6 @@
  *******************************************************************************/
 /*!<< From MPA2500  */
 
-//// TODO: Resolve this dependencies
-//#define CAN_bNUM_DE_LINHAS                    36
-//#define CAN_bNUM_SENSORES_POR_LINHA           2
-//#define CAN_bNUM_SENSORES_DIGITAIS            6
-//#define CAN_bNUM_SENSORES_SEMENTE_E_ADUBO     (CAN_bNUM_DE_LINHAS * CAN_bNUM_SENSORES_POR_LINHA)
-//#define CAN_bTAMANHO_LISTA                    (CAN_bNUM_SENSORES_SEMENTE_E_ADUBO + CAN_bNUM_SENSORES_DIGITAIS)
 //Tempo para auto-desligamento do MPA2500
 #define AQR_TIMEOUT_30MIN       (30*60*TICK)
 

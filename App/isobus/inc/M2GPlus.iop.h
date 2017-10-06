@@ -345,10 +345,11 @@
 #define CO_REPLACE_SENSOR_ERR_NO_SENSORS   3266
 #define CO_REPLACE_SENSOR_DESCRIPTION      3267
 #define CO_CFG_MEMORY_USED                 3268
-#define Container_3269                     3269
+#define CO_SYSTEM_MEMORY_TAB               3269
 #define CO_SYSTEM_CAN_TAB                  3270
 #define CO_SYSTEM_GPS_TAB                  3271
 #define CO_SYSTEM_SENSORS_TAB              3272
+#define CO_SYSTEM_BU_ERASE_DATA            3273
 #define SoftKeyMask_Installation           4000
 #define SoftKeyMask_InstallationCompleted   4001
 #define SoftKeyMask_Planter                4002
@@ -387,7 +388,7 @@
 #define BU_SYS_TAB_GPS                     6003
 #define BU_SYS_TAB_CAN                     6004
 #define BU_SYS_TAB_SENSORS                 6005
-#define BU_CFG_TAB_VERSION_MEMORY          6006
+#define BU_CFG_TAB_MEMORY                  6006
 #define BU_CFG_ERASE_DATA                  6007
 #define BU_SETUP_REPEAT_TEST               6008
 #define BU_SETUP_CLEAR_SETUP               6009

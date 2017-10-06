@@ -501,6 +501,7 @@ void GPS_vIdentMsgRxGPS (void);
 void GPS_vProcessBufferRx (void);
 uint8_t GPS_vGPSPackMsgTx (uint8_t bClass, uint8_t bId, uint8_t *pbDados,
 	uint8_t bLength);
+void GUI_vItemStatusGPS (GPS_sStatus *psGPSStatus);
 
 void GPS_vTimerCallbackMtr (void const*);
 void GPS_vTimerCallbackTimeoutEnl (void const*);
@@ -704,7 +705,7 @@ void GPS_vGPSPublishThread (void const *argument)
 
 		if ((dValorGPS & GPS_FLAG_STATUS) > 0)
 		{
-			GUI_vItemStatusGPS(&GPS_sPublishStats);
+			GUI_vItemStatusGPS (&GPS_sPublishStats);
 			PUBLISH_MESSAGE(GPSStatus, GPS_FLAG_STATUS, EVENT_SET, &GPS_sPublishStats);
 		}
 	}

@@ -628,7 +628,9 @@ void GUI_SetGuiConfiguration(void)
 	GUIConfigurationData.bNumOfRows = sSISConfiguration.sMonitor.bNumLinhas;
 	GUIConfigurationData.bTolerance = sSISConfiguration.sMonitor.bTolerancia;
 	GUIConfigurationData.dVehicleID = sSISConfiguration.dVeiculo;
-	GUIConfigurationData.eAltType = (eAlternatedRowsType)sSISConfiguration.sMonitor.eIntercala;
+	GUIConfigurationData.eAltType =
+			(sSISConfiguration.sMonitor.eIntercala != Sem_Intercalacao) ? (eAlternatedRowsType) sSISConfiguration.sMonitor.eIntercala :
+					ALTERNATED_ROWS_EVEN;
 	GUIConfigurationData.eAlterRows =
 			(sSISConfiguration.sMonitor.eIntercala == Sem_Intercalacao) ? ALTERNATE_ROWS_DISABLED : ALTERNATE_ROWS_ENABLED;
 
@@ -671,7 +673,7 @@ void GUI_SetSisConfiguration(void)
 	}
 	else
 	{
-		sSISConfiguration.sMonitor.eIntercala = GUIConfigurationData.eAltType;
+		sSISConfiguration.sMonitor.eIntercala = (UOS_teIntercala) GUIConfigurationData.eAltType;
 	}
 
 	sSISConfiguration.sMonitor.bDivLinhas = GUIConfigurationData.eCentralRowSide;
@@ -1983,7 +1985,7 @@ void GUI_vGetProductivity (uint32_t* pdProductivity, uint32_t* pdSeconds)
 	//|Rendimento    |  |  |  |  |
 	//|______________|__|__|__|__|
 	//| <destaque>               |
-	//|            xxx,x   ha/h  |
+	//|            000,0   ha/h  |
 	//| </destaque>              |
 	//|                          |
 	//|         00h00m00s        |
