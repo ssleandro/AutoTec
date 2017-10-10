@@ -70,6 +70,7 @@
 #define GPS_FLAG_METRO              0x00000004
 #define GPS_FLAG_TIMEOUT_MTR        0x00000008
 #define GPS_FLAG_SEGUNDO            0x00000010
+#define GPS_FLAG_STATUS					0x00000020
 
 //Mascaras do Fix Status Flag
 #define GPS_FIX_OK  0x01   //i.e within DOP & ACC Masks
@@ -191,6 +192,27 @@ typedef struct
 	uint8_t  bDistanciaPercorrida;
 }GPS_sPubDadosGPS;
 
+
+typedef struct
+{
+	uint32_t dPDOP;
+	uint32_t dERRV;
+	uint32_t dERRP;
+	uint32_t dModVel;
+	uint8_t bMode[3];
+	uint8_t bBBRAM[3];
+	uint8_t bAnt[2];
+	uint16_t wLatDgr;
+	uint16_t wLatMin;
+	uint16_t wLatSec;
+	uint16_t wLonDgr;
+	uint16_t wLonMin;
+	uint16_t wLonSec;
+	uint16_t vVerFW;
+	uint8_t bLatDir;
+	uint8_t bLonDir;
+	uint8_t bNSV;
+}GPS_sStatus;
 /******************************************************************************
  * Variables
  *******************************************************************************/

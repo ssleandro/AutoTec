@@ -73,6 +73,9 @@ extern void osExitCritical(void);
 CREATE_RINGBUFFER(uint8_t, logger, DIG_BUFFER_SIZE);
 static bool bBufferInitialized = false;
 static osThreadId callerThread = NULL;
+static peripheral_descriptor_p pHardFault = NULL;       //!< Peripheral descriptor pointer
+static uint32_t wAddress = 0;                           //!< Hardfault address storage variable
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
@@ -296,6 +299,7 @@ void DIG_prvGetRegistersFromStack (uint32_t *pulFaultStackAddress)
  *
  *******************************************************************************/
 #ifndef UNITY_TEST
+void HardFault_Handler( void ) __attribute__( ( naked ) );
 void HardFault_Handler (void)
 {
 	/* The fault handler implementation calls a function called
@@ -310,9 +314,7 @@ void HardFault_Handler (void)
 #if defined(__IAR_SYSTEMS_ICC__)
 			" bl DIG_prvGetRegistersFromStack                           \n"
 #elif defined (__GNUC__)
-			" ldr r2, handler2_address_const                            \n"
-			" bx r2                                                     \n"
-			" handler2_address_const: .word DIG_prvGetRegistersFromStack\n"
+			" B DIG_prvGetRegistersFromStack                            \n"
 #endif
 
 	);
@@ -367,9 +369,6 @@ void MemManage_Handler (void)
 #if defined(__IAR_SYSTEMS_ICC__)
       " bl DIG_prvGetRegistersFromStack                           \n"
 #elif defined (__GNUC__)
-//      " ldr r2, handler2_address_const                            \n"
-//      " bx r2                                                     \n"
-//      " handler2_address_const: .word DIG_prvGetRegistersFromStack\n"
       " B DIG_prvGetRegistersFromStack                            \n"
 #endif
 
@@ -463,35 +462,63 @@ uint8_t DIG_vLoggerInit (osThreadId Thread)
 	return bResult;
 }
 
-uint32_t DIG_wLoggerWritter (uint32_t wTimestamp, uint8_t bLevelAndType, uint8_t* pbData, uint8_t bDataSize)
+uint32_t DIG_wLoggerWritter(uint32_t wTimestamp, uint8_t bLevelAndType, uint8_t* pbData, uint8_t bDataSize)
 {
 	osEnterCritical();
+	if (pHardFault == NULL) {
+		pHardFault = pTDVHandle;
+		wAddress = (uint32_t) pTDVHandle;
+	}
+	if (pHardFault != pTDVHandle) {
+		pHardFault = (peripheral_descriptor_p) wAddress;
+	}
 	uint32_t wResult = 0;
-	if ((bLevelAndType <= DBG_LOG_LEVEL) && bBufferInitialized)
-	{
-		uint8_t bMaxSize = DIG_BUFFER_MAX_LINE_SIZE - sizeof(wTimestamp) - sizeof(bLevelAndType) - sizeof(bDataSize);
+	if ((bLevelAndType <= DBG_LOG_LEVEL) && bBufferInitialized) {
+		uint8_t bTimestampMultiplier = 1;  // DIG_bGetMultiplier()
+		uint8_t bMaxSize = DIG_BUFFER_MAX_LINE_SIZE;
 		uint8_t bTemp[DIG_BUFFER_MAX_LINE_SIZE];
-		memset(&bTemp[0], 0x00, DIG_BUFFER_MAX_LINE_SIZE);
-		memcpy(&bTemp[0], &wTimestamp, sizeof(wTimestamp));     //Timestamp (4 Bytes)
-		memcpy(&bTemp[sizeof(wTimestamp)], &bLevelAndType, sizeof(bLevelAndType));    //Level and Type (1 Byte)
-		memcpy(&bTemp[sizeof(wTimestamp) + sizeof(bLevelAndType)], &bDataSize, sizeof(bDataSize));    //DataSize (1 Byte)
-		memcpy(&bTemp[sizeof(wTimestamp) + sizeof(bLevelAndType) + sizeof(bDataSize)], pbData,
-			(bDataSize > bMaxSize ? bMaxSize : bDataSize));
+		memset(bTemp, 0x00, DIG_BUFFER_MAX_LINE_SIZE);
+		uint8_t * pbTemp = &bTemp[0];
+		//memset(pbTemp, 0x00, DIG_BUFFER_MAX_LINE_SIZE);
+
+		memcpy(pbTemp, &bTimestampMultiplier, sizeof(bTimestampMultiplier)); //Timestamp Multiplier (1 Bytes)
+		pbTemp += sizeof(bTimestampMultiplier);
+		bMaxSize -= sizeof(bTimestampMultiplier);
+
+		memcpy(pbTemp, &wTimestamp, sizeof(wTimestamp));   //Timestamp (4 Bytes)
+		pbTemp += sizeof(wTimestamp);
+		bMaxSize -= sizeof(wTimestamp);
+
+		memcpy(pbTemp, &bLevelAndType, sizeof(bLevelAndType)); //Level and Type (1 Byte)
+		pbTemp += sizeof(bLevelAndType);
+		bMaxSize -= sizeof(bLevelAndType);
+
+		memcpy(pbTemp, &bDataSize, sizeof(bDataSize));    //DataSize (1 Byte)
+		pbTemp += sizeof(bDataSize);
+		bMaxSize -= sizeof(bDataSize);
+
+		memcpy(pbTemp, pbData, (bDataSize > bMaxSize ? bMaxSize : bDataSize)); //Data, up to bMaxSize
+
 		//insert into buffer
-		if (!RingBuffer_InsertMult(&BUFFER(logger), &bTemp[0], DIG_BUFFER_MAX_LINE_SIZE))
-		{
+		if (RingBuffer_GetFree(&BUFFER(logger)) < DIG_BUFFER_MAX_LINE_SIZE) {
 			uint8_t bGarbage[DIG_BUFFER_MAX_LINE_SIZE];
-			RingBuffer_PopMult(&BUFFER(logger), &bGarbage[0], DIG_BUFFER_MAX_LINE_SIZE);
-			RingBuffer_InsertMult(&BUFFER(logger), &bTemp[0], DIG_BUFFER_MAX_LINE_SIZE);
+			RingBuffer_PopMult(&BUFFER(logger), &bGarbage[0],
+					DIG_BUFFER_MAX_LINE_SIZE);
 		}
+
+		RingBuffer_InsertMult(&BUFFER(logger), &bTemp[0],
+				DIG_BUFFER_MAX_LINE_SIZE);
+
 		wResult = DIG_BUFFER_MAX_LINE_SIZE;
-		if (callerThread != NULL)
-		{ //if watchdog or hardfault print
-			if (((bLevelAndType & 0x0F) == DEBUG_HARDFAULT) || ((bLevelAndType & 0x0F) == DEBUG_WATCHDOG))
-			{
-				DEV_write(pTDVHandle, &bTemp, (sizeof(wTimestamp) + sizeof(bLevelAndType) + sizeof(bDataSize) + bDataSize));
-			}
-			else  //else signal receiver thread
+		if (callerThread != NULL) { //if watchdog or hardfault print TODO: Save in flash
+			if (((bLevelAndType & 0x0F) == DEBUG_HARDFAULT)
+					|| ((bLevelAndType & 0x0F) == DEBUG_WATCHDOG)) {
+				DEV_write(pHardFault, &bTemp,
+						(bDataSize > bMaxSize ?
+								DIG_BUFFER_MAX_LINE_SIZE :
+								(DIG_BUFFER_MAX_LINE_SIZE
+										- (bMaxSize - bDataSize))));
+			} else  //else signal receiver thread
 			{
 				osSignalSet(callerThread, 0xDE);
 			}

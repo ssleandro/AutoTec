@@ -243,8 +243,8 @@ void FSM_vFileSysPublishThread (void const *argument)
 	osSignalSet((osThreadId)argument, THREADS_RETURN_SIGNAL(bFSMPUBThreadArrayPosition)); //Task created, inform core
 
 	WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
-	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-	osDelay(200);
+	//osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+	//osDelay(200);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 
@@ -378,7 +378,8 @@ void FFS_vIdentifyEvent (contract_s* contract)
 				UOS_tsConfiguracao *psConfig =pvPubData;
 				if ((ePubEvType == EVENT_SET) && ( psConfig != NULL))
 				{
-					if ( memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0)
+					if ((memcmp(&FFS_sConfiguracao, psConfig, sizeof(FFS_sConfiguracao)) != 0) &&
+							(psConfig->sMonitor.bNumLinhas != 0))
 					{
 						FFS_sConfiguracao = *psConfig;
 						error = FFS_vSaveConfigFile();
@@ -487,6 +488,7 @@ void FSM_vFileSysThread (void const *argument)
 	error = FFS_vLoadStaticReg();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATIC_REG);
+
 
 	/* Start the main functions of the application */
 	while (1)

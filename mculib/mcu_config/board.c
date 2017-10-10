@@ -725,7 +725,6 @@ uint32_t BRD_PWMConfig (uint8_t PWMChannel)
 	return Chip_Clock_GetRate(CLK_APB1_MOTOCON);
 }
 
-//TODO:
 void BRD_SPIFIConfig (void)
 {
 	Chip_SCU_PinMuxSet(SPIFI_MAP_PORT(SPIFI0b), SPIFI_MAP_CLK(SPIFI0b), (SCU_PINIO_FAST | SCU_MODE_FUNC3));
@@ -1020,7 +1019,6 @@ void BRD_SystemInit (void)
 	BRD_vSetupClocking();
 	// Set up external memories
 	BRD_ExtMemoryConfig();
-
 	/* Clears the UART devices list */
 	UART_vInitPeripheralList();
 }

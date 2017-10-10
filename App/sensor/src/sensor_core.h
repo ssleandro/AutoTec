@@ -51,28 +51,8 @@
 /******************************************************************************
  * Configuration Constants
  *******************************************************************************/
+#define SEN_PERIOD_MS_CAN_STATUS 40
 
-/******************************************************************************
- * Configuration Constants from MPA2500 (can.h)
- *******************************************************************************/
-// Priorities
-//#define CAN_ALTA_PRIOR            0x00
-//
-//// Value of DLC of control field
-//#define CAN_MSG_DLC_0             0x00
-//#define CAN_MSG_DLC_1             0x01
-//#define CAN_MSG_DLC_2             0x02
-//#define CAN_MSG_DLC_3             0x03
-//#define CAN_MSG_DLC_4             0x04
-//#define CAN_MSG_DLC_5             0x05
-//#define CAN_MSG_DLC_6             0x06
-//#define CAN_MSG_DLC_7             0x07
-//#define CAN_MSG_DLC_8             0x08
-//
-//#define CAN_ENL_FLAG_NENHUM       0x00000000
-//#define CAN_ENL_FLAG_RX_MENSAGEM  0x00000001
-//
-//#define CAN_ENL_QTDE_BYTES_MSG        8
 /******************************************************************************
  * Macros
  *******************************************************************************/
@@ -84,7 +64,6 @@
 /******************************************************************************
  * Typedefs from MPA2500 (can.h)
  *******************************************************************************/
-
 // Auteq Identifier
 typedef union
 {

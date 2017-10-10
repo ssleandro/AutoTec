@@ -2,5 +2,6 @@ eclipse.preferences.version=1
 encoding//App/acquireg/src/acquireg_core.c=UTF-8
 encoding//App/common/app_common/acquireg_app.h=UTF-8
 encoding//App/common/app_common/common_app.h=UTF-8
+encoding//App/isobus/src/M2GPlus_pt.c=ISO-8859-1
 encoding//App/isobus/src/object_pool.c=ISO-8859-1
 encoding//App/sensor/src/sensor_core.h=UTF-8

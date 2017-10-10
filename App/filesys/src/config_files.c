@@ -106,7 +106,6 @@ uint8_t FFS_bSaveFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 		{
 			bRet = 1;
 		}
-		bErr = f_filelength(bFileName);
 	}
 	return bRet;
 }
@@ -119,7 +118,7 @@ uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 	uint8_t bErroCfg = true;
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
-	uint8_t bRet = F_NO_ERROR;
+	uint8_t bRet = F_ERR_READ;
 
 	//Verifica se o sistema de arquivo foi inicializado:
 	dFlagsSis = osFlagGet(FFS_sFlagSis);
@@ -140,15 +139,16 @@ uint8_t FFS_bReadFile(uint8_t const *bFileName, uint8_t *bData, uint32_t wLen)
 			{
 				//Le o arquivo de configuracao do sistema de arquivos:
 				bErr = f_read(bData, wLen, 1, xFileHandle);
+				if (bErr == 1)
+				{
+					bRet = F_NO_ERROR;
+				}
 				ASSERT(bErr == 1);
 			}
 
 			//Fecha o arquivo de configuracao:
 			bErr = f_close(xFileHandle);
 			ASSERT(bErr == F_NO_ERROR);
-		} else
-		{
-			bRet = bErr;
 		}
 	}
 	return bRet;
@@ -170,26 +170,26 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	bErr = FFS_bReadFile(FFS_abConfigName, (uint8_t * )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
-	ASSERT(bErr == 1);
 
 	if (bErr == F_NO_ERROR)
 	{
 		//Confere o CRC da configuracao:
 		TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
 		//Se o CRC esta OK:
-		if (wCRC16_C == 0)
+		if ((wCRC16_C == 0) && (FFS_sConfiguracao.sMonitor.bNumLinhas != 0))
 		{
 			osFlagSet(FFS_sFlagSis, FFS_FLAG_CFG);
 			eRet = APP_ERROR_SUCCESS;
-		} else
+		}
+		else
 		{
 			bErr = F_ERR_READ;
 		}
 	}
 
 	if (bErr != F_NO_ERROR)
-	//Carrega arquivo de configuracao default
 	{
+		//Carrega arquivo de configuracao default
 		memcpy(&FFS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracaoDefault));
 
 		osFlagClear(FFS_sFlagSis, FFS_FLAG_CFG);
@@ -334,7 +334,6 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	bErr = FFS_bReadFile(FFS_abSensorCfgName, (uint8_t * )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
-	ASSERT(bErr == 1);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *)&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));

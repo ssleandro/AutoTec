@@ -60,7 +60,6 @@
 static eAPPError_s eError;                   		//!< Error variable
 
 osThreadId xRecvThreadId;               // Holds the RecvThread ID
-osThreadId xManagementThreadId;         // Holds the WriteThread ID
 osThreadId xAqrRegThreadId;              // Holds the AqrRegThread ID
 
 /******************************************************************************
@@ -90,11 +89,11 @@ CREATE_SIGNATURE(SensorDiagnostic);//!< Signature Declarations
 CREATE_SIGNATURE(SensorGPS);//!< Signature Declarations
 CREATE_SIGNATURE(SensorAcquireg);//!< Signature Declarations
 CREATE_CONTRACT(Sensor);//!< Create contract for sensor msg publication
+CREATE_CONTRACT(SensorEvtPub);//!< Create contract for sensor msg publication
 
 /******************************************************************************
  * Local messages queue
  *******************************************************************************/
-CREATE_LOCAL_QUEUE(SensorPublishQ, canMSGStruct_s, 16);
 CREATE_LOCAL_QUEUE(SensorWriteQ, canMSGStruct_s, 32);
 
 /******************************************************************************
@@ -117,6 +116,7 @@ uint8_t bSENRCVThreadArrayPosition = 0;                    //!< Thread position 
 uint8_t bSENWRTThreadArrayPosition = 0;                    //!< Thread position in array
 uint8_t bSENMGTThreadArrayPosition = 0;                    //!< Thread position in array
 
+static canStatusStruct_s sSensorCANStatus;
 peripheral_descriptor_p pSENSORHandle = NULL;          //!< ISO Handler
 
 /******************************************************************************
@@ -125,6 +125,7 @@ peripheral_descriptor_p pSENSORHandle = NULL;          //!< ISO Handler
 void SEN_vTimerCallbackPnP (void const *arg);
 void SEN_vTimerCallbackPnPTimeout (void const *arg);
 void SEN_vTimerCallbackReadSensorsTimeout (void const *arg);
+void SEN_vTimerCallbackConfigSensorsTimeout (void const *arg);
 void SEN_vTimerCallbackConfigSensorsTimeout (void const *arg);
 
 /******************************************************************************
@@ -282,6 +283,9 @@ eAPPError_s SEN_eInitSensorPublisher (void)
 	MESSAGE_HEADER(Sensor, 1, SENSOR_DEFAULT_MSGSIZE, MT_ARRAYBYTE);
 	CONTRACT_HEADER(Sensor, 1, THIS_MODULE, TOPIC_SENSOR);
 
+	MESSAGE_HEADER(SensorEvtPub, 1, SENSOR_DEFAULT_MSGSIZE, MT_ARRAYBYTE);
+	CONTRACT_HEADER(SensorEvtPub, 1, THIS_MODULE, TOPIC_SEN_CAN_STATUS);
+
 	return APP_ERROR_SUCCESS;
 }
 
@@ -317,8 +321,6 @@ void SEN_vSensorPublishThread (void const *argument)
 	uint32_t dValorFlag;
 	static uint32_t dTxFlag = 0;
 
-	INITIALIZE_LOCAL_QUEUE(SensorPublishQ);   //!< Initialise message queue to publish thread
-
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Sensor Publish Thread Created");
 #endif
@@ -344,7 +346,8 @@ void SEN_vSensorPublishThread (void const *argument)
 		CAN_APL_FLAG_SENSOR_NAO_RESPONDEU |
 		CAN_APL_FLAG_DET_SENSOR_RECONECTADO |
 		CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO |
-		CAN_APL_FLAG_CFG_SENSOR_RESPONDEU),
+		CAN_APL_FLAG_CFG_SENSOR_RESPONDEU |
+		CAN_APL_FLAG_CAN_STATUS),
 		true, false, osWaitForever);
 
 		WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
@@ -384,6 +387,11 @@ void SEN_vSensorPublishThread (void const *argument)
 		if ((dValorFlag & CAN_APL_FLAG_CFG_SENSOR_RESPONDEU) > 0)
 		{
 			dTxFlag = CAN_APL_FLAG_CFG_SENSOR_RESPONDEU;
+		}
+		if ((dValorFlag & CAN_APL_FLAG_CAN_STATUS) > 0)
+		{
+			dTxFlag = CAN_APL_FLAG_CAN_STATUS;
+			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_CAN_STATUS, EVENT_SET, &sSensorCANStatus);
 		}
 		if (dTxFlag != 0)
 		{
@@ -461,6 +469,7 @@ eAPPError_s SEN_vInitDeviceLayer (uint32_t wSelectedInterface)
 		eError = (eAPPError_s)DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_ADD_ALL_CAN_ID, (void*)&wCANInitID);
 		ASSERT(eError == APP_ERROR_SUCCESS);
 	}
+
 	return eError;
 }
 
@@ -525,7 +534,13 @@ void SEN_vIdentifyEvent (contract_s* contract)
 				SEN_vSensorsParameters(CAN_APL_CMD_PARAMETROS_EXTENDED, CAN_APL_LINHA_TODAS,
 				CAN_APL_SENSOR_SEMENTE, abParametrosExt, CAN_MSG_DLC_8);
 			}
+
 			if (ePubEvt == EVENT_FFS_SENSOR_CFG &&  ePubEvType == EVENT_CLEAR)
+			{
+				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
+			}
+
+			if (ePubEvt == EVENT_AQR_INSTALLATION_ENABLE_SENSOR_PNP)
 			{
 				START_TIMER(PnPTimer, CAN_wTICKS_PRIMEIRO_CMD_PNP);
 			}
@@ -536,7 +551,6 @@ void SEN_vIdentifyEvent (contract_s* contract)
 		{
 			if ((ePubEvt & GPS_FLAG_METRO) > 0)
 			{
-				// TODO: Se nao esta em monitor de area nao pede a leitura dos sensores e nao esta em modo instalacao
 				SEN_vReadDataFromSensors();
 			}
 			break;
@@ -642,8 +656,6 @@ void SEN_vSensorThread (void const *argument)
 
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-
-	// TODO: Wait for system is ready to work event
 
 	/* Start the main functions of the application */
 	while (1)
@@ -769,6 +781,7 @@ void SEN_vSensorRecvThread (void const *argument)
 	uint8_t bIterator;
 	uint8_t bRecvMessages = 0;		//!< Lenght (messages) received
 	uint32_t dTicks;
+	uint16_t wCountMS = 0;
 	canMSGStruct_s asPayload[32];   //!< Buffer to hold the contract and message data
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
@@ -808,6 +821,16 @@ void SEN_vSensorRecvThread (void const *argument)
 				ASSERT(evt.status == osEventSignal);
 				WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 			}
+		}
+		wCountMS++;
+
+		if (wCountMS == SEN_PERIOD_MS_CAN_STATUS)
+		{
+			DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_GET_STATUS, (void*) &sSensorCANStatus);
+			WATCHDOG_STATE(SENRCV, WDT_SLEEP);
+			osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_CAN_STATUS);
+			WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
+			wCountMS = 0;
 		}
 	}
 	osThreadTerminate(NULL);
@@ -950,9 +973,6 @@ void SEN_vSensorNetworkManagementThread (void const *argument)
 
 	osThreadId xSenMainID = (osThreadId)argument;
 	osSignalSet(xSenMainID, THREADS_RETURN_SIGNAL(bSENMGTThreadArrayPosition));   //Task created, inform core
-
-	// Gets the Recv Thread ID
-	xManagementThreadId = osThreadGetId();
 
 	psApl = &CAN_sCtrlMPA.sCtrlApl;
 

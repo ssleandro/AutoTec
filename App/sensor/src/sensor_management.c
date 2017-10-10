@@ -744,7 +744,6 @@ void SEN_vReadDataFromSensors (void)
 
 	//Liga o timer de controle de timeout do comando de leitura de dados dos
 	//sensores conectados à rede CAN
-	//    UOS_vReiniciaTimer( psCtrlApl->bTimerTimeoutComando );
 	status = START_TIMER(psCtrlApl->wTimerTimeoutComando, psCtrlApl->dTicksTimeoutComando);
 	ASSERT(status == osOK);
 

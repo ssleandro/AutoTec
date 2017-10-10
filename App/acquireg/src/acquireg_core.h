@@ -44,12 +44,6 @@
  *******************************************************************************/
 /*!<< From MPA2500  */
 
-//// TODO: Resolve this dependencies
-//#define CAN_bNUM_DE_LINHAS                    36
-//#define CAN_bNUM_SENSORES_POR_LINHA           2
-//#define CAN_bNUM_SENSORES_DIGITAIS            6
-//#define CAN_bNUM_SENSORES_SEMENTE_E_ADUBO     (CAN_bNUM_DE_LINHAS * CAN_bNUM_SENSORES_POR_LINHA)
-//#define CAN_bTAMANHO_LISTA                    (CAN_bNUM_SENSORES_SEMENTE_E_ADUBO + CAN_bNUM_SENSORES_DIGITAIS)
 //Tempo para auto-desligamento do MPA2500
 #define AQR_TIMEOUT_30MIN       (30*60*TICK)
 
@@ -65,6 +59,8 @@
 #define AQR_APL_FLAG_SEND_TOTAL				0x0040
 #define AQR_SIS_FLAG_ALARME				 	0x0080
 #define AQR_SIS_FLAG_ALARME_TOLERANCIA		0x0100
+#define AQR_APL_FLAG_ENABLE_SENSOR_PNP		0x0200
+#define AQR_APL_FLAG_SENSOR_CHANGE			0x0400
 
 /******************************************************************************
  * Configuration Constants

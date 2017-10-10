@@ -83,6 +83,8 @@ typedef enum
 	DATA_MASK_CONFIRM_CONFIG_CHANGES,
 	DATA_MASK_CONFIRM_CLEAR_SETUP,
 	DATA_MASK_CONFIRM_TRIMMING_CHANGES,
+	DATA_MASK_PASSWORD,
+	DATA_MASK_REPLACE_SENSOR,
 	DATA_MASK_INVALID
 } eIsobusMask;
 
@@ -174,6 +176,14 @@ typedef struct
 	eTrimming eNewTrimmState;
 } sTrimmingState;
 
+typedef enum
+{
+	LINE_ALARM_NONE,
+	LINE_ALARM_TOLERANCE,
+	LINE_ALARM_NO_SEED,
+	LINE_IGNORED,
+} eLineAlarm;
+
 typedef struct sConfigurationData
 {
 	eSelectedLanguage eLanguage;
@@ -194,8 +204,6 @@ typedef struct sConfigurationData
 
 typedef struct sConfigurationDataMask
 {
-	eSelectedLanguage* eLanguage;
-	eSelectedUnitMeasurement* eUnit;
 	uint32_t* dVehicleID;
 	eAreaMonitor* eMonitor;
 	uint32_t* wSeedRate;
@@ -209,6 +217,18 @@ typedef struct sConfigurationDataMask
 	eAlternateRows* eAlterRows;
 	eAlternatedRowsType* eAltType;
 } sConfigurationDataMask;
+
+typedef struct sLanguageCommandData
+{
+	eSelectedLanguage eLanguage;
+	eSelectedUnitMeasurement eUnit;
+} sLanguageCommandData;
+
+typedef enum eSelectedCANStatus
+{
+	CAN_STATUS_ISOBUS,
+	CAN_STATUS_SENSORS
+} eSelectedCANStatus;
 
 typedef struct sNumberVariableObj
 {
@@ -248,6 +268,7 @@ typedef struct sPlanterIndividualLinesData
 	uint32_t dLineSemPerUnit;
 	uint32_t dLineSemPerHa;
 	uint32_t dLineTotalSeeds;
+	eLineAlarm eLineAlarmStatus;
 } sPlanterIndividualLinesData;
 
 typedef struct sPlanterDataMaskData
@@ -275,6 +296,7 @@ typedef struct sPlanterIndividualLines
 	sNumberVariableObj* psLineSemPerUnit;
 	sNumberVariableObj* psLineSemPerHa;
 	sNumberVariableObj* psLineTotalSeeds;
+	eLineAlarm* peLineAlarmStatus;
 } sPlanterIndividualLines;
 
 typedef struct sPlanterDataMask

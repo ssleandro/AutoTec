@@ -145,14 +145,13 @@ static void CAN_vTreatInterruptsISR (uint8_t bCANChannel)
 
 			if (wCANint & CAN_INT_STATUS) //Error or Transmit/Reception OK
 			{
-				eCANStat = (Chip_CCAN_GetStatus(CAN_MAP_REGISTER(pCAN->eCANPort)) & CAN_STAT_LEC_MASK);
-
+				eCANStat = Chip_CCAN_GetStatus(CAN_MAP_REGISTER(pCAN->eCANPort));
+				pCAN->fpCallback(eCANStat, sCANMessage);
 				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_BOFF);
 				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_EPASS);
 				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_EWARN);
 				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_TXOK);
 				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_RXOK);
-				pCAN->fpCallback(eCANStat, sCANMessage);
 			}
 			else if ((1 <= CCAN_INT_MSG_NUM(wCANint)) && (CCAN_INT_MSG_NUM(wCANint) <= 0x20))
 			{
@@ -592,10 +591,9 @@ void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage
 		NVIC_EnableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
 	}
 }
-/*
+
 uint8_t CAN_bGetErCount(const can_config_s *pCAN, can_transfer_id dir)
 {
-
-	return Chip_CCAN_GetErrCounter (CAN_MAP_REGISTER(pCAN->eCANPort), dir);
+	return Chip_CCAN_GetErrCounter(CAN_MAP_REGISTER(pCAN->eCANPort), dir);
 }
-*/
+
