@@ -627,7 +627,7 @@ STATIC const IP_EMC_STATIC_CONFIG_T memreg_config =
 void BRD_vWait_ms (uint32_t ms)
 {
 #ifdef CORE_M4
-	volatile static int initialized = 0;
+	static int initialized = 0;
 	if (!initialized)
 	{
 		initialized = 1;
@@ -649,7 +649,7 @@ void BRD_vWait_ms (uint32_t ms)
 void BRD_vWait_us (uint32_t us)
 {
 #ifdef CORE_M4
-	volatile static int initialized = 0;
+	static int initialized = 0;
 	if (!initialized)
 	{
 		initialized = 1;
@@ -825,7 +825,7 @@ STATIC const IP_EMC_DYN_CONFIG_T AS4C16M16SA_config = {
 /* Set up and initialize clocking prior to call to main */
 void BRD_vSetupClocking (void)
 {
-	int i;
+	uint32_t i;
 
 	/* Setup FLASH acceleration to target clock rate prior to clock switch */
 	Chip_CREG_SetFlashAcceleration(MAX_CLOCK_FREQ);
@@ -969,7 +969,7 @@ void BRD_LCDConfig (void)
 
 void BRD_SetupMuxing (void)
 {
-	int i;
+	uint32_t i;
 // TODO: Define an MACRO to setup all system level pin muxing as in EA_LPC4357 embedded kit
 #ifdef EA_LPC4357
 	/* Setup system level pin muxing */

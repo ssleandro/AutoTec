@@ -359,7 +359,7 @@ typedef struct
 	{
 		uint32_t v;     ///< message as 32-bit value
 		void *p;     ///< message or mail as void pointer
-		int32_t signals;     ///< signal flags
+		uint32_t signals;     ///< signal flags
 	} value;                             ///< event value
 	union
 	{
