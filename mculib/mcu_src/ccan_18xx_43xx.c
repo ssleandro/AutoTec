@@ -312,8 +312,6 @@ void Chip_CCAN_SetValidMsg (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, uint8_t msgN
 /* Send a message */
 void Chip_CCAN_Send (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, CCAN_MSG_OBJ_T *pMsgObj)
 {
-	uint16_t wCount = 0;
-
 	uint8_t msgNum = getFreeMsgObject(pCCAN);
 	if (!msgNum)
 	{
@@ -325,7 +323,7 @@ void Chip_CCAN_Send (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, C
 		//return;
 	}
 	Chip_CCAN_SetMsgObject(pCCAN, IFSel, CCAN_TX_DIR, remoteFrame, msgNum, pMsgObj);
-	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1) && (wCount++ < 0x17FF))
+	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1))
 	{	// blocking , wait for sending completed
 	}
 
