@@ -227,47 +227,6 @@ void GUI_vUptTestMode(void)
 	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
-void GUI_vRandomValuesToPlanterDataMask (void)
-{
-	uint8_t i, j;
-
-	for ( i = 0, j = 1; i < 36, j < 36; i = i + 2, j = j + 2) {
-		if (sGUIPlanterData.asLineStatus[i].dsLineAverage > 100)
-		{
-			sGUIPlanterData.asLineStatus[i].dsLineAverage = -100;
-		}
-		else
-		{
-			sGUIPlanterData.asLineStatus[i].dsLineAverage++;
-			sGUIPlanterData.asLineStatus[i].dLineSemPerUnit++;
-			sGUIPlanterData.asLineStatus[i].dLineSemPerHa++;
-			sGUIPlanterData.asLineStatus[i].dLineTotalSeeds++;
-		}
-
-		if (sGUIPlanterData.asLineStatus[j].dsLineAverage < -100)
-		{
-			sGUIPlanterData.asLineStatus[j].dsLineAverage = 100;
-		}
-		else
-		{
-			sGUIPlanterData.asLineStatus[j].dsLineAverage--;
-			sGUIPlanterData.asLineStatus[j].dLineSemPerUnit++;
-			sGUIPlanterData.asLineStatus[j].dLineSemPerHa++;
-			sGUIPlanterData.asLineStatus[j].dLineTotalSeeds++;
-		}
-	}
-
-	sGUIPlanterData.dProductivity++;
-	sGUIPlanterData.dWorkedTime++;
-	sGUIPlanterData.dTotalSeeds++;
-	sGUIPlanterData.dPartPopSemPerUnit++;
-	sGUIPlanterData.dPartPopSemPerHa++;
-	sGUIPlanterData.dWorkedAreaMt++;
-	sGUIPlanterData.dWorkedAreaHa++;
-	sGUIPlanterData.dTotalMt++;
-	sGUIPlanterData.dTotalHa++;
-}
-
 #define ALL_LINES 0
 
 void GUI_vGetValuesToPlanterDataMask (void)
