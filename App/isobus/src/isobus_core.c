@@ -166,7 +166,7 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
 CREATE_LOCAL_QUEUE(PublishQ, event_e, 32)
 CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 64)
 CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 64)
-CREATE_LOCAL_QUEUE(UpdateQ, event_e, 32)
+CREATE_LOCAL_QUEUE(UpdateQ, event_e, 64)
 CREATE_LOCAL_QUEUE(TranspProtocolQ, ISOBUSMsg, 64)
 
 /*****************************
@@ -199,8 +199,8 @@ uint8_t bISOMGTThreadArrayPosition = 0;                    	//!< Thread position
 uint8_t bISOUPDTThreadArrayPosition = 0;                    //!< Thread position in array
 uint8_t bISOTPTThreadArrayPosition = 0;                    //!< Thread position in array
 
-osThreadId xManagementThreadId;                           	// Holds the BootThreadId
-osThreadId xBootThreadId;                               	// Holds the AuxBootThreadId
+osThreadId xManagementThreadId;                          // Holds the ManagementThreadId
+osThreadId xTransportProtocolThreadId;                   // Holds the TransportProtocolThreadId
 osThreadId xUpdatePoolThreadId;							   	// Holds the UpdatePoolThreadId
 
 eBootStates eCurrState;
@@ -314,7 +314,7 @@ static void ISO_vCreateThread (const Threads_t sThread)
 	(sThread.thisWDTPosition == 3) ? xManagementThreadId = xThreads : xManagementThreadId;
 
 	// Holds the BootThreadId, note that BootThreadId is the sixth position at THREADS_THISTHREAD array
-	(sThread.thisWDTPosition == 6) ? xBootThreadId = xThreads : xBootThreadId;
+	(sThread.thisWDTPosition == 6) ? xTransportProtocolThreadId = xThreads : xTransportProtocolThreadId;
 
 	ASSERT(xThreads != NULL);
 	if (sThread.thisModule != 0)
@@ -552,6 +552,13 @@ eAPPError_s ISO_vInitDeviceLayer (uint32_t wSelectedInterface)
 	return eError;
 }
 
+void ISO_vISOThreadPutEventOnISOUpdateQ (event_e eEvt)
+{
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+	WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+}
+
 void ISO_vIdentifyEvent (contract_s* contract)
 {
 	event_e eEvt =  GET_PUBLISHED_EVENT(contract);
@@ -569,25 +576,25 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus)) != 0)
 					{
 						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus));
-						PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+						ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					}
 					break;
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
 					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)pvPayData);
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TEST_MODE_INTERFACE:
 				{
 					ISO_vUpdateTestModeData(eEvt, pvPayData);
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_TRIMMING_INTERFACE:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE:
@@ -596,64 +603,64 @@ void ISO_vIdentifyEvent (contract_s* contract)
 						return;
 
 					sISOGPSStatus = *((GPS_sStatus*) pvPayData);
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE:
 				{
 					canStatusStruct_s *psCANSensorStatus = pvPayData;
 					memcpy(&sCANSensorStatus, psCANSensorStatus, sizeof(canStatusStruct_s));
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_FINISH:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION:
 				{
 					ISO_vUpdateTestModeData(eEvt, pvPayData);
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_CONFIG:
 				{
 					ISO_vUpdateConfigData((sConfigurationData *)pvPayData);
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_CHANGE_ACTIVE_MASK_CONFIG_MASK:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_ALARM_NEW_SENSOR:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_ALARM_DISCONNECTED_SENSOR:
 				case EVENT_GUI_ALARM_LINE_FAILURE:
 				case EVENT_GUI_ALARM_SETUP_FAILURE:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_ALARM_EXCEEDED_SPEED:
 				case EVENT_GUI_ALARM_GPS_FAILURE:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_ALARM_TOLERANCE:
 				{
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK:
@@ -665,7 +672,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					{
 						ePasswordManager = PASSWD_CHANGE_PASSWD_NEW_PASSWD;
 					}
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK:
@@ -677,7 +684,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					{
 						ePasswordManager = PASSWD_CHANGE_NOT_ACCEPTED;
 					}
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK:
@@ -686,7 +693,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					{
 						ePasswordManager = PASSWD_CHANGE_ACCEPTED;
 					}
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK:
@@ -695,7 +702,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					{
 						ePasswordManager = PASSWD_CHANGE_NOT_ACCEPTED;
 					}
-					PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_UPDATE_REPLACE_SENSOR:
@@ -1014,7 +1021,6 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 
 	WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
 	osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);
-	WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 
 	if (evtPub.status == osEventMessage)
 	{
@@ -1031,8 +1037,11 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 						eCurrState = eIfAck;
 						break;
 					case TP_Conn_Abort:
+					{
 						eCurrState = eIfNack;
+						osSignalSet(xTransportProtocolThreadId, eCurrState);
 						break;
+					}
 					case TP_BAM:
 					case TP_CM_RTS:
 					default:
@@ -1054,7 +1063,10 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 						eCurrState = eIfAck;
 						break;
 					case ETP_Conn_Abort:
+					{
 						eCurrState = eIfNack;
+						osSignalSet(xTransportProtocolThreadId, eCurrState);
+					}
 						break;
 					case ETP_CM_DPO:
 					case ETP_CM_RTS:
@@ -1067,6 +1079,7 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 				break;
 		}
 	}
+	WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 }
 
 void ISO_vObjectPoolMemoryRequired (void)
@@ -1153,14 +1166,8 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 	osSignalWait(WAIT_GLOBAL_VT_STATUS, osWaitForever);
 	WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 
-	// Send a request address claim message
-	ISO_vSendRequest(ADDRESS_CLAIM_PGN);
-
-	// Send a address claim message
-	ISO_vSendAddressClaimed();
-
 	// Wait for an VT status message
-	eCurrState = WAIT_VT_STATUS;
+	eCurrState = INIT_HANDSHAKE;
 
 	while (1)
 	{
@@ -1176,6 +1183,24 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 
 					switch (eCurrState)
 					{
+						case RETRANSMIT_POOL:
+						{
+							WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
+							osDelay(ISO_RETRANSMIT_DELAY_MS);
+							WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+							eCurrState = INIT_HANDSHAKE;
+							break;
+						}
+						case INIT_HANDSHAKE:
+						{
+							// Send a request address claim message
+							ISO_vSendRequest(ADDRESS_CLAIM_PGN);
+							// Send a address claim message
+							ISO_vSendAddressClaimed();
+							// Wait for an VT status message
+							eCurrState = WAIT_VT_STATUS;
+							break;
+						}
 						case WAIT_VT_STATUS:
 						{
 							// Send a working set master message
@@ -1211,23 +1236,29 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 
 							do
 							{
-								ISO_vTransportProtocolManagement(OBJECT_POOL_SENT, WAIT_VT_STATUS);
-							} while (eCurrState != OBJECT_POOL_SENT);
+								ISO_vTransportProtocolManagement(OBJECT_POOL_SENT, RETRANSMIT_POOL);
+							} while ((eCurrState != OBJECT_POOL_SENT) && (eCurrState != RETRANSMIT_POOL));
 
-							ISO_vObjectPoolRequestToSend();
-
-							do
+							if (eCurrState != RETRANSMIT_POOL)
 							{
-								ISO_vTransportProtocolManagement(OBJECT_POOL_LANG_PKG_SENT, WAIT_VT_STATUS);
-							} while (eCurrState != OBJECT_POOL_LANG_PKG_SENT);
+								ISO_vObjectPoolRequestToSend();
 
-							ISO_vSendEndObjectPool();
-							ISO_vSendWSMaintenancePoolSent();
-							ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
-//							ISO_vSendStoreVersion(OBJECT_POOL_VERSION);
+								do
+								{
+									ISO_vTransportProtocolManagement(OBJECT_POOL_LANG_PKG_SENT, RETRANSMIT_POOL);
+								} while ((eCurrState != OBJECT_POOL_LANG_PKG_SENT) && (eCurrState != RETRANSMIT_POOL));
 
-							eCurrState = OBJECT_POOL_LOADED;
-							osSignalSet(xBootThreadId, OBJECT_POOL_LOADED);
+								if (eCurrState != RETRANSMIT_POOL)
+								{
+									ISO_vSendEndObjectPool();
+									ISO_vSendWSMaintenancePoolSent();
+									ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
+		//							ISO_vSendStoreVersion(OBJECT_POOL_VERSION);
+
+									eCurrState = OBJECT_POOL_LOADED;
+									osSignalSet(xTransportProtocolThreadId, OBJECT_POOL_LOADED);
+								}
+							}
 							break;
 						}
 						case OBJECT_POOL_LOADED:
@@ -1248,64 +1279,6 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 			}
 			case UPDATING_LANGUAGE:
 			{
-//				ISO_vObjectPoolRequestToSend();
-//
-//				do
-//				{
-//					WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-//					osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);   // Wait
-//					WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
-//
-//					if (evtPub.status == osEventMessage)
-//					{
-//						switch (ISO_wGetPGN(&RcvMsg))
-//						{
-//							case TP_CONN_MANAGE_PGN:
-//							{
-//								switch (RcvMsg.B1)
-//								{
-//									case TP_CM_CTS:
-//									ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
-//										break;
-//									case TP_EndofMsgACK:
-//										bUpdateObjectPool = true;
-//										break;
-//									case TP_Conn_Abort:
-//										break;
-//									case TP_BAM:
-//									case TP_CM_RTS:
-//									default:
-//										break;
-//								}
-//								break;
-//							}
-//							case ETP_CONN_MANAGE_PGN:
-//							{
-//								switch (RcvMsg.B1)
-//								{
-//									case ETP_CM_CTS:
-//									// Send DPO message
-//									ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
-//									ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
-//													   EXTENDED_TRANSPORT_PROTOCOL);
-//										break;
-//									case ETP_CM_EOMA:
-//										bUpdateObjectPool = true;
-//										break;
-//									case ETP_Conn_Abort:
-//										break;
-//									case ETP_CM_DPO:
-//									case ETP_CM_RTS:
-//									default:
-//										break;
-//								}
-//								break;
-//							}
-//						}
-//					}
-//				} while (!bUpdateObjectPool);
-//
-//				ISO_vSendEndObjectPool();
 				osFlagSet(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED);
 				eModCurrState = RUNNING;
 				bUpdateObjectPool = false;
@@ -1404,7 +1377,7 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 							if (eModCurrState == BOOT)
 							{
 								eCurrState = OBJECT_POOL_LOADED;
-								osSignalSet(xBootThreadId, OBJECT_POOL_LOADED);
+								osSignalSet(xTransportProtocolThreadId, OBJECT_POOL_LOADED);
 							}
 						}
 						else
@@ -1412,12 +1385,12 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 							if (eModCurrState == BOOT)
 							{
 								eCurrState = WAIT_LOAD_VERSION;
-								osSignalSet(xBootThreadId, WAIT_LOAD_VERSION);
+								osSignalSet(xTransportProtocolThreadId, WAIT_LOAD_VERSION);
 							}
 						}
 						break;
 					case FUNC_VT_STATUS:
-						osSignalSet(xBootThreadId, WAIT_VT_STATUS);
+						osSignalSet(xTransportProtocolThreadId, WAIT_VT_STATUS);
 						break;
 					default:
 						break;
@@ -1428,7 +1401,7 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 				switch (sRcvMsg->B1)
 				{
 					case FUNC_VT_STATUS:
-						osSignalSet(xBootThreadId, WAIT_GLOBAL_VT_STATUS);
+						osSignalSet(xTransportProtocolThreadId, WAIT_GLOBAL_VT_STATUS);
 						break;
 					default:
 						break;
@@ -1440,7 +1413,7 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 		{
 			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 			{
-				osSignalSet(xBootThreadId, WAIT_SEND_POOL);
+				osSignalSet(xTransportProtocolThreadId, WAIT_SEND_POOL);
 				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 				PUT_LOCAL_QUEUE(TranspProtocolQ, *sRcvMsg, osWaitForever);
 				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
@@ -1451,7 +1424,7 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 		{
 			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 			{
-				osSignalSet(xBootThreadId, WAIT_SEND_POOL);
+				osSignalSet(xTransportProtocolThreadId, WAIT_SEND_POOL);
 				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 				PUT_LOCAL_QUEUE(TranspProtocolQ, *sRcvMsg, osWaitForever);
 				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
