@@ -429,6 +429,12 @@ void ISO_vSendBytesToVT (uint8_t bNumPacketsToSend, uint32_t wNextPacketNumber, 
 	uint8_t bIterator;
 	uint16_t bSentPackets;                   // Number of packets sent in this CTS message
 
+	if (bNumPacketsToSend == 0)
+	{
+		osDelay(25);
+		return;
+	}
+
 	switch (bProtocol)
 	{
 		case TRANSPORT_PROTOCOL:

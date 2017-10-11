@@ -172,7 +172,8 @@
 #define ISO_ALARM_DEACTIVATE	0
 
 #define ISO_TIMER_PERIOD_MS_WS_MAINTENANCE	850
-#define ISO_TIMER_PERIOD_MS_CAN_STATUS		2500
+#define ISO_TIMER_PERIOD_MS_CAN_STATUS			2500
+#define ISO_RETRANSMIT_DELAY_MS					5000
 
 /******************************************************************************
  * Macros
@@ -190,6 +191,8 @@
 typedef enum
 {
 	WAIT_GLOBAL_VT_STATUS,
+	RETRANSMIT_POOL,
+	INIT_HANDSHAKE,
 	WAIT_VT_STATUS,
 	WAIT_LOAD_VERSION,
 	WAIT_SEND_POOL,
