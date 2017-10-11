@@ -2983,8 +2983,7 @@ void GPS_vGPSManagementThread (void const *argument)
 					GPS_sGerenciaTimeoutMsg.dNavPos++;
 
 					//Se o GPS nunca recebeu esta mensagem, reconfigura
-					if (!(memcmp(&GPS_sDadosGPS.lLon, 0,
-						sizeof(GPS_sDadosGPS.lLon))))
+					if (GPS_sDadosGPS.lLon != 0)
 					{
 						//Volta para a configuração
 						GPS_eConfigura = CfgMsgNavPosllh;
@@ -3002,8 +3001,7 @@ void GPS_vGPSManagementThread (void const *argument)
 					GPS_sGerenciaTimeoutMsg.dNavSol++;
 
 					//Se o GPS nunca recebeu esta mensagem, reconfigura
-					if (!(memcmp(&GPS_sDadosGPS.eGpsFix, 0,
-						sizeof(GPS_sDadosGPS.eGpsFix))))
+					if (GPS_sDadosGPS.eGpsFix != 0)
 					{
 						//Volta para a configuração
 						GPS_eConfigura = CfgMsgNavSol;
@@ -3022,7 +3020,7 @@ void GPS_vGPSManagementThread (void const *argument)
 					GPS_sGerenciaTimeoutMsg.dNavVelNed++;
 
 					//Se o GPS nunca recebeu esta mensagem, reconfigura
-					if (!(memcmp(&GPS_sDadosGPS.lVelNorth, 0, sizeof(GPS_sDadosGPS.lVelNorth))))
+					if (GPS_sDadosGPS.lVelNorth != 0)
 					{
 						//Volta para a configuração
 						GPS_eConfigura = CfgMsgNavVelned;
@@ -3040,8 +3038,7 @@ void GPS_vGPSManagementThread (void const *argument)
 					GPS_sGerenciaTimeoutMsg.dNavTimeGps++;
 
 					//Se o GPS nunca recebeu esta mensagem, reconfigura
-					if (!(memcmp(&GPS_sDadosGPS.dTOW, 0,
-						sizeof(GPS_sDadosGPS.dTOW))))
+					if (GPS_sDadosGPS.dTOW != 0)
 					{
 						//Volta para a configuração
 						GPS_eConfigura = CfgMsgNavTimeGps;
@@ -3058,8 +3055,7 @@ void GPS_vGPSManagementThread (void const *argument)
 					GPS_sGerenciaTimeoutMsg.dMonVer++;
 
 					//Se o GPS nunca recebeu esta mensagem, reconfigura
-					if (!(memcmp(&GPS_sDadosGPS.bSwVersion, 0,
-						sizeof(GPS_sDadosGPS.bSwVersion))))
+					if (GPS_sDadosGPS.bSwVersion != 0)
 					{
 						//Volta para a configuração
 						GPS_eConfigura = CfgMsgMonHw;
@@ -3077,8 +3073,7 @@ void GPS_vGPSManagementThread (void const *argument)
 					GPS_sGerenciaTimeoutMsg.dMonHw++;
 
 					//Se o GPS nunca recebeu esta mensagem, reconfigura
-					if (!(memcmp(&GPS_sDadosGPS.eStsAntena, 0,
-						sizeof(GPS_sDadosGPS.eStsAntena))))
+					if (GPS_sDadosGPS.eStsAntena != 0)
 					{
 						//Volta para a configuração
 						GPS_eConfigura = CfgMsgMonHw;
