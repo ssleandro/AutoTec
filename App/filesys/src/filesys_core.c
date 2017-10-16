@@ -487,10 +487,6 @@ void FSM_vFileSysThread (void const *argument)
 
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATUS);
 
-	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
-	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
-
-
 	error = FFS_vLoadConfigFile();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_CFG);
