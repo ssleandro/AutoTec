@@ -399,6 +399,8 @@ typedef enum event_e
 	EVENT_ISO_AREA_MONITOR_PAUSE,
 	EVENT_ISO_ALARM_CLEAR_ALARM,
 	EVENT_CTL_UPDATE_CONFIG,
+	EVENT_CTL_UPDATE_FILE_INFO,
+	EVENT_CTL_GET_FILE_INFO,
 	EVENT_SEN_PUBLISH_FLAG,
 	EVENT_SEN_CAN_STATUS,
 } event_e;
@@ -724,6 +726,25 @@ typedef union
 
 //Ajuste do Contraste
 #define LCD_bCONTRASTE_MAX    127
+
+
+typedef struct
+{
+	int8_t bFileName[20];
+	int32_t FileLengh;
+	int8_t bFileDateTime[17];
+	void * pNext;
+}sFileInfo;
+
+typedef struct
+{
+	uint32_t wTotal;
+	uint32_t wFree;
+	uint32_t wUsed;
+	uint32_t wBad;
+	sFileInfo *pFirst;
+	int8_t bNumFiles;
+}sFSInfo;
 
 /******************************************************************************
  * Variables

@@ -99,6 +99,7 @@ osFlagsGroupId FFS_sFlagSis;
 AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 UOS_tsConfiguracao FFS_sConfiguracao;
+sFSInfo tsFSInfo = {0, 0, 0, 0, NULL};
 
 /******************************************************************************
  * Function Prototypes
@@ -297,6 +298,10 @@ void FSM_vFileSysPublishThread (void const *argument)
 			PUBLISH_MESSAGE(FileSys, EVENT_FFS_SENSOR_CFG, EVENT_SET, (void*)&FFS_sCtrlListaSens.CAN_sCtrlListaSens);
 		}
 
+		if (tSignalBit & FFS_FLAG_FILE_INFO)
+		{
+			PUBLISH_MESSAGE(FileSys, EVENT_FFS_SENSOR_CFG, EVENT_SET, (void*)&tsFSInfo);
+		}
 	}
 
 	osThreadTerminate(NULL);
@@ -386,6 +391,11 @@ void FFS_vIdentifyEvent (contract_s* contract)
 						ASSERT(error == APP_ERROR_SUCCESS);
 					}
 				}
+			}
+			if (ePubEvt == EVENT_CTL_GET_FILE_INFO)
+			{
+				FFS_sGetFSInfo(&tsFSInfo);
+				osSignalSet(xPbulishThreadID, FFS_FLAG_FILE_INFO);
 			}
 			break;
 		}
@@ -477,6 +487,10 @@ void FSM_vFileSysThread (void const *argument)
 
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATUS);
 
+	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
+
+
 	error = FFS_vLoadConfigFile();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_CFG);
@@ -489,6 +503,8 @@ void FSM_vFileSysThread (void const *argument)
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATIC_REG);
 
+	FFS_sGetFSInfo(&tsFSInfo);
+	//osSignalSet(xPbulishThreadID, FFS_FLAG_FILE_INFO);
 
 	/* Start the main functions of the application */
 	while (1)
