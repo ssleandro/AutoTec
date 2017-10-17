@@ -99,7 +99,7 @@ osFlagsGroupId FFS_sFlagSis;
 AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 UOS_tsConfiguracao FFS_sConfiguracao;
-sFSInfo tsFSInfo = {0, 0, 0, 0, NULL};
+FFS_sFSInfo tsFSInfo = {0, 0, 0, 0, NULL};
 
 /******************************************************************************
  * Function Prototypes
@@ -300,7 +300,7 @@ void FSM_vFileSysPublishThread (void const *argument)
 
 		if (tSignalBit & FFS_FLAG_FILE_INFO)
 		{
-			PUBLISH_MESSAGE(FileSys, EVENT_FFS_SENSOR_CFG, EVENT_SET, (void*)&tsFSInfo);
+			PUBLISH_MESSAGE(FileSys, EVENT_FFS_FILE_INFO, EVENT_SET, (void*)&tsFSInfo);
 		}
 	}
 
@@ -500,7 +500,6 @@ void FSM_vFileSysThread (void const *argument)
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATIC_REG);
 
 	FFS_sGetFSInfo(&tsFSInfo);
-	//osSignalSet(xPbulishThreadID, FFS_FLAG_FILE_INFO);
 
 	/* Start the main functions of the application */
 	while (1)

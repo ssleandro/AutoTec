@@ -76,6 +76,6 @@ eAPPError_s FFS_vRemoveSensorCfg (void);
 
 eAPPError_s FFS_vLoadStaticReg (void);
 eAPPError_s FFS_vSaveStaticReg (void);
-void FFS_sGetFSInfo(sFSInfo *pSFInfo);
+void FFS_sGetFSInfo(FFS_sFSInfo *pSFInfo);
 
 #endif

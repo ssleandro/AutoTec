@@ -327,6 +327,7 @@ typedef enum event_e
 	EVENT_FFS_STATIC_REG,
 	EVENT_FFS_CONFIG_GET_MEMORY_USED,
 	EVENT_FFS_CONFIG_GET_MEMORY_USED_RESPONSE,
+	EVENT_FFS_FILE_INFO,
 	EVENT_AQR_INSTALLATION_FINISH_INSTALLATION,
 	EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION,
 	EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION,
@@ -378,6 +379,7 @@ typedef enum event_e
 	EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK,
 	EVENT_GUI_CONFIG_GET_MEMORY_USED,
 	EVENT_GUI_CONFIG_GET_MEMORY_USED_RESPONSE,
+	EVENT_GUI_GET_FILE_INFO,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
@@ -734,7 +736,7 @@ typedef struct
 	int32_t FileLengh;
 	int8_t bFileDateTime[17];
 	void * pNext;
-}sFileInfo;
+}FFS_sFileInfo;
 
 typedef struct
 {
@@ -742,9 +744,9 @@ typedef struct
 	uint32_t wFree;
 	uint32_t wUsed;
 	uint32_t wBad;
-	sFileInfo *pFirst;
+	FFS_sFileInfo *pFirst;
 	int8_t bNumFiles;
-}sFSInfo;
+}FFS_sFSInfo;
 
 /******************************************************************************
  * Variables

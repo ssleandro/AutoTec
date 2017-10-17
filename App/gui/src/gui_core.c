@@ -1086,6 +1086,14 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				ASSERT(status == osOK);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
+			if (ePubEvt == EVENT_CTL_UPDATE_FILE_INFO)
+			{
+				FFS_sFSInfo *psFSInfo = pvPayload;
+				if (psFSInfo != NULL)
+				{
+					//Trata informações da info
+				}
+			}
 			break;
 		}
 		case MODULE_ACQUIREG:

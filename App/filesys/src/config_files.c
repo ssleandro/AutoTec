@@ -61,7 +61,7 @@ extern AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 
 extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 
-extern sFSInfo tsFSInfo;
+extern FFS_sFSInfo tsFSInfo;
 
 /******************************************************************************
  * Typedefs
@@ -464,7 +464,7 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	return eRet;
 }
 
-void FFS_sGetFSInfo(sFSInfo *pSFInfo)
+void FFS_sGetFSInfo(FFS_sFSInfo *pSFInfo)
 {
 	osFlags dFlagsSis;
 	uint8_t bErr;
@@ -472,7 +472,7 @@ void FFS_sGetFSInfo(sFSInfo *pSFInfo)
 	F_FIND xFindStruct;
 	F_FILE *xFileHandle;
 	uint8_t bRet = F_ERR_READ;
-	sFileInfo **psFileInfo = NULL;
+	FFS_sFileInfo **psFileInfo = NULL;
 	TLS_FreeFSInfo(pSFInfo);
 
 	/* Get space information on current embedded FAT file system drive. */
@@ -494,14 +494,14 @@ void FFS_sGetFSInfo(sFSInfo *pSFInfo)
 		do
 		{
 			pSFInfo->bNumFiles++;
-			*psFileInfo = pvPortMalloc(sizeof(sFileInfo));
+			*psFileInfo = pvPortMalloc(sizeof(FFS_sFileInfo));
 			(*psFileInfo)->FileLengh = (int)xFindStruct.filesize;
 
 			strcpy((*psFileInfo)->bFileName, xFindStruct.filename);
 
 			TLS_convertDateTime((*psFileInfo)->bFileDateTime, xFindStruct.ctime,xFindStruct.cdate);
 			(*psFileInfo)->pNext = NULL;
-			psFileInfo = (sFileInfo **)&((*psFileInfo)->pNext);
+			psFileInfo = (FFS_sFileInfo **)&((*psFileInfo)->pNext);
 		}while( f_findnext( &xFindStruct ) == F_NO_ERROR );
 	}
 }

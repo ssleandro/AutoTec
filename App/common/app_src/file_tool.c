@@ -176,7 +176,7 @@ void TLS_convertDateTime(uint8_t *bBuffer, uint16_t ctime, uint16_t cdate)
 
 }
 
-uint8_t TLS_FreeFileInfo(sFileInfo *psFileInfo)
+uint8_t TLS_FreeFileInfo(FFS_sFileInfo *psFileInfo)
 {
 	int i = 0;
 
@@ -186,7 +186,7 @@ uint8_t TLS_FreeFileInfo(sFileInfo *psFileInfo)
 	}
 	else
 	{
-		if (TLS_FreeFileInfo((sFileInfo *)psFileInfo->pNext))
+		if (TLS_FreeFileInfo((FFS_sFileInfo *)psFileInfo->pNext))
 		{
 			if (psFileInfo != NULL)
 			{
@@ -198,7 +198,7 @@ uint8_t TLS_FreeFileInfo(sFileInfo *psFileInfo)
 	return 0;
 }
 
-void TLS_FreeFSInfo(sFSInfo *pSFInfo)
+void TLS_FreeFSInfo(FFS_sFSInfo *pSFInfo)
 {
 	pSFInfo->bNumFiles = 0;
 	pSFInfo->wTotal = 0;
