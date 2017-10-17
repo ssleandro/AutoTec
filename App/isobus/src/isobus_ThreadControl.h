@@ -43,16 +43,13 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define ISOBUS_MODULES \
-    X("IsobusRecv"     			, 512 		, osPriorityNormal		, ISO_vIsobusRecvThread     			, (1 << 0) , 1 ) \
-    X("IsobusWrite"    	 		, 512 		, osPriorityHigh		, ISO_vIsobusWriteThread				, (1 << 1) , 2 ) \
-    X("IsobusManagement"		, 512 		, osPriorityHigh		, ISO_vIsobusManagementThread 			, (1 << 2) , 3 ) \
-    X("IsobusUpdateOP" 			, 1024 		, osPriorityBelowNormal	, ISO_vIsobusUpdateOPThread 			, (1 << 3) , 4 ) \
-    X("IsobusPublish"  			, 512 		, osPriorityNormal		, ISO_vIsobusPublishThread  			, (1 << 4) , 5 ) \
-    X("IsobusTransportProtocol" , 512 		, osPriorityHigh       	, ISO_vIsobusTransportProtocolThread  	, (1 << 5) , 6 ) \
-    X(NULL             			,   0 		, 0                    	, NULL                      			, 0        , 7 ) \
-
-
-// 250, 250, 150, 100, 150, 200
+    X("IsobusRecv"     			, 512 		, osPriorityNormal		, ISO_vIsobusRecvThread     				, (1 << 0) , 1 ) \
+    X("IsobusWrite"    	 		, 512 		, osPriorityAboveNormal	, ISO_vIsobusWriteThread					, (1 << 1) , 2 ) \
+    X("IsobusManagement"		, 512 		, osPriorityAboveNormal	, ISO_vIsobusManagementThread				, (1 << 2) , 3 ) \
+    X("IsobusUpdateOP" 			, 1024 		, osPriorityBelowNormal	, ISO_vIsobusUpdateOPThread 				, (1 << 3) , 4 ) \
+    X("IsobusPublish"  			, 512 		, osPriorityNormal		, ISO_vIsobusPublishThread  				, (1 << 4) , 5 ) \
+    X("IsobusTransportProtocol" , 512 		, osPriorityAboveNormal	, ISO_vIsobusTransportProtocolThread  	, (1 << 5) , 6 ) \
+    X(NULL             			,   0 		, 0                    	, NULL                      				, 0        , 7 ) \
 
 /******************************************************************************
  * Configuration Constants

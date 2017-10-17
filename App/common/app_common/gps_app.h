@@ -71,6 +71,7 @@
 #define GPS_FLAG_TIMEOUT_MTR        0x00000008
 #define GPS_FLAG_SEGUNDO            0x00000010
 #define GPS_FLAG_STATUS					0x00000020
+#define GPS_FLAG_READ_DATA_SENSOR	0x00000040
 
 //Mascaras do Fix Status Flag
 #define GPS_FIX_OK  0x01   //i.e within DOP & ACC Masks
