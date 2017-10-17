@@ -221,6 +221,7 @@ typedef struct sConfigurationDataMask
 typedef struct sLanguageCommandData
 {
 	eSelectedLanguage eLanguage;
+	eSelectedLanguage eLastLanguage;
 	eSelectedUnitMeasurement eUnit;
 } sLanguageCommandData;
 
