@@ -166,7 +166,7 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
 CREATE_LOCAL_QUEUE(PublishQ, event_e, 32)
 CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 64)
 CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 64)
-CREATE_LOCAL_QUEUE(UpdateQ, event_e, 64)
+CREATE_LOCAL_QUEUE(UpdateQ, event_e, 128)
 CREATE_LOCAL_QUEUE(TranspProtocolQ, ISOBUSMsg, 64)
 
 /*****************************
@@ -1195,6 +1195,46 @@ void ISO_vObjectPoolUnitPkgRequestToSend (void)
 	}
 }
 
+void ISO_vUpdateConfigMaskInputNumberRange(void)
+{
+	bool bInternationalSystem = (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM);
+
+	ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_MIN : ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_MAX : ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_SEEDS_PER_METER_MIN : ISO_CONFIG_LIMITS_SEEDS_PER_METER_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_SEEDS_PER_METER_MAX : ISO_CONFIG_LIMITS_SEEDS_PER_METER_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_ROW_SPACING_MIN : ISO_CONFIG_LIMITS_ROW_SPACING_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_ROW_SPACING_MAX : ISO_CONFIG_LIMITS_ROW_SPACING_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_EVAL_DIST_MIN : ISO_CONFIG_LIMITS_EVAL_DIST_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_EVAL_DIST_MAX : ISO_CONFIG_LIMITS_EVAL_DIST_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_MAX_SPEED, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_MAXIMUM_SPEED_MIN : ISO_CONFIG_LIMITS_MAXIMUM_SPEED_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_MAX_SPEED, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_MAXIMUM_SPEED_MAX : ISO_CONFIG_LIMITS_MAXIMUM_SPEED_IMPERIAL_MAX);
+}
+
 void ISO_vTimerCallbackWSMaintenance (void const *arg)
 {
 	ISO_vSendWorkingSetMaintenance(false);
@@ -1327,6 +1367,10 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 									ISO_vSendEndObjectPool();
 									ISO_vSendWSMaintenancePoolSent();
 									ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
+
+									// Update object pool must be sent after end of object pool message
+									ISO_vUpdateConfigMaskInputNumberRange();
+
 		//							ISO_vSendStoreVersion(OBJECT_POOL_VERSION);
 
 									eCurrState = OBJECT_POOL_LOADED;
@@ -1375,12 +1419,10 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 											break;
 										case TP_EndofMsgACK:
 										{
-//											ISO_vSendEndObjectPool();
 											bUpdateObjectPool = true;
 											break;
 										}
 										case TP_Conn_Abort:
-//											bUpdateObjectPool = true;
 											break;
 										case TP_BAM:
 										case TP_CM_RTS:
@@ -1403,12 +1445,10 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 										}
 										case ETP_CM_EOMA:
 										{
-//											ISO_vSendEndObjectPool();
 											bUpdateObjectPool = true;
 											break;
 										}
 										case ETP_Conn_Abort:
-//											bUpdateObjectPool = true;
 											break;
 										case ETP_CM_DPO:
 										case ETP_CM_RTS:
@@ -1422,6 +1462,75 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 						WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 					} while (!bUpdateObjectPool);
 					ISO_vSendEndObjectPool();
+					bUpdateObjectPool = false;
+				}
+
+				if (sCommandLanguage.eLastUnit != sCommandLanguage.eUnit)
+				{
+					ISO_vObjectPoolUnitPkgRequestToSend();
+
+					do
+					{
+						WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
+						osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);   // Wait
+
+						if (evtPub.status == osEventMessage)
+						{
+							switch (ISO_wGetPGN(&RcvMsg))
+							{
+								case TP_CONN_MANAGE_PGN:
+								{
+									switch (RcvMsg.B1)
+									{
+										case TP_CM_CTS:
+											ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
+											break;
+										case TP_EndofMsgACK:
+										{
+											bUpdateObjectPool = true;
+											break;
+										}
+										case TP_Conn_Abort:
+											break;
+										case TP_BAM:
+										case TP_CM_RTS:
+										default:
+											break;
+									}
+									break;
+								}
+								case ETP_CONN_MANAGE_PGN:
+								{
+									switch (RcvMsg.B1)
+									{
+										case ETP_CM_CTS:
+										{
+											// Send DPO message
+											ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
+											ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
+																EXTENDED_TRANSPORT_PROTOCOL);
+											break;
+										}
+										case ETP_CM_EOMA:
+										{
+											bUpdateObjectPool = true;
+											break;
+										}
+										case ETP_Conn_Abort:
+											break;
+										case ETP_CM_DPO:
+										case ETP_CM_RTS:
+										default:
+											break;
+									}
+									break;
+								}
+							}
+						}
+						WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+					} while (!bUpdateObjectPool);
+					ISO_vSendEndObjectPool();
+					ISO_vUpdateConfigMaskInputNumberRange();
 				}
 
 				osFlagSet(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED);
@@ -1475,7 +1584,10 @@ void ISO_vIsobusUpdateVTStatus (ISOBUSMsg* RcvMsg)
 
 void ISO_vTreatLanguageCommandMessage (ISOBUSMsg sRcvMsg)
 {
+	event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
+
 	sCommandLanguage.eLastLanguage = sCommandLanguage.eLanguage;
+	sCommandLanguage.eLastUnit = sCommandLanguage.eUnit;
 
 	if ((sRcvMsg.B1 == 'r') && (sRcvMsg.B2 == 'u'))
 	{
@@ -1506,6 +1618,9 @@ void ISO_vTreatLanguageCommandMessage (ISOBUSMsg sRcvMsg)
 		default:
 			break;
 	}
+	WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+	PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+	WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 }
 
 void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
@@ -1581,11 +1696,6 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 		case LANGUAGE_PGN:
 		{
 			ISO_vTreatLanguageCommandMessage (*sRcvMsg);
-
-			event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
-			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 			break;
 		}
 		default:
@@ -2513,10 +2623,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 		case LANGUAGE_PGN:
 		{
 			ISO_vTreatLanguageCommandMessage(*sRcvMsg);
-			event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
-			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 			break;
 		}
 		case ACKNOWLEDGEMENT_PGN:
@@ -3571,7 +3677,9 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 							}
 
 							event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
+							WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 							PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+							WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 							break;
 						}
 						case EVENT_GUI_UPDATE_CONFIG:

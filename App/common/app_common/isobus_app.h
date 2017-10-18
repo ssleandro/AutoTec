@@ -223,6 +223,7 @@ typedef struct sLanguageCommandData
 	eSelectedLanguage eLanguage;
 	eSelectedLanguage eLastLanguage;
 	eSelectedUnitMeasurement eUnit;
+	eSelectedUnitMeasurement eLastUnit;
 } sLanguageCommandData;
 
 typedef enum eSelectedCANStatus
