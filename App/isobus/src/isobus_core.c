@@ -166,7 +166,7 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
 CREATE_LOCAL_QUEUE(PublishQ, event_e, 32)
 CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 64)
 CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 64)
-CREATE_LOCAL_QUEUE(UpdateQ, event_e, 64)
+CREATE_LOCAL_QUEUE(UpdateQ, event_e, 128)
 CREATE_LOCAL_QUEUE(TranspProtocolQ, ISOBUSMsg, 64)
 
 /*****************************
@@ -231,11 +231,23 @@ CREATE_MUTEX(ISO_UpdateMask);
 
 extern unsigned int POOL_SIZE;
 extern unsigned int PT_PACKAGE_SIZE;
+extern unsigned int PT_UNIT_METRIC_PKG_SIZE;
+extern unsigned int PT_UNIT_IMPERIAL_PKG_SIZE;
 extern unsigned int EN_PACKAGE_SIZE;
+extern unsigned int EN_UNIT_METRIC_PKG_SIZE;
+extern unsigned int EN_UNIT_IMPERIAL_PKG_SIZE;
 extern unsigned int ES_PACKAGE_SIZE;
+extern unsigned int ES_UNIT_METRIC_PKG_SIZE;
+extern unsigned int ES_UNIT_IMPERIAL_PKG_SIZE;
 extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en_unit_metric[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en_unit_imperial[];
 extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_pt[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_pt_unit_metric[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_pt_unit_imperial[];
 extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es_unit_metric[];
+extern const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es_unit_imperial[];
 
 CREATE_TIMER(AlarmTimeoutTimer, ISO_vTimerCallbackAlarmTimeout);
 CREATE_TIMER(WSMaintenanceTimer, ISO_vTimerCallbackWSMaintenance);
@@ -1084,28 +1096,35 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 
 void ISO_vObjectPoolMemoryRequired (void)
 {
+	uint32_t dUnitPkgSize = 0;
+
 	switch (sCommandLanguage.eLanguage) {
 		case LANGUAGE_PORTUGUESE:
 		{
-			ISO_vSendGetMemory(POOL_SIZE + PT_PACKAGE_SIZE);
+			dUnitPkgSize = (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM) ?
+						 PT_UNIT_METRIC_PKG_SIZE : PT_UNIT_IMPERIAL_PKG_SIZE;
+			ISO_vSendGetMemory(POOL_SIZE + PT_PACKAGE_SIZE + dUnitPkgSize);
 			break;
 		}
 		case LANGUAGE_SPANISH:
 		{
-			ISO_vSendGetMemory(POOL_SIZE + ES_PACKAGE_SIZE);
+			dUnitPkgSize = (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM) ?
+						 ES_UNIT_METRIC_PKG_SIZE : ES_UNIT_IMPERIAL_PKG_SIZE;
+			ISO_vSendGetMemory(POOL_SIZE + ES_PACKAGE_SIZE + dUnitPkgSize);
 			break;
 		}
 		case LANGUAGE_ENGLISH:
-		case LANGUAGE_RUSSIAN:
 		default:
 		{
-			ISO_vSendGetMemory(POOL_SIZE + EN_PACKAGE_SIZE);
+			dUnitPkgSize = (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM) ?
+						 EN_UNIT_METRIC_PKG_SIZE : EN_UNIT_IMPERIAL_PKG_SIZE;
+			ISO_vSendGetMemory(POOL_SIZE + EN_PACKAGE_SIZE + dUnitPkgSize);
 			break;
 		}
 	}
 }
 
-void ISO_vObjectPoolRequestToSend (void)
+void ISO_vObjectPoolLangPkgRequestToSend (void)
 {
 	switch (sCommandLanguage.eLanguage) {
 		case LANGUAGE_PORTUGUESE:
@@ -1121,7 +1140,6 @@ void ISO_vObjectPoolRequestToSend (void)
 			break;
 		}
 		case LANGUAGE_ENGLISH:
-		case LANGUAGE_RUSSIAN:
 		default:
 		{
 			ISO_vSendRequestToSend(EN_PACKAGE_SIZE);
@@ -1129,6 +1147,92 @@ void ISO_vObjectPoolRequestToSend (void)
 			break;
 		}
 	}
+}
+
+void ISO_vObjectPoolUnitPkgRequestToSend (void)
+{
+	switch (sCommandLanguage.eLanguage) {
+		case LANGUAGE_PORTUGUESE:
+		{
+			if (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+			{
+				ISO_vSendRequestToSend(PT_UNIT_METRIC_PKG_SIZE);
+				ISO_vInitPointersToTranfer(isoOP_M2GPlus_pt_unit_metric, PT_UNIT_METRIC_PKG_SIZE);
+			} else
+			{
+				ISO_vSendRequestToSend(PT_UNIT_IMPERIAL_PKG_SIZE);
+				ISO_vInitPointersToTranfer(isoOP_M2GPlus_pt_unit_imperial, PT_UNIT_IMPERIAL_PKG_SIZE);
+			}
+			break;
+		}
+		case LANGUAGE_SPANISH:
+		{
+			if (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+			{
+				ISO_vSendRequestToSend(ES_UNIT_METRIC_PKG_SIZE);
+				ISO_vInitPointersToTranfer(isoOP_M2GPlus_es_unit_metric, ES_UNIT_METRIC_PKG_SIZE);
+			} else
+			{
+				ISO_vSendRequestToSend(ES_UNIT_IMPERIAL_PKG_SIZE);
+				ISO_vInitPointersToTranfer(isoOP_M2GPlus_es_unit_imperial, ES_UNIT_IMPERIAL_PKG_SIZE);
+			}
+			break;
+		}
+		case LANGUAGE_ENGLISH:
+		default:
+		{
+			if (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM)
+			{
+				ISO_vSendRequestToSend(EN_UNIT_METRIC_PKG_SIZE);
+				ISO_vInitPointersToTranfer(isoOP_M2GPlus_en_unit_metric, EN_UNIT_METRIC_PKG_SIZE);
+			} else
+			{
+				ISO_vSendRequestToSend(EN_UNIT_IMPERIAL_PKG_SIZE);
+				ISO_vInitPointersToTranfer(isoOP_M2GPlus_en_unit_imperial, EN_UNIT_IMPERIAL_PKG_SIZE);
+			}
+			break;
+		}
+	}
+}
+
+void ISO_vUpdateConfigMaskInputNumberRange(void)
+{
+	bool bInternationalSystem = (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM);
+
+	ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_MIN : ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_IMP_WIDTH, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_MAX : ISO_CONFIG_LIMITS_IMPLEMENT_WIDTH_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_SEEDS_PER_METER_MIN : ISO_CONFIG_LIMITS_SEEDS_PER_METER_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_SEEDS_P_M, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_SEEDS_PER_METER_MAX : ISO_CONFIG_LIMITS_SEEDS_PER_METER_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_ROW_SPACING_MIN : ISO_CONFIG_LIMITS_ROW_SPACING_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_ROW_SPACING, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_ROW_SPACING_MAX : ISO_CONFIG_LIMITS_ROW_SPACING_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_EVAL_DIST_MIN : ISO_CONFIG_LIMITS_EVAL_DIST_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_EVAL_DISTANCE, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_EVAL_DIST_MAX : ISO_CONFIG_LIMITS_EVAL_DIST_IMPERIAL_MAX);
+
+	ISO_vChangeAttributeCommand(IN_CFG_MAX_SPEED, ISO_INPUT_NUMBER_MIN_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_MAXIMUM_SPEED_MIN : ISO_CONFIG_LIMITS_MAXIMUM_SPEED_IMPERIAL_MIN);
+	ISO_vChangeAttributeCommand(IN_CFG_MAX_SPEED, ISO_INPUT_NUMBER_MAX_VALUE_ATTRIBUTE,
+										(bInternationalSystem) ?
+										ISO_CONFIG_LIMITS_MAXIMUM_SPEED_MAX : ISO_CONFIG_LIMITS_MAXIMUM_SPEED_IMPERIAL_MAX);
 }
 
 void ISO_vTimerCallbackWSMaintenance (void const *arg)
@@ -1239,20 +1343,34 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 								ISO_vTransportProtocolManagement(OBJECT_POOL_SENT, RETRANSMIT_POOL);
 							} while ((eCurrState != OBJECT_POOL_SENT) && (eCurrState != RETRANSMIT_POOL));
 
-							if (eCurrState != RETRANSMIT_POOL)
+							if (eCurrState == OBJECT_POOL_SENT)
 							{
-								ISO_vObjectPoolRequestToSend();
+								ISO_vObjectPoolLangPkgRequestToSend();
 
 								do
 								{
 									ISO_vTransportProtocolManagement(OBJECT_POOL_LANG_PKG_SENT, RETRANSMIT_POOL);
 								} while ((eCurrState != OBJECT_POOL_LANG_PKG_SENT) && (eCurrState != RETRANSMIT_POOL));
+							}
 
-								if (eCurrState != RETRANSMIT_POOL)
+							if (eCurrState == OBJECT_POOL_LANG_PKG_SENT)
+							{
+								ISO_vObjectPoolUnitPkgRequestToSend();
+
+								do
+								{
+									ISO_vTransportProtocolManagement(OBJECT_POOL_UNIT_PKG_SENT, RETRANSMIT_POOL);
+								} while ((eCurrState != OBJECT_POOL_UNIT_PKG_SENT) && (eCurrState != RETRANSMIT_POOL));
+
+								if (eCurrState == OBJECT_POOL_UNIT_PKG_SENT)
 								{
 									ISO_vSendEndObjectPool();
 									ISO_vSendWSMaintenancePoolSent();
 									ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
+
+									// Update object pool must be sent after end of object pool message
+									ISO_vUpdateConfigMaskInputNumberRange();
+
 		//							ISO_vSendStoreVersion(OBJECT_POOL_VERSION);
 
 									eCurrState = OBJECT_POOL_LOADED;
@@ -1279,6 +1397,142 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 			}
 			case UPDATING_LANGUAGE:
 			{
+				if (sCommandLanguage.eLastLanguage != sCommandLanguage.eLanguage)
+				{
+					ISO_vObjectPoolLangPkgRequestToSend();
+
+					do
+					{
+						WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
+						osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);   // Wait
+
+						if (evtPub.status == osEventMessage)
+						{
+							switch (ISO_wGetPGN(&RcvMsg))
+							{
+								case TP_CONN_MANAGE_PGN:
+								{
+									switch (RcvMsg.B1)
+									{
+										case TP_CM_CTS:
+											ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
+											break;
+										case TP_EndofMsgACK:
+										{
+											bUpdateObjectPool = true;
+											break;
+										}
+										case TP_Conn_Abort:
+											break;
+										case TP_BAM:
+										case TP_CM_RTS:
+										default:
+											break;
+									}
+									break;
+								}
+								case ETP_CONN_MANAGE_PGN:
+								{
+									switch (RcvMsg.B1)
+									{
+										case ETP_CM_CTS:
+										{
+											// Send DPO message
+											ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
+											ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
+																EXTENDED_TRANSPORT_PROTOCOL);
+											break;
+										}
+										case ETP_CM_EOMA:
+										{
+											bUpdateObjectPool = true;
+											break;
+										}
+										case ETP_Conn_Abort:
+											break;
+										case ETP_CM_DPO:
+										case ETP_CM_RTS:
+										default:
+											break;
+									}
+									break;
+								}
+							}
+						}
+						WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+					} while (!bUpdateObjectPool);
+					ISO_vSendEndObjectPool();
+					bUpdateObjectPool = false;
+				}
+
+				if (sCommandLanguage.eLastUnit != sCommandLanguage.eUnit)
+				{
+					ISO_vObjectPoolUnitPkgRequestToSend();
+
+					do
+					{
+						WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
+						osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);   // Wait
+
+						if (evtPub.status == osEventMessage)
+						{
+							switch (ISO_wGetPGN(&RcvMsg))
+							{
+								case TP_CONN_MANAGE_PGN:
+								{
+									switch (RcvMsg.B1)
+									{
+										case TP_CM_CTS:
+											ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
+											break;
+										case TP_EndofMsgACK:
+										{
+											bUpdateObjectPool = true;
+											break;
+										}
+										case TP_Conn_Abort:
+											break;
+										case TP_BAM:
+										case TP_CM_RTS:
+										default:
+											break;
+									}
+									break;
+								}
+								case ETP_CONN_MANAGE_PGN:
+								{
+									switch (RcvMsg.B1)
+									{
+										case ETP_CM_CTS:
+										{
+											// Send DPO message
+											ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
+											ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
+																EXTENDED_TRANSPORT_PROTOCOL);
+											break;
+										}
+										case ETP_CM_EOMA:
+										{
+											bUpdateObjectPool = true;
+											break;
+										}
+										case ETP_Conn_Abort:
+											break;
+										case ETP_CM_DPO:
+										case ETP_CM_RTS:
+										default:
+											break;
+									}
+									break;
+								}
+							}
+						}
+						WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+					} while (!bUpdateObjectPool);
+					ISO_vSendEndObjectPool();
+					ISO_vUpdateConfigMaskInputNumberRange();
+				}
+
 				osFlagSet(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED);
 				eModCurrState = RUNNING;
 				bUpdateObjectPool = false;
@@ -1330,6 +1584,11 @@ void ISO_vIsobusUpdateVTStatus (ISOBUSMsg* RcvMsg)
 
 void ISO_vTreatLanguageCommandMessage (ISOBUSMsg sRcvMsg)
 {
+	event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
+
+	sCommandLanguage.eLastLanguage = sCommandLanguage.eLanguage;
+	sCommandLanguage.eLastUnit = sCommandLanguage.eUnit;
+
 	if ((sRcvMsg.B1 == 'r') && (sRcvMsg.B2 == 'u'))
 	{
 		sCommandLanguage.eLanguage = LANGUAGE_ENGLISH;
@@ -1359,6 +1618,9 @@ void ISO_vTreatLanguageCommandMessage (ISOBUSMsg sRcvMsg)
 		default:
 			break;
 	}
+	WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+	PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+	WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 }
 
 void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
@@ -1434,11 +1696,6 @@ void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
 		case LANGUAGE_PGN:
 		{
 			ISO_vTreatLanguageCommandMessage (*sRcvMsg);
-
-			event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
-			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 			break;
 		}
 		default:
@@ -2366,10 +2623,6 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 		case LANGUAGE_PGN:
 		{
 			ISO_vTreatLanguageCommandMessage(*sRcvMsg);
-			event_e ePubEvt = EVENT_ISO_LANGUAGE_COMMAND;
-			WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-			PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-			WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 			break;
 		}
 		case ACKNOWLEDGEMENT_PGN:
@@ -3424,7 +3677,9 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 							}
 
 							event_e ePubEvt = EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION;
+							WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 							PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+							WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 							break;
 						}
 						case EVENT_GUI_UPDATE_CONFIG:
