@@ -3582,7 +3582,7 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 	osSignalWait(ISO_FLAG_STATE_RUNNING, osWaitForever);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
-	osThreadSetPriority(NULL, osPriorityHigh);
+	osThreadSetPriority(NULL, osPriorityAboveNormal);
 
 	ISO_vInitObjectStruct();
 

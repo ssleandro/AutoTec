@@ -821,7 +821,7 @@ void SEN_vSensorRecvThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(SENRCV, WDT_SLEEP);
-		osDelayUntil(&dTicks, 50);
+		osDelayUntil(&dTicks, 25);
 		WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 		bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
 
