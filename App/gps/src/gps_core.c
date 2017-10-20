@@ -2871,7 +2871,7 @@ void GPS_vGPSThread (void const *argument)
 	ASSERT(status == osOK);
 
 	//Aloca um timer de sistema para aguardar 5s:
-	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerPeriodic);
+	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerOnce);
 
 	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
 	INITIALIZE_MUTEX(GPS_MTX_sEntradas);

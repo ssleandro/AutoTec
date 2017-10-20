@@ -54,17 +54,17 @@ osFlagsGroupId UOS_sFlagSis;
 // a structure to be used on thread creation function
 //  name            , stacksize, priority       , threadfunc              , waitfor         , WDTFunction
 #define STARTING_MODULES \
-        X("Diagnostic" , 512  , osPriorityLow			, DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
-        X("Broker"     , 256  , osPriorityHigh			, BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
-        X("Isobus"     , 1536 , osPriorityHigh       	, ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
-		X("Gui"        , 512  , osPriorityNormal    	, GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
-		X("Acquireg"   , 512  , osPriorityHigh    		, AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
-		X("Sensor"     , 512  , osPriorityHigh    		, SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
-		X("GPS"        , 512  , osPriorityAboveNormal 	, GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
-		X("Control"    , 512  , osPriorityNormal		, CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
-		X("Filesys"    , 1024 , osPriorityIdle			, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
-		X("Buzzer"	   , 256  , osPriorityAboveNormal	, BUZ_vBuzzerThread     , MODULE_BUZZER     , BUZ_WDTData  ) \
-		X(NULL         ,   0  , 0                     	, NULL                  , 0                 , NULL         )
+        X("Diagnostic" , 512  , osPriorityLow				, DIG_vDiagnosticThread , MODULE_DIAGNOSTIC , DIG_WDTData  ) \
+        X("Broker"     , 256  , osPriorityHigh				, BRK_vBrokerThread     , MODULE_BROKER     , BRK_WDTData  ) \
+        X("Isobus"     , 1536 , osPriorityAboveNormal		, ISO_vIsobusThread     , MODULE_ISOBUS     , ISO_WDTData  ) \
+		  X("Gui"        , 512  , osPriorityNormal    		, GUI_vGuiThread        , MODULE_GUI        , GUI_WDTData  ) \
+		  X("Acquireg"   , 512  , osPriorityAboveNormal		, AQR_vAcquiregThread   , MODULE_ACQUIREG   , AQR_WDTData  ) \
+		  X("Sensor"     , 512  , osPriorityAboveNormal		, SEN_vSensorThread     , MODULE_SENSOR     , SEN_WDTData  ) \
+		  X("GPS"        , 512  , osPriorityAboveNormal 	, GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
+		  X("Control"    , 512  , osPriorityNormal			, CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
+		  X("Filesys"    , 1024 , osPriorityIdle				, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
+		  X("Buzzer"	  , 256  , osPriorityNormal			, BUZ_vBuzzerThread     , MODULE_BUZZER     , BUZ_WDTData  ) \
+		  X(NULL         ,   0  , 0                     	, NULL                  , 0                 , NULL         )
 
 /******************************************************************************
  * Module Typedefs
