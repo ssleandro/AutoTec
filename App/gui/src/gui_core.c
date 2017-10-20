@@ -860,6 +860,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
+					GUI_vUptPlanter();
 				} else if (eCurrMask == DATA_MASK_INSTALLATION)
 				{
 					osFlagClear(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
@@ -1015,7 +1016,6 @@ void GUI_vIdentifyEvent (contract_s* contract)
 
 				ePubEvt = EVENT_GUI_UPDATE_SYS_CONFIG;
 				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
-
 
 				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 				status = RELEASE_MUTEX(GUI_UpdateMask);
@@ -1258,7 +1258,7 @@ eAPPError_s GUI_eInitGuiSubs (void)
 	SIGNATURE_HEADER(GuiGPS, THIS_MODULE, TOPIC_GPS_STATUS, GuiQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiGPS), 0) == osOK); 
 
-	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_SEN_CAN_STATUS, GuiQueue);
+	SIGNATURE_HEADER(GuiControl, THIS_MODULE, TOPIC_SEN_STATUS, GuiQueue);
 	ASSERT(SUBSCRIBE(SIGNATURE(GuiControl), 0) == osOK); 
 
 	return APP_ERROR_SUCCESS;

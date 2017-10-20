@@ -394,7 +394,7 @@ typedef struct
 static eAPPError_s eError;                          //!< Error variable
 
 DECLARE_QUEUE(GPSQueue, QUEUE_SIZEOFGPS);    //!< Declaration of Interface Queue
-CREATE_SIGNATURE(GPS);//!< Signature Declarations
+CREATE_SIGNATURE(GPSSensor);//!< Signature Declarations
 CREATE_CONTRACT(GPS);//!< Create contract for buzzer msg publication
 CREATE_CONTRACT(GPSMetro);//!< Create contract for buzzer msg publication
 CREATE_CONTRACT(GPSStatus);//!< Create contract for buzzer msg publication
@@ -659,24 +659,24 @@ void GPS_vGPSPublishThread (void const *argument)
 	SEGGER_SYSVIEW_Print("Buzzer Publish Thread Created");
 #endif
 
-	GPS_vDetectThread(&WATCHDOG(GPSPUB), &bGPSPUBThreadArrayPosition,
-		(void*)GPS_vGPSPublishThread);
+	GPS_vDetectThread(&WATCHDOG(GPSPUB), &bGPSPUBThreadArrayPosition, (void*)GPS_vGPSPublishThread);
 	WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGPSPUBThreadArrayPosition)); //Task created, inform core
 
-
 	while (1)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSPUB, WDT_SLEEP);
-		dValorGPS = osFlagWait(GPS_sFlagGPS, (GPS_FLAG_METRO | GPS_FLAG_SEGUNDO | GPS_FLAG_TIMEOUT_MTR), true, false,
-		osWaitForever);
+		dValorGPS = osFlagWait(GPS_sFlagGPS, (GPS_FLAG_METRO | GPS_FLAG_SEGUNDO | GPS_FLAG_TIMEOUT_MTR | GPS_FLAG_READ_DATA_SENSOR),
+									  true, false, osWaitForever);
 		WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
 
+		WATCHDOG_STATE(GPSPUB, WDT_SLEEP);
 		status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
 		ASSERT(status == osOK);
+		WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
 
 		memcpy(&GPS_sPublishGPS.sDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
 		GPS_sPublishGPS.bDistanciaPercorrida = GPS_bDistanciaPercorrida;
@@ -689,6 +689,11 @@ void GPS_vGPSPublishThread (void const *argument)
 		{
 			// Este evento interessa ao modulo SENSOR, ACQUIREG e RECORDS
 			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_METRO, EVENT_SET, &GPS_sPublishGPS);
+		}
+
+		if ((dValorGPS & GPS_FLAG_READ_DATA_SENSOR) > 0)
+		{
+			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_READ_DATA_SENSOR, EVENT_SET, NULL);
 		}
 
 		if ((dValorGPS & GPS_FLAG_SEGUNDO) > 0)
@@ -779,21 +784,12 @@ void GPS_vAcumulaDistancia (void)
 
 				if (UOS_sConfiguracao.sMonitor.bMonitorArea == false)
 				{
-					//Solicita leitura de dados dos sensores
-//                    CAN_vLeituraDadosSensores();
-//
-//                    //Aguarda resposta dos sensores
-//                    OSFlagPend( CAN_psFlagApl,
-//                                CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP |
-//                                CAN_APL_FLAG_SENSOR_NAO_RESPONDEU|
-//                                CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO,
-//                                OS_FLAG_WAIT_SET_ANY,
-//                                0, &bErr );
-//                    __assert( bErr == OS_NO_ERR );
+					osFlagSet(GPS_sFlagGPS, GPS_FLAG_READ_DATA_SENSOR);
+				} else
+				{
+					//Seta Flag de 1 metro percorrido, para tarefa de aquisição de dados
+					osFlagSet(GPS_sFlagGPS, GPS_FLAG_METRO);
 				}
-
-				//Seta Flag de 1 metro percorrido, para tarefa de aquisição de dados
-				osFlagSet(GPS_sFlagGPS, GPS_FLAG_METRO);
 			}
 
 			//------------------------------------------------------------------------
@@ -2780,6 +2776,15 @@ void GPS_vTimerCallbackTimeoutEnl (void const *arg)
 	osFlagSet(GPS_sFlagEnl, GPS_ENL_FLAG_TIME_OUT);
 }
 
+eAPPError_s GPS_eInitGPSSubs (void)
+{
+	/* Prepare the signature - struture that notify the broker about subscribers */
+	SIGNATURE_HEADER(GPSSensor, THIS_MODULE, TOPIC_SEN_STATUS, GPSQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(GPSSensor), 0) == osOK);
+
+	return APP_ERROR_SUCCESS;
+}
+
 /******************************************************************************
  * Function : GPS_vInitDeviceLayer()
  *//**
@@ -2812,11 +2817,34 @@ eAPPError_s GPS_vInitDeviceLayer (void)
 	return eError;
 }
 
+void GPS_vIdentifyEvent (contract_s* contract)
+{
+	osStatus status;
+	event_e ePubEvt = GET_PUBLISHED_EVENT(contract);
+	void * pvPayload = GET_PUBLISHED_PAYLOAD(contract);
+	eEventType ePubEvType = GET_PUBLISHED_TYPE(contract);
+
+	switch (contract->eOrigin)
+	{
+		case MODULE_SENSOR:
+		{
+			if (ePubEvt == EVENT_SEN_SYNC_READ_SENSORS)
+			{
+				osFlagSet(GPS_sFlagGPS, GPS_FLAG_METRO);
+			}
+			break;
+		}
+		default:
+			break;
+	}
+}
+
 /* ************************* Main thread ************************************ */
 #ifndef UNITY_TEST
 void GPS_vGPSThread (void const *argument)
 {
 	osStatus status;
+	uint32_t dTicks;
 	eAPPError_s error;
 	osFlags dValorFlag;
 
@@ -2843,7 +2871,7 @@ void GPS_vGPSThread (void const *argument)
 	ASSERT(status == osOK);
 
 	//Aloca um timer de sistema para aguardar 5s:
-	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerPeriodic);
+	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerOnce);
 
 	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
 	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
@@ -2855,22 +2883,12 @@ void GPS_vGPSThread (void const *argument)
 	GPS_sCtrlCBASRL.dEventosEnl = GPS_ENL_FLAG_NENHUM;
 	GPS_sCtrlCBASRL.bTimer = GPS_bTimerTimeoutEnl;
 
-//    GPS_sCtrlCBASRL.sCtrlEnl.dTicksWDT    = GPS_wTICKS_WDT;
-//    GPS_sCtrlCBASRL.sCtrlEnl.dTicksWAIT   = GPS_wTICKS_WAT;
 	GPS_sCtrlCBASRL.dTicksIDLE = ( TICK >> 2);
 
 	//Aloca um timer de sistema para o protocolo de comunicação:
 	INITIALIZE_TIMER(GPS_bTimerTimeoutEnl, osTimerPeriodic);
 
-	//      //Muda a prioridade de inicialização para o valor de trabalho:
-	//      bErr = OSTaskChangePrio( OS_PRIO_SELF, GPS_TRF_PRINCIPAL_PRIORIDADE );
-	//      __assert( bErr == OS_NO_ERR );
-
-	//      //Aguarda o fim da inicialização do sistema:
-	//      OSFlagPend( UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, OS_FLAG_WAIT_SET_ALL, 0, &bErr );
-	//      __assert( bErr == OS_NO_ERR );
-
-
+	GPS_eInitGPSSubs();
 	GPS_eInitGPSPublisher();
 
 	/* Inform Main thread that initialization was a success */
@@ -2901,6 +2919,8 @@ void GPS_vGPSThread (void const *argument)
 		GPS_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
+	dTicks = osKernelSysTick();
+
 	/* Start the main functions of the application */
 	while (1)
 	{
@@ -2911,8 +2931,12 @@ void GPS_vGPSThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
+			GPS_vIdentifyEvent(GET_CONTRACT(evt));
 		}
-		osDelay(500);
+
+		WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+		osDelayUntil(&dTicks, 500);
+		WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 	}
 	/* Unreachable */
 	osThreadSuspend(NULL);
@@ -2947,10 +2971,8 @@ void GPS_vGPSManagementThread (void const *argument)
 		/* Blocks until any data link layer event is receive */
 		WATCHDOG_STATE(GPSMGT, WDT_SLEEP);
 		// Get the received event
-		GPS_sCtrlCBASRL.dEventosEnl |= osFlagWait(
-			GPS_sFlagEnl, (GPS_ENL_FLAG_TIME_OUT | GPS_ENL_FLAG_RX_BYTE),
-			true,
-			false, osWaitForever);
+		GPS_sCtrlCBASRL.dEventosEnl |= osFlagWait(GPS_sFlagEnl, (GPS_ENL_FLAG_TIME_OUT | GPS_ENL_FLAG_RX_BYTE),
+																true, false, osWaitForever);
 		WATCHDOG_STATE(GPSMGT, WDT_ACTIVE);
 
 		// Read the flag value

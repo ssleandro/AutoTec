@@ -102,7 +102,7 @@ SECTIONS
     *(.data*)          /* .data* sections */
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } > RAMLOC40 AT> FLASH_A /*RAMAHB32 AT> FLASH_A*/
+  } > RAMAHB32 AT> FLASH_A /*RAMAHB32 AT> FLASH_A*/
 
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -130,12 +130,12 @@ SECTIONS
   } >RAMAHB16
 
   /* MEMORY_bank1 section, code must be located here explicitly            */
-  /* Example: extern int foo(void) __attribute__ ((section (".osheap"))); */
-  .memory_osheap :
+  /* Example: extern int foo(void) __attribute__ ((section (".rtt"))); */
+  .memory_rtt :
   {
-    *(.osheap)        /* .osheap sections */
-    *(.osheap*)       /* .osheap* sections */
-  } > RAMLOC32 /*EXTSRAM*/
+    *(.rtt)        /* .osheap sections */
+    *(.rtt*)       /* .osheap* sections */
+  } > RAMLOC40 /*EXTSRAM*/
   
   PROVIDE(__HEAP_START = ORIGIN(RAMAHB16));
   

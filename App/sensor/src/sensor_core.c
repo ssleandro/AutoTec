@@ -284,7 +284,7 @@ eAPPError_s SEN_eInitSensorPublisher (void)
 	CONTRACT_HEADER(Sensor, 1, THIS_MODULE, TOPIC_SENSOR);
 
 	MESSAGE_HEADER(SensorEvtPub, 1, SENSOR_DEFAULT_MSGSIZE, MT_ARRAYBYTE);
-	CONTRACT_HEADER(SensorEvtPub, 1, THIS_MODULE, TOPIC_SEN_CAN_STATUS);
+	CONTRACT_HEADER(SensorEvtPub, 1, THIS_MODULE, TOPIC_SEN_STATUS);
 
 	return APP_ERROR_SUCCESS;
 }
@@ -347,7 +347,8 @@ void SEN_vSensorPublishThread (void const *argument)
 		CAN_APL_FLAG_DET_SENSOR_RECONECTADO |
 		CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO |
 		CAN_APL_FLAG_CFG_SENSOR_RESPONDEU |
-		CAN_APL_FLAG_CAN_STATUS),
+		CAN_APL_FLAG_CAN_STATUS |
+		CAN_APL_FLAG_SYNC_READ_SENSOR),
 		true, false, osWaitForever);
 
 		WATCHDOG_STATE(SENPUB, WDT_ACTIVE);
@@ -392,6 +393,11 @@ void SEN_vSensorPublishThread (void const *argument)
 		{
 			dTxFlag = CAN_APL_FLAG_CAN_STATUS;
 			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_CAN_STATUS, EVENT_SET, &sSensorCANStatus);
+		}
+		if ((dValorFlag & CAN_APL_FLAG_SYNC_READ_SENSOR) > 0)
+		{
+			dTxFlag = CAN_APL_FLAG_SYNC_READ_SENSOR;
+			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_SYNC_READ_SENSORS, EVENT_SET, NULL);
 		}
 		if (dTxFlag != 0)
 		{
@@ -549,10 +555,19 @@ void SEN_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_GPS:
 		{
-			if ((ePubEvt & GPS_FLAG_METRO) > 0)
+			if ((ePubEvt & GPS_FLAG_READ_DATA_SENSOR) > 0)
 			{
 				SEN_vReadDataFromSensors();
+
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				osFlagWait(CAN_psFlagApl,
+							  CAN_APL_FLAG_DADOS_TODOS_SENSORES_RESP |
+							  CAN_APL_FLAG_SENSOR_NAO_RESPONDEU|
+							  CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO, false, false, osWaitForever);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
+				osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_SYNC_READ_SENSOR);
 			}
+
 			break;
 		}
 		default:
@@ -806,7 +821,7 @@ void SEN_vSensorRecvThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(SENRCV, WDT_SLEEP);
-		osDelayUntil(&dTicks, 50);
+		osDelayUntil(&dTicks, 25);
 		WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 		bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
 

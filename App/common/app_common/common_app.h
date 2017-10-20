@@ -252,7 +252,7 @@ typedef origin_e destine_e;
 typedef enum topic_e
 {
 	TOPIC_SENSOR,        //!< TOPIC_SENSOR
-	TOPIC_SEN_CAN_STATUS,        //!< TOPIC_SENSOR
+	TOPIC_SEN_STATUS,        //!< TOPIC_SENSOR
 	TOPIC_INPUT,         //!< TOPIC_INPUT
 	TOPIC_OUTPUT,        //!< TOPIC_OUTPUT
 	TOPIC_ACTUATOR,      //!< TOPIC_ACTUATOR
@@ -405,6 +405,7 @@ typedef enum event_e
 	EVENT_CTL_GET_FILE_INFO,
 	EVENT_SEN_PUBLISH_FLAG,
 	EVENT_SEN_CAN_STATUS,
+	EVENT_SEN_SYNC_READ_SENSORS,
 } event_e;
 
 typedef struct
@@ -496,7 +497,8 @@ extern gpio_config_s sEnablePS9;
 // Nenhum sensor conectado a rede Resposta comum a todos os comandos
 #define CAN_APL_FLAG_SENSOR_NAO_RESPONDEU         0x00040000
 #define CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO      0x00080000
-#define CAN_APL_FLAG_CAN_STATUS				      0x00100000
+#define CAN_APL_FLAG_CAN_STATUS				        0x00100000
+#define CAN_APL_FLAG_SYNC_READ_SENSOR		        0x00200000
 
 /******************************************************************************
  * Typedefs from Control module... Just for test...
