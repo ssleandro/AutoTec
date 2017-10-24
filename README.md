@@ -1,5 +1,25 @@
 ﻿# Release Notes
 
+## v0.1.005
+## 1.	GUI / Isobus
+
+    a.  Adicionado suporte a restransmissão no envio do object pool.
+
+    b.  Adicionado suporte a idioma on-line (inglês, português e espanhol).
+
+    c.	Adicionado suporte a unidade de medida na inicialização.
+
+    d.  Adicionado suporte a unidade de medida on-line.
+
+    e.  Alteração das strings dos limites de entrada de dados conforme a unidade de medida.
+
+    f.  Alteração dos limites de entrada de dados conforme a unidade de medida (input number).
+
+    g.  Adicionado objetos para a apresentação da lista de sensores object pool.
+
+    h.  Compilação na versão release funcional.
+
+
 ## v0.1.004
 ## 1.	GUI / Isobus
 

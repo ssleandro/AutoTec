@@ -63,6 +63,8 @@
  *******************************************************************************/
 
 void TLS_vCalculaCRC16Bloco (uint16_t *pwCRC16, uint8_t *pabBuf, uint16_t dTam);
+void TLS_convertDateTime(uint8_t *bBuffer, uint16_t ctime, uint16_t cdate);
+void TLS_FreeFSInfo(FFS_sFSInfo *pSFInfo);
 
 #endif /* APP_COMMON_APP_SRC_FILE_TOOL_H_ */
 

@@ -167,3 +167,43 @@ void TLS_vCalculaCRC16Bloco (uint16_t *pwCRC16, uint8_t *pabBuf, uint16_t dTam)
 
 }
 
+
+void TLS_convertDateTime(uint8_t *bBuffer, uint16_t ctime, uint16_t cdate)
+{
+	sprintf(bBuffer, "%02d/%02d/%04d %02d:%02d",
+			  (cdate >> 9) & 0x7f, (cdate >> 5 & 0x0f), cdate & 0x1f,
+			  (ctime >> 11) & 0x1f, (ctime >> 5) & 0x3f);
+
+}
+
+uint8_t TLS_FreeFileInfo(FFS_sFileInfo *psFileInfo)
+{
+	int i = 0;
+
+	if (psFileInfo == NULL)
+	{
+		return 1;
+	}
+	else
+	{
+		if (TLS_FreeFileInfo((FFS_sFileInfo *)psFileInfo->pNext))
+		{
+			if (psFileInfo != NULL)
+			{
+				vPortFree(psFileInfo);
+			}
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void TLS_FreeFSInfo(FFS_sFSInfo *pSFInfo)
+{
+	pSFInfo->bNumFiles = 0;
+	pSFInfo->wTotal = 0;
+	pSFInfo->wBad = 0;
+	pSFInfo->wFree = 0;
+	TLS_FreeFileInfo(pSFInfo->pFirst);
+}
+

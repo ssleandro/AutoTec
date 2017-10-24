@@ -105,6 +105,7 @@ uint8_t bMem = 1;
 uint8_t UOS_bGPSAtivo;
 uint8_t UOS_bEstadoUART0;
 uint8_t UOS_bSilenciaAlarme;
+FFS_sFSInfo UOS_sFSInfo;
 
 /****************************************************************************
  Variáveis locais
@@ -264,7 +265,7 @@ void CTL_vControlPublishThread (void const *argument)
 	while (1)
 	{
 		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA, true, false, osWaitForever);
+		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO, true, false, osWaitForever);
 		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
 		UOSflags = osFlagGet(UOS_sFlagSis);
@@ -278,6 +279,15 @@ void CTL_vControlPublishThread (void const *argument)
 			PUBLISH_MESSAGE(Control, EVENT_CTL_UPDATE_CONFIG, eEvType, &UOS_sConfiguracao);
 
 		}
+		if ((flags & CTL_UPDATE_FILE_INFO) > 0)
+		{
+			PUBLISH_MESSAGE(Control, EVENT_CTL_UPDATE_FILE_INFO, eEvType, &UOS_sFSInfo);
+		}
+		if ((flags & CTL_GET_FILE_INFO) > 0)
+		{
+			PUBLISH_MESSAGE(Control, EVENT_CTL_GET_FILE_INFO, eEvType, NULL);
+		}
+
 	}
 	osThreadTerminate(NULL);
 }
@@ -329,6 +339,17 @@ void CTL_vIdentifyEvent (contract_s* contract)
 				}
 				osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
 			}
+
+			if (ePubEvt == EVENT_FFS_FILE_INFO)
+			{
+
+				FFS_sFSInfo *psFSInfo = pvPayData;
+				if (psFSInfo != NULL)
+				{
+					UOS_sFSInfo = *psFSInfo;
+					osFlagSet(CTL_sFlagSis, CTL_UPDATE_FILE_INFO);
+				}
+			}
 			break;
 		}
 		case MODULE_GUI:
@@ -342,6 +363,10 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					osFlagSet(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA);
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 				}
+			}
+			if (ePubEvt == EVENT_GUI_GET_FILE_INFO)
+			{
+				osFlagSet(CTL_sFlagSis, CTL_GET_FILE_INFO);
 			}
 			break;
 		}
