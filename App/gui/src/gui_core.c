@@ -1222,7 +1222,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_GPS:
 		{
-			if (ePubEvt == GPS_FLAG_STATUS)
+			if (ePubEvt == EVENT_GPS_UPDATE_GPS_STATUS)
 			{
 //				GPS_sStatus *psGPSStats = pvPayload;
 //				GUI_sGPSStats = *psGPSStats;

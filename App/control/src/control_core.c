@@ -105,7 +105,7 @@ uint8_t bMem = 1;
 uint8_t UOS_bGPSAtivo;
 uint8_t UOS_bEstadoUART0;
 uint8_t UOS_bSilenciaAlarme;
-sFSInfo UOS_sFSInfo;
+FFS_sFSInfo UOS_sFSInfo;
 
 /****************************************************************************
  Variáveis locais
@@ -343,7 +343,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_FFS_FILE_INFO)
 			{
 
-				sFSInfo *psFSInfo = pvPayData;
+				FFS_sFSInfo *psFSInfo = pvPayData;
 				if (psFSInfo != NULL)
 				{
 					UOS_sFSInfo = *psFSInfo;

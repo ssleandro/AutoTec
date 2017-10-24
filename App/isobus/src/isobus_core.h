@@ -146,8 +146,8 @@
  * Configuration Constants
  *******************************************************************************/
 //#define ISO_ALARM_FREQUENCY_HZ	2900
-//#define ISO_ALARM_FREQUENCY_HZ	800
-#define ISO_ALARM_FREQUENCY_HZ	150
+#define ISO_ALARM_FREQUENCY_HZ	800
+//#define ISO_ALARM_FREQUENCY_HZ	150
 
 // Alarms
 #define ISO_ALARM_SETUP_NEW_SENSOR_ACTIVATIONS 	1

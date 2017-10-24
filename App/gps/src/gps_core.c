@@ -710,8 +710,8 @@ void GPS_vGPSPublishThread (void const *argument)
 
 		if ((dValorGPS & GPS_FLAG_STATUS) > 0)
 		{
-			GUI_vItemStatusGPS (&GPS_sPublishStats);
-			PUBLISH_MESSAGE(GPSStatus, GPS_FLAG_STATUS, EVENT_SET, &GPS_sPublishStats);
+//			GUI_vItemStatusGPS (&GPS_sPublishStats);
+//			PUBLISH_MESSAGE(GPSStatus, EVENT_GPS_UPDATE_GPS_STATUS, EVENT_SET, &GPS_sPublishStats);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -923,7 +923,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
 				if (bConta2S5 > 20)
 				{
 					bConta2S5 = 0;
-					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
+//					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
 				}
 			}
 			//Acumula a distância percorrida.
