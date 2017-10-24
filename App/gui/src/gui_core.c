@@ -1091,8 +1091,17 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				FFS_sFSInfo *psFSInfo = pvPayload;
 				if (psFSInfo != NULL)
 				{
-					//Trata informações da info
+					// Trata informações da info
 				}
+			}
+			if (ePubEvt == EVENT_CTL_FILE_FORMAT_DONE)
+			{
+				// Verificar Event Type para saber se deu ok ou não
+			}
+			if (ePubEvt == EVENT_CTL_FILE_FORMAT_STATUS)
+			{
+				uint8_t bPercFormat = pvPayload;
+				//
 			}
 			break;
 		}

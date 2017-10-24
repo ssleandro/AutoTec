@@ -115,6 +115,8 @@
 #define CTL_UPDATE_CONFIG_DATA	 	0x000002
 #define CTL_UPDATE_FILE_INFO			0x000004
 #define CTL_GET_FILE_INFO				0x000008
+#define CTL_FORMAT_FILE					0x000010
+#define CTL_FORMAT_FILE_DONE			0x000020
 
 /******************************************************************************
  * Typedefs
