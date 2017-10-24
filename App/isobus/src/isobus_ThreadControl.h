@@ -43,16 +43,13 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define ISOBUS_MODULES \
-    X("IsobusRecv"     , 512 	, osPriorityNormal	, ISO_vIsobusRecvThread     	, (1 << 0) , 1 ) \
-    X("IsobusWrite"    , 512 	, osPriorityHigh		, ISO_vIsobusWriteThread		, (1 << 1) , 2 ) \
-    X("IsobusBoot"     , 512 	, osPriorityHigh		, ISO_vIsobusManagementThread , (1 << 2) , 3 ) \
-    X("IsobusUpdateOP" , 1024 , osPriorityBelowNormal , ISO_vIsobusUpdateOPThread 	, (1 << 3) , 4 ) \
-    X("IsobusPublish"  , 512 , osPriorityBelowNormal , ISO_vIsobusPublishThread  	, (1 << 4) , 5 ) \
-    X("IsobusAuxBoot"  , 256 , osPriorityHigh        , ISO_vIsobusBootThread  		, (1 << 5) , 6 ) \
-    X(NULL             ,   0 , 0                     , NULL                      	, 0        , 7 ) \
-
-
-// 250, 250, 150, 100, 150, 200
+    X("IsobusRecv"     			, 512 		, osPriorityAboveNormal		, ISO_vIsobusRecvThread     				, (1 << 0) , 1 ) \
+    X("IsobusWrite"    	 		, 512 		, osPriorityNormal		, ISO_vIsobusWriteThread					, (1 << 1) , 2 ) \
+    X("IsobusManagement"		, 512 		, osPriorityAboveNormal		, ISO_vIsobusManagementThread				, (1 << 2) , 3 ) \
+    X("IsobusUpdateOP" 			, 1024 		, osPriorityNormal		, ISO_vIsobusUpdateOPThread 				, (1 << 3) , 4 ) \
+    X("IsobusPublish"  			, 512 		, osPriorityNormal		, ISO_vIsobusPublishThread  				, (1 << 4) , 5 ) \
+    X("IsobusTransportProtocol" , 512 		, osPriorityAboveNormal		, ISO_vIsobusTransportProtocolThread  	, (1 << 5) , 6 ) \
+    X(NULL             			,   0 		, 0                    	, NULL                      				, 0        , 7 ) \
 
 /******************************************************************************
  * Configuration Constants
@@ -118,7 +115,7 @@ extern void ISO_vIsobusManagementThread (void const *argument);
 
 extern void ISO_vIsobusUpdateOPThread (void const *argument);
 
-extern void ISO_vIsobusBootThread (void const *argument);
+extern void ISO_vIsobusTransportProtocolThread (void const *argument);
 
 extern void ISO_vDetectThread (thisWDTFlag* flag, uint8_t* bCounter, void* pFunc);
 

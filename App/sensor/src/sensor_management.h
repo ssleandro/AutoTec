@@ -256,9 +256,6 @@ extern CAN_tsParametrosExtended CAN_sParametrosExtended;
 // Mutex para acesso ao buffer da lista de sensores na rede CAN
 EXTERN_MUTEX(CAN_MTX_sBufferListaSensores);
 
-// Mutex para acesso ao arquivo da lista de sensores na rede CAN
-//TODO: extern OS_EVENT              *CAN_MTX_sArquivoListaSensores;
-
 // Variável para incrementar a quantidade de pulsos lida pelo sensor de velociadade
 extern uint32_t CAN_dLeituraSensor;
 extern uint8_t CAN_bSensorSimulador;

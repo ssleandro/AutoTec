@@ -3118,7 +3118,6 @@ FTL_STATUS CACHE_CacheToFlash(FTL_DEV devID, UINT16 fromIndex, CACHE_INFO_EBLOCK
 
 	}
 
-	// PPA Todo
 	if(FTL_FALSE == gTestFlag)
 	{
 		eBlockPPAMapInfo.flashLogEBArrayCount = (UINT8)(eBlockPPAMapInfo.flashLogEBArrayCount - arrayOffsetTemp);

@@ -52,14 +52,14 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: V2.50                                    *
+*       SystemView version: V2.52a                                    *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
 
 File    : SEGGER_SYSVIEW_Config_FreeRTOS.c
 Purpose : Sample setup configuration of SystemView with FreeRTOS.
-Revision: $Rev: 3734 $
+Revision: $Rev: 7745 $
 */
 #include "FreeRTOS.h"
 #include "SEGGER_SYSVIEW.h"
@@ -79,13 +79,13 @@ extern const SEGGER_SYSVIEW_OS_API SYSVIEW_X_OS_TraceAPI;
 #define SYSVIEW_DEVICE_NAME     "Cortex-M4"
 
 // Frequency of the timestamp. Must match SEGGER_SYSVIEW_GET_TIMESTAMP in SEGGER_SYSVIEW_Conf.h
-#define SYSVIEW_TIMESTAMP_FREQ  (configCPU_CLOCK_HZ >> 4)
+#define SYSVIEW_TIMESTAMP_FREQ  (configCPU_CLOCK_HZ)
 
 // System Frequency. SystemcoreClock is used in most CMSIS compatible projects.
 #define SYSVIEW_CPU_FREQ        configCPU_CLOCK_HZ
 
 // The lowest RAM address used for IDs (pointers)
-#define SYSVIEW_RAM_BASE        (0x20000000)
+#define SYSVIEW_RAM_BASE        (0x10080000)
 
 /********************************************************************* 
 *

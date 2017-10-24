@@ -113,6 +113,8 @@
 
 #define CTL_SAVE_CONFIG_DATA	 		0x000001
 #define CTL_UPDATE_CONFIG_DATA	 	0x000002
+#define CTL_UPDATE_FILE_INFO			0x000004
+#define CTL_GET_FILE_INFO				0x000008
 
 /******************************************************************************
  * Typedefs

@@ -40,10 +40,15 @@
 #else
 #define M2G_SOURCE_ADDRESS 0x81
 #endif
+
+#define OBJECT_POOL_VERSION 0xAAAAAAABAAAAAA
 #define DESTINATION_ADDRESS 0x26
 #define VT_ADDRESS 0x26
 #define BROADCAST_ADDRESS 0xFF
-#define PRIORITY 0x04
+
+#define PRIORITY_4 0x04
+#define PRIORITY_6 0x06
+#define PRIOTITY_7 0x07
 
 #define TRANSPORT_PROTOCOL 0
 #define TRANSPORT_PROTOCOL_MAX_POOLSIZE 1785
@@ -312,13 +317,13 @@ void ISO_vSendWorkingSetMaintenance ( bool);
 void ISO_vSendWSMaintenancePoolSent (void);
 void ISO_vSendGetMemory (uint32_t);
 void ISO_vSendGetNumberSoftKeys (void);
-void ISO_vSendRequestToSend (void);
+void ISO_vSendRequestToSend (uint32_t);
 void ISO_vSendProprietaryA (void);
 void ISO_vSendLoadVersion (uint64_t);
 void ISO_vSendStoreVersion (uint64_t);
 void ISO_vSendETP_CM_DPO (uint8_t, uint32_t);
 uint8_t ISO_vInitPointersToTranfer (const uint8_t*, uint32_t);
-void ISO_vSendObjectPool (uint8_t, uint32_t, uint8_t);
+void ISO_vSendBytesToVT (uint8_t, uint32_t, uint8_t);
 void ISO_vSendEndObjectPool (void);
 
 extern uint32_t ISO_vGetID (uint32_t pgn, uint32_t sa, uint32_t da, uint32_t prio);

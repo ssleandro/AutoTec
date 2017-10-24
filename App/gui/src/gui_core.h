@@ -43,6 +43,7 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
+
 #define GUI_FLGAS_ALL_FLAGS			  	  0x00FFFFFF
 #define GUI_UPDATE_INSTALLATION_INTERFACE 0x00000001
 #define GUI_UPDATE_PLANTER_INTERFACE 	  0x00000002
@@ -53,6 +54,7 @@
 #define GUI_CHANGE_CURRENT_CONFIGURATION  0x00000040
 #define GUI_CHANGE_INSTAL_REPEAT_TEST     0x00000080
 #define GUI_INSTALL_CONFIRM_INSTALLATION	0x00000100
+#define GUI_FLAG_SYSTEM_CFG_OK				0x00000200
 
 // Flags usados para converter unidades de medidas:
 #define GUI_dMILIMETERS       1
@@ -66,6 +68,29 @@
 #define GUI_dINCHES	         9
 #define GUI_dUNITS_QUANT	   9
 #define GUI_dCONV(from,to)  (((from)<<16)|(to))
+
+enum
+{
+
+	GUI_eAbbrCentimeters = 0, // cm
+	GUI_eAbbrInch,   // pol
+	GUI_eAbbrMeters,   // m
+	GUI_eAbbrFeeds,      // ft
+	GUI_eAbbrKilometers, // km
+	GUI_eAbbrMiles,
+	GUI_eAbbrHectare, // ha, 10000 m�
+	GUI_eAbbrAcres,   // acre
+	GUI_eAbbrSeeed, // sem
+	GUI_eAbbrSeedPerHectare,
+	GUI_eAbbrSeedPerAcre,
+	GUI_eAbbrMilesPerHour, // mph
+	GUI_eAbbrKilometerPerHour, // km/h
+	GUI_eAbbrHectaresPerHour, //ha/h
+	GUI_eAbbrAcresPerHour, // acre/h
+	GUI_eAbbrFertilizer,
+	GUI_eAbbrLeft,
+	GUI_eAbbrRight,
+}eCfgUnitText;
 
 /******************************************************************************
  * Configuration Constants

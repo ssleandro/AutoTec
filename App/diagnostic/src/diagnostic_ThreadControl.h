@@ -47,8 +47,8 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define DIAGNOSTIC_MODULES \
-  X("DiagPublish"   , 200 , osPriorityHigh      , DIG_vDiagnosticPublishThread  , (1 << 0) , 1 ) \
-  X("DiagLogger"    , 200 , osPriorityNormal    , DIG_vLogActionThread          , (1 << 1) , 2 ) \
+  X("DiagPublish"   , 512 , osPriorityHigh      , DIG_vDiagnosticPublishThread  , (1 << 0) , 1 ) \
+  X("DiagLogger"    , 512 , osPriorityNormal    , DIG_vLogActionThread          , (1 << 1) , 2 ) \
   X(NULL            ,   0 , 0                   , NULL                          , 0        , 3 ) \
 
 

@@ -193,16 +193,19 @@
 
 
 // Converter Macros
-#define MM2IN(value) 	((value) * 0.0393701)
-#define IN2MM(value) 	((uint16_t)(value * 25.41))
-#define DM2IN(value) 	((value) * 3.93701)
-#define IN2DM(value) 	((uint16_t)(value * 0.2541))
+#define MM2IN(value) 	((value) * 0.0393701f)
+#define IN2MM(value) 	((uint16_t)(value * 25.41f))
+#define DM2IN(value) 	((value) * 3.93701f)
+#define IN2DM(value) 	((uint16_t)(value * 0.2541f))
 
-#define KMH2MLH(value) 	(value * 0.621371)
-#define MLH2KMH(value) 	(value * 1.60934)
+#define DM2FT(value) 	((value) * 3.28084f)
+#define FT2DM(value) 	((value) / 3.28084f)
 
-#define SDM2SP(value) 	((value) / 3.93701)
-#define SP2SDM(value) 	((uint16_t)(value * 3.93701))
+#define KMH2MLH(value) 	(value * 0.621371f)
+#define MLH2KMH(value) 	(value * 1.60934f)
+
+#define SDM2SP(value) 	((value) / 3.28084f)
+#define SP2SDM(value) 	((uint16_t)(value * 3.28084f))
 
 /******************************************************************************
  * Typedefs
@@ -249,6 +252,7 @@ typedef origin_e destine_e;
 typedef enum topic_e
 {
 	TOPIC_SENSOR,        //!< TOPIC_SENSOR
+	TOPIC_SEN_STATUS,        //!< TOPIC_SENSOR
 	TOPIC_INPUT,         //!< TOPIC_INPUT
 	TOPIC_OUTPUT,        //!< TOPIC_OUTPUT
 	TOPIC_ACTUATOR,      //!< TOPIC_ACTUATOR
@@ -262,6 +266,7 @@ typedef enum topic_e
 	TOPIC_FILESYS,       //!< TOPIC_FILESYS
 	TOPIC_GPS,           //!< TOPIC_GPS
 	TOPIC_GPS_METRO,           //!< TOPIC_GPS
+	TOPIC_GPS_STATUS,
 	TOPIC_ACQUIREG,      //!< TOPIC_ACQUIREG
 	TOPIC_ACQUIREG_SAVE,      //!< TOPIC_ACQUIREG
 	TOPIC_CONTROL,       //!< TOPIC_CONTROL
@@ -320,9 +325,14 @@ typedef enum event_e
 	EVENT_FFS_CFG,
 	EVENT_FFS_SENSOR_CFG,
 	EVENT_FFS_STATIC_REG,
+	EVENT_FFS_CONFIG_GET_MEMORY_USED,
+	EVENT_FFS_CONFIG_GET_MEMORY_USED_RESPONSE,
+	EVENT_FFS_FILE_INFO,
 	EVENT_AQR_INSTALLATION_FINISH_INSTALLATION,
 	EVENT_AQR_INSTALLATION_UPDATE_INSTALLATION,
 	EVENT_AQR_INSTALLATION_CONFIRM_INSTALLATION,
+	EVENT_AQR_INSTALLATION_SENSOR_REPLACE,
+	EVENT_AQR_INSTALLATION_ENABLE_SENSOR_PNP,
 	EVENT_AQR_UPDATE_PLANT_DATA,
 	EVENT_AQR_ALARM_NEW_SENSOR,
 	EVENT_AQR_ALARM_DISCONNECTED_SENSOR,
@@ -331,17 +341,24 @@ typedef enum event_e
 	EVENT_AQR_ALARM_EXCEEDED_SPEED,
 	EVENT_AQR_ALARM_GPS_FAILURE,
 	EVENT_AQR_ALARM_TOLERANCE,
+	EVENT_GPS_UPDATE_GPS_STATUS,
 	EVENT_GUI_UPDATE_CONFIGURATION_INTERFACE,
 	EVENT_GUI_UPDATE_PLANTER_INTERFACE,
 	EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
 	EVENT_GUI_UPDATE_TEST_MODE_INTERFACE,
 	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
-	EVENT_GUI_UPDATE_SYSTEM_INTERFACE,
+	EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE,
+	EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE,
+	EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE,
+	EVENT_GUI_UPDATE_REPLACE_SENSOR,
 	EVENT_GUI_INSTALLATION_FINISH,
 	EVENT_GUI_INSTALLATION_REPEAT_TEST,
 	EVENT_GUI_INSTALLATION_ERASE_INSTALLATION,
 	EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION,
 	EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION_ACK,
+	EVENT_GUI_INSTALLATION_REPLACE_SENSOR,
+	EVENT_GUI_INSTALLATION_CONFIRM_REPLACE_SENSOR,
+	EVENT_GUI_INSTALLATION_CANCEL_REPLACE_SENSOR,
 	EVENT_GUI_PLANTER_CLEAR_COUNTER_TOTAL,
 	EVENT_GUI_PLANTER_CLEAR_COUNTER_SUBTOTAL,
 	EVENT_GUI_PLANTER_IGNORE_SENSOR,
@@ -357,21 +374,39 @@ typedef enum event_e
 	EVENT_GUI_ALARM_EXCEEDED_SPEED,
 	EVENT_GUI_ALARM_GPS_FAILURE,
 	EVENT_GUI_ALARM_TOLERANCE,
+	EVENT_GUI_CONFIG_CHECK_PASSWORD_ACK,
+	EVENT_GUI_CONFIG_CHECK_PASSWORD_NACK,
+	EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK,
+	EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK,
+	EVENT_GUI_CONFIG_GET_MEMORY_USED,
+	EVENT_GUI_CONFIG_GET_MEMORY_USED_RESPONSE,
+	EVENT_GUI_GET_FILE_INFO,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
 	EVENT_ISO_INSTALLATION_ERASE_INSTALLATION,
 	EVENT_ISO_INSTALLATION_CONFIRM_INSTALLATION,
 	EVENT_ISO_INSTALLATION_REPLACE_SENSOR,
+	EVENT_ISO_INSTALLATION_CONFIRM_REPLACE_SENSOR,
+	EVENT_ISO_INSTALLATION_CANCEL_REPLACE_SENSOR,
 	EVENT_ISO_PLANTER_CLEAR_COUNTER_TOTAL,
 	EVENT_ISO_PLANTER_CLEAR_COUNTER_SUBTOTAL,
 	EVENT_ISO_PLANTER_IGNORE_SENSOR,
 	EVENT_ISO_TRIMMING_TRIMMING_MODE_CHANGE,
 	EVENT_ISO_CONFIG_UPDATE_DATA,
 	EVENT_ISO_CONFIG_CANCEL_UPDATE_DATA,
+	EVENT_ISO_CONFIG_CHECK_PASSWORD,
+	EVENT_ISO_CONFIG_CHANGE_PASSWORD,
+	EVENT_ISO_CONFIG_GET_MEMORY_USED,
+	EVENT_ISO_LANGUAGE_COMMAND,
 	EVENT_ISO_AREA_MONITOR_PAUSE,
+	EVENT_ISO_ALARM_CLEAR_ALARM,
 	EVENT_CTL_UPDATE_CONFIG,
+	EVENT_CTL_UPDATE_FILE_INFO,
+	EVENT_CTL_GET_FILE_INFO,
 	EVENT_SEN_PUBLISH_FLAG,
+	EVENT_SEN_CAN_STATUS,
+	EVENT_SEN_SYNC_READ_SENSORS,
 } event_e;
 
 typedef struct
@@ -384,9 +419,6 @@ typedef struct
 /******************************************************************************
  * Conversion from MPA
  *******************************************************************************/
-// TODO: This variables is just for test
-// TODO: common from GPS
-
 extern gpio_config_s sEnablePS9;
 #define ENABLE_PS9 GPIO_vClear(&sEnablePS9)     // Enable sensor power source
 #define DISABLE_PS9 GPIO_vSet(&sEnablePS9)      // Disable sensor power source
@@ -410,7 +442,6 @@ extern gpio_config_s sEnablePS9;
 
 #define CAN_ENL_QTDE_BYTES_MSG        8
 
-// TODO: Resolve this dependencies
 // Listagem de comandos utilizados na rede CAN
 #define CAN_APL_CMD_PNP                           0x01 //Comando de PnP
 #define CAN_APL_CMD_LEITURA_DADOS                 0x02 //Comando de leitura de dados
@@ -467,6 +498,8 @@ extern gpio_config_s sEnablePS9;
 // Nenhum sensor conectado a rede Resposta comum a todos os comandos
 #define CAN_APL_FLAG_SENSOR_NAO_RESPONDEU         0x00040000
 #define CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO      0x00080000
+#define CAN_APL_FLAG_CAN_STATUS				        0x00100000
+#define CAN_APL_FLAG_SYNC_READ_SENSOR		        0x00200000
 
 /******************************************************************************
  * Typedefs from Control module... Just for test...
@@ -538,17 +571,9 @@ typedef struct
 
 typedef struct
 {
-	//Senha para operacoes de seguranca:
-	uint32_t abSenha;
-
-	//Idioma:
+	uint32_t wPasswd;
 	eSelectedLanguage eLanguage;
-
-	// Se egit  sistema imperial ou internacional
 	eSelectedUnitMeasurement eUnit;
-
-	//uint8_t alinhamento[2];
-
 } tsCfgIHM;
 
 //Receptor GPS interno:
@@ -569,19 +594,14 @@ typedef struct
 {
 	//Configuracao Monitor
 	UOS_tsCfgMonitor sMonitor;
-
 	//Receptor GPS interno:
 	tsCfgGPS sGPS;
-
 	//Configuracao IHM
 	tsCfgIHM sIHM;
-
 	//Identificacao do veiculo:
 	uint32_t dVeiculo;
-
 	//CRC16 desta estrutura:
 	uint16_t wCRC16;
-
 } __attribute__((aligned(1), packed)) UOS_tsConfiguracao;
 
 
@@ -658,47 +678,6 @@ typedef struct
 	uint8_t abBufSem[CAN_bNUM_DE_LINHAS];
 } tsFalhaInstantanea;
 
-typedef struct
-{
-	//Senha para operacoes de seguranca:
-	uint8_t abSenha[4];
-	//Contraste do LCD:
-	uint8_t bContraste;
-	//Brilho do LCD:
-	uint8_t bBrilho;
-
-
-	//Idioma:
-	uint8_t bIdioma;
-
-	// Se egit  sistema imperial ou internacional
-	uint8_t bSistImperial;
-
-	// Tipo de medida para velocidade do veiculo
-	uint8_t bVelocidade;
-	uint8_t bTxtVel;
-	uint8_t bTxtVelPorHora;
-	// Medida da superficie trabalhada
-	uint8_t bAreaTrabalhada;
-	uint8_t bTxtAreaTrab;
-	uint8_t bTxtAreaTrabPorHora;
-
-	// Sementes por cm/pol..
-	uint8_t bSementes;
-	uint8_t bTxtSementes;
-	uint8_t bTxtSemPorDist;
-	uint8_t bImgSemPorDist;
-	// distancia em km/mi..
-	uint8_t bDistPerc;
-	uint8_t bTxtDistPerc;
-	// caractere usado para fracao e milhar:
-	uint8_t bCharFrac;
-	uint8_t bCharMilhar;
-
-	// CRC da estrutura
-	uint16_t wCRC16;
-} __attribute__((aligned(1), packed)) IHM_tsConfig;
-
 //Estrutura do registro estático:
 typedef struct
 {
@@ -752,6 +731,25 @@ typedef union
 
 //Ajuste do Contraste
 #define LCD_bCONTRASTE_MAX    127
+
+
+typedef struct
+{
+	int8_t bFileName[20];
+	int32_t FileLengh;
+	int8_t bFileDateTime[17];
+	void * pNext;
+}FFS_sFileInfo;
+
+typedef struct
+{
+	uint32_t wTotal;
+	uint32_t wFree;
+	uint32_t wUsed;
+	uint32_t wBad;
+	FFS_sFileInfo *pFirst;
+	int8_t bNumFiles;
+}FFS_sFSInfo;
 
 /******************************************************************************
  * Variables

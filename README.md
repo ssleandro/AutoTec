@@ -1,5 +1,54 @@
 ﻿# Release Notes
 
+## v0.1.005
+## 1.	GUI / Isobus
+
+    a.  Adicionado suporte a restransmissão no envio do object pool.
+
+    b.  Adicionado suporte a idioma on-line (inglês, português e espanhol).
+
+    c.	Adicionado suporte a unidade de medida na inicialização.
+
+    d.  Adicionado suporte a unidade de medida on-line.
+
+    e.  Alteração das strings dos limites de entrada de dados conforme a unidade de medida.
+
+    f.  Alteração dos limites de entrada de dados conforme a unidade de medida (input number).
+
+    g.  Adicionado objetos para a apresentação da lista de sensores object pool.
+
+    h.  Compilação na versão release funcional.
+
+
+## v0.1.004
+## 1.	GUI / Isobus
+
+    a.	Adicionado alarme para média fora da tolerância (2 beeps)
+
+    b.	Adicionado alarme para nenhuma semente na linha (Beep continuo)
+
+    c.	Adicionado alarme para excesso de velocidade (Beep continuo)
+
+    d.	Adicionado indicação visual para alarmes nas linhas de plantio.
+
+    e.	Adicionado senha para acesso as configurações.
+
+    f.	Adicionado opção para alteração de senha.
+
+    g.	Adicionado suporte a troca de sensores.
+
+    h.	Adicionado estatísticas da CAN na tela sistema.
+
+    i.  Adicionado suporte a idioma na inicialização do sistema (inglês, português e espanhol).
+
+    j.	Corrigido bug na instalação, após mudança na configuração ou quando a instalação era apagada.
+
+    k.  Corrigido bug ao alternar entre modo monitor de area e modo plantadeira.
+
+    l.  Corrigido alinhamento do texto nas soft key do object pool.
+
+
+
 ## v0.1.003
 ## 1.	GUI / Isobus
 

@@ -53,6 +53,7 @@
 #define FFS_FLAG_CFG 			0x0002
 #define FFS_FLAG_SENSOR_CFG	0x0004
 #define FFS_FLAG_STATIC_REG	0x0008
+#define FFS_FLAG_FILE_INFO		0x0010
 
 /******************************************************************************
  * Configuration Constants

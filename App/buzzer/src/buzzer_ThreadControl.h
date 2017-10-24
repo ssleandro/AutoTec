@@ -43,8 +43,8 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define BUZZER_MODULES \
-    X("BuzzerPublish"  , 150 , osPriorityNormal	, BUZ_vBuzzerPublishThread  , (1 << 0) , 1 ) \
-    X(NULL             ,   0 , 0               	, NULL                      , 0        , 2 ) \
+    X("BuzzerPublish"  , 150 , osPriorityLow	, BUZ_vBuzzerPublishThread  , (1 << 0) , 1 ) \
+    X(NULL             ,   0 , 0             , NULL                      , 0        , 2 ) \
 
 /******************************************************************************
  * Configuration Constants
