@@ -391,13 +391,14 @@ void SEN_vSensorPublishThread (void const *argument)
 		}
 		if ((dValorFlag & CAN_APL_FLAG_CAN_STATUS) > 0)
 		{
-			dTxFlag = CAN_APL_FLAG_CAN_STATUS;
+			dTxFlag = 0;
 			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_CAN_STATUS, EVENT_SET, &sSensorCANStatus);
 		}
 		if ((dValorFlag & CAN_APL_FLAG_SYNC_READ_SENSOR) > 0)
 		{
-			dTxFlag = CAN_APL_FLAG_SYNC_READ_SENSOR;
+			dTxFlag = 0;
 			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_SYNC_READ_SENSORS, EVENT_SET, NULL);
+			SEGGER_SYSVIEW_Print("Published EVENT_SEN_SYNC_READ_SENSORS event");
 		}
 		if (dTxFlag != 0)
 		{
@@ -566,6 +567,9 @@ void SEN_vIdentifyEvent (contract_s* contract)
 							  CAN_APL_FLAG_NENHUM_SENSOR_CONECTADO, false, false, osWaitForever);
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 				osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_SYNC_READ_SENSOR);
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Flag data from sensor read");
+#endif
 			}
 
 			break;
@@ -797,7 +801,7 @@ void SEN_vSensorRecvThread (void const *argument)
 	uint8_t bRecvMessages = 0;		//!< Lenght (messages) received
 	uint32_t dTicks;
 	uint16_t wCountMS = 0;
-	canMSGStruct_s asPayload[32];   //!< Buffer to hold the contract and message data
+	canMSGStruct_s asPayload[64];   //!< Buffer to hold the contract and message data
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Sensor Recv Thread Created");
@@ -822,8 +826,10 @@ void SEN_vSensorRecvThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(SENRCV, WDT_SLEEP);
 		osDelayUntil(&dTicks, 25);
-		WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
+		osEnterCritical();
 		bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
+		osExitCritical();
+		WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 
 		if (bRecvMessages)
 		{
@@ -831,8 +837,7 @@ void SEN_vSensorRecvThread (void const *argument)
 			{
 				SEN_vIdentifyMessage(&asPayload[bIterator]);
 				WATCHDOG_STATE(SENRCV, WDT_SLEEP);
-				// Wait until XXX_Thread reads the received message
-				evt = osSignalWait(CAN_APL_FLAG_MENSAGEM_LIDA, 50);
+				evt = osSignalWait(CAN_APL_FLAG_MENSAGEM_LIDA, osWaitForever);
 				ASSERT(evt.status == osEventSignal);
 				WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 			}
@@ -842,9 +847,7 @@ void SEN_vSensorRecvThread (void const *argument)
 		if (wCountMS == SEN_PERIOD_MS_CAN_STATUS)
 		{
 			DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_GET_STATUS, (void*) &sSensorCANStatus);
-			WATCHDOG_STATE(SENRCV, WDT_SLEEP);
 			osFlagSet(CAN_psFlagApl, CAN_APL_FLAG_CAN_STATUS);
-			WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 			wCountMS = 0;
 		}
 	}
@@ -909,6 +912,7 @@ void SEN_vSensorWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
+			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_CHANGE_SEND_ID, (void*)&(sRecv.id));
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
@@ -918,6 +922,7 @@ void SEN_vSensorWriteThread (void const *argument)
 				DEV_write(pSENSORHandle, &(sRecv.data[0]), sRecv.dlc);
 				WATCHDOG_STATE(SENWRT, WDT_ACTIVE);
 			}
+			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);

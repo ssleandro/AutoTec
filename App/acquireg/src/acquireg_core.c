@@ -1361,27 +1361,45 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		{
 			if ((AQR_wAlarmes & AQR_SENSOR_DESCONECTADO) > 0)
 			{
-				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_DISCONNECTED_SENSOR, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_DISCONNECTED_SENSOR");
+#endif
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_DISCONNECTED_SENSOR, EVENT_SET, NULL);
 			} else if ((AQR_wAlarmes & AQR_FALHA_LINHA) > 0)
 			{
-				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_LINE_FAILURE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_LINE_FAILURE");
+#endif
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_LINE_FAILURE, EVENT_SET, NULL);
 			} else if ((AQR_wAlarmes & AQR_FALHA_INSTALACAO) > 0)
 			{
-				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_SETUP_FAILURE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_SETUP_FAILURE");
+#endif
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_SETUP_FAILURE, EVENT_SET, NULL);
 			} else
 			{
 				if ((AQR_wAlarmes & AQR_EXC_VELOCIDADE) > 0)
 				{
-					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_EXCEEDED_SPEED, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+					SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_EXCEEDED_SPEED");
+#endif
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_EXCEEDED_SPEED, EVENT_SET, NULL);
 				} else if ((AQR_wAlarmes & AQR_FALHA_GPS) > 0)
 				{
-					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_GPS_FAILURE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+					SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_GPS_FAILURE");
+#endif
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_GPS_FAILURE, EVENT_SET, NULL);
 				}
 			}
 		}
 		if ((dFlags & AQR_SIS_FLAG_ALARME_TOLERANCIA) > 0)
 		{
-			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+		SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_TOLERANCE");
+#endif
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, NULL);
 		}
 		
 		if ((dFlags & AQR_APL_FLAG_SENSOR_CHANGE) > 0)
@@ -1804,7 +1822,7 @@ void AQR_vAcquiregTimeThread (void const *argument)
 			bSaveEstaticData = 0;
 			AQR_SetStaticRegData();
 			AQR_vPubAcumulaArea();
-			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
+//			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -2300,6 +2318,17 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
 		dValorGPS = osFlagWait(xGPS_sFlagGPS, (GPS_FLAG_METRO | GPS_FLAG_TIMEOUT_MTR), true, false, osWaitForever);
 		WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
+
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+		if ((dValorGPS & GPS_FLAG_METRO) > 0)
+		{
+			SEGGER_SYSVIEW_Print("Acquireg Mgt Unlocked by: METER_FLAG");
+		} else if ((dValorGPS & GPS_FLAG_TIMEOUT_MTR) > 0)
+		{
+			SEGGER_SYSVIEW_Print("Acquireg Mgt Unlocked by: METER_FLAG_TIMEOUT");
+		}
+		SEGGER_SYSVIEW_Print("Acquireg Mgt Cycle Starts...");
+#endif
 
 		// Mutex wait
 		status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
@@ -4576,6 +4605,9 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		// devolve mutex
 		status = RELEASE_MUTEX(AQR_MTX_sEntradas);
 		ASSERT(status == osOK);
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+		SEGGER_SYSVIEW_Print("Acquireg Mgt Cycle Ends...");
+#endif
 	}
 	osThreadTerminate(NULL);
 }

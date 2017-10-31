@@ -687,29 +687,44 @@ void GPS_vGPSPublishThread (void const *argument)
 		// Todas as publicacoes a seguir chegaram aos modulos que estao assinados para receber as publicacoes do modulo GPS
 		if ((dValorGPS & GPS_FLAG_METRO) > 0)
 		{
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+			SEGGER_SYSVIEW_Print("Flag meter");
+#endif
 			// Este evento interessa ao modulo SENSOR, ACQUIREG e RECORDS
 			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_METRO, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_READ_DATA_SENSOR) > 0)
 		{
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+			SEGGER_SYSVIEW_Print("Flag read data from sensor");
+#endif
 			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_READ_DATA_SENSOR, EVENT_SET, NULL);
 		}
 
 		if ((dValorGPS & GPS_FLAG_SEGUNDO) > 0)
 		{
+#if defined (SYSVIEW_DEBUG_FLAG_SECONDS)
+			SEGGER_SYSVIEW_Print("Flag seconds");
+#endif
 			// Este evento interessa ao modulo ACQUIREG, mais precisamente a thread AQR_vAcquiregTimeThread
 			PUBLISH_MESSAGE(GPS, GPS_FLAG_SEGUNDO, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_TIMEOUT_MTR) > 0)
 		{
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+			SEGGER_SYSVIEW_Print("Flag timeout meter");
+#endif
 			// Este evento interessa ao modulo ACQUIREG, AQR_vAcquiregManagementThread
 			PUBLISH_MESSAGE(GPS, GPS_FLAG_TIMEOUT_MTR, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_STATUS) > 0)
 		{
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+			SEGGER_SYSVIEW_Print("Flag GPS status");
+#endif
 //			GUI_vItemStatusGPS (&GPS_sPublishStats);
 //			PUBLISH_MESSAGE(GPSStatus, EVENT_GPS_UPDATE_GPS_STATUS, EVENT_SET, &GPS_sPublishStats);
 		}
@@ -2831,6 +2846,7 @@ void GPS_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_SEN_SYNC_READ_SENSORS)
 			{
 				osFlagSet(GPS_sFlagGPS, GPS_FLAG_METRO);
+				SEGGER_SYSVIEW_Print("Received EVENT_SEN_SYNC_READ_SENSORS event");
 			}
 			break;
 		}
@@ -2844,7 +2860,6 @@ void GPS_vIdentifyEvent (contract_s* contract)
 void GPS_vGPSThread (void const *argument)
 {
 	osStatus status;
-	uint32_t dTicks;
 	eAPPError_s error;
 	osFlags dValorFlag;
 
@@ -2919,8 +2934,6 @@ void GPS_vGPSThread (void const *argument)
 		GPS_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-	dTicks = osKernelSysTick();
-
 	/* Start the main functions of the application */
 	while (1)
 	{
@@ -2933,10 +2946,6 @@ void GPS_vGPSThread (void const *argument)
 		{
 			GPS_vIdentifyEvent(GET_CONTRACT(evt));
 		}
-
-		WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
-		osDelayUntil(&dTicks, 500);
-		WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 	}
 	/* Unreachable */
 	osThreadSuspend(NULL);

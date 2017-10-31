@@ -939,7 +939,9 @@ void ISO_vIsobusRecvThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(ISORCV, WDT_SLEEP);
 		osDelayUntil(&dTicks, 25);
+		osEnterCritical();
 		bRecvMessages = DEV_read(pISOHandle, &asPayload[0].frame, ARRAY_SIZE(asPayload));
+		osExitCritical();
 		WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
 
 		if (bRecvMessages)
@@ -1009,6 +1011,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
+			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
@@ -1018,6 +1021,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 				DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
 				WATCHDOG_STATE(ISOWRT, WDT_ACTIVE);
 			}
+			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);
