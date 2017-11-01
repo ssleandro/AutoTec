@@ -98,8 +98,8 @@
 									<listOptionValue builtIn="false" value="M2G_PROTOB"/>
 									<listOptionValue builtIn="false" value="configUSE_SEGGER_SYSTEM_VIEWER_HOOKS=1"/>
 									<listOptionValue builtIn="false" value="__SPF"/>
-									<listOptionValue builtIn="false" value="SYSVIEW_DEBUG_UNLOCK_ACQUIREG"/>
-									<listOptionValue builtIn="false" value="SYSVIEW_DEBUG_ALARMS_ACQUIREG"/>
+									<listOptionValue builtIn="false" value="SYSVIEW_DEBUG_UNLOCK_ACQUIREG___"/>
+									<listOptionValue builtIn="false" value="SYSVIEW_DEBUG_ALARMS_ACQUIREG___"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.other.263015611" name="Other compiler flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.other" useByScannerDiscovery="true" value="" valueType="string"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.425588427" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>

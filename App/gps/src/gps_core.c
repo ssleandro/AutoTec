@@ -673,25 +673,15 @@ void GPS_vGPSPublishThread (void const *argument)
 									  true, false, osWaitForever);
 		WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
 
-		WATCHDOG_STATE(GPSPUB, WDT_SLEEP);
-		status = WAIT_MUTEX(GPS_MTX_sEntradas, osWaitForever);
-		ASSERT(status == osOK);
-		WATCHDOG_STATE(GPSPUB, WDT_ACTIVE);
-
-		memcpy(&GPS_sPublishGPS.sDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
-		GPS_sPublishGPS.bDistanciaPercorrida = GPS_bDistanciaPercorrida;
-
-		status = RELEASE_MUTEX(GPS_MTX_sEntradas);
-		ASSERT(status == osOK);
-
 		// Todas as publicacoes a seguir chegaram aos modulos que estao assinados para receber as publicacoes do modulo GPS
 		if ((dValorGPS & GPS_FLAG_METRO) > 0)
 		{
 #if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 			SEGGER_SYSVIEW_Print("Flag meter");
 #endif
+			memcpy(&GPS_sPublishGPS.sDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
 			// Este evento interessa ao modulo SENSOR, ACQUIREG e RECORDS
-			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_METRO, EVENT_SET, &GPS_sPublishGPS);
+			PUBLISH_MESSAGE(GPSMetro, EVENT_GPS_METER_TRAVELED, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_READ_DATA_SENSOR) > 0)
@@ -699,7 +689,7 @@ void GPS_vGPSPublishThread (void const *argument)
 #if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 			SEGGER_SYSVIEW_Print("Flag read data from sensor");
 #endif
-			PUBLISH_MESSAGE(GPSMetro, GPS_FLAG_READ_DATA_SENSOR, EVENT_SET, NULL);
+			PUBLISH_MESSAGE(GPSMetro, EVENT_GPS_READ_SENSORS, EVENT_SET, NULL);
 		}
 
 		if ((dValorGPS & GPS_FLAG_SEGUNDO) > 0)
@@ -708,7 +698,7 @@ void GPS_vGPSPublishThread (void const *argument)
 			SEGGER_SYSVIEW_Print("Flag seconds");
 #endif
 			// Este evento interessa ao modulo ACQUIREG, mais precisamente a thread AQR_vAcquiregTimeThread
-			PUBLISH_MESSAGE(GPS, GPS_FLAG_SEGUNDO, EVENT_SET, &GPS_sPublishGPS);
+			PUBLISH_MESSAGE(GPS, EVENT_GPS_SECOND_ELAPSED, EVENT_SET, NULL);
 		}
 
 		if ((dValorGPS & GPS_FLAG_TIMEOUT_MTR) > 0)
@@ -716,8 +706,9 @@ void GPS_vGPSPublishThread (void const *argument)
 #if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 			SEGGER_SYSVIEW_Print("Flag timeout meter");
 #endif
+			memcpy(&GPS_sPublishGPS.sDadosGPS, &GPS_sDadosGPS, sizeof(GPS_tsDadosGPS));
 			// Este evento interessa ao modulo ACQUIREG, AQR_vAcquiregManagementThread
-			PUBLISH_MESSAGE(GPS, GPS_FLAG_TIMEOUT_MTR, EVENT_SET, &GPS_sPublishGPS);
+			PUBLISH_MESSAGE(GPS, EVENT_GPS_METER_TIMEOUT, EVENT_SET, &GPS_sPublishGPS);
 		}
 
 		if ((dValorGPS & GPS_FLAG_STATUS) > 0)
@@ -794,8 +785,10 @@ void GPS_vAcumulaDistancia (void)
 				GPS_fDistancia = 0.0f;
 				fDistanciaMinima = 0.0f;
 
+				GPS_sPublishGPS.bDistanciaPercorrida = GPS_bDistanciaPercorrida;
 				GPS_sDadosGPS.fDistancia = fDistanciaAcumula;
 				fDistanciaAcumula = 0.0f;
+				GPS_bDistanciaPercorrida = 0;
 
 				if (UOS_sConfiguracao.sMonitor.bMonitorArea == false)
 				{
@@ -1033,7 +1026,13 @@ uint8_t GPS_vGPSPackMsgTx (uint8_t bClass, uint8_t bId, uint8_t *pbDados,
  *******************************************************************************/
 uint32_t GPS_vSendData (uint16_t wNumDados, uint8_t *pbVetorDados)
 {
-	return DEV_write(pGPSHandle, &pbVetorDados[0], wNumDados);
+	uint32_t dRet;
+
+	osEnterCritical();
+	dRet = DEV_write(pGPSHandle, &pbVetorDados[0], wNumDados);
+	osExitCritical();
+
+	return dRet;
 }
 
 /*******************************************************************************
@@ -3314,7 +3313,9 @@ void GPS_vGPSRecvThread (void const *argument)
 		osDelayUntil(&wTicks, 25);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
+		osEnterCritical();
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));
+		osExitCritical();
 
 		if (wRecvBytes)
 		{

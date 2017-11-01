@@ -556,7 +556,7 @@ void SEN_vIdentifyEvent (contract_s* contract)
 		}
 		case MODULE_GPS:
 		{
-			if ((ePubEvt & GPS_FLAG_READ_DATA_SENSOR) > 0)
+			if (ePubEvt == EVENT_GPS_READ_SENSORS)
 			{
 				SEN_vReadDataFromSensors();
 
