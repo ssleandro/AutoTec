@@ -50,6 +50,7 @@
 #include "lcd.h"
 #include "mcu.h"
 #include "uart.h"
+#include "rtc.h"
 #include "wdt.h"
 #include <inttypes.h>
 #include <spifi.h>

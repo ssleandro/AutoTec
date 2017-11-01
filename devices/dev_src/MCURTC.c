@@ -1,12 +1,12 @@
 /****************************************************************************
- * Title                 :   devicelib Include File
- * Filename              :   devicelib.c
- * Author                :   thiago.palmieri
- * Origin Date           :   15 de mar de 2016
+ * Title                 :   MCURTC
+ * Filename              :   MCURTC.c
+ * Author                :   Henrique Reis
+ * Origin Date           :   30/10/2017
  * Version               :   1.0.0
- * Compiler              :   GCC 5.2 2015q4 / ICCARM 7.50.2.10312
+ * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
- * Notes                 :   None
+ * Notes                 :   Qualicode Machine Technologies
  *
  * THIS SOFTWARE IS PROVIDED BY AUTEQ TELEMATICA "AS IS" AND ANY EXPRESSED
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -23,145 +23,120 @@
  *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
  *
- *    Date    Version   Author         Description
- *  15 de mar de 2016   1.0.0   thiago.palmieri devicelib include file Created.
+ *    Date    Version       Author          Description
+ * 30/10/2017  1.0.0     Henrique Reis      MCURTC.c created.
  *
  *****************************************************************************/
-/** @file devicelib.c
- *  @brief This file provides implementation of device control layer. For each device
- *  created, include its header file here.
- *
- */
 
 /******************************************************************************
  * Includes
  *******************************************************************************/
-#include "devicelib.h"
-#include <stdbool.h>
-#include <TERMDEV.h>
-#include "MLX75305.h"
-#include "LCDBACKLIGHT.h"
-#include "KEYBACKLIGHT.h"
-#include "CBACOMM.h"
-#include "FLASHER.h"
-#include "WATCHDOG.h"
-#include "M2GISOCOMM.h"
-#include "M2GSENSORCOMM.h"
-#include "M2GGPSCOMM.h"
-#include "CBT09427.h"
-#include "EXTBUZZER.h"
 #include "MCURTC.h"
-#include "CHIPPROG.h"
+#include "MCURTC_config.h"
+#include <string.h>
+#ifndef UNITY_TEST
+#include "mculib.h"
+#endif
 
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
-#ifndef NULL
-#define NULL (void*)0
-#endif
+#define MCURTC_STATUS_ACTIVE		0x00000001
+#define MCURTC_STATUS_BUSY			0x00000002
+
 /******************************************************************************
- * Module Preprocessor Macros
+ * Variables from others modules
  *******************************************************************************/
 
 /******************************************************************************
- * Module Typedefs
+ * Typedefs
+ *******************************************************************************/
+typedef eDEVError_s (*fpIOCTLFunction) (void * vpValue);
+
+/******************************************************************************
+ * Public Variables
  *******************************************************************************/
 
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
-/**
- * This Typedef holds all peripheral IDs
- */
-#define X(a, fopen, fread, fwrite, fioctl, fclose) {.open = fopen, .read = fread, .write = fwrite, \
-    .ioctl = fioctl, .close = fclose, .bOpen = false},
-peripheral_descriptor_s sDescriptor[] =
-	{
-	DEVICE_MAPPING
-		};
-#undef X
+sRTCTime sRTCCurrentlFullTime;
+static rtc_config_s sRTCConfig;
+static uint8_t bRTCDeviceStatus;
+
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
 
+#define X(a, b) b,
+fpIOCTLFunction RTC_pIOCTLFunction[] =  //!< IOCTL array of function mapping
+	{
+	IOCTL_MCURTC
+	};
+#undef X
+
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
-peripheral_descriptor_p DEV_open (peripheralID_e eID)
+void vRTCCallbackFunction (sRTCTime sRTCTimeStruct)
 {
-	if (eID >= PERIPHERAL_INVALID)
-	{
-		return NULL ;
-	}
-	if (sDescriptor[eID].bOpen) //If it is open, return NULL
-	{
-		return NULL ;
-	}
-	if (sDescriptor[eID].open()) //If it did not open, return NULL
-	{
-		return NULL ;
-	}
-	sDescriptor[eID].bOpen = true;
-	return &sDescriptor[eID];
+	bRTCDeviceStatus = MCURTC_STATUS_BUSY;
+
+	sRTCCurrentlFullTime = sRTCTimeStruct;
+
+	bRTCDeviceStatus = MCURTC_STATUS_ACTIVE;
 }
 
-uint32_t DEV_read (peripheral_descriptor_p this,
-	void * const vpBuffer,
-	const uint32_t tBufferSize)
+eDEVError_s RTC_open (void)
 {
-	if ((this == NULL ) || (vpBuffer == NULL ))
-	{
-		return 0;
-	}
-	return this->read(this, vpBuffer, tBufferSize);
-}
+	sRTCConfig.fpRTCCallBack = vRTCCallbackFunction;
 
-uint32_t DEV_write (peripheral_descriptor_p this,
-	const void * vpBuffer,
-	const uint32_t tBufferSize)
-{
-	if (this == NULL)
-	{
-		return 0;
-	}
-	return this->write(this, vpBuffer, tBufferSize);
-}
-
-eDEVError_s DEV_ioctl (peripheral_descriptor_p this,
-	uint32_t wRequest,
-	void * vpValue)
-{
-	if (this == NULL)
-	{
-		return DEV_ERROR_INVALID_DESCRIPTOR;
-	}
-	if (vpValue == NULL)
-	{
-		return DEV_ERROR_INVALID_IOCTL;
-	}
-	return this->ioctl(this, wRequest, vpValue);
-}
-
-eDEVError_s DEV_close (peripheral_descriptor_p this)
-{
-	eDEVError_s eError = DEV_ERROR_INVALID_DESCRIPTOR;
-	if (this == NULL)
-	{
-		return eError;
-	}
-
-	if (this->bOpen)
-	{
-		eError = this->close(this);
-		if (!eError)
-		{
-			//Release ID
-			this->bOpen = false;
-		}
-	}
+	eDEVError_s eError = (eDEVError_s) RTC_eInit(&sRTCConfig);
 	return eError;
 }
 
-/******************************************************************************
- * Unity Testing
- *******************************************************************************/
+uint32_t RTC_read (struct peripheral_descriptor_s* const this,
+	void * const vpBuffer,
+	const uint32_t tBufferSize)
+{
+	(void)this;
+	if (tBufferSize < sizeof(sRTCTime))
+	{
+		return 0;
+	}
+
+	if (bRTCDeviceStatus != MCURTC_STATUS_BUSY)
+	{
+		memcpy(vpBuffer, &sRTCCurrentlFullTime, sizeof(sRTCTime));
+	}
+
+	return sizeof(sRTCTime);
+}
+
+uint32_t RTC_write (struct peripheral_descriptor_s* const this,
+	const void * vpBuffer,
+	const uint32_t tBufferSize)
+{
+	(void)this;
+	(void)tBufferSize;
+
+	RTC_vSetFullTime((sRTCTime*)vpBuffer);
+
+	return sizeof(sRTCTime);
+}
+
+eDEVError_s RTC_ioctl (struct peripheral_descriptor_s* const this,
+	uint32_t wRequest,
+	void * vpValue)
+{
+	(void)this;
+	(void)wRequest;
+	(void)vpValue;
+	return DEV_ERROR_SUCCESS;
+}
+
+eDEVError_s RTC_close (struct peripheral_descriptor_s* const this)
+{
+	RTC_eDeInit();
+	return DEV_ERROR_SUCCESS;
+}

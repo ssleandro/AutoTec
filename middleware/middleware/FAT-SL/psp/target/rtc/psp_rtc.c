@@ -43,6 +43,8 @@
 #include "../../include/psp_rtc.h"
 
 #include "../../../version/ver_psp_rtc.h"
+#include "MCURTC_config.h"
+
 #if VER_PSP_RTC_MAJOR != 1
 #error "VER_PSP_RTC_MAJOR invalid"
 #endif
@@ -69,13 +71,13 @@ void psp_getcurrenttimedate (t_psp_timedate * p_timedate)
 {
 	if (p_timedate != NULL)
 	{
-		p_timedate->sec = 0;
-		p_timedate->min = 0;
-		p_timedate->hour = 12u;
+		p_timedate->sec = sRTCCurrentlFullTime.time[RTC_SECOND];
+		p_timedate->min = sRTCCurrentlFullTime.time[RTC_MINUTE];
+		p_timedate->hour = sRTCCurrentlFullTime.time[RTC_HOUR];
 
-		p_timedate->day = 1u;
-		p_timedate->month = 1u;
-		p_timedate->year = 1980u;
+		p_timedate->day = sRTCCurrentlFullTime.time[RTC_DAYOFMONTH];
+		p_timedate->month = sRTCCurrentlFullTime.time[RTC_MONTH];
+		p_timedate->year = sRTCCurrentlFullTime.time[RTC_YEAR];
 	}
 } /* psp_getcurrenttimedate */
 
