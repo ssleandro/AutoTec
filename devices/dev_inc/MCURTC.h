@@ -1,8 +1,8 @@
 /****************************************************************************
- * Title                 :   filesys_core Include File
- * Filename              :   filesys_core.h
+ * Title                 :   MCURTC
+ * Filename              :   MCURTC.h
  * Author                :   Henrique Reis
- * Origin Date           :
+ * Origin Date           :   30/10/2017
  * Version               :   1.0.0
  * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
@@ -23,66 +23,69 @@
  *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
  *
- *    Date    Version        Author              Description
- *  XX/XX/XX   1.0.0      Henrique Reis    filesys_core.h created.
+ *    Date    Version       Author          Description
+ * 30/10/2017  1.0.0     Henrique Reis      MCURTC.h created.
  *
  *****************************************************************************/
-/** @file   filesys_core.h
- *  @brief
- *
- */
-#ifndef FILESYS_SRC_FILESYS_CORE_H_
-#define FILESYS_SRC_FILESYS_CORE_H_
+#ifndef DEVICES_DEV_INC_MCURTC_H_
+#define DEVICES_DEV_INC_MCURTC_H_
 
 /******************************************************************************
- * Includes
- *******************************************************************************/
-#include <M2G_app.h>
-#if defined (UNITY_TEST)
-#include "../filesys/inc/interface_filesys.h"
-#else
-#include "interface_filesys.h"
-#endif
-/******************************************************************************
- * Preprocessor Constants
- *******************************************************************************/
-#define FFS_SIGNAL_PUBLISH			0x55
-
-#define FFS_FLAG_ALL 				0x0FFF
-#define FFS_FLAG_STATUS 			0x0001
-#define FFS_FLAG_CFG 				0x0002
-#define FFS_FLAG_SENSOR_CFG		0x0004
-#define FFS_FLAG_STATIC_REG		0x0008
-#define FFS_FLAG_FILE_INFO			0x0010
-#define FFS_FLAG_FORMAT_DONE		0x0020
+* Includes
+*******************************************************************************/
+#include "devicelib.h"
 
 /******************************************************************************
- * Configuration Constants
- *******************************************************************************/
+* Preprocessor Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Macros
- *******************************************************************************/
+* Configuration Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Typedefs
- *******************************************************************************/
+* Macros
+*******************************************************************************/
 
 /******************************************************************************
- * Variables
- *******************************************************************************/
+* Typedefs
+*******************************************************************************/
 
 /******************************************************************************
- * Function Prototypes
- *******************************************************************************/
+* Variables
+*******************************************************************************/
+
+/******************************************************************************
+* Public Variables
+*******************************************************************************/
+
+/******************************************************************************
+* Function Prototypes
+*******************************************************************************/
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+eDEVError_s RTC_open (void);
+
+uint32_t RTC_read (struct peripheral_descriptor_s* const this,
+	void * const vpBuffer,
+	const uint32_t tBufferSize);
+
+uint32_t RTC_write (struct peripheral_descriptor_s* const this,
+	const void * vpBuffer,
+	const uint32_t tBufferSize);
+
+eDEVError_s RTC_ioctl (struct peripheral_descriptor_s* const this,
+	uint32_t wRequest,
+	void * vpValue);
+
+eDEVError_s RTC_close (struct peripheral_descriptor_s* const this);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif /* FILESYS_SRC_FILESYS_CORE_H_ */
+#endif /* DEVICES_DEV_INC_MCURTC_H_ */

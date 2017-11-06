@@ -388,7 +388,7 @@ void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage
 
 void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage);
 
-uint8_t CAN_bGetErCount(const can_config_s *pCCAN, can_transfer_id dir);
+uint8_t CAN_bGetErrCount(const can_config_s *pCCAN, can_transfer_id dir);
 
 #ifdef __cplusplus
 } // extern "C"

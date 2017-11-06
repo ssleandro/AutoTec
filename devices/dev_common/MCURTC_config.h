@@ -1,8 +1,8 @@
 /****************************************************************************
- * Title                 :   filesys_core Include File
- * Filename              :   filesys_core.h
+ * Title                 :   RTC_config
+ * Filename              :   RTC_config.h
  * Author                :   Henrique Reis
- * Origin Date           :
+ * Origin Date           :   30/10/2017
  * Version               :   1.0.0
  * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
@@ -23,66 +23,48 @@
  *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
  *
- *    Date    Version        Author              Description
- *  XX/XX/XX   1.0.0      Henrique Reis    filesys_core.h created.
+ *    Date    Version       Author          Description
+ * 30/10/2017  1.0.0     Henrique Reis      RTC_config.h created.
  *
  *****************************************************************************/
-/** @file   filesys_core.h
- *  @brief
- *
- */
-#ifndef FILESYS_SRC_FILESYS_CORE_H_
-#define FILESYS_SRC_FILESYS_CORE_H_
+#ifndef DEVICES_DEV_COMMON_MCURTC_CONFIG_H_
+#define DEVICES_DEV_COMMON_MCURTC_CONFIG_H_
 
 /******************************************************************************
- * Includes
- *******************************************************************************/
-#include <M2G_app.h>
-#if defined (UNITY_TEST)
-#include "../filesys/inc/interface_filesys.h"
-#else
-#include "interface_filesys.h"
+* Includes
+*******************************************************************************/
+#ifndef UNITY_TEST
+#include "mculib.h"
 #endif
 /******************************************************************************
- * Preprocessor Constants
- *******************************************************************************/
-#define FFS_SIGNAL_PUBLISH			0x55
-
-#define FFS_FLAG_ALL 				0x0FFF
-#define FFS_FLAG_STATUS 			0x0001
-#define FFS_FLAG_CFG 				0x0002
-#define FFS_FLAG_SENSOR_CFG		0x0004
-#define FFS_FLAG_STATIC_REG		0x0008
-#define FFS_FLAG_FILE_INFO			0x0010
-#define FFS_FLAG_FORMAT_DONE		0x0020
+* Preprocessor Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Configuration Constants
- *******************************************************************************/
+* Configuration Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Macros
- *******************************************************************************/
+* Macros
+*******************************************************************************/
+#define IOCTL_MCURTC \
+  X(IOCTL_RTC_INVALID, NULL) \
 
 /******************************************************************************
- * Typedefs
- *******************************************************************************/
+* Typedefs
+*******************************************************************************/
 
 /******************************************************************************
- * Variables
- *******************************************************************************/
+* Variables
+*******************************************************************************/
 
 /******************************************************************************
- * Function Prototypes
- *******************************************************************************/
+* Public Variables
+*******************************************************************************/
+extern sRTCTime sRTCCurrentlFullTime;
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+/******************************************************************************
+* Function Prototypes
+*******************************************************************************/
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-#endif /* FILESYS_SRC_FILESYS_CORE_H_ */
+#endif /* DEVICES_DEV_COMMON_MCURTC_CONFIG_H_ */

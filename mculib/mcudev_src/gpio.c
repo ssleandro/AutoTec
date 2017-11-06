@@ -571,6 +571,16 @@ void GPIO_vToggle (const gpio_config_s *pGPIO)
 	}
 }
 
+void GPIO_vSetDir (gpio_config_s *pGPIO, bool output)
+{
+	if (pGPIO->vpPrivateData != NULL)
+	{
+		gpio_config_private_s *pPrivateGPIO = pGPIO->vpPrivateData;
+		pGPIO->eDirection = output ? GPIO_OUTPUT : GPIO_INPUT;
+		Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, pPrivateGPIO->bGPort, pPrivateGPIO->bGPin, output);
+	}
+}
+
 bool GPIO_bRead (const gpio_config_s *pGPIO)
 {
 	if (pGPIO->vpPrivateData != NULL)

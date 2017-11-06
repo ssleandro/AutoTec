@@ -231,11 +231,11 @@ void GUI_vUptTestMode(void)
 
 void GUI_vGetValuesToPlanterDataMask (void)
 {
-	dBitsTolerance |= (GUI_sStatus.dSementeFalhaIHM | GUI_sStatus.dAduboFalha |
+	dBitsTolerance |= ((uint64_t)(GUI_sStatus.dSementeFalhaIHM | GUI_sStatus.dAduboFalha) |
 									((uint64_t)(GUI_sStatus.dSementeFalhaIHMExt | GUI_sStatus.dAduboFalhaExt) << 32));
-	dBitsNoSeed = (GUI_sStatus.dMemLinhaDesconectada | GUI_sStatus.dSementeZeroIHM |
+	dBitsNoSeed = ((uint64_t)(GUI_sStatus.dMemLinhaDesconectada | GUI_sStatus.dSementeZeroIHM) |
 								 ((uint64_t)(GUI_sStatus.dMemLinhaDesconectadaExt | GUI_sStatus.dSementeZeroIHMExt) << 32));
-	dBitsIgnoredLines = (GUI_sStatus.dSementeIgnorado | GUI_sStatus.dAduboIgnorado |
+	dBitsIgnoredLines = ((uint64_t)(GUI_sStatus.dSementeIgnorado | GUI_sStatus.dAduboIgnorado) |
 								 ((uint64_t)(GUI_sStatus.dSementeIgnoradoExt | GUI_sStatus.dAduboIgnoradoExt) << 32));
 
 	for (uint8_t dNumSensor = 0; dNumSensor < sSISConfiguration.sMonitor.bNumLinhas; dNumSensor++)
@@ -245,13 +245,13 @@ void GUI_vGetValuesToPlanterDataMask (void)
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineSemPerHa,
 			&sGUIPlanterData.asLineStatus[dNumSensor].dLineTotalSeeds);
 
-		if (dBitsIgnoredLines & (1 << dNumSensor))
+		if (dBitsIgnoredLines & (1ull << dNumSensor))
 		{
 			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_IGNORED;
-		}	else if (dBitsNoSeed & (1 << dNumSensor))
+		}	else if (dBitsNoSeed & (1ull << dNumSensor))
 		{
 			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_ALARM_NO_SEED;
-		} else if (dBitsTolerance & (1 << dNumSensor))
+		} else if (dBitsTolerance & (1ull << dNumSensor))
 		{
 			sGUIPlanterData.asLineStatus[dNumSensor].eLineAlarmStatus = LINE_ALARM_TOLERANCE;
 		} else
@@ -1091,8 +1091,17 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				FFS_sFSInfo *psFSInfo = pvPayload;
 				if (psFSInfo != NULL)
 				{
-					//Trata informações da info
+					// Trata informações da info
 				}
+			}
+			if (ePubEvt == EVENT_CTL_FILE_FORMAT_DONE)
+			{
+				// Verificar Event Type para saber se deu ok ou não
+			}
+			if (ePubEvt == EVENT_CTL_FILE_FORMAT_STATUS)
+			{
+				uint8_t bPercFormat = pvPayload;
+				//
 			}
 			break;
 		}
@@ -1132,7 +1141,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 
-			if (ePubEvt == EVENT_AQR_UPDATE_PLANT_DATA)
+			if (ePubEvt == EVENT_AQR_UPDATE_PLANTER_MASK)
 			{
 				tsPubPlantData *psPlantData = pvPayload;
 

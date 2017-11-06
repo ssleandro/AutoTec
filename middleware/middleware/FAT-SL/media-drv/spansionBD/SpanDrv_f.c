@@ -71,6 +71,14 @@ int span_format (void)
 	return MDRIVER_SPAN_NO_ERROR;
 }
 
+
+int span_getFormatPercent(void)
+{
+	int iRet;
+	FTL_GetFormatPercent(&iRet);
+	return iRet;
+}
+
 /*
  Name: span_init
  */

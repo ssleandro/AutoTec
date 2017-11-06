@@ -265,7 +265,8 @@ void CTL_vControlPublishThread (void const *argument)
 	while (1)
 	{
 		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO, true, false, osWaitForever);
+		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO |
+								 CTL_FORMAT_FILE | CTL_FORMAT_FILE_DONE, true, false, osWaitForever);
 		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
 		UOSflags = osFlagGet(UOS_sFlagSis);
@@ -283,9 +284,24 @@ void CTL_vControlPublishThread (void const *argument)
 		{
 			PUBLISH_MESSAGE(Control, EVENT_CTL_UPDATE_FILE_INFO, eEvType, &UOS_sFSInfo);
 		}
+
 		if ((flags & CTL_GET_FILE_INFO) > 0)
 		{
 			PUBLISH_MESSAGE(Control, EVENT_CTL_GET_FILE_INFO, eEvType, NULL);
+		}
+
+		if ((flags & CTL_FORMAT_FILE) > 0)
+		{
+			PUBLISH_MESSAGE(Control, EVENT_CTL_FILE_FORMAT, eEvType, NULL);
+		}
+
+		if ((flags & CTL_FORMAT_FILE_DONE) > 0)
+		{
+			if (UOSflags & UOS_SIS_FLAG_CFG_OK)
+				eEvType = EVENT_SET;
+			else
+				eEvType = EVENT_CLEAR;
+			PUBLISH_MESSAGE(Control, EVENT_CTL_FILE_FORMAT_DONE, eEvType, NULL);
 		}
 
 	}
@@ -350,6 +366,19 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					osFlagSet(CTL_sFlagSis, CTL_UPDATE_FILE_INFO);
 				}
 			}
+			if (ePubEvt == EVENT_FFS_FILE_FORMAT_DONE)
+			{
+				if (ePubEvType == EVENT_SET)
+				{
+					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				}
+				else
+				{
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				}
+				osFlagSet(CTL_sFlagSis, CTL_FORMAT_FILE_DONE);
+			}
+
 			break;
 		}
 		case MODULE_GUI:
@@ -367,6 +396,10 @@ void CTL_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_GUI_GET_FILE_INFO)
 			{
 				osFlagSet(CTL_sFlagSis, CTL_GET_FILE_INFO);
+			}
+			if (ePubEvt == EVENT_GUI_FORMAT_FILE)
+			{
+				osFlagSet(CTL_sFlagSis, CTL_FORMAT_FILE);
 			}
 			break;
 		}

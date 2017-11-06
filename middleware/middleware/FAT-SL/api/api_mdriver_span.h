@@ -58,6 +58,7 @@ enum
 F_DRIVER * initfunc_span (unsigned long driver_param);
 int span_format (void);
 int span_init (void);
+int span_getFormatPercent(void);
 
 #ifdef __cplusplus
 }

@@ -749,14 +749,12 @@ uint32_t BRD_CANConfig (uint8_t CANChannel)
 	{
 		//Clock enable
 		Chip_Clock_SetBaseClock(CLK_BASE_APB1, CLKIN_IDIVC, true, false);
-		//    uint32_t rate = Chip_Clock_GetRate(CLK_APB3_CAN0);
 		rate = Chip_Clock_GetRate(CLK_APB1_CAN1);
 	}
 	else
 	{
 		//Clock enable
 		Chip_Clock_SetBaseClock(CLK_BASE_APB3, CLKIN_IDIVC, true, false);
-		//    uint32_t rate = Chip_Clock_GetRate(CLK_APB3_CAN0);
 		rate = Chip_Clock_GetRate(CLK_APB3_CAN0);
 	}
 	return rate;

@@ -1355,33 +1355,51 @@ void AQR_vAcquiregPublishThread (void const *argument)
 		{
 			AQR_sPubPlantData.AQR_sAcumulado = &AQR_sPubAcumulado;
 			AQR_sPubPlantData.AQR_sStatus = &AQR_sPubStatus;
-			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_UPDATE_PLANT_DATA, EVENT_SET, &AQR_sPubPlantData);
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_UPDATE_PLANTER_MASK, EVENT_SET, &AQR_sPubPlantData);
 		}
 		if ((dFlags & AQR_SIS_FLAG_ALARME) > 0)
 		{
 			if ((AQR_wAlarmes & AQR_SENSOR_DESCONECTADO) > 0)
 			{
-				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_DISCONNECTED_SENSOR, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_DISCONNECTED_SENSOR");
+#endif
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_DISCONNECTED_SENSOR, EVENT_SET, NULL);
 			} else if ((AQR_wAlarmes & AQR_FALHA_LINHA) > 0)
 			{
-				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_LINE_FAILURE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_LINE_FAILURE");
+#endif
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_LINE_FAILURE, EVENT_SET, NULL);
 			} else if ((AQR_wAlarmes & AQR_FALHA_INSTALACAO) > 0)
 			{
-				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_SETUP_FAILURE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+				SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_SETUP_FAILURE");
+#endif
+				PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_SETUP_FAILURE, EVENT_SET, NULL);
 			} else
 			{
 				if ((AQR_wAlarmes & AQR_EXC_VELOCIDADE) > 0)
 				{
-					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_EXCEEDED_SPEED, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+					SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_EXCEEDED_SPEED");
+#endif
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_EXCEEDED_SPEED, EVENT_SET, NULL);
 				} else if ((AQR_wAlarmes & AQR_FALHA_GPS) > 0)
 				{
-					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_GPS_FAILURE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+					SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_GPS_FAILURE");
+#endif
+					PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_GPS_FAILURE, EVENT_SET, NULL);
 				}
 			}
 		}
 		if ((dFlags & AQR_SIS_FLAG_ALARME_TOLERANCIA) > 0)
 		{
-			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, &AQR_sStatus);
+#if defined (SYSVIEW_DEBUG_ALARMS_ACQUIREG)
+		SEGGER_SYSVIEW_Print("Alarm event: EVENT_AQR_ALARM_TOLERANCE");
+#endif
+			PUBLISH_MESSAGE(Acquireg, EVENT_AQR_ALARM_TOLERANCE, EVENT_SET, NULL);
 		}
 		
 		if ((dFlags & AQR_APL_FLAG_SENSOR_CHANGE) > 0)
@@ -1446,23 +1464,47 @@ void AQR_vIdentifyEvent (contract_s* contract)
 		{
 			GPS_sPubDadosGPS *psGPSDados = pvPubData;
 
-			// Treat an event receive from MODULE_GPS
-			osFlagSet(xGPS_sFlagGPS, (osFlags)ePubEvt);
-
-			if (psGPSDados != NULL)
+			if (ePubEvt == EVENT_GPS_METER_TRAVELED)
 			{
-				status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
-				ASSERT(status == osOK);
-				AQR_sDadosGPS = psGPSDados->sDadosGPS;
-				if (ePubEvt == GPS_FLAG_METRO)
+				if (psGPSDados != NULL)
 				{
+					status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
+					ASSERT(status == osOK);
+
+					AQR_sDadosGPS = psGPSDados->sDadosGPS;
 					AQR_bDistanciaPercorrida = psGPSDados->bDistanciaPercorrida;
+
+					status = RELEASE_MUTEX(AQR_MTX_sEntradas);
+					ASSERT(status == osOK);
+
+					// Treat an event receive from MODULE_GPS
+					osFlagSet(xGPS_sFlagGPS, (osFlags)GPS_FLAG_METRO);
 				}
 
-				status = RELEASE_MUTEX(AQR_MTX_sEntradas);
-				ASSERT(status == osOK);
 			}
 
+			if (ePubEvt == EVENT_GPS_METER_TIMEOUT)
+			{
+				if (psGPSDados != NULL)
+				{
+					status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
+					ASSERT(status == osOK);
+
+					AQR_sDadosGPS = psGPSDados->sDadosGPS;
+
+					status = RELEASE_MUTEX(AQR_MTX_sEntradas);
+					ASSERT(status == osOK);
+
+					// Treat an event receive from MODULE_GPS
+					osFlagSet(xGPS_sFlagGPS, (osFlags)GPS_FLAG_TIMEOUT_MTR);
+				}
+
+			}
+
+			if (ePubEvt == EVENT_GPS_SECOND_ELAPSED)
+			{
+				osFlagSet(xGPS_sFlagGPS, (osFlags)GPS_FLAG_SEGUNDO);
+			}
 			break;
 		}
 		case MODULE_FILESYS:
@@ -1792,10 +1834,6 @@ void AQR_vAcquiregTimeThread (void const *argument)
 		dFlagsSis = osFlagGet(UOS_sFlagSis);
 		if ((dFlagsSis & (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE)) != 0)
 		{
-			WAIT_MUTEX(AQR_MTX_sBufferAcumulado, osWaitForever);
-			AQR_sPubStatus = AQR_sStatus;
-			AQR_sPubAcumulado = AQR_sAcumulado;
-			RELEASE_MUTEX(AQR_MTX_sBufferAcumulado);
 			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SEND_TOTAL);
 		}
 
@@ -2300,6 +2338,17 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
 		dValorGPS = osFlagWait(xGPS_sFlagGPS, (GPS_FLAG_METRO | GPS_FLAG_TIMEOUT_MTR), true, false, osWaitForever);
 		WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
+
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+		if ((dValorGPS & GPS_FLAG_METRO) > 0)
+		{
+			SEGGER_SYSVIEW_Print("Acquireg Mgt Unlocked by: METER_FLAG");
+		} else if ((dValorGPS & GPS_FLAG_TIMEOUT_MTR) > 0)
+		{
+			SEGGER_SYSVIEW_Print("Acquireg Mgt Unlocked by: METER_FLAG_TIMEOUT");
+		}
+		SEGGER_SYSVIEW_Print("Acquireg Mgt Cycle Starts...");
+#endif
 
 		// Mutex wait
 		status = WAIT_MUTEX(AQR_MTX_sEntradas, osWaitForever);
@@ -3149,8 +3198,9 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				AQR_wCausaFim = AQR_wCF_ZERA_TOTAL;
 				AQR_sStatus.bAlarmeOK = true;
 
+				dFlagsSis |= UOS_SIS_FLAG_NOVO_REG;
 				//Pede a criação de um novo registro:
-				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_NOVO_REG);
+//				osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_NOVO_REG);
 			}
 
 			//Se foi solicitado auto teste dos sensores
@@ -3857,16 +3907,14 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					}
 
 					//----------------------------------------------------------------------------
+					uint8_t bOutBuffer[30];
+					sprintf(bOutBuffer, "GPS: %d ; AQR: %d", GPS_bDistanciaPercorrida, AQR_bDistanciaPercorrida);
+					SEGGER_SYSVIEW_Print(bOutBuffer);
 
-					if (GPS_bDistanciaPercorrida==0 || AQR_bDistanciaPercorrida == 0)
-					{
-						wPtrAux = 0;
-					}
 					//Arredonda Distância para Avaliação
 					//Arredonda variável de avaliação para um número inteiro.
 					AQR_sStatus.wAvaliaArred = (psMonitor->wAvalia * 100) / AQR_bDistanciaPercorrida;
 					AQR_sStatus.wAvaliaArred = ((AQR_sStatus.wAvaliaArred + 5) / 10);
-					GPS_bDistanciaPercorrida = 0;
 					AQR_bDistanciaPercorrida = 0;
 
 					//Se a posição de retirado do buffer for zero, Aponta para o fim
@@ -4573,9 +4621,15 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			}
 		}
 
+		AQR_sPubStatus = AQR_sStatus;
+		AQR_sPubAcumulado = AQR_sAcumulado;
+
 		// devolve mutex
 		status = RELEASE_MUTEX(AQR_MTX_sEntradas);
 		ASSERT(status == osOK);
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
+		SEGGER_SYSVIEW_Print("Acquireg Mgt Cycle Ends...");
+#endif
 	}
 	osThreadTerminate(NULL);
 }

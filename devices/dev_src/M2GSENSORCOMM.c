@@ -56,7 +56,7 @@
 #define NULL (void*)0
 #endif
 
-#define RECV_SENSORBUFSIZE		64
+#define RECV_SENSORBUFSIZE		128
 
 #ifndef UNITY_TEST
 #define DEFAULT_TIMEOUT		500
@@ -618,8 +618,8 @@ void M2GSEN_vClearStatus(void)
 void M2GSEN_vSetStatus(eCANStatus_s eErrorCode)
 {
 	sMCU_CANSensor_Status.wBaudRateKbps = M2GSENSORCOMM_CAN_BITRATE / 1000;
-	sMCU_CANSensor_Status.bRxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
-	sMCU_CANSensor_Status.bTxError += CAN_bGetErCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
+	sMCU_CANSensor_Status.bRxError += CAN_bGetErrCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
+	sMCU_CANSensor_Status.bTxError += CAN_bGetErrCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
 
 	if (eErrorCode & (CAN_STAT_STUFFERROR | CAN_STAT_FORMERROR | CAN_STAT_CRCERROR))
 	{

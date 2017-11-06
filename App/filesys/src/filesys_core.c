@@ -254,7 +254,8 @@ void FSM_vFileSysPublishThread (void const *argument)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(FSMPUB, WDT_SLEEP);
-		osEvent sEvent = osSignalWait(FFS_FLAG_STATUS | FFS_FLAG_CFG | FFS_FLAG_STATIC_REG | FFS_FLAG_SENSOR_CFG, osWaitForever);
+		osEvent sEvent = osSignalWait(FFS_FLAG_STATUS | FFS_FLAG_CFG | FFS_FLAG_STATIC_REG |
+												FFS_FLAG_SENSOR_CFG | FFS_FLAG_FORMAT_DONE, osWaitForever);
 		WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
 
 		osFlags dFlags = osFlagGet(FFS_sFlagSis);
@@ -302,6 +303,18 @@ void FSM_vFileSysPublishThread (void const *argument)
 		{
 			PUBLISH_MESSAGE(FileSys, EVENT_FFS_FILE_INFO, EVENT_SET, (void*)&tsFSInfo);
 		}
+		if (tSignalBit & FFS_FLAG_FORMAT_DONE)
+		{
+			if (dFlags & FFS_FLAG_FORMAT_DONE)
+			{
+				PUBLISH_MESSAGE(FileSys, EVENT_FFS_FILE_FORMAT_DONE, EVENT_SET, NULL);
+			}
+			else
+			{
+				PUBLISH_MESSAGE(FileSys,EVENT_FFS_FILE_FORMAT_DONE, EVENT_CLEAR, NULL);
+			}
+		}
+
 	}
 
 	osThreadTerminate(NULL);
@@ -396,6 +409,21 @@ void FFS_vIdentifyEvent (contract_s* contract)
 			{
 				FFS_sGetFSInfo(&tsFSInfo);
 				osSignalSet(xPbulishThreadID, FFS_FLAG_FILE_INFO);
+			}
+
+			if (ePubEvt == EVENT_CTL_FILE_FORMAT)
+			{
+				WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
+				if (FFS_FormatFS() == APP_ERROR_SUCCESS)
+				{
+					osFlagSet(FFS_sFlagSis, FFS_FLAG_FORMAT_DONE);
+				}
+				else
+				{
+					osFlagClear(FFS_sFlagSis, FFS_FLAG_FORMAT_DONE);
+				}
+				osSignalSet(xPbulishThreadID, FFS_FLAG_FORMAT_DONE);
+				WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 			}
 			break;
 		}

@@ -43,6 +43,14 @@
 #include "ftl_if_in.h"
 #endif // #ifdef __KERNEL__
 
+
+UINT16 eBlockPercent = 0; /*2*/
+
+FTL_STATUS FTL_GetFormatPercent (UINT16 * ePercent)
+{
+	*ePercent = eBlockPercent;
+}
+
 //-----------------------------------------------------------------
 FTL_STATUS FTL_InitAll (FTL_INIT_STRUCT_PTR initStructPtr)
 {
@@ -583,6 +591,7 @@ FTL_STATUS FTL_Shutdown (void)
 	return FTL_ERR_PASS;
 }
 
+
 //---------------------------------------------------------------------------
 FTL_STATUS FTL_InternalFormat (void)
 {
@@ -806,6 +815,7 @@ FTL_STATUS FTL_InternalFormat (void)
 	}
 
 #endif
+	eBlockPercent = 0;
 	for (eBlockCount = 0; eBlockCount < NUM_EBLOCKS_PER_DEVICE; eBlockCount++)
 	{
 		for (devCount = 0; devCount < NUM_DEVICES; devCount++)
@@ -824,6 +834,8 @@ FTL_STATUS FTL_InternalFormat (void)
 				continue;
 			}
 #endif
+
+			eBlockPercent = (eBlockCount * 100) / (NUM_EBLOCKS_PER_DEVICE * NUM_DEVICES);
 
 			if (FTL_ERR_PASS != (status = FTL_EraseOpNoDirty(devCount, eBlockCount)))
 			{
