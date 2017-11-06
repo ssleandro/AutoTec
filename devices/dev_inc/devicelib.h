@@ -59,6 +59,7 @@
 #include "EXTBUZZER_config.h"
 #include "CHIPPROG_config.h"
 #include "MCURTC_config.h"
+#include "DS2411R_config.h"
 
 /******************************************************************************
  * Preprocessor Constants
@@ -83,6 +84,7 @@
  */
 //CAN, PORT, TD, RD, MODE
 #define DEVICE_MAPPING \
+		  X(PERIPHERAL_DS2411R, IDN_open, IDN_read, IDN_write, IDN_ioctl, IDN_close) \
 		  X(PERIPHERAL_MCURTC, RTC_open, RTC_read, RTC_write, RTC_ioctl, RTC_close) \
         X(PERIPHERAL_CBT09427, CBT_open, CBT_read, CBT_write, CBT_ioctl, CBT_close) \
         X(PERIPHERAL_EXTBUZZER, EXB_open, EXB_read, EXB_write, EXB_ioctl, EXB_close) \

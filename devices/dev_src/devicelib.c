@@ -52,6 +52,7 @@
 #include "EXTBUZZER.h"
 #include "MCURTC.h"
 #include "CHIPPROG.h"
+#include "DS2411R.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
