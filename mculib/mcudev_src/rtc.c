@@ -1,8 +1,8 @@
 /****************************************************************************
- * Title                 :   filesys_core Include File
- * Filename              :   filesys_core.h
+ * Title                 :   rtc
+ * Filename              :   rtc.c
  * Author                :   Henrique Reis
- * Origin Date           :
+ * Origin Date           :   30/10/2017
  * Version               :   1.0.0
  * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
@@ -23,45 +23,29 @@
  *****************************************************************************/
 /*************** INTERFACE CHANGE LIST **************************************
  *
- *    Date    Version        Author              Description
- *  XX/XX/XX   1.0.0      Henrique Reis    filesys_core.h created.
+ *    Date    Version       Author          Description
+ * 30/10/2017  1.0.0     Henrique Reis      rtc.c created.
  *
  *****************************************************************************/
-/** @file   filesys_core.h
- *  @brief
- *
- */
-#ifndef FILESYS_SRC_FILESYS_CORE_H_
-#define FILESYS_SRC_FILESYS_CORE_H_
 
 /******************************************************************************
  * Includes
  *******************************************************************************/
-#include <M2G_app.h>
-#if defined (UNITY_TEST)
-#include "../filesys/inc/interface_filesys.h"
-#else
-#include "interface_filesys.h"
+
+#include "rtc.h"
+#include <stdlib.h>
+#include "board.h"
+#ifdef USE_SYSVIEW
+#include "SEGGER.h"
+#include "SEGGER_SYSVIEW.h"
 #endif
-/******************************************************************************
- * Preprocessor Constants
- *******************************************************************************/
-#define FFS_SIGNAL_PUBLISH			0x55
-
-#define FFS_FLAG_ALL 				0x0FFF
-#define FFS_FLAG_STATUS 			0x0001
-#define FFS_FLAG_CFG 				0x0002
-#define FFS_FLAG_SENSOR_CFG		0x0004
-#define FFS_FLAG_STATIC_REG		0x0008
-#define FFS_FLAG_FILE_INFO			0x0010
-#define FFS_FLAG_FORMAT_DONE		0x0020
 
 /******************************************************************************
- * Configuration Constants
+ * Module Preprocessor Constants
  *******************************************************************************/
 
 /******************************************************************************
- * Macros
+ * Variables from others modules
  *******************************************************************************/
 
 /******************************************************************************
@@ -69,20 +53,86 @@
  *******************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Public Variables
  *******************************************************************************/
+
+/******************************************************************************
+ * Module Variable Definitions
+ *******************************************************************************/
+static bool bRTCEnabled = false;  			//!< Inidicates if RTC is enabled
+static rtcCallBack fpRTCCallback = NULL; 	//!< Callback to be used inside interruption
 
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
 
-#ifdef __cplusplus
-extern "C"
+/******************************************************************************
+ * Function Definitions
+ *******************************************************************************/
+
+void RTC_IRQHandler (void)
 {
-#endif
+	sRTCTime sRTCStruct;
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+	if (Chip_RTC_GetIntPending(LPC_RTC, RTC_INT_COUNTER_INCREASE)) {
 
-#endif /* FILESYS_SRC_FILESYS_CORE_H_ */
+		Chip_RTC_GetFullTime(LPC_RTC, (RTC_TIME_T*) &sRTCStruct);
+
+		if (fpRTCCallback != NULL)
+		{
+			fpRTCCallback(sRTCStruct);
+		}
+
+		/* Clear pending interrupt */
+		Chip_RTC_ClearIntPending(LPC_RTC, RTC_INT_COUNTER_INCREASE);
+	}
+}
+
+eMCUError_s RTC_eInit (const rtc_config_s* pRTC)
+{
+	if (pRTC == NULL)
+	{
+		return MCU_ERROR_INVALID_CALLBACK;
+	} else
+	{
+		fpRTCCallback = pRTC->fpRTCCallBack;
+	}
+
+	Chip_RTC_Init(LPC_RTC);
+
+	/* Set the RTC to generate an interrupt on each second */
+	Chip_RTC_CntIncrIntConfig(LPC_RTC, RTC_AMR_CIIR_IMSEC, (fpRTCCallback != NULL) ? ENABLE : DISABLE);
+
+	/* Enable matching for alarm for second, minute, hour fields only */
+	Chip_RTC_AlarmIntConfig(LPC_RTC, RTC_AMR_CIIR_IMSEC | RTC_AMR_CIIR_IMMIN | RTC_AMR_CIIR_IMHOUR, DISABLE);
+
+	/* Clear interrupt pending */
+	Chip_RTC_ClearIntPending(LPC_RTC, RTC_INT_COUNTER_INCREASE | RTC_INT_ALARM);
+
+	/* Enable RTC interrupt in NVIC */
+	NVIC_EnableIRQ((IRQn_Type) RTC_IRQn);
+
+	/* Enable RTC (starts increase the tick counter and second counter register) */
+	Chip_RTC_Enable(LPC_RTC, ENABLE);
+	bRTCEnabled = true;
+
+	return MCU_ERROR_SUCCESS;
+}
+
+eMCUError_s RTC_eDeInit (void)
+{
+	Chip_RTC_DeInit(LPC_RTC);
+	bRTCEnabled = false;
+
+	return MCU_ERROR_SUCCESS;
+}
+
+void RTC_vGetFullTime (const sRTCTime* pTime)
+{
+	Chip_RTC_GetFullTime(LPC_RTC, (RTC_TIME_T*)pTime);
+}
+
+void RTC_vSetFullTime (const sRTCTime* pTime)
+{
+	Chip_RTC_SetFullTime(LPC_RTC, (RTC_TIME_T*)pTime);
+}

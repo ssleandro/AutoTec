@@ -1,8 +1,8 @@
 /****************************************************************************
- * Title                 :   control_core
- * Filename              :   control_core.h
+ * Title                 :   rtc
+ * Filename              :   rtc.h
  * Author                :   Henrique Reis
- * Origin Date           :   18 de abr de 2017
+ * Origin Date           :   30/10/2017
  * Version               :   1.0.0
  * Compiler              :   GCC 5.4 2016q2 / ICCARM 7.40.3.8938
  * Target                :   LPC43XX M4
@@ -24,59 +24,83 @@
 /*************** INTERFACE CHANGE LIST **************************************
  *
  *    Date    Version       Author          Description
- *  18/04/17   1.0.0     Henrique Reis         control_file.h created.
+ * 30/10/2017  1.0.0     Henrique Reis      rtc.h created.
  *
  *****************************************************************************/
-#ifndef APP_CONTROL_FILE_H_
-#define APP_CONTROL_FILE_H_
+#ifndef DEVICES_MCU_INC_RTC_H_
+#define DEVICES_MCU_INC_RTC_H_
 
 /******************************************************************************
- * Includes
- *******************************************************************************/
+* Includes
+*******************************************************************************/
+#include <inttypes.h>
+#include <stdbool.h>
+#include "mcuerror.h"
 
 /******************************************************************************
- * Preprocessor Constants
- *******************************************************************************/
+* Preprocessor Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Configuration Constants
- *******************************************************************************/
+* Configuration Constants
+*******************************************************************************/
 
 /******************************************************************************
- * Macros
- *******************************************************************************/
+* Macros
+*******************************************************************************/
 
 /******************************************************************************
- * Typedefs
- *******************************************************************************/
-typedef struct
+* Typedefs
+*******************************************************************************/
+/**
+ * @brief RTC time type option
+ */
+typedef enum {
+	RTC_SECOND,		/*!< Second */
+	RTC_MINUTE,		/*!< Month */
+	RTC_HOUR,			/*!< Hour */
+	RTC_DAYOFMONTH,	/*!< Day of month */
+	RTC_DAYOFWEEK,		/*!< Day of week */
+	RTC_DAYOFYEAR,		/*!< Day of year */
+	RTC_MONTH,			/*!< Month */
+	RTC_YEAR,			/*!< Year */
+	RTC_INVALID
+} eRTCTimeIndex;
+
+typedef struct {
+	uint32_t time[RTC_INVALID];
+} sRTCTime;
+
+typedef void (*rtcCallBack) (sRTCTime sRTCTimeStruct); //!< RTC callback
+
+typedef struct rtc_config_s
 {
-   CAN_tsCtrlListaSens CAN_sCtrlListaSens;
-   uint16_t wCRC16;
-}AQR_tsCtrlListaSens;
+	rtcCallBack fpRTCCallBack;    //!< RTC Callback function
+} rtc_config_s;
 
 /******************************************************************************
- * Variables
- *******************************************************************************/
+* Variables
+*******************************************************************************/
 
 /******************************************************************************
- * Public Variables
- *******************************************************************************/
+* Public Variables
+*******************************************************************************/
 
 /******************************************************************************
- * Function Prototypes
- *******************************************************************************/
-
-eAPPError_s FFS_vLoadConfigFile (void);
-eAPPError_s FFS_vSaveConfigFile (void);
-
-eAPPError_s FFS_vLoadSensorCfg (void);
-eAPPError_s FFS_vSaveSensorCfg (void);
-eAPPError_s FFS_vRemoveSensorCfg (void);
-
-eAPPError_s FFS_vLoadStaticReg (void);
-eAPPError_s FFS_vSaveStaticReg (void);
-void FFS_sGetFSInfo(FFS_sFSInfo *pSFInfo);
-eAPPError_s FFS_FormatFS(void);
-
+* Function Prototypes
+*******************************************************************************/
+#ifdef __cplusplus
+extern "C"
+{
 #endif
+
+eMCUError_s RTC_eInit (const rtc_config_s* pRTC);
+eMCUError_s RTC_eDeInit (void);
+void RTC_vGetFullTime (const sRTCTime* pTime);
+void RTC_vSetFullTime (const sRTCTime* pTime);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif /* DEVICES_MCU_INC_RTC_H_ */

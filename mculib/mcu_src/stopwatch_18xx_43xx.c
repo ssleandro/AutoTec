@@ -32,6 +32,9 @@
 #include "chip.h"
 #include "stopwatch.h"
 
+#define USE_STOP_WATCH_TIMER 		LPC_TIMER3
+#define USE_STOP_WATCH_TIMER_CLK CLK_MX_TIMER3
+
 /*****************************************************************************
  * Private types/enumerations/variables
  ****************************************************************************/
@@ -58,12 +61,12 @@ void StopWatch_Init (void)
 {
 	/* Use timer 1. Set prescaler to divide by 8 */
 	const uint32_t prescaleDivisor = 8;
-	Chip_TIMER_Init(LPC_TIMER0);
-	Chip_TIMER_PrescaleSet(LPC_TIMER0, prescaleDivisor - 1);
-	Chip_TIMER_Enable(LPC_TIMER0);
+	Chip_TIMER_Init(USE_STOP_WATCH_TIMER);
+	Chip_TIMER_PrescaleSet(USE_STOP_WATCH_TIMER, prescaleDivisor - 1);
+	Chip_TIMER_Enable(USE_STOP_WATCH_TIMER);
 
 	/* Pre-compute tick rate. */
-	ticksPerSecond = Chip_Clock_GetRate(CLK_MX_TIMER0) / prescaleDivisor;
+	ticksPerSecond = Chip_Clock_GetRate(USE_STOP_WATCH_TIMER_CLK) / prescaleDivisor;
 	ticksPerMs = ticksPerSecond / 1000;
 	ticksPerUs = ticksPerSecond / 1000000;
 }
@@ -72,7 +75,7 @@ void StopWatch_Init (void)
 uint32_t StopWatch_Start (void)
 {
 	/* Return the current timer count. */
-	return Chip_TIMER_ReadCount(LPC_TIMER0);
+	return Chip_TIMER_ReadCount(USE_STOP_WATCH_TIMER);
 }
 
 /* Returns number of ticks per second of the stopwatch timer */

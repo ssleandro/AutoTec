@@ -49,12 +49,12 @@
 /******************************************************************************
  * Module Variable Definitions
  *******************************************************************************/
-DECLARE_QUEUE(ControlQueue, QUEUE_SIZEOFCONTROL);      //!< Declaration of Interface Queue
-CREATE_SIGNATURE(ControlAcquireg);//!< Signature Declarations
-CREATE_SIGNATURE(ControlSensor);//!< Signature Declarations
-CREATE_SIGNATURE(ControlFileSys);
-CREATE_SIGNATURE(ControlGui);
-CREATE_CONTRACT(Control);                              //!< Create contract for sensor msg publication
+DECLARE_QUEUE(ControlQueue, QUEUE_SIZEOFCONTROL);     //!< Declaration of Interface Queue
+CREATE_SIGNATURE(ControlAcquireg);							//!< Signature Declarations
+CREATE_SIGNATURE(ControlSensor);								//!< Signature Declarations
+CREATE_SIGNATURE(ControlFileSys);							//!< Signature Declarations
+CREATE_SIGNATURE(ControlGui);									//!< Signature Declarations
+CREATE_CONTRACT(Control);                             //!< Create contract for sensor msg publication
 
 //!< From MPA2500
 /******************************************************************************
@@ -64,10 +64,10 @@ CREATE_CONTRACT(Control);                              //!< Create contract for 
 //Código numérico desta versão:
 const UOS_tsVersaoCod UOS_sVersaoCodDef = {
 	0xFFFF,           //Flag
-	5,                //Modelo MPA2500
-	1,                //Versão
+	6,                //Modelo M2G
+	0,                //Versão
 	1,                //Revisão
-	1003,              //Build
+	1006,              //Build
 	0x00,             //Número de série do hardware
 	0x00,             //(6 bytes)
 	0x00,
@@ -168,8 +168,10 @@ volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS
 
 //Thread Control
 WATCHDOG_CREATE(CONTROLPUB);//!< WDT pointer flag
+WATCHDOG_CREATE(CONTROLMGT);//!< WDT pointer flag
 WATCHDOG_CREATE(CONTROLEMY);//!< WDT pointer flag
 uint8_t bCONTROLPUBThreadArrayPosition = 0;                    //!< Thread position in array
+uint8_t bCONTROLMGTThreadArrayPosition = 0;                    //!< Thread position in array
 uint8_t bCONTROLEMYThreadArrayPosition = 0;                    //!< Thread position in array
 
 /******************************************************************************
@@ -265,7 +267,8 @@ void CTL_vControlPublishThread (void const *argument)
 	while (1)
 	{
 		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO, true, false, osWaitForever);
+		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO |
+								 CTL_FORMAT_FILE | CTL_FORMAT_FILE_DONE | CTL_SW_HW_VERSION, true, false, osWaitForever);
 		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
 		UOSflags = osFlagGet(UOS_sFlagSis);
@@ -283,11 +286,30 @@ void CTL_vControlPublishThread (void const *argument)
 		{
 			PUBLISH_MESSAGE(Control, EVENT_CTL_UPDATE_FILE_INFO, eEvType, &UOS_sFSInfo);
 		}
+
 		if ((flags & CTL_GET_FILE_INFO) > 0)
 		{
 			PUBLISH_MESSAGE(Control, EVENT_CTL_GET_FILE_INFO, eEvType, NULL);
 		}
 
+		if ((flags & CTL_FORMAT_FILE) > 0)
+		{
+			PUBLISH_MESSAGE(Control, EVENT_CTL_FILE_FORMAT, eEvType, NULL);
+		}
+
+		if ((flags & CTL_FORMAT_FILE_DONE) > 0)
+		{
+			if (UOSflags & UOS_SIS_FLAG_CFG_OK)
+				eEvType = EVENT_SET;
+			else
+				eEvType = EVENT_CLEAR;
+			PUBLISH_MESSAGE(Control, EVENT_CTL_FILE_FORMAT_DONE, eEvType, NULL);
+		}
+
+		if ((flags & CTL_SW_HW_VERSION) > 0)
+		{
+			PUBLISH_MESSAGE(Control, EVENT_CTL_SW_HW_VERSION, EVENT_SET, &UOS_sVersaoCod);
+		}
 	}
 	osThreadTerminate(NULL);
 }
@@ -350,6 +372,19 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					osFlagSet(CTL_sFlagSis, CTL_UPDATE_FILE_INFO);
 				}
 			}
+			if (ePubEvt == EVENT_FFS_FILE_FORMAT_DONE)
+			{
+				if (ePubEvType == EVENT_SET)
+				{
+					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				}
+				else
+				{
+					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_FFS_OK);
+				}
+				osFlagSet(CTL_sFlagSis, CTL_FORMAT_FILE_DONE);
+			}
+
 			break;
 		}
 		case MODULE_GUI:
@@ -364,15 +399,43 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 				}
 			}
-			if (ePubEvt == EVENT_GUI_GET_FILE_INFO)
+			if (ePubEvt == EVENT_GUI_SYSTEM_GET_FILE_INFO)
 			{
 				osFlagSet(CTL_sFlagSis, CTL_GET_FILE_INFO);
+			}
+			if (ePubEvt == EVENT_GUI_SYSTEM_FORMAT_FILE)
+			{
+				osFlagSet(CTL_sFlagSis, CTL_FORMAT_FILE);
 			}
 			break;
 		}
 		default:
 			break;
 	}
+}
+
+eAPPError_s CTL_eGetSwHwVersion (void)
+{
+	eAPPError_s eErr = APP_ERROR_ERROR;
+	static peripheral_descriptor_p pIDHandle;
+	static uint8_t bIDNumBuffer[8];
+	uint32_t dRecvBytes = 0;
+
+	pIDHandle = DEV_open(PERIPHERAL_DS2411R);
+
+	dRecvBytes = DEV_read(pIDHandle, &bIDNumBuffer, sizeof(bIDNumBuffer));
+
+	if (dRecvBytes)
+	{
+		memcpy(UOS_sVersaoCod.abNumSerie, &bIDNumBuffer[1], sizeof(UOS_sVersaoCod.abNumSerie));
+		eErr = APP_ERROR_SUCCESS;
+	}
+
+	DEV_close(pIDHandle);
+
+	osFlagSet(CTL_sFlagSis, CTL_SW_HW_VERSION);
+
+	return eErr;
 }
 
 /* ************************* Main thread ************************************ */
@@ -388,9 +451,6 @@ void CTL_vControlThread (void const *argument)
 
 	INITIALIZE_MUTEX(UOS_MTX_sDataHora);
 
-	// Copy default configurations to start; because we don't have file system
-	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_sConfiguracao));
-
 	status = osFlagGroupCreate(&CTL_sFlagSis);
 	ASSERT(status == osOK);
 
@@ -403,6 +463,12 @@ void CTL_vControlThread (void const *argument)
 	WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_UP, false, false, osWaitForever);
 
+	SIGNATURE_HEADER(ControlFileSys, THIS_MODULE, TOPIC_FILESYS, ControlQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(ControlFileSys), 0) == osOK);
+
+	SIGNATURE_HEADER(ControlGui, THIS_MODULE, TOPIC_GUI, ControlQueue);
+	ASSERT(SUBSCRIBE(SIGNATURE(ControlGui), 0) == osOK);
+
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;
 	while (THREADS_THREAD(bNumberOfThreads)!= NULL)
@@ -410,11 +476,9 @@ void CTL_vControlThread (void const *argument)
 		CTL_vCreateThread(THREADS_THISTHREAD[bNumberOfThreads++]);
 	}
 
-	SIGNATURE_HEADER(ControlFileSys, THIS_MODULE, TOPIC_FILESYS, ControlQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(ControlFileSys), 0) == osOK);
+	UOS_sVersaoCod = UOS_sVersaoCodDef;
 
-	SIGNATURE_HEADER(ControlGui, THIS_MODULE, TOPIC_GUI, ControlQueue);
-	ASSERT(SUBSCRIBE(SIGNATURE(ControlGui), 0) == osOK);
+	CTL_eGetSwHwVersion();
 
 	/* Start the main functions of the application */
 	while (1)
@@ -433,6 +497,30 @@ void CTL_vControlThread (void const *argument)
 	osThreadSuspend(NULL);
 }
 
+void CTL_vControlManagementThread (void const *argument)
+{
+	osFlags dFlagsSis;
+
+#ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
+	SEGGER_SYSVIEW_Print("Control Management Thread Created");
+#endif
+
+	CTL_vDetectThread(&WATCHDOG(CONTROLMGT), &bCONTROLMGTThreadArrayPosition, (void*)CTL_vControlManagementThread);
+	WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
+
+	osThreadId xDiagMainID = (osThreadId)argument;
+	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLMGTThreadArrayPosition));    //Task created, inform core
+
+	while (1)
+	{
+		/* Pool the device waiting for */
+		WATCHDOG_STATE(CONTROLMGT, WDT_SLEEP);
+		osDelay(2000);
+		WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
+	}
+	osThreadTerminate(NULL);
+}
+
 void CTL_vControlEmergencyThread (void const *argument)
 {
 	osFlags dFlagsSis;
@@ -446,46 +534,6 @@ void CTL_vControlEmergencyThread (void const *argument)
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLEMYThreadArrayPosition));    //Task created, inform core
-
-	// At this point this thread will be suspended by ControlThread
-	// Waiting for and osThreadResume
-	WATCHDOG_STATE(CONTROLEMY, WDT_SLEEP);
-	osSignalWait(0xAAAA, osWaitForever);
-	WATCHDOG_STATE(CONTROLEMY, WDT_ACTIVE);
-
-	// Turn off interrupts
-	__disable_irq();
-
-	// Turn off peripheral and sensors power source
-
-	//Verifica os flags de sistema:
-	dFlagsSis = osFlagGet(UOS_sFlagSis);
-
-	//Se o sistema de arquivos está rodando:
-	if ((dFlagsSis & UOS_SIS_FLAG_FFS_OK) > 0)
-	{
-		//Acumula os valores de áreas trabalhadas
-//        AQR_vAcumulaArea();
-
-		//Finaliza os arquivos da aquisicao:
-//        AQR_vEmergencia();
-
-//        CAN_vSalvaArquivoErros();
-
-		//Finaliza o sistema de arquivos:
-//        FFS_vEmergencia();
-	}
-
-//      if( REBOOT == TRF_EMERGENCIA )
-//      {
-//        //Reajusta watchdog timer para aguardar a descarga dos super capacitores:
-//        WDTC = UOS_WDT_dTMP_EMERGENCIA;
-//      }
-//      else
-//      {
-//        //Reajusta o watchdog timer para aguardar reinicializacao forçada:
-//        WDTC = UOS_WDT_dTMP_REBOOT;
-//      }
 
 	while (1)
 	{

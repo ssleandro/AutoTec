@@ -102,7 +102,8 @@ typedef enum ePinDirection
  */
 typedef enum ePinPull
 {
-	GPIO_PULLUP = (0x0 << 3),       //!< GPIO Pull type is PULL DOWN
+	GPIO_PULLUP = (0x0 << 3),      	 //!< GPIO Pull type is PULL DOWN
+	GPIO_PULL_INACT = (0x2 << 3),		 //!< GPIO Pull type is disable
 	GPIO_PULLDOWN = (0x3 << 3),       //!< GPIO Pull type is PULL UP
 	GPIO_PULL_INVALID                 //!< GPIO Invalid PULL
 } ePinPull;
@@ -252,6 +253,8 @@ void GPIO_vSet (const gpio_config_s *pgpio);
  *
  *******************************************************************************/
 void GPIO_vClear (const gpio_config_s *pgpio);
+
+void GPIO_vSetDir (gpio_config_s *pGPIO, bool output);
 
 /******************************************************************************
  * Function : GPIO_vToggle(gpio_config_s *pgpio)

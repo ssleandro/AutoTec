@@ -258,7 +258,7 @@ CREATE_TIMER(IsobusCANStatusTimer, ISO_vTimerCallbackIsobusCANStatus);
  *******************************************************************************/
 void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask);
 void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload);
-void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData);
+void ISO_vUpdatePlanterMask (sPlanterDataMaskData *psPlanterData);
 void ISO_vUpdatePlanterDataMaskLines (void);
 void ISO_vTreatUpdateReplaceSensorEvent (tsPubSensorReplacement);
 void ISO_vTreatUpdateDataEvent (event_e ePubEvt);
@@ -594,7 +594,7 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_UPDATE_PLANTER_INTERFACE:
 				{
-					ISO_vUpdatePlanterMaskData((sPlanterDataMaskData*)pvPayData);
+					ISO_vUpdatePlanterMask((sPlanterDataMaskData*)pvPayData);
 					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
@@ -721,6 +721,14 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				{
 					tsPubSensorReplacement *psReplacement = pvPayData;
 					ISO_vTreatUpdateReplaceSensorEvent(*psReplacement);
+					break;
+				}
+				case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
+				{
+					break;
+				}
+				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
+				{
 					break;
 				}
 				default:
@@ -939,7 +947,9 @@ void ISO_vIsobusRecvThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(ISORCV, WDT_SLEEP);
 		osDelayUntil(&dTicks, 25);
+		osEnterCritical();
 		bRecvMessages = DEV_read(pISOHandle, &asPayload[0].frame, ARRAY_SIZE(asPayload));
+		osExitCritical();
 		WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
 
 		if (bRecvMessages)
@@ -1009,6 +1019,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
+			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
@@ -1018,6 +1029,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 				DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
 				WATCHDOG_STATE(ISOWRT, WDT_ACTIVE);
 			}
+			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);
@@ -3022,6 +3034,7 @@ void ISO_vUpdateAlarmStatus (uint8_t bNumLine, eLineAlarm eAlarmStatus)
 	ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_RECTANGLE_LINE_ATTRIBUTE, wRectID);
 }
 
+
 void ISO_vUpdatePlanterDataMask (void)
 {
 	osStatus status;
@@ -3064,50 +3077,59 @@ void ISO_vUpdatePlanterDataMask (void)
 		}
 	}
 
-	if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
+	if (sPlanterMask.psSpeedKm->dValue > 0)
 	{
-		for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
+		if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
 		{
-			ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
-				sPlanterMask.psLineStatus->psLineAverage[i].dValue);
-
-			if (i < (*sConfigDataMask.bNumOfRows))
+			for (int i = 0; i < ((*sConfigDataMask.bNumOfRows) * 2); i++)
 			{
-				ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
-					sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
-				ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
-					sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
-				ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
-					sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
-				ISO_vUpdateAlarmStatus(i, sPlanterMask.psLineStatus->peLineAlarmStatus[i]);
-			}
-		}
+				ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineAverage[i].wObjID,
+					sPlanterMask.psLineStatus->psLineAverage[i].dValue);
 
-		ISO_vChangeNumericValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+				if (i < (*sConfigDataMask.bNumOfRows))
+				{
+					if (sPlanterMask.psSpeedKm->dValue > 0)
+					ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineSemPerUnit[i].wObjID,
+						sPlanterMask.psLineStatus->psLineSemPerUnit[i].dValue);
+					ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineSemPerHa[i].wObjID,
+						sPlanterMask.psLineStatus->psLineSemPerHa[i].dValue);
+					ISO_vChangeNumericValue(sPlanterMask.psLineStatus->psLineTotalSeeds[i].wObjID,
+						sPlanterMask.psLineStatus->psLineTotalSeeds[i].dValue);
+					ISO_vUpdateAlarmStatus(i, sPlanterMask.psLineStatus->peLineAlarmStatus[i]);
+				}
+			}
+			ISO_vChangeNumericValue(sPlanterMask.psProductivity->wObjID, sPlanterMask.psProductivity->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psWorkedTime->wObjID, sPlanterMask.psWorkedTime->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTotalSeeds->wObjID, sPlanterMask.psTotalSeeds->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psPartPopSemPerUnit->wObjID, sPlanterMask.psPartPopSemPerUnit->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psPartPopSemPerHa->wObjID, sPlanterMask.psPartPopSemPerHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+		} else
+		{
+			ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
+			ISO_vChangeNumericValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+		}
 	} else
 	{
-		ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaHa->wObjID, sPlanterMask.psWorkedAreaHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTotalMt->wObjID, sPlanterMask.psTotalMt->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTotalHa->wObjID, sPlanterMask.psTotalHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psSpeedKm->wObjID, sPlanterMask.psSpeedKm->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psSpeedHa->wObjID, sPlanterMask.psSpeedHa->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
-		ISO_vChangeNumericValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+		for (int i = 0; i < (*sConfigDataMask.bNumOfRows); i++)
+		{
+			ISO_vUpdateAlarmStatus(i, sPlanterMask.psLineStatus->peLineAlarmStatus[i]);
+		}
 	}
 
 	if (sUptPlanterMask.eUpdateState == UPDATE_PLANTER_ALARM)
@@ -3372,7 +3394,7 @@ void ISO_vUpdateTestModeData (event_e eEvt, void* vPayload)
 	WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 }
 
-void ISO_vUpdatePlanterMaskData (sPlanterDataMaskData *psPlanterData)
+void ISO_vUpdatePlanterMask (sPlanterDataMaskData *psPlanterData)
 {
 	osStatus status;
 	uint8_t bI, bJ;

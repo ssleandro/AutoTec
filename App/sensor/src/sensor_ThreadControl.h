@@ -47,7 +47,7 @@
     X("SensorRecv"      , 512  , osPriorityAboveNormal  , SEN_vSensorRecvThread               , (1 << 0) , 1 ) \
     X("SensorWrite"     , 512  , osPriorityAboveNormal  , SEN_vSensorWriteThread              , (1 << 1) , 2 ) \
     X("SensorManagement", 1024 , osPriorityAboveNormal  , SEN_vSensorNetworkManagementThread  , (1 << 2) , 3 ) \
-    X("SensorPublish"   , 512  , osPriorityNormal  	  , SEN_vSensorPublishThread            , (1 << 3) , 4 ) \
+    X("SensorPublish"   , 512  , osPriorityAboveNormal  , SEN_vSensorPublishThread            , (1 << 3) , 4 ) \
     X(NULL              ,   0  , 0                      , NULL                                , 0        , 5 )
 
 /******************************************************************************

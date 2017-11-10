@@ -136,24 +136,20 @@ void Chip_CCAN_DeInit (LPC_CCAN_T *pCCAN)
 }
 
 /* Select bit rate for CCAN bus */
-Status Chip_CCAN_SetBitRate (LPC_CCAN_T *pCCAN, uint32_t bitRate)
+Status Chip_CCAN_SetBitRate(LPC_CCAN_T *pCCAN, uint32_t bitRate)
 {
 	uint32_t pClk, div, quanta, segs, seg1, seg2, clk_per_bit, can_sjw;
 	pClk = Chip_Clock_GetRate(Chip_CCAN_GetClockIndex(pCCAN));
 	clk_per_bit = pClk / bitRate;
 
-	for (div = 0; div <= 15; div++)
-	{
-		for (quanta = 1; quanta <= 32; quanta++)
-		{
-			for (segs = 3; segs <= 17; segs++)
-			{
-				if (clk_per_bit == (segs * quanta * (div + 1)))
-				{
+	for (div = 0; div <= 15; div++) {
+		for (quanta = 1; quanta <= 32; quanta++) {
+			for (segs = 3; segs <= 17; segs++) {
+				if (clk_per_bit == (segs * quanta * (div + 1))) {
 					segs -= 3;
-					seg2 = (segs / 2) - 1;
-					seg1 = segs - seg2;
-					can_sjw = seg2 > 3 ? 3 : seg2;
+					seg1 = segs / 2;
+					seg2 = segs - seg1;
+					can_sjw = seg1 > 3 ? 3 : seg1;
 					configTimming(pCCAN, div, quanta - 1, can_sjw, seg1, seg2);
 					return SUCCESS;
 				}

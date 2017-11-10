@@ -860,6 +860,7 @@ extern "C"
 {
 #endif
 
+FTL_STATUS FTL_GetFormatPercent (UINT16 * ePercent);
 FTL_STATUS FTL_InitAll (FTL_INIT_STRUCT *initStructPtr);
 #if (CACHE_RAM_BD_MODULE == FTL_TRUE && CACHE_DYNAMIC_ALLOCATION == FTL_TRUE)
 FTL_STATUS FTL_Format(FTL_INIT_STRUCT *initStructPtr);

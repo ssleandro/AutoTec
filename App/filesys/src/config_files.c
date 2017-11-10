@@ -38,6 +38,7 @@
 #include "file_tool.h"
 #include <stdlib.h>
 #include "fat_sl.h"
+#include "api_mdriver_span.h"
 
 /******************************************************************************
  * Module Preprocessor Constants
@@ -504,4 +505,35 @@ void FFS_sGetFSInfo(FFS_sFSInfo *pSFInfo)
 			psFileInfo = (FFS_sFileInfo **)&((*psFileInfo)->pNext);
 		}while( f_findnext( &xFindStruct ) == F_NO_ERROR );
 	}
+}
+
+eAPPError_s FFS_FormatFS(void)
+{
+	eAPPError_s ret = APP_ERROR_ERROR;
+	uint8_t bStatus;
+	uint8_t bRetries = 3;
+
+	// Format
+	span_format();
+
+	bStatus = f_initvolume(initfunc_span);
+	if (bStatus == F_ERR_NOTFORMATTED)
+	{
+		f_format(F_FAT16_MEDIA);
+	}
+
+	do
+	{
+		bStatus = f_initvolume(initfunc_span);
+		if (bStatus == F_ERR_NOTFORMATTED)
+		{
+			f_format(F_FAT16_MEDIA);
+		}
+	} while ((bStatus != F_NO_ERROR) && (bRetries-- > 0));
+
+	if (bStatus == F_NO_ERROR)
+	{
+		ret = APP_ERROR_SUCCESS;
+	}
+	return ret;
 }
