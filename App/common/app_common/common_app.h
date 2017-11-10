@@ -385,8 +385,10 @@ typedef enum event_e
 	EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK,
 	EVENT_GUI_CONFIG_GET_MEMORY_USED,
 	EVENT_GUI_CONFIG_GET_MEMORY_USED_RESPONSE,
-	EVENT_GUI_GET_FILE_INFO,
-	EVENT_GUI_FORMAT_FILE,
+	EVENT_GUI_SYSTEM_GET_FILE_INFO,
+	EVENT_GUI_SYSTEM_FORMAT_FILE,
+	EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER,
+	EVENT_GUI_SYSTEM_SW_HW_VERSION,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
@@ -413,6 +415,7 @@ typedef enum event_e
 	EVENT_CTL_FILE_FORMAT,
 	EVENT_CTL_FILE_FORMAT_DONE,
 	EVENT_CTL_FILE_FORMAT_STATUS,
+	EVENT_CTL_SW_HW_VERSION,
 	EVENT_SEN_PUBLISH_FLAG,
 	EVENT_SEN_CAN_STATUS,
 	EVENT_SEN_SYNC_READ_SENSORS,
@@ -511,7 +514,19 @@ extern gpio_config_s sEnablePS9;
 #define CAN_APL_FLAG_SYNC_READ_SENSOR		        0x00200000
 
 /******************************************************************************
- * Typedefs from Control module... Just for test...
+ * Typedefs from GUI module
+ *******************************************************************************/
+#define SERIAL_NUMBER_N_BYTES			6
+#define M2G_HW_ID_NUMBER_N_DIGITS	SERIAL_NUMBER_N_BYTES * 2
+#define M2G_FW_VERSION_N_DIGITS		8
+
+typedef struct sM2GVersion {
+	uint8_t abHwIDNumber[M2G_HW_ID_NUMBER_N_DIGITS];
+	uint8_t abFwVersion[M2G_FW_VERSION_N_DIGITS];
+} sM2GVersion;
+
+/******************************************************************************
+ * Typedefs from Control module
  *******************************************************************************/
 typedef enum
 {
@@ -526,7 +541,6 @@ typedef enum
 	Linhas_Pares,     //Linhas Pares levantadas
 	Linhas_Impares,   //Linhas impares levantadas
 	Sem_Intercalacao  //Nenhuma linha levantada
-
 } UOS_teIntercala;
 
 //Estrutura de identificacao da versao deste software:
@@ -613,9 +627,8 @@ typedef struct
 	uint16_t wCRC16;
 } __attribute__((aligned(1), packed)) UOS_tsConfiguracao;
 
-
 /******************************************************************************
- * Variables from Control module... Just for test...
+ * Variables from Control module...
  *******************************************************************************/
 #define UOS_SIS_FLAG_NENHUM             0x00000000
 #define UOS_SIS_FLAG_TODOS              0xFFFFFFFF
@@ -725,7 +738,6 @@ typedef struct
 
 } __attribute__((aligned(1), packed)) AQR_tsRegEstaticoCRC;
 
-
 typedef union
 {
 	uint32_t wMsgKey;
@@ -735,12 +747,6 @@ typedef union
 		uint32_t wType:3;
 	};
 }smsg_key;
-
-#define LCD_bBRILHO_MAX        99
-
-//Ajuste do Contraste
-#define LCD_bCONTRASTE_MAX    127
-
 
 typedef struct
 {
