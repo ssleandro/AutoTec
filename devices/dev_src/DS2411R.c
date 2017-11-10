@@ -267,7 +267,11 @@ uint32_t IDN_OneWire_Read_ID_Number(void)
 
 	if (IDN_OneWire_Reset())
 	{
+		BRD_vWait_ms(5);
+
 		IDN_OneWire_WriteByte(DS2411R_CMD_READ_ROM);
+
+		BRD_vWait_ms(5);
 
 		for (uint8_t bI = sizeof(abM2GSerialNumber); bI > 0; bI--) {
 			IDN_OneWire_ReadByte(&abM2GSerialNumber[bI - 1]);
@@ -291,17 +295,11 @@ uint32_t IDN_read (struct peripheral_descriptor_s* const this,
 	uint8_t bReadBytes = 0;
 	(void)this;
 
-	if (!bValidIDNumber)
-	{
-		bReadBytes = IDN_OneWire_Read_ID_Number();
-		bValidIDNumber = (bReadBytes == 8);
-		if(bValidIDNumber)
-			memcpy(&vpBuffer, abM2GSerialNumber, tBufferSize);
-	} else
-	{
-		bReadBytes = sizeof(abM2GSerialNumber);
-		memcpy(&vpBuffer, abM2GSerialNumber, tBufferSize);
-	}
+	bReadBytes = IDN_OneWire_Read_ID_Number();
+	bValidIDNumber = (bReadBytes == 8);
+
+	if(bValidIDNumber)
+		memcpy(vpBuffer, abM2GSerialNumber, tBufferSize);
 
 	return (uint32_t) bReadBytes;
 }

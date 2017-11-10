@@ -117,6 +117,7 @@
 #define CTL_GET_FILE_INFO				0x000008
 #define CTL_FORMAT_FILE					0x000010
 #define CTL_FORMAT_FILE_DONE			0x000020
+#define CTL_SW_HW_VERSION				0x000040
 
 /******************************************************************************
  * Typedefs

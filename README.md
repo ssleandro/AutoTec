@@ -1,5 +1,30 @@
 ﻿# Release Notes
 
+## v0.1.006
+
+    a.  Adicionado RTC device
+
+    b.  Adicionado DS2411R device
+
+    c.	Leitura e armazenamento do ID number do equipamento pelo modulo Control.
+
+    d.  Sincronização do device RTC com a hora do GPS atraves do modulo Control.
+
+    e.  Arrumado a sincronização da leitura de sementes com a sinalização de um metro percorrido.
+
+    f.  Corrigido bug na sinalização de alarmes para as linhas acima da linha 32.
+
+    g.  Alteração na device da CAN.
+
+    h.  Alteração na mcu GPIO.
+
+    i.  Adicionado rotina de formatação da memória.
+
+    j.  Adicionado rotina de leitura do status da formatação da memória.
+
+    k.  Adicionado rotina de leitura das informações do sistema de arquivos.
+
+
 ## v0.1.005
 ## 1.	GUI / Isobus
 

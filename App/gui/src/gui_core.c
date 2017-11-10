@@ -93,6 +93,8 @@ static sLanguageCommandData sGUILanguageCommandData;
 static tsPubSensorReplacement sPubReplacState;
 static canStatusStruct_s sGUISensorCANStatus;
 
+static sM2GVersion GUI_sM2GIDs;
+
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
 static uint64_t dBitsNoSeed = 0;
@@ -417,6 +419,9 @@ void GUI_vGuiPublishThread (void const *argument)
 
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sGUITestModeData);
 
+//					ePubEvt = EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER;
+//					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					status = RELEASE_MUTEX(GUI_UpdateMask);
 					ASSERT(status == osOK);
@@ -540,6 +545,16 @@ void GUI_vGuiPublishThread (void const *argument)
 					break;
 				}
 				case EVENT_GUI_CONFIG_GET_MEMORY_USED:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					break;
+				}
+				case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					break;
+				}
+				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
 				{
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
 					break;
@@ -830,6 +845,53 @@ void GUI_vChangePassword (uint32_t wNewPasswd)
 	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
+void GUI_vIntToAscii(uint8_t *pabBuff, uint32_t dValue)
+{
+	uint32_t dI;
+	uint8_t abValue[16];
+
+	dI = 0;
+	do
+	{
+		dI++;
+		abValue[dI] = (dValue % 10);
+		dValue /= 10;
+	} while (dValue > 0);
+
+	for (; dI > 0; dI--, pabBuff++)
+	{
+		*pabBuff = abValue[dI] + 0x30;
+	}
+
+//	*pabBuff = 0;
+}
+
+void GUI_vFwVersionToString (uint8_t *pabOutBuff, uint16_t wVer, uint16_t wRev, uint16_t wBuild)
+{
+	GUI_vIntToAscii(pabOutBuff, wVer);
+	*pabOutBuff++ = '.';
+	GUI_vIntToAscii(pabOutBuff, wRev);
+	*pabOutBuff++ = '.';
+	GUI_vIntToAscii(pabOutBuff, wBuild);
+}
+
+void GUI_vBufferToStringHex (uint8_t *pabOutBuff, uint8_t *pabInBuffer, uint32_t dQuant)
+{
+	const uint8_t abHexa[] = "0123456789ABCDEF";
+	uint8_t bTmp;
+
+	while (dQuant != 0)
+	{
+		bTmp = *pabInBuffer;
+		pabInBuffer++;
+		*pabOutBuff++ = abHexa[(bTmp >> 4) & 0x0f];
+		*pabOutBuff++ = abHexa[(bTmp) & 0x0f];
+		dQuant--;
+	}
+
+	*pabOutBuff = 0;
+}
+
 void GUI_vIdentifyEvent (contract_s* contract)
 {
 	osStatus status;
@@ -1100,8 +1162,15 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			}
 			if (ePubEvt == EVENT_CTL_FILE_FORMAT_STATUS)
 			{
-				uint8_t bPercFormat = pvPayload;
-				//
+
+			}
+			if (ePubEvt == EVENT_CTL_SW_HW_VERSION)
+			{
+				UOS_tsVersaoCod* pbSerialNumber = pvPayload;
+				GUI_vFwVersionToString(GUI_sM2GIDs.abFwVersion, pbSerialNumber->wVer, pbSerialNumber->wRev, pbSerialNumber->wBuild);
+				GUI_vBufferToStringHex(GUI_sM2GIDs.abHwIDNumber, pbSerialNumber->abNumSerie, SERIAL_NUMBER_N_BYTES);
+				ePubEvt = EVENT_GUI_SYSTEM_SW_HW_VERSION;
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			break;
 		}

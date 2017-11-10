@@ -723,6 +723,14 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					ISO_vTreatUpdateReplaceSensorEvent(*psReplacement);
 					break;
 				}
+				case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
+				{
+					break;
+				}
+				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
+				{
+					break;
+				}
 				default:
 					break;
 			}
