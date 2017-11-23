@@ -153,6 +153,10 @@ static canStatusStruct_s sCANIsobusStatus;
 static canStatusStruct_s sCANSensorStatus;
 static GPS_sStatus sISOGPSStatus;
 
+static sTransportProtocolControl sTPControlStruct;
+static sObjectPoolControl sOPControlStruct;
+static sAddressClaimControl sACCControlStruct;
+
 #ifndef UNITY_TEST
 DECLARE_QUEUE(IsobusQueue, QUEUE_SIZEOFISOBUS);     //!< Declaration of Interface Queue
 CREATE_SIGNATURE(Isobus);//!< Signature Declarations
@@ -267,6 +271,8 @@ void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNe
 void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType, eIsobusSoftKeyMask eNewSoftKeyMask);
 void ISO_vChangeNumericValue (uint16_t wOutputNumberID, uint32_t dNumericValue);
 void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
+void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg);
+void ISO_vHandleAddressClaimNGetCapabilitiesProcedure (ISOBUSMsg* sRcvMsg);
 
 /******************************************************************************
  * Function Definitions
@@ -883,8 +889,6 @@ void ISO_vIsobusDispatcher (ISOBUSMsg* RcvMsg)
 		{
 			case LANGUAGE_PGN:
 			{
-				if (eCurrState == BOOT_COMPLETED)
-					eModCurrState = UPDATING_LANGUAGE;
 				bLanguageChRcv = 1;
 				WATCHDOG_STATE(ISORCV, WDT_SLEEP);
 				PUT_LOCAL_QUEUE(ManagementQ, *RcvMsg, osWaitForever);
@@ -1023,7 +1027,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 			eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
-			if (eError == APP_ERROR_SUCCESS)     // wSendCANID changed
+			if (eError == APP_ERROR_SUCCESS)
 			{
 				WATCHDOG_STATE(ISOWRT, WDT_SLEEP);
 				DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
@@ -1039,11 +1043,9 @@ void ISO_vIsobusWriteThread(void const *argument)
 {}
 #endif
 
-void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
+void ISO_vHandleTransportProtocolMessages (void)
 {
 	ISOBUSMsg RcvMsg;
-
-	WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
 	osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);
 
 	if (evtPub.status == osEventMessage)
@@ -1055,14 +1057,19 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 				switch (RcvMsg.B1)
 				{
 					case TP_CM_CTS:
+					{
+						sTPControlStruct.eTPCommState = TPInProgress;
 						ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
 						break;
+					}
 					case TP_EndofMsgACK:
-						eCurrState = eIfAck;
+					{
+						sTPControlStruct.eTPCommState = TPIdle;
 						break;
+					}
 					case TP_Conn_Abort:
 					{
-						eCurrState = eIfNack;
+						sTPControlStruct.eTPCommState = TPFailed;
 						osSignalSet(xTransportProtocolThreadId, eCurrState);
 						break;
 					}
@@ -1078,20 +1085,24 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 				switch (RcvMsg.B1)
 				{
 					case ETP_CM_CTS:
-						// Send DPO message
+					{
+						sTPControlStruct.eTPCommState = TPInProgress;
 						ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
 						ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
 										   EXTENDED_TRANSPORT_PROTOCOL);
 						break;
+					}
 					case ETP_CM_EOMA:
-						eCurrState = eIfAck;
+					{
+						sTPControlStruct.eTPCommState = TPIdle;
 						break;
+					}
 					case ETP_Conn_Abort:
 					{
-						eCurrState = eIfNack;
+						sTPControlStruct.eTPCommState = TPFailed;
 						osSignalSet(xTransportProtocolThreadId, eCurrState);
-					}
 						break;
+					}
 					case ETP_CM_DPO:
 					case ETP_CM_RTS:
 					default:
@@ -1103,7 +1114,91 @@ void ISO_vTransportProtocolManagement (eBootStates eIfAck, eBootStates eIfNack)
 				break;
 		}
 	}
-	WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+}
+
+void ISO_vTranferBytesToVirtualTerminal (const uint8_t* pbBuffer, uint32_t dBufferSize)
+{
+	if ((pbBuffer == NULL) || (dBufferSize == 0))
+		return;
+
+	ISO_vInitPointersToTranfer(pbBuffer, dBufferSize);
+	ISO_vSendRequestToSend(dBufferSize);
+
+	sTPControlStruct.eTPCommState = TPInProgress;
+	do{
+		WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
+		ISO_vHandleTransportProtocolMessages();
+		WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+	} while(sTPControlStruct.eTPCommState == TPInProgress);
+}
+
+void ISO_vTransportProtocolManagement (void)
+{
+	switch (sTPControlStruct.eTPUploadType) {
+		case UploadObjectPool:
+		{
+			if ((sOPControlStruct.eOPState != OPUploadedSuccessfully) && (sOPControlStruct.eOPState != OPRegistered))
+			{
+				if (sTPControlStruct.eTPCommState == TPIdle)
+				{
+					ISO_vTranferBytesToVirtualTerminal(sOPControlStruct.pbObjectPool, sOPControlStruct.dOPSize);
+
+					if (sTPControlStruct.eTPCommState == TPIdle)
+					{
+						ISO_vTranferBytesToVirtualTerminal(sOPControlStruct.pbOPLanguage, sOPControlStruct.dOPLangSize);
+
+						if (sTPControlStruct.eTPCommState == TPIdle)
+						{
+							ISO_vTranferBytesToVirtualTerminal(sOPControlStruct.pbOPUnits, sOPControlStruct.dOPUnitsSize);
+
+							if (sTPControlStruct.eTPCommState == TPIdle)
+							{
+								sOPControlStruct.eOPUplState = UWaitingForEOOResponse;
+								ISO_vSendEndObjectPool();
+							} else
+							{
+								sOPControlStruct.eOPUplState = UFailed;
+							}
+						} else
+						{
+							sOPControlStruct.eOPUplState = UFailed;
+						}
+					} else
+					{
+						sOPControlStruct.eOPUplState = UFailed;
+					}
+				} else
+				{
+					sOPControlStruct.eOPUplState = UFailed;
+				}
+			} else
+			{
+				if (sTPControlStruct.eTPCommState == TPIdle)
+				{
+					ISO_vTranferBytesToVirtualTerminal(sOPControlStruct.pbOPLanguage, sOPControlStruct.dOPLangSize);
+
+					if (sTPControlStruct.eTPCommState == TPIdle)
+					{
+						ISO_vTranferBytesToVirtualTerminal(sOPControlStruct.pbOPUnits, sOPControlStruct.dOPUnitsSize);
+
+						if (sTPControlStruct.eTPCommState == TPIdle)
+						{
+							sOPControlStruct.eOPUplState = UWaitingForEOOResponse;
+							ISO_vSendEndObjectPool();
+						}
+					}
+				}
+			}
+			break;
+		}
+		case UploadChangeStringValue:
+		{
+			ISO_vTranferBytesToVirtualTerminal(sTPControlStruct.pbTPBuffer, sTPControlStruct.dNumOfBytes);
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 void ISO_vObjectPoolMemoryRequired (void)
@@ -1136,44 +1231,44 @@ void ISO_vObjectPoolMemoryRequired (void)
 	}
 }
 
-void ISO_vObjectPoolLangPkgRequestToSend (void)
+void ISO_vSetObjectPoolLangPkg (void)
 {
 	switch (sCommandLanguage.eLanguage) {
 		case LANGUAGE_PORTUGUESE:
 		{
-			ISO_vSendRequestToSend(PT_PACKAGE_SIZE);
-			ISO_vInitPointersToTranfer(isoOP_M2GPlus_pt, PT_PACKAGE_SIZE);
+			sOPControlStruct.pbOPLanguage = (uint8_t*)isoOP_M2GPlus_pt;
+			sOPControlStruct.dOPLangSize = PT_PACKAGE_SIZE;
 			break;
 		}
 		case LANGUAGE_SPANISH:
 		{
-			ISO_vSendRequestToSend(ES_PACKAGE_SIZE);
-			ISO_vInitPointersToTranfer(isoOP_M2GPlus_es, ES_PACKAGE_SIZE);
+			sOPControlStruct.pbOPLanguage = (uint8_t*)isoOP_M2GPlus_es;
+			sOPControlStruct.dOPLangSize = ES_PACKAGE_SIZE;
 			break;
 		}
 		case LANGUAGE_ENGLISH:
 		default:
 		{
-			ISO_vSendRequestToSend(EN_PACKAGE_SIZE);
-			ISO_vInitPointersToTranfer(isoOP_M2GPlus_en, EN_PACKAGE_SIZE);
+			sOPControlStruct.pbOPLanguage = (uint8_t*)isoOP_M2GPlus_en;
+			sOPControlStruct.dOPLangSize = EN_PACKAGE_SIZE;
 			break;
 		}
 	}
 }
 
-void ISO_vObjectPoolUnitPkgRequestToSend (void)
+void ISO_vSetObjectPoolUnitPkg (void)
 {
 	switch (sCommandLanguage.eLanguage) {
 		case LANGUAGE_PORTUGUESE:
 		{
 			if (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 			{
-				ISO_vSendRequestToSend(PT_UNIT_METRIC_PKG_SIZE);
-				ISO_vInitPointersToTranfer(isoOP_M2GPlus_pt_unit_metric, PT_UNIT_METRIC_PKG_SIZE);
+				sOPControlStruct.pbOPUnits = (uint8_t*)isoOP_M2GPlus_pt_unit_metric;
+				sOPControlStruct.dOPUnitsSize = PT_UNIT_METRIC_PKG_SIZE;
 			} else
 			{
-				ISO_vSendRequestToSend(PT_UNIT_IMPERIAL_PKG_SIZE);
-				ISO_vInitPointersToTranfer(isoOP_M2GPlus_pt_unit_imperial, PT_UNIT_IMPERIAL_PKG_SIZE);
+				sOPControlStruct.pbOPUnits = (uint8_t*)isoOP_M2GPlus_pt_unit_imperial;
+				sOPControlStruct.dOPUnitsSize = PT_UNIT_IMPERIAL_PKG_SIZE;
 			}
 			break;
 		}
@@ -1181,12 +1276,12 @@ void ISO_vObjectPoolUnitPkgRequestToSend (void)
 		{
 			if (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 			{
-				ISO_vSendRequestToSend(ES_UNIT_METRIC_PKG_SIZE);
-				ISO_vInitPointersToTranfer(isoOP_M2GPlus_es_unit_metric, ES_UNIT_METRIC_PKG_SIZE);
+				sOPControlStruct.pbOPUnits = (uint8_t*)isoOP_M2GPlus_es_unit_metric;
+				sOPControlStruct.dOPUnitsSize = ES_UNIT_METRIC_PKG_SIZE;
 			} else
 			{
-				ISO_vSendRequestToSend(ES_UNIT_IMPERIAL_PKG_SIZE);
-				ISO_vInitPointersToTranfer(isoOP_M2GPlus_es_unit_imperial, ES_UNIT_IMPERIAL_PKG_SIZE);
+				sOPControlStruct.pbOPUnits = (uint8_t*)isoOP_M2GPlus_es_unit_imperial;
+				sOPControlStruct.dOPUnitsSize = ES_UNIT_IMPERIAL_PKG_SIZE;
 			}
 			break;
 		}
@@ -1195,12 +1290,12 @@ void ISO_vObjectPoolUnitPkgRequestToSend (void)
 		{
 			if (sCommandLanguage.eUnit == UNIT_INTERNATIONAL_SYSTEM)
 			{
-				ISO_vSendRequestToSend(EN_UNIT_METRIC_PKG_SIZE);
-				ISO_vInitPointersToTranfer(isoOP_M2GPlus_en_unit_metric, EN_UNIT_METRIC_PKG_SIZE);
+				sOPControlStruct.pbOPUnits = (uint8_t*)isoOP_M2GPlus_en_unit_metric;
+				sOPControlStruct.dOPUnitsSize = EN_UNIT_METRIC_PKG_SIZE;
 			} else
 			{
-				ISO_vSendRequestToSend(EN_UNIT_IMPERIAL_PKG_SIZE);
-				ISO_vInitPointersToTranfer(isoOP_M2GPlus_en_unit_imperial, EN_UNIT_IMPERIAL_PKG_SIZE);
+				sOPControlStruct.pbOPUnits = (uint8_t*)isoOP_M2GPlus_en_unit_imperial;
+				sOPControlStruct.dOPUnitsSize = EN_UNIT_IMPERIAL_PKG_SIZE;
 			}
 			break;
 		}
@@ -1252,11 +1347,20 @@ void ISO_vTimerCallbackWSMaintenance (void const *arg)
 	ISO_vSendWorkingSetMaintenance(false);
 }
 
+void ISO_vTransportProtocolClearBuffers (void)
+{
+	sOPControlStruct.pbObjectPool = NULL;
+	sOPControlStruct.dOPSize = 0;
+	sOPControlStruct.pbOPLanguage = NULL;
+	sOPControlStruct.dOPLangSize = 0;
+	sOPControlStruct.pbOPUnits = NULL;
+	sOPControlStruct.dOPUnitsSize = 0;
+}
+
 #ifndef UNITY_TEST
 void ISO_vIsobusTransportProtocolThread (void const *argument)
 {
 	ISOBUSMsg RcvMsg;
-	bool bUpdateObjectPool = false;
 
 	INITIALIZE_LOCAL_QUEUE(TranspProtocolQ);
 
@@ -1270,293 +1374,24 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 	osThreadId xIsoMainID = (osThreadId)argument;
 	osSignalSet(xIsoMainID, THREADS_RETURN_SIGNAL(bISOTPTThreadArrayPosition));     //Task created, inform core
 
-	INITIALIZE_TIMER(WSMaintenanceTimer, osTimerPeriodic);
-
-	// Inform Management Thread that BootThread already start
+	// Inform Management Thread that TransportProtocolThread already start
 	WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
 	osSignalSet(xManagementThreadId, 0xFF);
 	WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 
-	// Wait for an VT status message
-	WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-	osSignalWait(WAIT_GLOBAL_VT_STATUS, osWaitForever);
-	WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
-
-	// Wait for an VT status message
-	eCurrState = INIT_HANDSHAKE;
-
 	while (1)
 	{
-		switch (eModCurrState)
-		{
-			case BOOT:
-			{
-				while (eCurrState != BOOT_COMPLETED)
-				{
-					WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-					osSignalWait(eCurrState, osWaitForever);
-					WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
-
-					switch (eCurrState)
-					{
-						case RETRANSMIT_POOL:
-						{
-							WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-							osDelay(ISO_RETRANSMIT_DELAY_MS);
-							WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
-							eCurrState = INIT_HANDSHAKE;
-							break;
-						}
-						case INIT_HANDSHAKE:
-						{
-							// Send a request address claim message
-							ISO_vSendRequest(ADDRESS_CLAIM_PGN);
-							// Send a address claim message
-							ISO_vSendAddressClaimed();
-							// Wait for an VT status message
-							eCurrState = WAIT_VT_STATUS;
-							break;
-						}
-						case WAIT_VT_STATUS:
-						{
-							// Send a working set master message
-							ISO_vSendWorkingSetMaster();
-							// Send a working set maintenance (first)
-							// Send a proprietary A message
-							ISO_vSendProprietaryA();
-							// Send a command language message
-							ISO_vSendRequest(LANGUAGE_PGN);
-							// Send a get hardware message
-							ISO_vSendGetHardware();
-							// Send a proprietary A message
-							ISO_vSendProprietaryA();
-							// Send a proprietary A message
-							ISO_vSendProprietaryA();
-							// Send a get memory message
-							ISO_vObjectPoolMemoryRequired();
-							// Send a load version message
-							ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
-
-							break;
-						}
-						case WAIT_LOAD_VERSION:
-						{
-							// Send a request to send message
-							ISO_vSendRequestToSend(POOL_SIZE);
-							eCurrState = WAIT_SEND_POOL;
-							break;
-						}
-						case WAIT_SEND_POOL:
-						{
-							ISO_vInitPointersToTranfer(isoOP_M2GPlus, POOL_SIZE);
-
-							do
-							{
-								ISO_vTransportProtocolManagement(OBJECT_POOL_SENT, RETRANSMIT_POOL);
-							} while ((eCurrState != OBJECT_POOL_SENT) && (eCurrState != RETRANSMIT_POOL));
-
-							if (eCurrState == OBJECT_POOL_SENT)
-							{
-								ISO_vObjectPoolLangPkgRequestToSend();
-
-								do
-								{
-									ISO_vTransportProtocolManagement(OBJECT_POOL_LANG_PKG_SENT, RETRANSMIT_POOL);
-								} while ((eCurrState != OBJECT_POOL_LANG_PKG_SENT) && (eCurrState != RETRANSMIT_POOL));
-							}
-
-							if (eCurrState == OBJECT_POOL_LANG_PKG_SENT)
-							{
-								ISO_vObjectPoolUnitPkgRequestToSend();
-
-								do
-								{
-									ISO_vTransportProtocolManagement(OBJECT_POOL_UNIT_PKG_SENT, RETRANSMIT_POOL);
-								} while ((eCurrState != OBJECT_POOL_UNIT_PKG_SENT) && (eCurrState != RETRANSMIT_POOL));
-
-								if (eCurrState == OBJECT_POOL_UNIT_PKG_SENT)
-								{
-									ISO_vSendEndObjectPool();
-									ISO_vSendWSMaintenancePoolSent();
-									ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
-
-									// Update object pool must be sent after end of object pool message
-									ISO_vUpdateConfigMaskInputNumberRange();
-
-		//							ISO_vSendStoreVersion(OBJECT_POOL_VERSION);
-
-									eCurrState = OBJECT_POOL_LOADED;
-									osSignalSet(xTransportProtocolThreadId, OBJECT_POOL_LOADED);
-								}
-							}
-							break;
-						}
-						case OBJECT_POOL_LOADED:
-						{
-							START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
-
-							eCurrState = BOOT_COMPLETED;
-							eModCurrState = RUNNING;
-							osSignalSet(xUpdatePoolThreadId, ISO_FLAG_STATE_RUNNING);
-							osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK);
-							break;
-						}
-						default:
-							break;
-					} // End of switch statement
-				} // End of while
-				break;
-			}
-			case UPDATING_LANGUAGE:
-			{
-				if (sCommandLanguage.eLastLanguage != sCommandLanguage.eLanguage)
-				{
-					ISO_vObjectPoolLangPkgRequestToSend();
-
-					do
-					{
-						WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-						osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);   // Wait
-
-						if (evtPub.status == osEventMessage)
-						{
-							switch (ISO_wGetPGN(&RcvMsg))
-							{
-								case TP_CONN_MANAGE_PGN:
-								{
-									switch (RcvMsg.B1)
-									{
-										case TP_CM_CTS:
-											ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
-											break;
-										case TP_EndofMsgACK:
-										{
-											bUpdateObjectPool = true;
-											break;
-										}
-										case TP_Conn_Abort:
-											break;
-										case TP_BAM:
-										case TP_CM_RTS:
-										default:
-											break;
-									}
-									break;
-								}
-								case ETP_CONN_MANAGE_PGN:
-								{
-									switch (RcvMsg.B1)
-									{
-										case ETP_CM_CTS:
-										{
-											// Send DPO message
-											ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
-											ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
-																EXTENDED_TRANSPORT_PROTOCOL);
-											break;
-										}
-										case ETP_CM_EOMA:
-										{
-											bUpdateObjectPool = true;
-											break;
-										}
-										case ETP_Conn_Abort:
-											break;
-										case ETP_CM_DPO:
-										case ETP_CM_RTS:
-										default:
-											break;
-									}
-									break;
-								}
-							}
-						}
-						WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
-					} while (!bUpdateObjectPool);
-					ISO_vSendEndObjectPool();
-					bUpdateObjectPool = false;
-				}
-
-				if (sCommandLanguage.eLastUnit != sCommandLanguage.eUnit)
-				{
-					ISO_vObjectPoolUnitPkgRequestToSend();
-
-					do
-					{
-						WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-						osEvent evtPub = RECEIVE_LOCAL_QUEUE(TranspProtocolQ, &RcvMsg, osWaitForever);   // Wait
-
-						if (evtPub.status == osEventMessage)
-						{
-							switch (ISO_wGetPGN(&RcvMsg))
-							{
-								case TP_CONN_MANAGE_PGN:
-								{
-									switch (RcvMsg.B1)
-									{
-										case TP_CM_CTS:
-											ISO_vSendBytesToVT(RcvMsg.B2, RcvMsg.B3, TRANSPORT_PROTOCOL);
-											break;
-										case TP_EndofMsgACK:
-										{
-											bUpdateObjectPool = true;
-											break;
-										}
-										case TP_Conn_Abort:
-											break;
-										case TP_BAM:
-										case TP_CM_RTS:
-										default:
-											break;
-									}
-									break;
-								}
-								case ETP_CONN_MANAGE_PGN:
-								{
-									switch (RcvMsg.B1)
-									{
-										case ETP_CM_CTS:
-										{
-											// Send DPO message
-											ISO_vSendETP_CM_DPO(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)));
-											ISO_vSendBytesToVT(RcvMsg.B2, (RcvMsg.B3 | (RcvMsg.B4 << 8) | (RcvMsg.B5 << 16)),
-																EXTENDED_TRANSPORT_PROTOCOL);
-											break;
-										}
-										case ETP_CM_EOMA:
-										{
-											bUpdateObjectPool = true;
-											break;
-										}
-										case ETP_Conn_Abort:
-											break;
-										case ETP_CM_DPO:
-										case ETP_CM_RTS:
-										default:
-											break;
-									}
-									break;
-								}
-							}
-						}
-						WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
-					} while (!bUpdateObjectPool);
-					ISO_vSendEndObjectPool();
-					ISO_vUpdateConfigMaskInputNumberRange();
-				}
-
-				osFlagSet(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED);
-				eModCurrState = RUNNING;
-				bUpdateObjectPool = false;
-				break;
-			}
-			default:
-				break;
-		}
-
 		WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
-		osDelay(50);
+		osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST, false, false, osWaitForever);
 		WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
+
+		osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
+
+		ISO_vTransportProtocolManagement();
+		ISO_vTransportProtocolClearBuffers();
+
+		osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+		osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_END);
 	} // End of while
 	osThreadTerminate(NULL);
 }
@@ -1633,86 +1468,6 @@ void ISO_vTreatLanguageCommandMessage (ISOBUSMsg sRcvMsg)
 	WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 	PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
 	WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-}
-
-void ISO_vTreatBootState (ISOBUSMsg* sRcvMsg)
-{
-	switch (ISO_wGetPGN(sRcvMsg))
-	{
-		case VT_TO_ECU_PGN:
-		{
-			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
-			{
-				switch (sRcvMsg->B1)
-				{
-					case FUNC_LOAD_VERSION:
-						if (sRcvMsg->B6 == 0)
-						{
-							if (eModCurrState == BOOT)
-							{
-								eCurrState = OBJECT_POOL_LOADED;
-								osSignalSet(xTransportProtocolThreadId, OBJECT_POOL_LOADED);
-							}
-						}
-						else
-						{
-							if (eModCurrState == BOOT)
-							{
-								eCurrState = WAIT_LOAD_VERSION;
-								osSignalSet(xTransportProtocolThreadId, WAIT_LOAD_VERSION);
-							}
-						}
-						break;
-					case FUNC_VT_STATUS:
-						osSignalSet(xTransportProtocolThreadId, WAIT_VT_STATUS);
-						break;
-					default:
-						break;
-				}
-			}
-			else if (sRcvMsg->PS == BROADCAST_ADDRESS)
-			{
-				switch (sRcvMsg->B1)
-				{
-					case FUNC_VT_STATUS:
-						osSignalSet(xTransportProtocolThreadId, WAIT_GLOBAL_VT_STATUS);
-						break;
-					default:
-						break;
-				}
-			}
-			break;
-		}
-		case TP_CONN_MANAGE_PGN:
-		{
-			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
-			{
-				osSignalSet(xTransportProtocolThreadId, WAIT_SEND_POOL);
-				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-				PUT_LOCAL_QUEUE(TranspProtocolQ, *sRcvMsg, osWaitForever);
-				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-			}
-			break;
-		}
-		case ETP_CONN_MANAGE_PGN:
-		{
-			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
-			{
-				osSignalSet(xTransportProtocolThreadId, WAIT_SEND_POOL);
-				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-				PUT_LOCAL_QUEUE(TranspProtocolQ, *sRcvMsg, osWaitForever);
-				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-			}
-			break;
-		}
-		case LANGUAGE_PGN:
-		{
-			ISO_vTreatLanguageCommandMessage (*sRcvMsg);
-			break;
-		}
-		default:
-			break;
-	}
 }
 
 void ISO_vInitObjectStruct (void)
@@ -1976,7 +1731,7 @@ void ISO_vTreatAcknowledgementMessage (ISOBUSMsg sRcvMsg)
 	event_e eEvt;
 
 	STOP_TIMER(WSMaintenanceTimer);
-	ISO_vSendLoadVersion(OBJECT_POOL_VERSION);
+	ISO_vSendLoadVersion(ISO_VERSION_LABEL);
 	START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
 
 	PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
@@ -2104,26 +1859,57 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 	}
 }
 
+static uint8_t bStrVarBuffer[ISO_MAX_STRING_BUFFER_SIZE];
+
+uint32_t ISO_vBufferStrCat(uint16_t wStrVarID, const uint8_t* pbStr, uint16_t wBytes)
+{
+	if ((wBytes + 5) > (ISO_MAX_STRING_BUFFER_SIZE - 1))
+		return 0;
+
+	bStrVarBuffer[0] = FUNC_CHANGE_STRING_VALUE;
+	bStrVarBuffer[1] = wStrVarID & 0xFF;
+	bStrVarBuffer[2] = (wStrVarID & 0xFF00) >> 8;
+	bStrVarBuffer[3] = wBytes & 0xFF;
+	bStrVarBuffer[4] = (wBytes & 0xFF00) >> 8;
+
+	memcpy(&bStrVarBuffer[5], pbStr, wBytes);
+
+	return wBytes + 5;
+}
+
 void ISO_vUpdateStringVariable (uint16_t wStrVarID, uint8_t* pbNewStrValue, uint16_t wNumBytes)
 {
 	ISOBUSMsg sSendMsg;
 
-	if (pbNewStrValue == NULL)
+	if ((pbNewStrValue == NULL) || (wNumBytes == 0))
 		return;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
-	sSendMsg.frame.dlc = 8;
+	if (wNumBytes <= 3)
+	{
+		sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
+		sSendMsg.frame.dlc = 8;
 
-	sSendMsg.frame.data[0] = FUNC_CHANGE_STRING_VALUE;
-	sSendMsg.frame.data[1] = wStrVarID & 0xFF;
-	sSendMsg.frame.data[2] = (wStrVarID & 0xFF00) >> 8;
-	sSendMsg.frame.data[3] = wNumBytes & 0xFF;
-	sSendMsg.frame.data[4] = (wNumBytes & 0xFF00) >> 8;
-	sSendMsg.frame.data[5] = pbNewStrValue[0];
-	sSendMsg.frame.data[6] = pbNewStrValue[1];
-	sSendMsg.frame.data[7] = pbNewStrValue[2];
+		sSendMsg.frame.data[0] = FUNC_CHANGE_STRING_VALUE;
+		sSendMsg.frame.data[1] = wStrVarID & 0xFF;
+		sSendMsg.frame.data[2] = (wStrVarID & 0xFF00) >> 8;
+		sSendMsg.frame.data[3] = wNumBytes & 0xFF;
+		sSendMsg.frame.data[4] = (wNumBytes & 0xFF00) >> 8;
+		sSendMsg.frame.data[5] = pbNewStrValue[0];
+		sSendMsg.frame.data[6] = pbNewStrValue[1];
+		sSendMsg.frame.data[7] = pbNewStrValue[2];
 
-	PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+		PUT_LOCAL_QUEUE(WriteQ, sSendMsg, osWaitForever);
+	} else
+	{
+		sTPControlStruct.eTPUploadType = UploadChangeStringValue;
+		sTPControlStruct.dNumOfBytes = ISO_vBufferStrCat(wStrVarID, pbNewStrValue, wNumBytes);
+		sTPControlStruct.pbTPBuffer = bStrVarBuffer;
+
+		osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+		WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+		osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
+		WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+	}
 }
 
 void ISO_vTreatButtonActivation (uint16_t wObjectID)
@@ -2512,12 +2298,130 @@ void ISO_vTreatButtonActivation (uint16_t wObjectID)
 	}
 }
 
-void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
+void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 {
-	uint16_t dAux;
+	uint16_t dAux = ((sRcvMsg->B4 << 8) | (sRcvMsg->B3));
 	event_e ePubEvt;
 
+	switch (sRcvMsg->B1)
+	{
+		case FUNC_LOAD_VERSION:
+		{
+			ISO_vHandleObjectPoolState(sRcvMsg);
+			break;
+		}
+		case FUNC_GET_MEMORY:
+		{
+			ISO_vHandleObjectPoolState(sRcvMsg);
+			break;
+		}
+		case FUNC_GET_HARDWARE:
+		{
+			ISO_vHandleAddressClaimNGetCapabilitiesProcedure(sRcvMsg);
+			break;
+		}
+		case FUNC_OBJECT_POOL_END:
+		{
+			ISO_vHandleObjectPoolState(sRcvMsg);
+			break;
+		}
+		case FUNC_STORE_VERSION:
+		{
+			ISO_vHandleObjectPoolState(sRcvMsg);
+			break;
+		}
+		case FUNC_VT_STATUS:
+		{
+			ISO_vHandleAddressClaimNGetCapabilitiesProcedure(sRcvMsg);
+			break;
+		}
+		case FUNC_SOFT_KEY_ACTIVATION:
+		{
+			ISO_vTreatSoftKeyActivation(dAux);
+			break;
+		}
+		case FUNC_BUTTON_ACTIVATION:
+		{
+			if (sRcvMsg->B2 != ISO_BUTTON_ACTIVATION_PRESSED)
+				break;
 
+			ISO_vTreatButtonActivation(dAux);
+			break;
+		}
+		case FUNC_POINTING_EVENT:
+			break;
+		case FUNC_VT_SELECT_INP_OBJECT:
+			break;
+		case FUNC_VT_ESC:
+			break;
+		case FUNC_VT_CHANGE_NUMERIC_VALUE:
+		{
+			ISO_vTreatChangeNumericValueEvent(sRcvMsg);
+			break;
+		}
+		case FUNC_VT_CHANGE_ACTIVE_MASK:
+		{
+			dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B2));
+			if ((dAux >= DATA_MASK_INSTALLATION) && (dAux < DATA_MASK_INVALID))
+			{
+				if (eCurrentMask == (eIsobusMask)dAux)
+				{
+					bLanguageChRcv = 0;
+				}
+				ePrevMask = eCurrentMask;
+				eCurrentMask = (eIsobusMask)dAux;
+
+				if (eCurrentMask == DATA_MASK_INSTALLATION)
+				{
+					// Ao trocar as configurações regionais do GS3, o mesmo força uma mudança de tela
+					// para a tela default do pool. A ideia é monitorar esse comando e voltar a tela
+					// anterior.
+					if (bLanguageChRcv)
+					{
+						bLanguageChRcv = 0;
+						ISO_vChangeActiveMask(ePrevMask);
+					}
+					else
+					{
+						eConfigMaskFromX = DATA_MASK_INSTALLATION;
+						ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION);
+						ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
+						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
+						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+
+						ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
+					}
+					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+					PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+				} else if (eCurrentMask == DATA_MASK_PLANTER)
+				{
+					eConfigMaskFromX = DATA_MASK_PLANTER;
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
+					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
+				}
+
+				ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			}
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+void ISO_vHandleReceivedMessages (ISOBUSMsg* sRcvMsg)
+{
 	if (sRcvMsg == NULL)
 		return;
 
@@ -2527,100 +2431,18 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 		{
 			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
 			{
-				dAux = ((sRcvMsg->B4 << 8) | (sRcvMsg->B3));
-				switch (sRcvMsg->B1)
-				{
-					case FUNC_SOFT_KEY_ACTIVATION:
-					{
-						ISO_vTreatSoftKeyActivation(dAux);
-						break;
-					}
-					case FUNC_BUTTON_ACTIVATION:
-					{
-						if (sRcvMsg->B2 != ISO_BUTTON_ACTIVATION_PRESSED)
-							break;
-
-						ISO_vTreatButtonActivation(dAux);
-						break;
-					}
-					case FUNC_POINTING_EVENT:
-						break;
-					case FUNC_VT_SELECT_INP_OBJECT:
-						break;
-					case FUNC_VT_ESC:
-						break;
-					case FUNC_VT_CHANGE_NUMERIC_VALUE:
-					{
-						ISO_vTreatChangeNumericValueEvent(sRcvMsg);
-						break;
-					}
-					case FUNC_VT_CHANGE_ACTIVE_MASK:
-					{
-						dAux = ((sRcvMsg->B3 << 8) | (sRcvMsg->B2));
-						if ((dAux >= DATA_MASK_INSTALLATION) && (dAux < DATA_MASK_INVALID))
-						{
-							if (eCurrentMask == (eIsobusMask)dAux)
-							{
-								bLanguageChRcv = 0;
-							}
-							ePrevMask = eCurrentMask;
-							eCurrentMask = (eIsobusMask)dAux;
-
-							if (eCurrentMask == DATA_MASK_INSTALLATION)
-							{
-								// Ao trocar as configurações regionais do GS3, o mesmo força uma mudança de tela
-								// para a tela default do pool. A ideia é monitorar esse comando e voltar a tela
-								// anterior.
-								if (bLanguageChRcv)
-								{
-									bLanguageChRcv = 0;
-									ISO_vChangeActiveMask(ePrevMask);
-								}
-								else
-								{
-									eConfigMaskFromX = DATA_MASK_INSTALLATION;
-									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION);
-									ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
-									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
-									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
-									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-									ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
-
-									ePubEvt = EVENT_ISO_INSTALLATION_REPEAT_TEST;
-								}
-								WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-								PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-								WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-							} else if (eCurrentMask == DATA_MASK_PLANTER)
-							{
-								eConfigMaskFromX = DATA_MASK_PLANTER;
-								ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_ONLY, true);
-								ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CLEAR_TOTALS, false);
-							}
-
-							ePubEvt = EVENT_ISO_UPDATE_CURRENT_DATA_MASK;
-							WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-							PUT_LOCAL_QUEUE(PublishQ, ePubEvt, osWaitForever);
-							WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-						}
-						break;
-					}
-					default:
-						break;
-				}
+				ISO_HandleVtToEcuMessage(sRcvMsg);
 			}
 			else if (sRcvMsg->PS == BROADCAST_ADDRESS)
 			{
 				switch (sRcvMsg->B1)
 				{
 					case FUNC_VT_STATUS:
-					ISO_vIsobusUpdateVTStatus(sRcvMsg);
+					{
+						ISO_vHandleAddressClaimNGetCapabilitiesProcedure(sRcvMsg);
+						ISO_vIsobusUpdateVTStatus(sRcvMsg);
 						break;
+					}
 					default:
 						break;
 				}
@@ -2628,22 +2450,231 @@ void ISO_vTreatRunningState (ISOBUSMsg* sRcvMsg)
 			break;
 		}
 		case TP_CONN_MANAGE_PGN:
+		{
+			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
+			{
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(TranspProtocolQ, *sRcvMsg, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			}
+			break;
+		}
 		case ETP_CONN_MANAGE_PGN:
 		{
+			if (sRcvMsg->PS == M2G_SOURCE_ADDRESS)
+			{
+				WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
+				PUT_LOCAL_QUEUE(TranspProtocolQ, *sRcvMsg, osWaitForever);
+				WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
+			}
 			break;
 		}
 		case LANGUAGE_PGN:
 		{
+			ISO_vHandleAddressClaimNGetCapabilitiesProcedure(sRcvMsg);
 			ISO_vTreatLanguageCommandMessage(*sRcvMsg);
 			break;
 		}
 		case ACKNOWLEDGEMENT_PGN:
 		{
+			ISO_vHandleObjectPoolState(sRcvMsg);
 //			ISO_vTreatAcknowledgementMessage (*sRcvMsg);
 			break;
 		}
 		default:
 			break;
+	}
+}
+
+void ISO_vHandleObjectPoolUploadedSucessfully (void)
+{
+	if (sOPControlStruct.eOPUplState == UIdle && sOPControlStruct.eOPState == OPUploadedSuccessfully)
+	{
+		START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
+		sOPControlStruct.eOPState = OPRegistered;
+		osSignalSet(xUpdatePoolThreadId, ISO_FLAG_STATE_RUNNING);
+		osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK);
+	}
+}
+
+void ISO_vHandleAddressClaimNGetCapabilitiesProcedure (ISOBUSMsg* sRcvMsg)
+{
+	if (sACCControlStruct.eACCState == ACCIdle)
+	{
+		if (ISO_wGetPGN(sRcvMsg) == LANGUAGE_PGN)
+		{
+			osFlagSet(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATE);
+		}
+		return;
+	}
+
+	switch (sACCControlStruct.eACCState) {
+		case ACCWaitingGlobalVTStatusResponse:
+		{
+			if (sRcvMsg->B1 == FUNC_VT_STATUS)
+			{
+				// Send a request address claim message
+				ISO_vSendRequest(ADDRESS_CLAIM_PGN);
+				// Send a address claim message
+				ISO_vSendAddressClaimed();
+				sACCControlStruct.eACCState = ACCWaitingVTStatusResponse;
+			}
+			break;
+		}
+		case ACCWaitingVTStatusResponse:
+		{
+			if ((sRcvMsg->B1 == FUNC_VT_STATUS) /*&& (sRcvMsg->PS == M2G_SOURCE_ADDRESS)*/)
+			{
+				// Send a working set master message
+				ISO_vSendWorkingSetMaster();
+				// Send a get hardware message
+				ISO_vSendGetHardware();
+				// Send a proprietary A message
+				ISO_vSendProprietaryA();
+				sACCControlStruct.eACCState = ACCWaitingHardwareResponse;
+			}
+			break;
+		}
+		case ACCWaitingHardwareResponse:
+		{
+			if (sRcvMsg->B1 == FUNC_GET_HARDWARE)
+			{
+				// TODO: store hardware capabilities
+				// Send a command language message
+				ISO_vSendRequest(LANGUAGE_PGN);
+				// Send a proprietary A message
+				ISO_vSendProprietaryA();
+				sACCControlStruct.eACCState = ACCWaitingLanguageResquestResponse;
+			}
+			break;
+		}
+		case ACCWaitingLanguageResquestResponse:
+		{
+			if (ISO_wGetPGN(sRcvMsg) == LANGUAGE_PGN)
+			{
+				sACCControlStruct.eACCState = ACCIdle;
+			}
+			break;
+		}
+		case ACCFailed:
+		default:
+			break;
+	}
+}
+
+void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg)
+{
+	if (((sRcvMsg == NULL) && (sOPControlStruct.eOPUplState != UFailed)) || (sACCControlStruct.eACCState != ACCIdle))
+		return;
+
+	if ((sOPControlStruct.eOPState == OPUploading) || (sOPControlStruct.eOPState == OPCannotBeUploaded))
+	{
+		switch (sOPControlStruct.eOPUplState) {
+			case UWaitingForLoadVersionResponse:
+			{
+				if (sRcvMsg->B1 == FUNC_LOAD_VERSION)
+				{
+					if (sRcvMsg->B6 == 0)
+					{
+						sOPControlStruct.eOPUplState = UIdle;
+						sOPControlStruct.eOPState = OPUploadedSuccessfully;
+						ISO_vHandleObjectPoolUploadedSucessfully();
+					}
+					else
+					{
+						sOPControlStruct.eOPUplState = UWaitingForMemoryResponse;
+						ISO_vObjectPoolMemoryRequired();
+					}
+				}
+				break;
+			}
+			case UWaitingForMemoryResponse:
+			{
+				if (sRcvMsg->B1 == FUNC_GET_MEMORY)
+				{
+					if (sRcvMsg->B3 == 0)
+					{
+						sOPControlStruct.eOPUplState = UUploading;
+
+						// Test if an upload object pool is running. If not send an request to transport protocol thread
+						if (sTPControlStruct.eTPCommState != TPInProgress)
+						{
+							sTPControlStruct.eTPUploadType = UploadObjectPool;
+
+							sOPControlStruct.pbObjectPool = (uint8_t*)isoOP_M2GPlus;
+							sOPControlStruct.dOPSize = POOL_SIZE;
+
+							ISO_vSetObjectPoolLangPkg();
+							ISO_vSetObjectPoolUnitPkg();
+
+							osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+						}
+						else
+						{
+							// TODO: Handle if an transport protocol communication is in progress
+						}
+					}
+					else
+					{
+						sOPControlStruct.eOPUplState = UFailed;
+						sOPControlStruct.eOPState = OPCannotBeUploaded;
+						// TODO: Alarm to inform that VT has no enough memory to the object pool
+					}
+				}
+				break;
+			}
+			case UWaitingForEOOResponse:
+			{
+				if (sRcvMsg->B1 == FUNC_OBJECT_POOL_END)
+				{
+					if (sRcvMsg->B2 == 0)
+					{
+						if ((sOPControlStruct.eOPState != OPRegistered) && (sOPControlStruct.eOPState != OPUploadedSuccessfully))
+						{
+							ISO_vSendStoreVersion(ISO_VERSION_LABEL);
+							sOPControlStruct.eOPUplState = UWaitingForStoreVersionResponse;
+						}
+					} else
+					{
+						// TODO: There are errors in the object pool. Handle this!
+						sOPControlStruct.eOPUplState = UFailed;
+						sOPControlStruct.eOPState = OPCannotBeUploaded;
+					}
+				}
+				break;
+			}
+			case UWaitingForStoreVersionResponse:
+			{
+				if (sRcvMsg->B1 == FUNC_STORE_VERSION)
+				{
+					if (sRcvMsg->B6 == 0)
+					{
+						sOPControlStruct.eOPUplState = UIdle;
+						sOPControlStruct.eOPState = OPUploadedSuccessfully;
+						ISO_vHandleObjectPoolUploadedSucessfully();
+					} else
+					{
+						// TODO: There are errors in the store version message. Handle this!
+						sOPControlStruct.eOPUplState = UFailed;
+						sOPControlStruct.eOPState = OPCannotBeUploaded;
+					}
+				}
+				break;
+			}
+			case UFailed:
+			{
+				sOPControlStruct.eOPUplState = UWaitingForLoadVersionResponse;
+				ISO_vSendLoadVersion(ISO_VERSION_LABEL);
+				break;
+			}
+			case UUploading:
+			case UIdle:
+			default:
+				break;
+		}
+	} else if (sOPControlStruct.eOPState == OPNoneRegistered)
+	{
+
 	}
 }
 
@@ -2678,6 +2709,7 @@ void ISO_vIsobusManagementThread (void const *argument)
 	ISOBUSMsg sRcvMsg;
 
 	INITIALIZE_LOCAL_QUEUE(ManagementQ);
+	INITIALIZE_TIMER(WSMaintenanceTimer, osTimerPeriodic);
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Isobus Management Thread Created");
@@ -2695,31 +2727,28 @@ void ISO_vIsobusManagementThread (void const *argument)
 	osSignalWait(0xFF, osWaitForever);
 	WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
+	sOPControlStruct.eOPUplState = UFailed;
+	sOPControlStruct.eOPState = OPUploading;
+
+	sACCControlStruct.eACCState = ACCWaitingGlobalVTStatusResponse;
+
 	while (1)
 	{
-		/* Pool the device waiting for */
 		WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
-		evt = RECEIVE_LOCAL_QUEUE(ManagementQ, &sRcvMsg, osWaitForever);   // Wait
+		evt = RECEIVE_LOCAL_QUEUE(ManagementQ, &sRcvMsg, 500);
 		WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
 		if (evt.status == osEventMessage)
 		{
-			switch (eModCurrState)
-			{
-				case UPDATING_LANGUAGE:
-				case BOOT:
-				{
-					ISO_vTreatBootState(&sRcvMsg);
-					break;
-				}
-				case RUNNING:
-				{
-					ISO_vTreatRunningState(&sRcvMsg);
-					break;
-				}
-				default:
-					break;
-			}
+			ISO_vHandleReceivedMessages(&sRcvMsg);
+		}
+
+		if (((sOPControlStruct.eOPState == OPUploading) && (sOPControlStruct.eOPUplState == UFailed)
+			&& (sACCControlStruct.eACCState == ACCIdle)) || (sOPControlStruct.eOPState == OPCannotBeUploaded))
+		{
+			ISO_vHandleObjectPoolState(NULL);
+		} else if (sOPControlStruct.eOPState == OPNoneRegistered)
+		{
 		}
 	}
 	osThreadTerminate(NULL);
@@ -2733,7 +2762,7 @@ void ISO_vChangeNumericValue (uint16_t wOutputNumberID, uint32_t dNumericValue)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_NUMERIC_VALUE;
@@ -2752,7 +2781,7 @@ void ISO_vUpdateListItemValue (uint16_t wOutputNumberID, uint8_t bListItem)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_LIST_ITEM;
@@ -2771,7 +2800,7 @@ void ISO_vUpdateBarGraphColor (uint16_t wBarGraphID, uint32_t dNumericValue)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ATTRIBUTE;
@@ -2790,7 +2819,7 @@ void ISO_vUpdateFillAttributesValue (uint16_t wFillAttrID, uint8_t bColor)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_FILL_ATTRIBUTES;
@@ -2810,7 +2839,7 @@ void ISO_vControlAudioSignalCommand (uint8_t bNumActivations, uint16_t wFrequenc
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CONTROL_AUDIO_SIGNAL;
@@ -2829,7 +2858,7 @@ void ISO_vChangeActiveMask (eIsobusMask eNewMask)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ACTIVE_MASK;
@@ -2848,7 +2877,7 @@ void ISO_vChangeAttributeCommand (uint16_t wObjID, uint8_t bObjAID, uint32_t dNe
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_ATTRIBUTE;
@@ -2867,7 +2896,7 @@ void ISO_vEnableDisableObjCommand (uint16_t wObjID, bool bIsEnable)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_ENABLE_DISABLE_OBJECT;
@@ -2886,7 +2915,7 @@ void ISO_vChangeSoftKeyMaskCommand (eIsobusMask eMask, eIsobusMaskType eMaskType
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_CHANGE_SOFT_KEY_MASK;
@@ -2905,7 +2934,7 @@ void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow)
 {
 	ISOBUSMsg sSendMsg;
 
-	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_6);
+	sSendMsg.frame.id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, VT_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
 	sSendMsg.frame.dlc = 8;
 
 	sSendMsg.frame.data[0] = FUNC_HIDE_SHOW_OBJECT;
@@ -3554,6 +3583,33 @@ void ISO_vTimerCallbackIsobusCANStatus (void const *arg)
 	PUT_LOCAL_QUEUE(UpdateQ, eEvt, osWaitForever);
 }
 
+void ISO_vHandleLanguageCommand (void)
+{
+	if (sCommandLanguage.eLastLanguage != sCommandLanguage.eLanguage)
+	{
+		ISO_vSetObjectPoolLangPkg();
+	}
+
+	if (sCommandLanguage.eLastUnit != sCommandLanguage.eUnit)
+	{
+		ISO_vSetObjectPoolUnitPkg();
+	}
+
+	if ((sCommandLanguage.eLastLanguage != sCommandLanguage.eLanguage) || (sCommandLanguage.eLastUnit != sCommandLanguage.eUnit))
+	{
+		if (sTPControlStruct.eTPCommState == TPIdle)
+		{
+			sTPControlStruct.eTPUploadType = UploadObjectPool;
+			osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+			WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+			osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
+			WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+			ISO_vUpdateConfigMaskInputNumberRange();
+			osFlagClear(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATE);
+		}
+	}
+}
+
 /******************************************************************************
  * Function : ISO_vIsobusUpdateOPThread(void const *argument)
  *//**
@@ -3581,6 +3637,7 @@ void ISO_vTimerCallbackIsobusCANStatus (void const *arg)
 #ifndef UNITY_TEST
 void ISO_vIsobusUpdateOPThread (void const *argument)
 {
+	osFlags dFlags;
 	osEvent evt;
 	event_e eRecvPubEvt;
 
@@ -3613,17 +3670,13 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 		evt = RECEIVE_LOCAL_QUEUE(UpdateQ, &eRecvPubEvt, osWaitForever);
-		if(eModCurrState == UPDATING_LANGUAGE)
-		{
-			osFlagWait(ISO_sFlags, ISO_FLAG_LANGUAGE_UPDATED, true, false, osWaitForever);
-		}
 		WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
 
 		if (evt.status == osEventMessage)
 		{
-			switch (eModCurrState)
+			switch (sOPControlStruct.eOPState)
 			{
-				case RUNNING:
+				case OPRegistered:
 				{
 					switch (eRecvPubEvt)
 					{
@@ -3862,6 +3915,13 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 				default:
 					break;
 			}
+		}
+
+		dFlags = osFlagGet(ISO_sFlags);
+
+		if ((dFlags & ISO_FLAG_LANGUAGE_UPDATE) > 0)
+		{
+			ISO_vHandleLanguageCommand();
 		}
 	}
 	osThreadTerminate(NULL);
