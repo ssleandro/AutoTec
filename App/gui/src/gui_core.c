@@ -76,7 +76,7 @@ extern GPS_tsDadosGPS AQR_sDadosGPS;
 extern tsVelocidade AQR_sVelocidade;
 extern uint8_t CAN_bSensorSimulador;
 
-eInstallationStatus eSensorStatus[GUI_NUM_SENSOR];
+static sM2GSensorInfo sGUISensorsInfo[GUI_NUM_SENSOR];
 
 sTestModeDataMaskData sGUITestModeData;
 sPlanterDataMaskData  sGUIPlanterData;
@@ -133,6 +133,8 @@ void GUI_vUptPlanter(void);
 void GUI_vUptReplaceSensor(tsPubSensorReplacement *);
 void GUI_vUptSetUnit(GUI_tsConfig *psCfg);
 double GUI_fConvertUnit (double gValue, uint32_t dFlags);
+void GUI_vFwVersionToString (uint8_t *pabOutBuff, uint16_t wVer, uint16_t wRev, uint16_t wBuild);
+void GUI_vBufferToStringHex (uint8_t *pabOutBuff, uint8_t *pabInBuffer, uint32_t dQuant);
 
 void GUI_vGuiThreadPutEventOnGuiPublishQ (event_e eEvt);
 
@@ -335,7 +337,7 @@ void GUI_vGuiPublishThread (void const *argument)
 					ASSERT(status == osOK);
 					WATCHDOG_STATE(GUIPUB, WDT_ACTIVE);
 
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, &eSensorStatus);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, &sGUISensorsInfo);
 
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					status = RELEASE_MUTEX(GUI_UpdateMask);
@@ -419,8 +421,8 @@ void GUI_vGuiPublishThread (void const *argument)
 
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sGUITestModeData);
 
-//					ePubEvt = EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER;
-//					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					ePubEvt = EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER;
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
 
 					WATCHDOG_STATE(GUIPUB, WDT_SLEEP);
 					status = RELEASE_MUTEX(GUI_UpdateMask);
@@ -556,7 +558,7 @@ void GUI_vGuiPublishThread (void const *argument)
 				}
 				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
 				{
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, NULL);
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &GUI_sM2GIDs);
 					break;
 				}
 				default:
@@ -739,11 +741,11 @@ void GUI_InitSensorStatus (void)
 	{
 		if (bConta < GUIConfigurationData.bNumOfRows)
 		{
-			eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+			sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_WAITING;
 		}
 		else
 		{
-			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+			sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_NONE;
 		}
 	}
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
@@ -756,6 +758,7 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 	uint8_t bConta;
 	uint8_t bSensor = 0;
 	bool bAlarmIntSensor = false;
+	uint8_t abAddr[6];
 
 	for (bConta = 0; bConta < GUI_NUM_SENSOR; bConta++)
 	{
@@ -768,12 +771,12 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 			{
 				case Novo:
 				{
-					eSensorStatus[bConta] = STATUS_INSTALL_WAITING;
+					sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_WAITING;
 					break;
 				}
 				case Verificando:
 				{
-					eSensorStatus[bConta] = STATUS_INSTALL_INSTALLING;
+					sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_INSTALLING;
 					break;
 				}
 				case Conectado:
@@ -781,33 +784,42 @@ void GUI_UpdateSensorStatus (CAN_tsLista * pSensorStatus)
 					if ((pSensor->eResultadoAutoTeste == Aprovado) ||
 						(pSensor->eResultadoAutoTeste == Nenhum))
 					{
-						if (eSensorStatus[bConta] == STATUS_INSTALL_WAITING)
+						if (sGUISensorsInfo[bConta].eSensorIntallStatus == STATUS_INSTALL_WAITING)
 						{
 							bAlarmIntSensor = true;
 						}
-						eSensorStatus[bConta] = STATUS_INSTALL_INSTALLED;
+						sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_INSTALLED;
+						GUI_vFwVersionToString(&sGUISensorsInfo[bConta].abFwVer[0], pSensor->CAN_sVersaoSensor.wVer,
+							pSensor->CAN_sVersaoSensor.wRev, pSensor->CAN_sVersaoSensor.wBuild);
+
+						for( uint32_t j = 5; j < 6; --j )
+						{
+							abAddr[ 5 - j ] = pSensor->abEnderecoFisico[ j ];
+						}
+
+						GUI_vBufferToStringHex(&sGUISensorsInfo[bConta].abIDNumber[0], abAddr, M2G_SERIAL_NUMBER_N_BYTES);
 					}
 					else
 					{
-						eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+						sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_INSTALL_ERROR;
 					}
 					break;
 				}
 				case Desconectado:
 				{
-					eSensorStatus[bConta] = STATUS_INSTALL_INSTALL_ERROR;
+					sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_INSTALL_ERROR;
 					break;
 				}
 				default:
 				{
-					eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+					sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_NONE;
 					break;
 				}
 			}
 		}
 		else
 		{
-			eSensorStatus[bConta] = STATUS_INSTALL_NONE;
+			sGUISensorsInfo[bConta].eSensorIntallStatus = STATUS_INSTALL_NONE;
 		}
 	}
 	ePubEvt = EVENT_GUI_UPDATE_INSTALLATION_INTERFACE;
@@ -845,7 +857,7 @@ void GUI_vChangePassword (uint32_t wNewPasswd)
 	GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 }
 
-void GUI_vIntToAscii(uint8_t *pabBuff, uint32_t dValue)
+uint8_t* GUI_vIntToAscii(uint8_t *pabBuff, uint32_t dValue)
 {
 	uint32_t dI;
 	uint8_t abValue[16];
@@ -862,17 +874,16 @@ void GUI_vIntToAscii(uint8_t *pabBuff, uint32_t dValue)
 	{
 		*pabBuff = abValue[dI] + 0x30;
 	}
-
-//	*pabBuff = 0;
+	return pabBuff;
 }
 
 void GUI_vFwVersionToString (uint8_t *pabOutBuff, uint16_t wVer, uint16_t wRev, uint16_t wBuild)
 {
-	GUI_vIntToAscii(pabOutBuff, wVer);
+	pabOutBuff = GUI_vIntToAscii(pabOutBuff, wVer);
 	*pabOutBuff++ = '.';
-	GUI_vIntToAscii(pabOutBuff, wRev);
+	pabOutBuff = GUI_vIntToAscii(pabOutBuff, wRev);
 	*pabOutBuff++ = '.';
-	GUI_vIntToAscii(pabOutBuff, wBuild);
+	pabOutBuff = GUI_vIntToAscii(pabOutBuff, wBuild);
 }
 
 void GUI_vBufferToStringHex (uint8_t *pabOutBuff, uint8_t *pabInBuffer, uint32_t dQuant)
@@ -888,8 +899,6 @@ void GUI_vBufferToStringHex (uint8_t *pabOutBuff, uint8_t *pabInBuffer, uint32_t
 		*pabOutBuff++ = abHexa[(bTmp) & 0x0f];
 		dQuant--;
 	}
-
-	*pabOutBuff = 0;
 }
 
 void GUI_vIdentifyEvent (contract_s* contract)
@@ -1124,7 +1133,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(GUI_sFlags, GUI_FLAG_SYSTEM_CFG_OK);
 					GUI_sConfig.bIdioma = psConfig->sIHM.eLanguage;
-					GUI_sConfig.bSistImperial = (psConfig->sIHM.eUnit== UNIT_IMPERIAL_SYSTEM);
+					GUI_sConfig.bSistImperial = (psConfig->sIHM.eUnit == UNIT_IMPERIAL_SYSTEM);
 					GUI_vUptSetUnit(&GUI_sConfig);
 
 					if (memcmp(&sSISConfiguration, psConfig, sizeof(UOS_tsConfiguracao)) != 0)
@@ -1167,8 +1176,8 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_CTL_SW_HW_VERSION)
 			{
 				UOS_tsVersaoCod* pbSerialNumber = pvPayload;
-				GUI_vFwVersionToString(GUI_sM2GIDs.abFwVersion, pbSerialNumber->wVer, pbSerialNumber->wRev, pbSerialNumber->wBuild);
-				GUI_vBufferToStringHex(GUI_sM2GIDs.abHwIDNumber, pbSerialNumber->abNumSerie, SERIAL_NUMBER_N_BYTES);
+				GUI_vFwVersionToString(&GUI_sM2GIDs.abFwVersion[0], pbSerialNumber->wVer, pbSerialNumber->wRev, pbSerialNumber->wBuild);
+				GUI_vBufferToStringHex(&GUI_sM2GIDs.abHwIDNumber[0], pbSerialNumber->abNumSerie, M2G_SERIAL_NUMBER_N_BYTES);
 				ePubEvt = EVENT_GUI_SYSTEM_SW_HW_VERSION;
 				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}

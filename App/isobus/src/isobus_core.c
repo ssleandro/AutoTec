@@ -80,9 +80,8 @@ static uint8_t bPasswsNumDigits;
 static uint8_t bLanguageChRcv = 0;
 
 // Installation
-static eInstallationStatus eSensorsIntallStatus[CAN_bNUM_DE_LINHAS];
+static sM2GSensorInfo sSensorsInfo[CAN_bNUM_DE_LINHAS];
 static sInstallSensorStatus sInstallStatus;
-eInstallationStatus InstallationStatus[36];
 
 static sIgnoreLineStatus sIgnoreStatus;
 static sLanguageCommandData sCommandLanguage;
@@ -152,6 +151,7 @@ static eSelectedCANStatus* eCANSelectedStatus = &asConfigInputList[4].bSelectedI
 static canStatusStruct_s sCANIsobusStatus;
 static canStatusStruct_s sCANSensorStatus;
 static GPS_sStatus sISOGPSStatus;
+static sM2GVersion sISOM2GVersions;
 
 static sTransportProtocolControl sTPControlStruct;
 static sObjectPoolControl sOPControlStruct;
@@ -168,7 +168,7 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
  * Local messages queue
  *****************************/
 CREATE_LOCAL_QUEUE(PublishQ, event_e, 32)
-CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 64)
+CREATE_LOCAL_QUEUE(WriteQ, ISOBUSMsg, 128)
 CREATE_LOCAL_QUEUE(ManagementQ, ISOBUSMsg, 64)
 CREATE_LOCAL_QUEUE(UpdateQ, event_e, 128)
 CREATE_LOCAL_QUEUE(TranspProtocolQ, ISOBUSMsg, 64)
@@ -273,6 +273,7 @@ void ISO_vChangeNumericValue (uint16_t wOutputNumberID, uint32_t dNumericValue);
 void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
 void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg);
 void ISO_vHandleAddressClaimNGetCapabilitiesProcedure (ISOBUSMsg* sRcvMsg);
+void ISO_vUpdateStringVariable (uint16_t wStrVarID, uint8_t* pbNewStrValue, uint16_t wNumBytes);
 
 /******************************************************************************
  * Function Definitions
@@ -577,6 +578,26 @@ void ISO_vISOThreadPutEventOnISOUpdateQ (event_e eEvt)
 	WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 }
 
+void ISO_vUpdateM2GVersion (void)
+{
+	ISO_vUpdateStringVariable(SV_FW_VERSION, sISOM2GVersions.abFwVersion, M2G_FW_VERSION_N_DIGITS);
+	ISO_vUpdateStringVariable(SV_HW_VERSION, sISOM2GVersions.abHwIDNumber, M2G_HW_ID_NUMBER_N_DIGITS);
+	osDelay(5);
+}
+
+void ISO_vUpdateSensorsIDNumber (void)
+{
+	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++)
+	{
+		if (sSensorsInfo[i].eSensorIntallStatus == STATUS_INSTALL_INSTALLED)
+		{
+			ISO_vUpdateStringVariable(SV_SENSOR_VERSION_L01 + i, sSensorsInfo[i].abFwVer, M2G_SENSOR_FW_VER_N_DIGITS);
+			ISO_vUpdateStringVariable(SV_SENSOR_ID_L01 + i, sSensorsInfo[i].abIDNumber, M2G_SENSOR_ID_NUMBER_N_DIGITS);
+			osDelay(5);
+		}
+	}
+}
+
 void ISO_vIdentifyEvent (contract_s* contract)
 {
 	event_e eEvt =  GET_PUBLISHED_EVENT(contract);
@@ -591,9 +612,9 @@ void ISO_vIdentifyEvent (contract_s* contract)
 			{
 				case EVENT_GUI_UPDATE_INSTALLATION_INTERFACE:
 				{
-					if (memcmp(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus)) != 0)
+					if (memcmp(&sSensorsInfo, (sM2GSensorInfo*)pvPayData, sizeof(sSensorsInfo)) != 0)
 					{
-						memcpy(&eSensorsIntallStatus, (eInstallationStatus*)pvPayData, sizeof(eSensorsIntallStatus));
+						memcpy(&sSensorsInfo, (sM2GSensorInfo*)pvPayData, sizeof(sSensorsInfo));
 						ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					}
 					break;
@@ -731,10 +752,14 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
 				{
+					ISO_vUpdateSensorsIDNumber();
 					break;
 				}
 				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
 				{
+					sM2GVersion* psM2GVer = pvPayData;
+					sISOM2GVersions = *psM2GVer;
+					ISO_vUpdateM2GVersion();
 					break;
 				}
 				default:
@@ -803,7 +828,9 @@ void ISO_vIsobusThread (void const *argument)
 
 		if (evt.status == osEventMessage)
 		{
+			WATCHDOG_FLAG_ARRAY[0] = WDT_SLEEP;
 			ISO_vIdentifyEvent(GET_CONTRACT(evt));
+			WATCHDOG_FLAG_ARRAY[0] = WDT_ACTIVE;
 		}
 	}
 
@@ -1134,6 +1161,8 @@ void ISO_vTranferBytesToVirtualTerminal (const uint8_t* pbBuffer, uint32_t dBuff
 
 void ISO_vTransportProtocolManagement (void)
 {
+	static bool bWaitToTransmit;
+
 	switch (sTPControlStruct.eTPUploadType) {
 		case UploadObjectPool:
 		{
@@ -1193,7 +1222,17 @@ void ISO_vTransportProtocolManagement (void)
 		}
 		case UploadChangeStringValue:
 		{
-			ISO_vTranferBytesToVirtualTerminal(sTPControlStruct.pbTPBuffer, sTPControlStruct.dNumOfBytes);
+			do {
+				if (sTPControlStruct.eTPCommState == TPIdle)
+				{
+					ISO_vTranferBytesToVirtualTerminal(sTPControlStruct.pbTPBuffer, sTPControlStruct.dNumOfBytes);
+					bWaitToTransmit = false;
+				} else
+				{
+					osDelay(100);
+					bWaitToTransmit = true;
+				}
+			} while(bWaitToTransmit);
 			break;
 		}
 		default:
@@ -1383,7 +1422,6 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 	{
 		WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
 		osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST, false, false, osWaitForever);
-		WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 
 		osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
 
@@ -1392,6 +1430,7 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 
 		osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
 		osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_END);
+		WATCHDOG_STATE(ISOTPT, WDT_ACTIVE);
 	} // End of while
 	osThreadTerminate(NULL);
 }
@@ -2400,6 +2439,7 @@ void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 				} else if (eCurrentMask == DATA_MASK_PLANTER)
 				{
 					eConfigMaskFromX = DATA_MASK_PLANTER;
+					ISO_vUpdatePlanterDataMask();
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
@@ -3043,7 +3083,7 @@ void ISO_vUpdateInstallationDataMask (void)
 
 	for (int i = 0; i < sInstallStatus.bNumOfSensors; i++)
 	{
-		sInstallStatus.pFillAttribute[i].bColor = eSensorsIntallStatus[i];
+		sInstallStatus.pFillAttribute[i].bColor = sSensorsInfo[i].eSensorIntallStatus;
 		ISO_vUpdateFillAttributesValue(sInstallStatus.pFillAttribute[i].wObjID,
 				sInstallStatus.pFillAttribute[i].bColor);
 	}
@@ -3067,6 +3107,7 @@ void ISO_vUpdateAlarmStatus (uint8_t bNumLine, eLineAlarm eAlarmStatus)
 void ISO_vUpdatePlanterDataMask (void)
 {
 	osStatus status;
+	static bool bUpdateLinesInfo;
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = WAIT_MUTEX(ISO_UpdateMask, osWaitForever);
@@ -3100,13 +3141,14 @@ void ISO_vUpdatePlanterDataMask (void)
 				ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
 						MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_PLANTER_INFO);
 			}
+			bUpdateLinesInfo = true;
 		} else {
 			ISO_vChangeSoftKeyMaskCommand(DATA_MASK_PLANTER,
 					MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_AREA_MONITOR);
 		}
 	}
 
-	if (sPlanterMask.psSpeedKm->dValue > 0)
+	if ((sPlanterMask.psSpeedKm->dValue > 0) || bUpdateLinesInfo)
 	{
 		if ((*sConfigDataMask.eMonitor) == AREA_MONITOR_DISABLED)
 		{
@@ -3141,6 +3183,7 @@ void ISO_vUpdatePlanterDataMask (void)
 			ISO_vChangeNumericValue(sPlanterMask.psTEV->wObjID, sPlanterMask.psTEV->dValue);
 			ISO_vChangeNumericValue(sPlanterMask.psMTEV->wObjID, sPlanterMask.psMTEV->dValue);
 			ISO_vChangeNumericValue(sPlanterMask.psMaxSpeed->wObjID, sPlanterMask.psMaxSpeed->dValue);
+			bUpdateLinesInfo = false;
 		} else
 		{
 			ISO_vChangeNumericValue(sPlanterMask.psWorkedAreaMt->wObjID, sPlanterMask.psWorkedAreaMt->dValue);
