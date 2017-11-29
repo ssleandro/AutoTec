@@ -516,14 +516,22 @@ extern gpio_config_s sEnablePS9;
 /******************************************************************************
  * Typedefs from GUI module
  *******************************************************************************/
-#define SERIAL_NUMBER_N_BYTES			6
-#define M2G_HW_ID_NUMBER_N_DIGITS	SERIAL_NUMBER_N_BYTES * 2
-#define M2G_FW_VERSION_N_DIGITS		8
+#define M2G_SERIAL_NUMBER_N_BYTES		6
+#define M2G_HW_ID_NUMBER_N_DIGITS		M2G_SERIAL_NUMBER_N_BYTES * 2
+#define M2G_FW_VERSION_N_DIGITS			8
+#define M2G_SENSOR_ID_NUMBER_N_DIGITS	M2G_SERIAL_NUMBER_N_BYTES * 2
+#define M2G_SENSOR_FW_VER_N_DIGITS		8
 
 typedef struct sM2GVersion {
 	uint8_t abHwIDNumber[M2G_HW_ID_NUMBER_N_DIGITS];
 	uint8_t abFwVersion[M2G_FW_VERSION_N_DIGITS];
 } sM2GVersion;
+
+typedef struct sM2GSensorInfo {
+	eInstallationStatus eSensorIntallStatus;
+	uint8_t abIDNumber[M2G_SENSOR_ID_NUMBER_N_DIGITS];
+	uint8_t abFwVer[M2G_SENSOR_FW_VER_N_DIGITS];
+} sM2GSensorInfo;
 
 /******************************************************************************
  * Typedefs from Control module
