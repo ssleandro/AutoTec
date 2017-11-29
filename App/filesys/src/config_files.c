@@ -62,8 +62,6 @@ extern AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 
 extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
 
-extern FFS_sFSInfo tsFSInfo;
-
 /******************************************************************************
  * Typedefs
  *******************************************************************************/
@@ -436,7 +434,7 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
 
 	bErr = FFS_bReadFile(Filename, (uint8_t *) &FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
-	ASSERT(bErr == 1);
+	ASSERT(bErr == F_NO_ERROR);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *) &FFS_sCtrlListaSens,

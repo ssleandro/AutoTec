@@ -1028,9 +1028,7 @@ uint32_t GPS_vSendData (uint16_t wNumDados, uint8_t *pbVetorDados)
 {
 	uint32_t dRet;
 
-	osEnterCritical();
 	dRet = DEV_write(pGPSHandle, &pbVetorDados[0], wNumDados);
-	osExitCritical();
 
 	return dRet;
 }
@@ -3313,9 +3311,7 @@ void GPS_vGPSRecvThread (void const *argument)
 		osDelayUntil(&wTicks, 25);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
-		osEnterCritical();
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));
-		osExitCritical();
 
 		if (wRecvBytes)
 		{
