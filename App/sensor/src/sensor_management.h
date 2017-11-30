@@ -258,7 +258,6 @@ EXTERN_MUTEX(CAN_MTX_sBufferListaSensores);
 
 // Variável para incrementar a quantidade de pulsos lida pelo sensor de velociadade
 extern uint32_t CAN_dLeituraSensor;
-extern uint8_t CAN_bSensorSimulador;
 extern uint8_t CAN_bNumRespostasPNP;
 
 /******************************************************************************

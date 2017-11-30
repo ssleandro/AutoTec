@@ -580,9 +580,9 @@ void ISO_vISOThreadPutEventOnISOUpdateQ (event_e eEvt)
 
 void ISO_vUpdateM2GVersion (void)
 {
+	osDelay(5);
 	ISO_vUpdateStringVariable(SV_FW_VERSION, sISOM2GVersions.abFwVersion, M2G_FW_VERSION_N_DIGITS);
 	ISO_vUpdateStringVariable(SV_HW_VERSION, sISOM2GVersions.abHwIDNumber, M2G_HW_ID_NUMBER_N_DIGITS);
-	osDelay(5);
 }
 
 void ISO_vUpdateSensorsIDNumber (void)
@@ -591,9 +591,9 @@ void ISO_vUpdateSensorsIDNumber (void)
 	{
 		if (sSensorsInfo[i].eSensorIntallStatus == STATUS_INSTALL_INSTALLED)
 		{
+			osDelay(5);
 			ISO_vUpdateStringVariable(SV_SENSOR_VERSION_L01 + i, sSensorsInfo[i].abFwVer, M2G_SENSOR_FW_VER_N_DIGITS);
 			ISO_vUpdateStringVariable(SV_SENSOR_ID_L01 + i, sSensorsInfo[i].abIDNumber, M2G_SENSOR_ID_NUMBER_N_DIGITS);
-			osDelay(5);
 		}
 	}
 }
@@ -3290,12 +3290,12 @@ void ISO_vUpdateSystemGPSMask (void)
 
 	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_LAT_DIRECTION, &sISOGPSStatus.bLatDir, sizeof(sISOGPSStatus.bLatDir));
 	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_DEGREES, sISOGPSStatus.wLatDgr);
-	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_MINUTES, sISOGPSStatus.wLatDgr);
-	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_SECONDS, sISOGPSStatus.wLatDgr);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_MINUTES, sISOGPSStatus.wLatMin);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LAT_SECONDS, sISOGPSStatus.wLatSec);
 	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_LNG_DIRECTION, &sISOGPSStatus.bLonDir, sizeof(sISOGPSStatus.bLonDir));
 	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_DEGREES, sISOGPSStatus.wLonDgr);
-	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_MINUTES, sISOGPSStatus.wLonDgr);
-	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_SECONDS, sISOGPSStatus.wLonDgr);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_MINUTES, sISOGPSStatus.wLonMin);
+	ISO_vChangeNumericValue(ON_SYSTEM_GPS_LNG_SECONDS, sISOGPSStatus.wLonSec);
 
 	ISO_vChangeNumericValue(ON_SYSTEM_GPS_PDOP, sISOGPSStatus.dPDOP);
 	ISO_vChangeNumericValue(ON_SYSTEM_GPS_NSV, sISOGPSStatus.bNSV);
@@ -3306,7 +3306,7 @@ void ISO_vUpdateSystemGPSMask (void)
 	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_ANT, sISOGPSStatus.bAnt, sizeof(sISOGPSStatus.bAnt));
 	ISO_vChangeNumericValue(ON_SYSTEM_GPS_SPEED, sISOGPSStatus.dModVel);
 
-	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_ANT, sISOGPSStatus.bBBRAM, sizeof(sISOGPSStatus.bBBRAM));
+	ISO_vUpdateStringVariable(SV_SYSTEM_GPS_BBRAM, sISOGPSStatus.bBBRAM, sizeof(sISOGPSStatus.bBBRAM));
 	ISO_vChangeNumericValue(ON_SYSTEM_GPS_VER_FW, sISOGPSStatus.vVerFW);
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);

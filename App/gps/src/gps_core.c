@@ -716,8 +716,8 @@ void GPS_vGPSPublishThread (void const *argument)
 #if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 			SEGGER_SYSVIEW_Print("Flag GPS status");
 #endif
-//			GUI_vItemStatusGPS (&GPS_sPublishStats);
-//			PUBLISH_MESSAGE(GPSStatus, EVENT_GPS_UPDATE_GPS_STATUS, EVENT_SET, &GPS_sPublishStats);
+			GUI_vItemStatusGPS (&GPS_sPublishStats);
+			PUBLISH_MESSAGE(GPSStatus, EVENT_GPS_UPDATE_GPS_STATUS, EVENT_SET, &GPS_sPublishStats);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -931,7 +931,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
 				if (bConta2S5 > 20)
 				{
 					bConta2S5 = 0;
-//					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
+					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
 				}
 			}
 			//Acumula a distância percorrida.
@@ -2890,6 +2890,7 @@ void GPS_vGPSThread (void const *argument)
 
 	//Prepara o protocolo de comunicação para trabalhar:
 	memset(&GPS_sCtrlCBASRL, 0x00, sizeof(GPS_tsCtrlEnl));
+	memset(&GPS_sDadosGPS, 0x00, sizeof(GPS_tsDadosGPS));
 
 	GPS_sCtrlCBASRL.psFlagEnl = &GPS_sFlagEnl;
 	GPS_sCtrlCBASRL.dEventosEnl = GPS_ENL_FLAG_NENHUM;
@@ -3185,12 +3186,12 @@ void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
 
 	// arcseg
 	dLat = ( dLat << 2 ) + ( dLat << 1 ); //dLat *= 6;
-	dLat /= 100000;
+	dLat /= 1000;
 	psGPSStatus->wLatSec = dLat;
 
 	/* longitude */
 	dLon = GPS_sDadosGPS.lLon;
-	psGPSStatus->bLonDir = (dLon < 0) ? 'S':'N';
+	psGPSStatus->bLonDir = (dLon < 0) ? 'W':'E';
 
 	dLon = abs(dLon);
 
@@ -3208,7 +3209,7 @@ void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
 
 			// arcseg
 	dLon = ( dLon << 2 ) + ( dLon << 1 ); //dLat *= 6;
-	dLon /= 100000;
+	dLon /= 1000;
 	psGPSStatus->wLonSec = dLon;
 
 	/* PDOP */
@@ -3238,13 +3239,6 @@ void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
 
 	/* Velocidade */
 	psGPSStatus->dModVel = GPS_sDadosGPS.dGroundSpeed;
-/*
-	float fModVel = GPS_sDadosGPS.dGroundSpeed;
-	fModVel *= 36.0f;
-	float fVel = (float)GUI_fConvertUnit(fModVel,
-		GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
-
-	psGPSStatus->dModVel = (uint32_t)roundf(fVel * 10);*/
 
 	/* BBRAM */
 	memcpy(psGPSStatus->bBBRAM, (GPS_sDadosGPS.bBateria) ? " OK" : "NOK", 3);

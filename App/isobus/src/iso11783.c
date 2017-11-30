@@ -452,7 +452,7 @@ void ISO_vSendBytesToVT (uint8_t bNumPacketsToSend, uint32_t wNextPacketNumber, 
 						// Mark the first byte with the timestamp
 						pISOMsg.B1 = bSentPackets;
 
-						for (bIterator = 1; bIterator < (tTransfBufferSize - wTransfSentBytes); bIterator++)
+						for (bIterator = 1; bIterator <= (tTransfBufferSize - wTransfSentBytes); bIterator++)
 						{
 							(pISOMsg.frame).data[bIterator] = *(pbTransferBuffer++);
 						}
@@ -496,7 +496,7 @@ void ISO_vSendBytesToVT (uint8_t bNumPacketsToSend, uint32_t wNextPacketNumber, 
 						// Mark the first byte with the timestamp
 						pISOMsg.B1 = bSentPackets;
 
-						for (bIterator = 1; bIterator < (tTransfBufferSize - wTransfSentBytes); bIterator++)
+						for (bIterator = 1; bIterator <= (tTransfBufferSize - wTransfSentBytes); bIterator++)
 						{
 							(pISOMsg.frame).data[bIterator] = *(pbTransferBuffer++);
 						}

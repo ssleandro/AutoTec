@@ -1311,17 +1311,17 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_GPS_UPDATE_GPS_STATUS)
 			{
-//				GPS_sStatus *psGPSStats = pvPayload;
-//				GUI_sGPSStats = *psGPSStats;
-//				//Convert Velocidade
-//				float fModVel = GUI_sGPSStats.dModVel;
-//				fModVel *= 36.0f;
-//				float fVel = (float)GUI_fConvertUnit(fModVel,
-//																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
-//
-//				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
-//				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
-//				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+				GPS_sStatus *psGPSStats = pvPayload;
+				GUI_sGPSStats = *psGPSStats;
+				//Convert Velocidade
+				float fModVel = GUI_sGPSStats.dModVel;
+				fModVel *= 36.0f;
+				float fVel = (float)GUI_fConvertUnit(fModVel,
+																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
+
+				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
+				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
+				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
 			break;
 		}
