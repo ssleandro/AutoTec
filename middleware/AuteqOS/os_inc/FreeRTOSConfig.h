@@ -44,11 +44,21 @@ its value back to 0. */
 #define configCHECK_FOR_STACK_OVERFLOW          1
 #define configUSE_MALLOC_FAILED_HOOK            1
 
+#ifndef NDEBUG
+/* Run time and task stats gathering related definitions. */
+#define configGENERATE_RUN_TIME_STATS				1
+#define configUSE_TRACE_FACILITY                1
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1
+#define configGENERATE_RUN_TIME_STATS_USE_TICKS   1
+#define configUSE_HEAP_SCHEME							4
+#define configRECORD_STACK_HIGH_ADDRESS			1
+#else
 /* Run time and task stats gathering related definitions. */
 #define configGENERATE_RUN_TIME_STATS				0
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS    0
 #define configGENERATE_RUN_TIME_STATS_USE_TICKS   1
+#endif
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                   0

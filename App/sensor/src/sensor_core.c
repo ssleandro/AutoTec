@@ -591,6 +591,12 @@ void SEN_vSensorThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(SensorQueue);
+	// Create a Mutex to access sensor buffer list on CAN network
+	INITIALIZE_MUTEX(CAN_MTX_sBufferListaSensores);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(SensorQueue, SEN_vSensorThread);
+	REGISTRY_QUEUE(CAN_MTX_sBufferListaSensores, CAN_MTX_sBufferListaSensores);
+#endif
 
 	/* Init M2GSENSORCOMM device for output */
 	SEN_vInitDeviceLayer(SENSOR_INITIAL_IO_IFACE);
@@ -624,9 +630,6 @@ void SEN_vSensorThread (void const *argument)
 	// Flags to indicate the CAN application status and treatment of Auteq protocol
 	status = osFlagGroupCreate(&CAN_psFlagApl);
 	ASSERT(status == osOK);
-
-	// Create a Mutex to access sensor buffer list on CAN network
-	INITIALIZE_MUTEX(CAN_MTX_sBufferListaSensores);
 
 	// System timers allocation to timeout control
 	// PnP command
@@ -799,7 +802,7 @@ void SEN_vSensorRecvThread (void const *argument)
 	osEvent evt;
 	uint8_t bIterator;
 	uint8_t bRecvMessages = 0;		//!< Lenght (messages) received
-	uint32_t dTicks;
+	uint32_t dSENRecvTicks;
 	uint16_t wCountMS = 0;
 	canMSGStruct_s asPayload[64];   //!< Buffer to hold the contract and message data
 
@@ -819,13 +822,13 @@ void SEN_vSensorRecvThread (void const *argument)
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 
-	dTicks = osKernelSysTick();
+	dSENRecvTicks = osKernelSysTick();
 
 	while (1)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(SENRCV, WDT_SLEEP);
-		osDelayUntil(&dTicks, 25);
+		osDelayUntil(&dSENRecvTicks, 25);
 		osEnterCritical();
 		bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
 		osExitCritical();
@@ -889,6 +892,9 @@ void SEN_vSensorWriteThread (void const *argument)
 	canMSGStruct_s sRecv;
 
 	INITIALIZE_LOCAL_QUEUE(SensorWriteQ);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(SensorWriteQ, Sensor Write);
+#endif
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Sensor Write Thread Created");

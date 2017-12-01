@@ -43,7 +43,7 @@
  *******************************************************************************/
 //  name            , stacksize, priority       , threadfunc              , waitfor  , WDTPosition
 #define ISOBUS_MODULES \
-    X("IsobusRecv"     			, 512 		, osPriorityAboveNormal		, ISO_vIsobusRecvThread     				, (1 << 0) , 1 ) \
+    X("IsobusRecv"     			, 512 		, osPriorityNormal		, ISO_vIsobusRecvThread     				, (1 << 0) , 1 ) \
     X("IsobusWrite"    	 		, 512 		, osPriorityNormal		, ISO_vIsobusWriteThread					, (1 << 1) , 2 ) \
     X("IsobusManagement"		, 512 		, osPriorityAboveNormal		, ISO_vIsobusManagementThread				, (1 << 2) , 3 ) \
     X("IsobusUpdateOP" 			, 1024 		, osPriorityNormal		, ISO_vIsobusUpdateOPThread 				, (1 << 3) , 4 ) \

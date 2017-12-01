@@ -42,7 +42,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of CONTROL queue
-#define QUEUE_SIZEOFCONTROL 5
+#define QUEUE_SIZEOFCONTROL 16
 
 #define THIS_MODULE MODULE_CONTROL
 
@@ -448,11 +448,16 @@ void CTL_vControlThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(ControlQueue);
-
 	INITIALIZE_MUTEX(UOS_MTX_sDataHora);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(ControlQueue, CTL_vControlThread);
+	REGISTRY_QUEUE(UOS_MTX_sDataHora, UOS_MTX_sDataHora);
+#endif
 
 	status = osFlagGroupCreate(&CTL_sFlagSis);
 	ASSERT(status == osOK);
+
+	memcpy(&UOS_sConfiguracao, &UOS_sConfiguracaoDefault, sizeof(UOS_tsConfiguracao));
 
 	CTL_eInitPublisher();
 
@@ -495,30 +500,6 @@ void CTL_vControlThread (void const *argument)
 	}
 	/* Unreachable */
 	osThreadSuspend(NULL);
-}
-
-void CTL_vControlManagementThread (void const *argument)
-{
-	osFlags dFlagsSis;
-
-#ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
-	SEGGER_SYSVIEW_Print("Control Management Thread Created");
-#endif
-
-	CTL_vDetectThread(&WATCHDOG(CONTROLMGT), &bCONTROLMGTThreadArrayPosition, (void*)CTL_vControlManagementThread);
-	WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-
-	osThreadId xDiagMainID = (osThreadId)argument;
-	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bCONTROLMGTThreadArrayPosition));    //Task created, inform core
-
-	while (1)
-	{
-		/* Pool the device waiting for */
-		WATCHDOG_STATE(CONTROLMGT, WDT_SLEEP);
-		osDelay(2000);
-		WATCHDOG_STATE(CONTROLMGT, WDT_ACTIVE);
-	}
-	osThreadTerminate(NULL);
 }
 
 void CTL_vControlEmergencyThread (void const *argument)

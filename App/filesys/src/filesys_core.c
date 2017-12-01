@@ -50,7 +50,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFFILESYS (5)
+#define QUEUE_SIZEOFFILESYS (16)
 
 #define THIS_MODULE MODULE_FILESYS
 
@@ -70,7 +70,7 @@ CREATE_SIGNATURE(FileSysAcqureg);
 CREATE_SIGNATURE(FileSysDiag);//!< Signature Declarations
 CREATE_CONTRACT(FileSys);//!< Create contract for buzzer msg publication
 
-CREATE_MUTEX(FFS_AccesControl);
+CREATE_MUTEX(FFS_AccessControl);
 
 /**
  * Module Threads
@@ -237,7 +237,6 @@ void FSM_vFileSysPublishThread (void const *argument)
 
 	FSM_vDetectThread(&WATCHDOG(FSMPUB), &bFSMPUBThreadArrayPosition, (void*)FSM_vFileSysPublishThread);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
-	INITIALIZE_MUTEX(FFS_AccesControl);
 
 	xPbulishThreadID = osThreadGetId();
 
@@ -247,8 +246,6 @@ void FSM_vFileSysPublishThread (void const *argument)
 	//osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	//osDelay(200);
 	WATCHDOG_STATE(FSMPUB, WDT_ACTIVE);
-
-
 
 	while (1)
 	{
@@ -485,7 +482,11 @@ void FSM_vFileSysThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(FileSysQueue);
-
+	INITIALIZE_MUTEX(FFS_AccessControl);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(FileSysQueue, FSM_vFileSysThread);
+	REGISTRY_QUEUE(FFS_AccessControl, FFS_AccessControl);
+#endif
 
 	FSM_eInitFileSysPublisher();
 

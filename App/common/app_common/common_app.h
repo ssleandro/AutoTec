@@ -161,16 +161,12 @@
 #define INITIALIZE_LOCAL_QUEUE(QueueName) \
   (QueueName = osMessageCreate(osMessageQ(QueueName), NULL));  \
     ASSERT(QueueName != NULL);
+#define REGISTRY_QUEUE(QueueName, QueueNameStr) \
+	(vQueueAddToRegistry(QueueName, #QueueNameStr));
 /*!< Put message to an local queue */
 #define PUT_LOCAL_QUEUE(QueueName, message, time) (osMessagePutValue(QueueName, (void*)&message, time))
 /*!< Receive from Queue */
 #define RECEIVE_LOCAL_QUEUE(fromQueue, buffer, time) (osMessageGetValue(fromQueue, buffer, time))
-
-/*
-#define GET_PUBLISHED_EVENT(contract)   ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent
-#define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
-#define GET_PUBLISHED_PAYLOAD(contract) ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->vPayload
-*/
 
 #define GET_PUBLISHED_EVENT(contract)  	((smsg_key)(GET_MESSAGE(contract)->hMessageKey)).wEvent
 #define GET_PUBLISHED_TYPE(contract)  	(eEventType)((smsg_key)GET_MESSAGE(contract)->hMessageKey).wType
@@ -354,7 +350,6 @@ typedef enum event_e
 	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE,
-	EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE,
 	EVENT_GUI_UPDATE_REPLACE_SENSOR,
 	EVENT_GUI_INSTALLATION_FINISH,
 	EVENT_GUI_INSTALLATION_REPEAT_TEST,
@@ -421,12 +416,6 @@ typedef enum event_e
 	EVENT_SEN_SYNC_READ_SENSORS,
 } event_e;
 
-typedef struct
-{
-	uint32_t dEvent;
-	eEventType eEvtType;
-	void* vPayload;
-} PubMessage;
 
 /******************************************************************************
  * Conversion from MPA

@@ -101,7 +101,7 @@ static RINGBUFF_T rbM2GISOHandle;             	        //!< RingBuffer Control h
 /*
  * @brief Private handler used to access CAN peripheral under MCULIB layer
  * */
-static can_config_s sMCU_CAN_Handle =
+static can_config_s sMCU_CANISO_Handle =
 	{
 		.eCANPort = M2GISOCOMM_CAN_CHANNEL,
 		.eCANBitrate = M2GISOCOMM_CAN_BITRATE,
@@ -333,8 +333,8 @@ eDEVError_s M2GISO_eSetActive (uint32_t wRequest, void * vpValue)
 		if (!(_IS_M2GISOCOMM_USING_CAN(M2GISOCOMM_Handle)))
 		{
 			// Initializes CAN peripheral
-			sMCU_CAN_Handle.fpCallback = M2GISO_CANCallback; //Set the callback
-			eInitErr = (eDEVError_s)CAN_eInit(&sMCU_CAN_Handle);
+			sMCU_CANISO_Handle.fpCallback = M2GISO_CANCallback; //Set the callback
+			eInitErr = (eDEVError_s)CANISO_eInit(&sMCU_CANISO_Handle);
 			if (eInitErr != DEV_ERROR_SUCCESS)
 			{
 				/* Return if error */
@@ -403,7 +403,7 @@ eDEVError_s M2GISO_eDisable (uint32_t wRequest, void * vpValue)
 	if ((_IS_M2GISOCOMM_USING_CAN(M2GISOCOMM_Handle)) && (wActiveIface == M2GISOCOMM_CAN))
 	{
 		/* Close CAN on MCULIB */
-		CAN_vDeInit(&sMCU_CAN_Handle);
+		CANISO_vDeInit(&sMCU_CANISO_Handle);
 		M2GISOCOMM_Handle.dReservedInterfaces &= ~M2GISOCOMM_CAN;
 		return DEV_ERROR_SUCCESS;
 	}
@@ -444,7 +444,7 @@ eDEVError_s M2GISO_eCANAddID (uint32_t wRequest, void * vpValue)
 	{
 		return DEV_ERROR_INVALID_IOCTL;
 	}
-	CAN_vAddMessageID(&sMCU_CAN_Handle, *(uint16_t*)vpValue);
+	CANISO_vAddMessageID(&sMCU_CANISO_Handle, *(uint16_t*)vpValue);
 	wCANSendID = *(uint32_t*)vpValue;
 	return DEV_ERROR_SUCCESS;
 }
@@ -457,7 +457,7 @@ eDEVError_s M2GISO_eCANAddAllID (uint32_t wRequest, void * vpValue)
 	{
 		return DEV_ERROR_INVALID_IOCTL;
 	}
-	CAN_vAddAllMessageID(&sMCU_CAN_Handle, extID);
+	CANISO_vAddAllMessageID(&sMCU_CANISO_Handle, extID);
 	wCANSendID = *(uint32_t*)vpValue;
 	return DEV_ERROR_SUCCESS;
 }
@@ -479,7 +479,6 @@ eDEVError_s M2GISO_eCANGetStatus (uint32_t wRequest, void * vpValue)
 		return DEV_ERROR_INVALID_IOCTL;
 	}
 	*((canStatusStruct_s *)vpValue) = sMCU_CANIsobus_Status;
-	//memcpy(vpValue, &sMCU_CAN_Status, sizeof(sMCU_CAN_Status));
 	return DEV_ERROR_SUCCESS;
 }
 
@@ -565,7 +564,7 @@ uint32_t M2GISO_write (struct peripheral_descriptor_s* const this,
 			}
 
 			/* Send CAN frame */
-			CAN_vSendMessage(&sMCU_CAN_Handle, sCANMessage);
+			CANISO_vSendMessage(&sMCU_CANISO_Handle, sCANMessage);
 			sMCU_CANIsobus_Status.wTxCount++;
 
 		}
@@ -591,7 +590,7 @@ eDEVError_s M2GISO_close (struct peripheral_descriptor_s* const this)
 	if (_IS_M2GISOCOMM_USING_CAN(M2GISOCOMM_Handle))
 	{
 		/* Close CAN on MCULIB */
-		CAN_vDeInit(&sMCU_CAN_Handle);
+		CANISO_vDeInit(&sMCU_CANISO_Handle);
 		M2GISOCOMM_Handle.dReservedInterfaces &= ~M2GISOCOMM_CAN;
 	}
 	return DEV_ERROR_SUCCESS;
@@ -613,8 +612,8 @@ void M2GISO_vClearStatus(void)
 void M2GISO_vSetStatus(eCANStatus_s eErrorCode)
 {
 	sMCU_CANIsobus_Status.wBaudRateKbps = M2GISOCOMM_CAN_BITRATE / 1000;
-	sMCU_CANIsobus_Status.bRxError += CAN_bGetErrCount(&sMCU_CAN_Handle, eCAN_RX_DIR);
-	sMCU_CANIsobus_Status.bTxError += CAN_bGetErrCount(&sMCU_CAN_Handle, eCAN_TX_DIR);
+	sMCU_CANIsobus_Status.bRxError += CANISO_bGetErrCount(&sMCU_CANISO_Handle, eCAN_RX_DIR);
+	sMCU_CANIsobus_Status.bTxError += CANISO_bGetErrCount(&sMCU_CANISO_Handle, eCAN_TX_DIR);
 
 	if (eErrorCode & (CAN_STAT_STUFFERROR | CAN_STAT_FORMERROR | CAN_STAT_CRCERROR))
 	{

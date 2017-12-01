@@ -53,8 +53,8 @@
 
 #define AQR_DISTANCIA_LIMPA_FALHA  10
 
-#define AQR_dTAMANHO_HEADER  ( uint32_t )( sizeof( UOS_sVersaoCod        ) + \
-        sizeof( UOS_sConfiguracao     )     )
+#define AQR_dTAMANHO_HEADER  ( uint32_t )( sizeof( UOS_sVersaoCod ) + \
+        sizeof( UOS_sConfiguracao ) )
 
 /******************************************************************************
  * Variables from others modules
@@ -1642,6 +1642,9 @@ void AQR_vAcquiregThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(AcquiregQueue);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(AcquiregQueue, AQR_vAcquiregThread);
+#endif
 
 	// Internal flags
 	status = osFlagGroupCreate(&xSEN_sFlagApl);
@@ -2200,6 +2203,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	INITIALIZE_MUTEX(AQR_MTX_sEntradas);
 	INITIALIZE_MUTEX(AQR_MTX_sBufferListaSensores);
 	INITIALIZE_MUTEX(AQR_MTX_sBufferAcumulado);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(AQR_MTX_sEntradas, AQR_MTX_sEntradas);
+	REGISTRY_QUEUE(AQR_MTX_sBufferListaSensores, AQR_MTX_sBufferListaSensores);
+	REGISTRY_QUEUE(AQR_MTX_sBufferAcumulado, AQR_MTX_sBufferAcumulado);
+#endif
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRMGTThreadArrayPosition)); //Task created, inform core
@@ -3491,6 +3499,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				psStatus->bVelZero = false;
 
 				//Ajusta o timer com timeout de 10 segundo
+				STOP_TIMER(AQR_bTimerImpStopped);
 				status = START_TIMER(AQR_bTimerImpStopped, AQR_TIMEOUT_10SEGS);
 				ASSERT(status == osOK);
 
@@ -3559,6 +3568,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if ((dValorFlagREG & AQR_FLAG_RESET_DESLIGA) > 0)
 			{
 				//Ajusta o timer com timeout de 30 Min.
+				STOP_TIMER(AQR_bTimerTurnOff);
 				status = START_TIMER(AQR_bTimerTurnOff, AQR_TIMEOUT_30MIN);
 				ASSERT(status == osOK);
 			}
@@ -3907,9 +3917,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					}
 
 					//----------------------------------------------------------------------------
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 					uint8_t bOutBuffer[30];
 					sprintf(bOutBuffer, "GPS: %d ; AQR: %d", GPS_bDistanciaPercorrida, AQR_bDistanciaPercorrida);
 					SEGGER_SYSVIEW_Print(bOutBuffer);
+#endif
 
 					//Arredonda Distância para Avaliação
 					//Arredonda variável de avaliação para um número inteiro.

@@ -267,11 +267,9 @@ uint32_t IDN_OneWire_Read_ID_Number(void)
 
 	if (IDN_OneWire_Reset())
 	{
-		BRD_vWait_ms(5);
+		BRD_vWait_ms(20);
 
 		IDN_OneWire_WriteByte(DS2411R_CMD_READ_ROM);
-
-		BRD_vWait_ms(5);
 
 		for (uint8_t bI = sizeof(abM2GSerialNumber); bI > 0; bI--) {
 			IDN_OneWire_ReadByte(&abM2GSerialNumber[bI - 1]);

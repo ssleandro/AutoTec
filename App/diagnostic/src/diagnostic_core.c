@@ -593,6 +593,9 @@ void DIG_vDiagnosticThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(DiagnosticQueue);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(DiagnosticQueue, DIG_vDiagnosticThread);
+#endif
 
 	/* Prepare the signature - struture that notify the broker about subscribers */
 	/*	SIGNATURE_HEADER(Diagnostic, THIS_MODULE, TOPIC_ALL, DiagnosticQueue);

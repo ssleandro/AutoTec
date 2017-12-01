@@ -417,8 +417,6 @@ uint8_t bGPSMGTThreadArrayPosition = 0;            //!< Thread position in array
 uint8_t bGPSTPSThreadArrayPosition = 0;            //!< Thread position in array
 uint8_t bGPSRCVThreadArrayPosition = 0;            //!< Thread position in array
 
-CREATE_LOCAL_QUEUE(GPSPublishQ, uint8_t*, 10);
-
 peripheral_descriptor_p pGPSHandle;
 
 gpio_config_s sTimePulseInt;
@@ -2866,6 +2864,12 @@ void GPS_vGPSThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(GPSQueue);
+	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
+	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(GPSQueue, GPS_vGPSThread);
+	REGISTRY_QUEUE(GPS_MTX_sEntradas, GPS_MTX_sEntradas);
+#endif
 
 	/* Init the module ring buffer - structure that receive data from device M2GGPSCOMM */
 	INITIALIZE_RINGBUFFER(uint8_t, GPSRx, GPS_RX_BUFFER_SIZE);
@@ -2884,9 +2888,6 @@ void GPS_vGPSThread (void const *argument)
 
 	//Aloca um timer de sistema para aguardar 5s:
 	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerOnce);
-
-	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
-	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
 
 	//Prepara o protocolo de comunicação para trabalhar:
 	memset(&GPS_sCtrlCBASRL, 0x00, sizeof(GPS_tsCtrlEnl));
@@ -3296,13 +3297,13 @@ void GPS_vGPSRecvThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGPSRCVThreadArrayPosition)); //Task created, inform core
 
-	uint32_t wTicks = osKernelSysTick();
+	uint32_t dGPSRecvTicks = osKernelSysTick();
 
 	while (1)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSRCV, WDT_SLEEP);
-		osDelayUntil(&wTicks, 25);
+		osDelayUntil(&dGPSRecvTicks, 25);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));

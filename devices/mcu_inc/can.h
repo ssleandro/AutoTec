@@ -81,6 +81,15 @@
 /******************************************************************************
  * Macros
  *******************************************************************************/
+#define CAN_MAX_CHANNELS (CAN_INVALID) //!< Maximum number of CAN channels
+#define CAN_MAX_CLOCK 100000000  //!< Maximum clock supported on CAN
+
+#define CAN_STAT_LEC_MASK  (0x07)    //!< Mask for Last Error Code
+#define CAN_INT_STATUS (0x8000)      //!< CAN Status Macro
+
+#ifndef NULL
+#define NULL (void*)0
+#endif
 
 /******************************************************************************
  * Typedefs
@@ -131,7 +140,7 @@ typedef struct canStatusStruct_s
 } canStatusStruct_s;
 
 
-typedef void (*canCallBack) (eCANStatus_s eErrorCode, canMSGStruct_s CANMessage);  //!< CAN Callback typedef
+typedef void (*canCallBack) (eCANStatus_s eErrorCode, canMSGStruct_s CANMessage);  //!< CAN Callback typedef/
 
 /**
  * This enumeration is a list of possible CAN ports on the Board
@@ -163,6 +172,7 @@ typedef struct can_config_s
 	canBitrate_s eCANBitrate;     //!< CAN BitRate
 	canCallBack fpCallback;       //!< CAN Callback Function
 	void * vpPrivateData;         //!< CAN Private data
+	uint8_t bIDRecvObj;				//!< ID of CAN receive object
 } can_config_s;
 
 typedef enum
@@ -222,6 +232,7 @@ extern "C"
  *
  *******************************************************************************/
 eMCUError_s CAN_eInit (can_config_s *pCAN);
+eMCUError_s CANISO_eInit (can_config_s *pCAN);
 
 /******************************************************************************
  * Function : CAN_vDeInit(can_config_s *pCAN)
@@ -260,6 +271,7 @@ eMCUError_s CAN_eInit (can_config_s *pCAN);
  *
  *******************************************************************************/
 void CAN_vDeInit (can_config_s *pCAN);
+void CANISO_vDeInit (can_config_s *pCAN);
 
 /******************************************************************************
  * Function : CAN_vAddMessageID(const can_config_s *pCAN, const uint16_t hCANmsgID)
@@ -298,10 +310,13 @@ void CAN_vDeInit (can_config_s *pCAN);
  *
  *******************************************************************************/
 void CAN_vAddMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID);
+void CANISO_vAddMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID);
 
 void CAN_vAddAllMessageID (const can_config_s *pCAN, const uint32_t hCANmsgID);
+void CANISO_vAddAllMessageID (can_config_s *pCAN, const uint32_t hCANmsgID);
 
 void CAN_vEnableLoopback (can_config_s *pCAN);
+void CANISO_vEnableLoopback (can_config_s *pCAN);
 
 /******************************************************************************
  * Function : CAN_vRemoveMessageID(const can_config_s *pCAN, const uint16_t hCANmsgID)
@@ -342,6 +357,7 @@ void CAN_vEnableLoopback (can_config_s *pCAN);
  *
  *******************************************************************************/
 void CAN_vRemoveMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID);
+void CANISO_vRemoveMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID);
 
 /******************************************************************************
  * Function : CAN_vSendMessage(const can_config_s *pCAN, const canMSGStruct_s CANMessage)
@@ -385,10 +401,12 @@ void CAN_vRemoveMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID);
  *
  *******************************************************************************/
 void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage);
+void CANISO_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage);
 
 void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage);
 
 uint8_t CAN_bGetErrCount(const can_config_s *pCCAN, can_transfer_id dir);
+uint8_t CANISO_bGetErrCount(const can_config_s *pCCAN, can_transfer_id dir);
 
 #ifdef __cplusplus
 } // extern "C"

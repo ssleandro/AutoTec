@@ -338,6 +338,9 @@ void BUZ_vBuzzerThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(BuzzerQueue);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(BuzzerQueue, BUZ_vBuzzerThread);
+#endif
 
 	/* Init buzzer device for output */
 	BUZ_vInitDeviceLayer();
