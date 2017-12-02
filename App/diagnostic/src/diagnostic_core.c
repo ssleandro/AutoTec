@@ -51,7 +51,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of SENSOR queue
-#define QUEUE_SIZEOFDIAGNOSTIC (5)
+#define QUEUE_SIZEOFDIAGNOSTIC (32)
 
 #define MAX_LOG_REGISTERS 100
 

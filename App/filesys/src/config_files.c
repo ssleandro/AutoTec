@@ -478,6 +478,7 @@ void FFS_sGetFSInfo(FFS_sFSInfo *pSFInfo)
 	bErr = f_getfreespace( &xSpace );
 	if( bErr == F_NO_ERROR )
 	{
+		pSFInfo->wUsed = xSpace.used;
 		pSFInfo->wFree = xSpace.free;
 		pSFInfo->wTotal = xSpace.total;
 		pSFInfo->wBad = xSpace.bad;

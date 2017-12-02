@@ -168,10 +168,8 @@ volatile uint8_t WATCHDOG_FLAG_ARRAY[sizeof(THREADS_THISTHREAD) / sizeof(THREADS
 
 //Thread Control
 WATCHDOG_CREATE(CONTROLPUB);//!< WDT pointer flag
-WATCHDOG_CREATE(CONTROLMGT);//!< WDT pointer flag
 WATCHDOG_CREATE(CONTROLEMY);//!< WDT pointer flag
 uint8_t bCONTROLPUBThreadArrayPosition = 0;                    //!< Thread position in array
-uint8_t bCONTROLMGTThreadArrayPosition = 0;                    //!< Thread position in array
 uint8_t bCONTROLEMYThreadArrayPosition = 0;                    //!< Thread position in array
 
 /******************************************************************************
@@ -267,7 +265,7 @@ void CTL_vControlPublishThread (void const *argument)
 	while (1)
 	{
 		WATCHDOG_STATE(CONTROLPUB, WDT_SLEEP);
-		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO |
+		flags = osFlagWait(CTL_sFlagSis, CTL_UPDATE_CONFIG_DATA | CTL_UPDATE_FILE_INFO | CTL_GET_FILE_INFO |
 								 CTL_FORMAT_FILE | CTL_FORMAT_FILE_DONE | CTL_SW_HW_VERSION, true, false, osWaitForever);
 		WATCHDOG_STATE(CONTROLPUB, WDT_ACTIVE);
 
@@ -399,7 +397,7 @@ void CTL_vIdentifyEvent (contract_s* contract)
 					osFlagSet(UOS_sFlagSis, UOS_SIS_FLAG_CFG_OK);
 				}
 			}
-			if (ePubEvt == EVENT_GUI_SYSTEM_GET_FILE_INFO)
+			if (ePubEvt == EVENT_GUI_CONFIG_GET_MEMORY_USED)
 			{
 				osFlagSet(CTL_sFlagSis, CTL_GET_FILE_INFO);
 			}
@@ -420,18 +418,24 @@ eAPPError_s CTL_eGetSwHwVersion (void)
 	static peripheral_descriptor_p pIDHandle;
 	static uint8_t bIDNumBuffer[8];
 	uint32_t dRecvBytes = 0;
+	uint8_t bRetry = 0;
 
-	pIDHandle = DEV_open(PERIPHERAL_DS2411R);
+	do{
+		pIDHandle = DEV_open(PERIPHERAL_DS2411R);
 
-	dRecvBytes = DEV_read(pIDHandle, &bIDNumBuffer, sizeof(bIDNumBuffer));
+		if (pIDHandle != NULL)
+		{
+			dRecvBytes = DEV_read(pIDHandle, &bIDNumBuffer, sizeof(bIDNumBuffer));
 
-	if (dRecvBytes)
-	{
-		memcpy(UOS_sVersaoCod.abNumSerie, &bIDNumBuffer[1], sizeof(UOS_sVersaoCod.abNumSerie));
-		eErr = APP_ERROR_SUCCESS;
-	}
+			if (dRecvBytes)
+			{
+				memcpy(UOS_sVersaoCod.abNumSerie, &bIDNumBuffer[1], sizeof(UOS_sVersaoCod.abNumSerie));
+				eErr = APP_ERROR_SUCCESS;
+			}
 
-	DEV_close(pIDHandle);
+			DEV_close(pIDHandle);
+		}
+	} while((dRecvBytes != 0) && (bRetry++ < 5));
 
 	osFlagSet(CTL_sFlagSis, CTL_SW_HW_VERSION);
 

@@ -350,6 +350,8 @@
 #define CO_SYSTEM_GPS_TAB                  3271
 #define CO_SYSTEM_SENSORS_TAB              3272
 #define CO_SYSTEM_BU_ERASE_DATA            3273
+#define CO_CFG_MEMORY_ALERT                3274
+#define CO_CFG_FILE_LIST                   3275
 #define SoftKeyMask_Installation           4000
 #define SoftKeyMask_InstallationCompleted   4001
 #define SoftKeyMask_Planter                4002
@@ -795,6 +797,12 @@
 #define OutputString_11319                11319
 #define OutputString_11320                11320
 #define OutputString_11321                11321
+#define OutputString_11322                11322
+#define OutputString_11323                11323
+#define OutputString_11324                11324
+#define OutputString_11325                11325
+#define OutputString_11326                11326
+#define OutputString_11327                11327
 #define ON_TEST_MODE_L01                  12000
 #define ON_TEST_MODE_L02                  12001
 #define ON_TEST_MODE_L03                  12002
@@ -1103,6 +1111,7 @@
 #define TrimmingDataMaskTractor           20002
 #define backspace_20003                   20003
 #define passwd_20004                      20004
+#define exclamation_20005                 20005
 #define NV_TEST_MODE_L01                  21000
 #define NV_TEST_MODE_L02                  21001
 #define NV_TEST_MODE_L03                  21002
@@ -1462,6 +1471,9 @@
 #define SV_SENSOR_ID_L36                  22076
 #define SV_HW_VERSION                     22077
 #define SV_FW_VERSION                     22078
+#define SV_CFG_FILENAME_LIST              22079
+#define SV_CFG_FILEDATE_LIST              22080
+#define SV_CFG_FILESIZE_LIST              22081
 #define FontAttributes_23000              23000
 #define FontAttributes_23001              23001
 #define FontAttributes_23002              23002

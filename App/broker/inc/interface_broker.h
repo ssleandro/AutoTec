@@ -72,9 +72,9 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define QUEUE_SIZEOFPUBLISH 32      //!< MACRO to define the size of PUBLISH queue
-#define QUEUE_SIZEOFSUBSCRIBE 32    //!< MACRO to define the size of SUBSCRIBE queue
-#define QUEUE_SIZEOFUNSUBSCRIBE 32  //!< MACRO to define the size of UNSUBSCRIBE queue
+#define QUEUE_SIZEOFPUBLISH 128     //!< MACRO to define the size of PUBLISH queue
+#define QUEUE_SIZEOFSUBSCRIBE 64    //!< MACRO to define the size of SUBSCRIBE queue
+#define QUEUE_SIZEOFUNSUBSCRIBE 64  //!< MACRO to define the size of UNSUBSCRIBE queue
 
 #if defined (UNITY_TEST)
 typedef void * osMessageQId;

@@ -94,6 +94,7 @@ static tsPubSensorReplacement sPubReplacState;
 static canStatusStruct_s sGUISensorCANStatus;
 
 static sM2GVersion GUI_sM2GIDs;
+static FFS_sFSInfo sGUIFSInfo;
 
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
@@ -557,6 +558,11 @@ void GUI_vGuiPublishThread (void const *argument)
 				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
 				{
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &GUI_sM2GIDs);
+					break;
+				}
+				case EVENT_GUI_UPDATE_FILE_INFO:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sGUIFSInfo);
 					break;
 				}
 				default:
@@ -1164,9 +1170,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_CTL_UPDATE_FILE_INFO)
 			{
 				FFS_sFSInfo *psFSInfo = pvPayload;
+
 				if (psFSInfo != NULL)
 				{
-					// Trata informações da info
+					sGUIFSInfo = *psFSInfo;
+					ePubEvt = EVENT_GUI_UPDATE_FILE_INFO;
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 				}
 			}
 			if (ePubEvt == EVENT_CTL_FILE_FORMAT_DONE)
@@ -1182,6 +1191,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				UOS_tsVersaoCod* pbSerialNumber = pvPayload;
 				GUI_vFwVersionToString(&GUI_sM2GIDs.abFwVersion[0], pbSerialNumber->wVer, pbSerialNumber->wRev, pbSerialNumber->wBuild);
 				GUI_vBufferToStringHex(&GUI_sM2GIDs.abHwIDNumber[0], pbSerialNumber->abNumSerie, M2G_SERIAL_NUMBER_N_BYTES);
+				osDelay(30);
 				ePubEvt = EVENT_GUI_SYSTEM_SW_HW_VERSION;
 				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}

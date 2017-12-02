@@ -152,6 +152,7 @@ static canStatusStruct_s sCANIsobusStatus;
 static canStatusStruct_s sCANSensorStatus;
 static GPS_sStatus sISOGPSStatus;
 static sM2GVersion sISOM2GVersions;
+static uint8_t bStrVarBuffer[ISO_MAX_STRING_BUFFER_SIZE];
 
 static sTransportProtocolControl sTPControlStruct;
 static sObjectPoolControl sOPControlStruct;
@@ -274,6 +275,7 @@ void ISO_vHideShowContainerCommand (uint16_t wObjID, bool bShow);
 void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg);
 void ISO_vHandleAddressClaimNGetCapabilitiesProcedure (ISOBUSMsg* sRcvMsg);
 void ISO_vUpdateStringVariable (uint16_t wStrVarID, uint8_t* pbNewStrValue, uint16_t wNumBytes);
+uint32_t ISO_vBufferStrCat(uint16_t wStrVarID, const uint8_t* pbStr, uint16_t wBytes);
 
 /******************************************************************************
  * Function Definitions
@@ -583,7 +585,6 @@ void ISO_vISOThreadPutEventOnISOUpdateQ (event_e eEvt)
 
 void ISO_vUpdateM2GVersion (void)
 {
-	osDelay(5);
 	ISO_vUpdateStringVariable(SV_FW_VERSION, sISOM2GVersions.abFwVersion, M2G_FW_VERSION_N_DIGITS);
 	ISO_vUpdateStringVariable(SV_HW_VERSION, sISOM2GVersions.abHwIDNumber, M2G_HW_ID_NUMBER_N_DIGITS);
 }
@@ -594,11 +595,77 @@ void ISO_vUpdateSensorsIDNumber (void)
 	{
 		if (sSensorsInfo[i].eSensorIntallStatus == STATUS_INSTALL_INSTALLED)
 		{
-			osDelay(5);
 			ISO_vUpdateStringVariable(SV_SENSOR_VERSION_L01 + i, sSensorsInfo[i].abFwVer, M2G_SENSOR_FW_VER_N_DIGITS);
 			ISO_vUpdateStringVariable(SV_SENSOR_ID_L01 + i, sSensorsInfo[i].abIDNumber, M2G_SENSOR_ID_NUMBER_N_DIGITS);
 		}
 	}
+}
+
+static uint8_t bFileName[256];
+static uint8_t bFileDate[256];
+static uint8_t bFileSize[128];
+
+void ISO_vUpdateFileSystemInfo (FFS_sFSInfo* psInfo)
+{
+	FFS_sFileInfo *pFInfo;
+	if (psInfo == NULL)
+		return;
+
+	uint32_t dMemoryUsed = 0;
+
+	if (psInfo->wTotal == 0)
+	{
+		ISO_vHideShowContainerCommand(CO_CFG_MEMORY_ALERT, true);
+	} else
+	{
+		ISO_vHideShowContainerCommand(CO_CFG_MEMORY_ALERT, false);
+		dMemoryUsed = ((psInfo->wUsed * 100)/(psInfo->wTotal - psInfo->wBad));
+		dMemoryUsed = (dMemoryUsed < 2) ? 2 : dMemoryUsed;
+	}
+	ISO_vChangeNumericValue(NV_MEMORY_USED, dMemoryUsed);
+
+	strcpy(bFileName, "");
+	strcpy(bFileDate, "");
+	strcpy(bFileSize, "");
+	pFInfo = psInfo->pFirst;
+	while (pFInfo != NULL)
+	{
+		sprintf(bFileName, "%s%s\r\n", bFileName, pFInfo->bFileName);
+		sprintf(bFileDate, "%s%s\r\n", bFileDate, pFInfo->bFileDateTime);
+		sprintf(bFileSize, "%s%d B\r\n", bFileSize, pFInfo->FileLengh);
+		pFInfo = pFInfo->pNext;
+	}
+
+	sTPControlStruct.eTPUploadType = UploadChangeStringValue;
+	sTPControlStruct.dNumOfBytes = ISO_vBufferStrCat(SV_CFG_FILENAME_LIST, bFileName, strlen(bFileName));
+	sTPControlStruct.pbTPBuffer = bStrVarBuffer;
+
+	osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
+	osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
+	sTPControlStruct.eTPUploadType = UploadChangeStringValue;
+	sTPControlStruct.dNumOfBytes = ISO_vBufferStrCat(SV_CFG_FILEDATE_LIST, bFileDate, strlen(bFileDate));
+	sTPControlStruct.pbTPBuffer = bStrVarBuffer;
+
+	osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
+	osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
+	sTPControlStruct.eTPUploadType = UploadChangeStringValue;
+	sTPControlStruct.dNumOfBytes = ISO_vBufferStrCat(SV_CFG_FILESIZE_LIST, bFileSize, strlen(bFileSize));
+	sTPControlStruct.pbTPBuffer = bStrVarBuffer;
+
+	osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
+	osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
+	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
+	osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
+	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
 }
 
 void ISO_vIdentifyEvent (contract_s* contract)
@@ -758,6 +825,12 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					sM2GVersion* psM2GVer = pvPayData;
 					sISOM2GVersions = *psM2GVer;
 					ISO_vUpdateM2GVersion();
+					break;
+				}
+				case EVENT_GUI_UPDATE_FILE_INFO:
+				{
+					FFS_sFSInfo* psFSInfo = pvPayData;
+					ISO_vUpdateFileSystemInfo(psFSInfo);
 					break;
 				}
 				default:
@@ -1053,7 +1126,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
-			osEnterCritical();
+//			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
@@ -1063,7 +1136,7 @@ void ISO_vIsobusWriteThread (void const *argument)
 				DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
 				WATCHDOG_STATE(ISOWRT, WDT_ACTIVE);
 			}
-			osExitCritical();
+//			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);
@@ -1428,8 +1501,6 @@ void ISO_vIsobusTransportProtocolThread (void const *argument)
 	{
 		WATCHDOG_STATE(ISOTPT, WDT_SLEEP);
 		osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST, false, false, osWaitForever);
-
-		osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
 
 		ISO_vTransportProtocolManagement();
 		ISO_vTransportProtocolClearBuffers();
@@ -1904,8 +1975,6 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 	}
 }
 
-static uint8_t bStrVarBuffer[ISO_MAX_STRING_BUFFER_SIZE];
-
 uint32_t ISO_vBufferStrCat(uint16_t wStrVarID, const uint8_t* pbStr, uint16_t wBytes)
 {
 	if ((wBytes + 5) > (ISO_MAX_STRING_BUFFER_SIZE - 1))
@@ -1950,6 +2019,7 @@ void ISO_vUpdateStringVariable (uint16_t wStrVarID, uint8_t* pbNewStrValue, uint
 		sTPControlStruct.dNumOfBytes = ISO_vBufferStrCat(wStrVarID, pbNewStrValue, wNumBytes);
 		sTPControlStruct.pbTPBuffer = bStrVarBuffer;
 
+		osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
 		osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
 		WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 		osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
@@ -3638,6 +3708,7 @@ void ISO_vHandleLanguageCommand (void)
 		if (sTPControlStruct.eTPCommState == TPIdle)
 		{
 			sTPControlStruct.eTPUploadType = UploadObjectPool;
+			osFlagClear(ISO_sFlags, ISO_FLAG_TP_COMM_END);
 			osFlagSet(ISO_sFlags, ISO_FLAG_TP_COMM_REQUEST);
 			WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 			osFlagWait(ISO_sFlags, ISO_FLAG_TP_COMM_END, true, false, osWaitForever);
