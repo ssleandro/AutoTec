@@ -190,7 +190,7 @@
 
 // Converter Macros
 #define MM2IN(value) 	roundf((value) * 0.393701f)
-#define IN2MM(value) 	(uint16_t)roundf((value * 25.41f))
+#define IN2MM(value) 	(uint16_t)roundf((value * 2.541f))
 #define DM2IN(value) 	roundf((value) * 3.93701f)
 #define IN2DM(value) 	((uint16_t)(value * 0.2541f))
 
