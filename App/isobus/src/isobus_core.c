@@ -3457,6 +3457,7 @@ void ISO_vUpdateSisConfigData (sConfigurationData *psCfgDataMask)
 	psCfgDataMask->fMaxSpeed = *sConfigDataMask.fMaxSpeed;
 	psCfgDataMask->eAlterRows = *sConfigDataMask.eAlterRows;
 	psCfgDataMask->eAltType = *sConfigDataMask.eAltType;
+	psCfgDataMask->eUnit = sCommandLanguage.eUnit;
 }
 
 void ISO_vUpdateConfigData (sConfigurationData *psCfgDataMask)

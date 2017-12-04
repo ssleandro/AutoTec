@@ -189,19 +189,19 @@
 
 
 // Converter Macros
-#define MM2IN(value) 	((value) * 0.0393701f)
-#define IN2MM(value) 	((uint16_t)(value * 25.41f))
-#define DM2IN(value) 	((value) * 3.93701f)
+#define MM2IN(value) 	roundf((value) * 0.393701f)
+#define IN2MM(value) 	(uint16_t)roundf((value * 25.41f))
+#define DM2IN(value) 	roundf((value) * 3.93701f)
 #define IN2DM(value) 	((uint16_t)(value * 0.2541f))
 
 #define DM2FT(value) 	((value) * 3.28084f)
-#define FT2DM(value) 	((value) / 3.28084f)
+#define FT2DM(value) 	roundf((value) / 3.28084f)
 
 #define KMH2MLH(value) 	(value * 0.621371f)
 #define MLH2KMH(value) 	(value * 1.60934f)
 
-#define SDM2SP(value) 	((value) / 3.28084f)
-#define SP2SDM(value) 	((uint16_t)(value * 3.28084f))
+#define SDM2SP(value) 	roundf((value) / 3.28084f)
+#define SP2SDM(value) 	(uint16_t)roundf((value * 3.28084f))
 
 /******************************************************************************
  * Typedefs

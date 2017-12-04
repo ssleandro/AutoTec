@@ -689,7 +689,7 @@ void GUI_SetSisConfiguration(void)
 	}
 	else
 	{
-		sSISConfiguration.sMonitor.wAvalia = DM2FT(GUIConfigurationData.wEvaluationDistance);
+		sSISConfiguration.sMonitor.wAvalia = FT2DM(GUIConfigurationData.wEvaluationDistance);
 		sSISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
 		sSISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
 		sSISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
