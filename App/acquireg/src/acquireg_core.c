@@ -43,7 +43,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFBUZZER (5)
+#define QUEUE_SIZEOFACQUIREG (32)
 #define THIS_MODULE MODULE_ACQUIREG
 
 /*!<< From MPA2500  */
@@ -154,7 +154,7 @@ tsPubSensorReplacement AQR_sPubTrocaSensor;
  * Module Variable Definitions
  *******************************************************************************/
 //static eAPPError_s eError; //!< Error variable
-DECLARE_QUEUE(AcquiregQueue, QUEUE_SIZEOFBUZZER);   //!< Declaration of Interface Queue
+DECLARE_QUEUE(AcquiregQueue, QUEUE_SIZEOFACQUIREG);   //!< Declaration of Interface Queue
 CREATE_SIGNATURE(AcquiregControl);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregSensor);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregGPS);//!< Signature Declarations

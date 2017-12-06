@@ -2594,7 +2594,7 @@ void ISO_vHandleReceivedMessages (ISOBUSMsg* sRcvMsg)
 		case ACKNOWLEDGEMENT_PGN:
 		{
 			ISO_vHandleObjectPoolState(sRcvMsg);
-//			ISO_vTreatAcknowledgementMessage (*sRcvMsg);
+			ISO_vTreatAcknowledgementMessage (*sRcvMsg);
 			break;
 		}
 		default:
@@ -2639,7 +2639,7 @@ void ISO_vHandleAddressClaimNGetCapabilitiesProcedure (ISOBUSMsg* sRcvMsg)
 		}
 		case ACCWaitingVTStatusResponse:
 		{
-			if ((sRcvMsg->B1 == FUNC_VT_STATUS) /*&& (sRcvMsg->PS == M2G_SOURCE_ADDRESS)*/)
+			if (sRcvMsg->B1 == FUNC_VT_STATUS)
 			{
 				// Send a working set master message
 				ISO_vSendWorkingSetMaster();
@@ -2763,17 +2763,10 @@ void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg)
 			{
 				if (sRcvMsg->B1 == FUNC_STORE_VERSION)
 				{
-					if (sRcvMsg->B6 == 0)
-					{
-						sOPControlStruct.eOPUplState = UIdle;
-						sOPControlStruct.eOPState = OPUploadedSuccessfully;
-						ISO_vHandleObjectPoolUploadedSucessfully();
-					} else
-					{
-						// TODO: There are errors in the store version message. Handle this!
-						sOPControlStruct.eOPUplState = UFailed;
-						sOPControlStruct.eOPState = OPCannotBeUploaded;
-					}
+					sOPControlStruct.eOPUplState = UIdle;
+					sOPControlStruct.eOPState = OPUploadedSuccessfully;
+					ISO_vHandleObjectPoolUploadedSucessfully();
+					// TODO: There are errors in the store version message. Handle this!
 				}
 				break;
 			}
@@ -2863,8 +2856,8 @@ void ISO_vIsobusManagementThread (void const *argument)
 			ISO_vHandleReceivedMessages(&sRcvMsg);
 		}
 
-		if (((sOPControlStruct.eOPState == OPUploading) && (sOPControlStruct.eOPUplState == UFailed)
-			&& (sACCControlStruct.eACCState == ACCIdle)) || (sOPControlStruct.eOPState == OPCannotBeUploaded))
+		if ((sOPControlStruct.eOPState == OPUploading) && (sOPControlStruct.eOPUplState == UFailed)
+			&& (sACCControlStruct.eACCState == ACCIdle))
 		{
 			ISO_vHandleObjectPoolState(NULL);
 		} else if (sOPControlStruct.eOPState == OPNoneRegistered)

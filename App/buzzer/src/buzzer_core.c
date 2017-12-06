@@ -45,7 +45,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFBUZZER (10)
+#define QUEUE_SIZEOFBUZZER (16)
 
 #define THIS_MODULE MODULE_BUZZER
 

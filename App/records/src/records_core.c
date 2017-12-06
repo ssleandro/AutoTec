@@ -42,7 +42,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of CONTROL queue
-#define QUEUE_SIZEOFRECORDS 5
+#define QUEUE_SIZEOFRECORDS 32
 
 #define THIS_MODULE MODULE_RECORDS
 

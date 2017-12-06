@@ -50,7 +50,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFFILESYS (16)
+#define QUEUE_SIZEOFFILESYS (32)
 
 #define THIS_MODULE MODULE_FILESYS
 

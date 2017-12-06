@@ -47,7 +47,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of SENSOR queue
-#define QUEUE_SIZEOFSENSOR 5
+#define QUEUE_SIZEOFSENSOR 32
 
 #define THIS_MODULE MODULE_SENSOR
 
