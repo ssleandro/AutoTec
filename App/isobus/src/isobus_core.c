@@ -77,7 +77,8 @@ static bool bKeepLineMediumPrioAlarm = false;
 static bool bHighPrioAudioInProcess = false;
 static bool bMediumPrioAudioInProcess = false;
 static uint8_t bPasswsNumDigits;
-static uint8_t bLanguageChRcv = 0;
+static bool bRestoreLastMask = false;
+static bool bReloadState = false;
 
 // Installation
 static sM2GSensorInfo sSensorsInfo[CAN_bNUM_DE_LINHAS];
@@ -152,6 +153,7 @@ static canStatusStruct_s sCANIsobusStatus;
 static canStatusStruct_s sCANSensorStatus;
 static GPS_sStatus sISOGPSStatus;
 static sM2GVersion sISOM2GVersions;
+static FFS_sFSInfo sISOM2GFSInfo;
 static uint8_t bStrVarBuffer[ISO_MAX_STRING_BUFFER_SIZE];
 
 static sTransportProtocolControl sTPControlStruct;
@@ -170,7 +172,7 @@ CREATE_CONTRACT(Isobus);                            //!< Create contract for iso
  *****************************/
 CREATE_LOCAL_QUEUE(IsoPublishQ, event_e, 64)
 CREATE_LOCAL_QUEUE(IsoWriteQ, ISOBUSMsg, 256)
-CREATE_LOCAL_QUEUE(IsoManagementQ, ISOBUSMsg, 64)
+CREATE_LOCAL_QUEUE(IsoManagementQ, ISOBUSMsg, 128)
 CREATE_LOCAL_QUEUE(IsoUpdateQ, event_e, 128)
 CREATE_LOCAL_QUEUE(IsoTranspProtocolQ, ISOBUSMsg, 64)
 
@@ -214,6 +216,7 @@ eBootStates eCurrState;
 eModuleStates eModCurrState;
 eIsobusMask eCurrentMask = DATA_MASK_INSTALLATION;
 eIsobusMask ePrevMask = DATA_MASK_INSTALLATION;
+eIsobusMask eBackupCurrMask;
 eClearCounterStates ePlanterCounterCurrState = CLEAR_TOTALS_IDLE;
 eClearSetupStates eClearSetupCurrState = CLEAR_SETUP_IDLE;
 eChangeTrimmingState eChangeTrimmCurrState = TRIMM_CHANGE_IDLE;
@@ -818,18 +821,22 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
 				{
 					ISO_vUpdateSensorsIDNumber();
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
 				case EVENT_GUI_SYSTEM_SW_HW_VERSION:
 				{
 					sM2GVersion* psM2GVer = pvPayData;
 					sISOM2GVersions = *psM2GVer;
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					ISO_vUpdateM2GVersion();
 					break;
 				}
 				case EVENT_GUI_UPDATE_FILE_INFO:
 				{
 					FFS_sFSInfo* psFSInfo = pvPayData;
+					sISOM2GFSInfo = *psFSInfo;
+					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					ISO_vUpdateFileSystemInfo(psFSInfo);
 					break;
 				}
@@ -991,7 +998,7 @@ void ISO_vIsobusDispatcher (ISOBUSMsg* RcvMsg)
 		{
 			case LANGUAGE_PGN:
 			{
-				bLanguageChRcv = 1;
+				bRestoreLastMask = true;
 				WATCHDOG_STATE(ISORCV, WDT_SLEEP);
 				PUT_LOCAL_QUEUE(IsoManagementQ, *RcvMsg, osWaitForever);
 				WATCHDOG_STATE(ISORCV, WDT_ACTIVE);
@@ -1842,15 +1849,42 @@ void ISO_vTreatChangeNumericValueEvent (ISOBUSMsg* sRcvMsg)
 	}
 }
 
-void ISO_vTreatAcknowledgementMessage (ISOBUSMsg sRcvMsg)
+void ISO_vHandleAcknowledgementMessage (void)
 {
-	event_e eEvt;
+	eIsobusMask eAuxMask;
+	eIsobusSoftKeyMask eAuxSoftKey;
+	uint32_t dUpdateMasks[] = { EVENT_GUI_UPDATE_CONFIG, EVENT_GUI_UPDATE_INSTALLATION_INTERFACE,
+		EVENT_GUI_UPDATE_PLANTER_INTERFACE, EVENT_GUI_UPDATE_TEST_MODE_INTERFACE, EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE,
+		EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE, EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER, EVENT_GUI_SYSTEM_SW_HW_VERSION,
+		EVENT_GUI_UPDATE_FILE_INFO };
 
-	STOP_TIMER(WSMaintenanceTimer);
-	ISO_vSendLoadVersion(ISO_VERSION_LABEL);
-	START_TIMER(WSMaintenanceTimer, ISO_TIMER_PERIOD_MS_WS_MAINTENANCE);
+	if (ePrevMask == DATA_MASK_REPLACE_SENSOR || ePrevMask == DATA_MASK_CONFIRM_CLEAR_SETUP)
+	{
+		ePrevMask = DATA_MASK_INSTALLATION;
+	} else if (ePrevMask == DATA_MASK_CONFIRM_TRIMMING_CHANGES || ePrevMask == DATA_MASK_CONFIRM_CLEAR_COUNTER)
+	{
+		ePrevMask = DATA_MASK_PLANTER;
+	} else if (ePrevMask == DATA_MASK_CONFIRM_CONFIG_CHANGES)
+	{
+		ePrevMask = DATA_MASK_CONFIGURATION;
+	}
 
-	PUT_LOCAL_QUEUE(IsoUpdateQ, eEvt, osWaitForever);
+	for (int bMask = 0; bMask < sizeof(dUpdateMasks); bMask++) {
+		PUT_LOCAL_QUEUE(IsoUpdateQ, dUpdateMasks[bMask], osWaitForever);
+	}
+
+	ISO_vUpdateTestModeDataMask(EVENT_GUI_INSTALLATION_CONFIRM_INSTALLATION);
+	ISO_vChangeActiveMask(ePrevMask);
+	eAuxMask = eCurrentMask;
+	eCurrentMask = ePrevMask;
+	ePrevMask = eAuxMask;
+	if (eCurrentMask == DATA_MASK_CONFIGURATION)
+	{
+		eAuxSoftKey = (eConfigMaskFromX == DATA_MASK_INSTALLATION) ? SOFT_KEY_MASK_CONFIG_TO_SETUP : SOFT_KEY_MASK_CONFIG_TO_PLANTER;
+		ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
+			eAuxSoftKey);
+	}
+	bRestoreLastMask = true;
 }
 
 void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
@@ -1866,6 +1900,7 @@ void ISO_vTreatSoftKeyActivation (uint16_t wObjectID)
 		case ISO_KEY_CONFIG_ID:
 		{
 			ePasswdMaskFromX = eCurrentMask;
+			eConfigMaskFromX = eCurrentMask;
 			ePasswordManager = PASSWD_ENTER_PASSWORD;
 			ISO_vHideShowContainerCommand(CO_PASSWD_ENTER_PASSWD, true);
 			ISO_vHideShowContainerCommand(CO_PASSWD_NEW_PASSWD, false);
@@ -2481,7 +2516,7 @@ void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 			{
 				if (eCurrentMask == (eIsobusMask)dAux)
 				{
-					bLanguageChRcv = 0;
+					bRestoreLastMask = false;
 				}
 				ePrevMask = eCurrentMask;
 				eCurrentMask = (eIsobusMask)dAux;
@@ -2491,16 +2526,20 @@ void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 					// Ao trocar as configurações regionais do GS3, o mesmo força uma mudança de tela
 					// para a tela default do pool. A ideia é monitorar esse comando e voltar a tela
 					// anterior.
-					if (bLanguageChRcv)
+					if (bRestoreLastMask)
 					{
-						bLanguageChRcv = 0;
+						bRestoreLastMask = false;
 						ISO_vChangeActiveMask(ePrevMask);
+						eIsobusMask eAux = eCurrentMask;
+						eCurrentMask = ePrevMask;
+						ePrevMask = eAux;
 					}
 					else
 					{
-						eConfigMaskFromX = DATA_MASK_INSTALLATION;
-						ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_INSTALLATION);
-						ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_SETUP);
+						ISO_vChangeSoftKeyMaskCommand(DATA_MASK_INSTALLATION, MASK_TYPE_DATA_MASK,
+							SOFT_KEY_MASK_INSTALLATION);
+						ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
+							SOFT_KEY_MASK_CONFIG_TO_SETUP);
 						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, true);
 						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
 						ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, false);
@@ -2512,11 +2551,12 @@ void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 					WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 					PUT_LOCAL_QUEUE(IsoPublishQ, ePubEvt, osWaitForever);
 					WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
-				} else if (eCurrentMask == DATA_MASK_PLANTER)
+				}
+				else if (eCurrentMask == DATA_MASK_PLANTER)
 				{
-					eConfigMaskFromX = DATA_MASK_PLANTER;
 					ISO_vUpdatePlanterDataMask();
-					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK, SOFT_KEY_MASK_CONFIG_TO_PLANTER);
+					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
+						SOFT_KEY_MASK_CONFIG_TO_PLANTER);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_CONFIG, false);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_SETUP, false);
@@ -2593,8 +2633,23 @@ void ISO_vHandleReceivedMessages (ISOBUSMsg* sRcvMsg)
 		}
 		case ACKNOWLEDGEMENT_PGN:
 		{
-			ISO_vHandleObjectPoolState(sRcvMsg);
-			ISO_vTreatAcknowledgementMessage (*sRcvMsg);
+			if (sRcvMsg->B1 == 0x01)
+			{
+				uint32_t dPGNReqInfo = (sRcvMsg->B8 << 16) | (sRcvMsg->B7 << 8) | (sRcvMsg->B6);
+
+				if (dPGNReqInfo == ECU_TO_VT_PGN)
+				{
+					if (!bReloadState)
+					{
+						STOP_TIMER(WSMaintenanceTimer);
+						sOPControlStruct.eOPUplState = UFailed;
+						sOPControlStruct.eOPState = OPUploading;
+						bReloadState = true;
+						eBackupCurrMask = eCurrentMask;
+						ISO_vHandleObjectPoolState(NULL);
+					}
+				}
+			}
 			break;
 		}
 		default:
@@ -2694,7 +2749,14 @@ void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg)
 					{
 						sOPControlStruct.eOPUplState = UIdle;
 						sOPControlStruct.eOPState = OPUploadedSuccessfully;
+
 						ISO_vHandleObjectPoolUploadedSucessfully();
+
+						if (bReloadState == true)
+						{
+							ISO_vHandleAcknowledgementMessage();
+							bReloadState = false;
+						}
 					}
 					else
 					{
@@ -2763,6 +2825,11 @@ void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg)
 			{
 				if (sRcvMsg->B1 == FUNC_STORE_VERSION)
 				{
+					if (bReloadState == true)
+					{
+						ISO_vHandleAcknowledgementMessage();
+						bReloadState = false;
+					}
 					sOPControlStruct.eOPUplState = UIdle;
 					sOPControlStruct.eOPState = OPUploadedSuccessfully;
 					ISO_vHandleObjectPoolUploadedSucessfully();
@@ -2781,9 +2848,6 @@ void ISO_vHandleObjectPoolState (ISOBUSMsg* sRcvMsg)
 			default:
 				break;
 		}
-	} else if (sOPControlStruct.eOPState == OPNoneRegistered)
-	{
-
 	}
 }
 
@@ -2849,7 +2913,6 @@ void ISO_vIsobusManagementThread (void const *argument)
 	{
 		WATCHDOG_STATE(ISOMGT, WDT_SLEEP);
 		evt = RECEIVE_LOCAL_QUEUE(IsoManagementQ, &sRcvMsg, 500);
-		WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 
 		if (evt.status == osEventMessage)
 		{
@@ -2860,9 +2923,9 @@ void ISO_vIsobusManagementThread (void const *argument)
 			&& (sACCControlStruct.eACCState == ACCIdle))
 		{
 			ISO_vHandleObjectPoolState(NULL);
-		} else if (sOPControlStruct.eOPState == OPNoneRegistered)
-		{
+
 		}
+		WATCHDOG_STATE(ISOMGT, WDT_ACTIVE);
 	}
 	osThreadTerminate(NULL);
 }
@@ -4005,6 +4068,21 @@ void ISO_vIsobusUpdateOPThread (void const *argument)
 								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_3, false);
 								ISO_vHideShowContainerCommand(CO_PASSWD_DIGIT_4, false);
 							}
+							break;
+						}
+						case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
+						{
+							ISO_vUpdateSensorsIDNumber();
+							break;
+						}
+						case EVENT_GUI_SYSTEM_SW_HW_VERSION:
+						{
+							ISO_vUpdateM2GVersion();
+							break;
+						}
+						case EVENT_GUI_UPDATE_FILE_INFO:
+						{
+							ISO_vUpdateFileSystemInfo(&sISOM2GFSInfo);
 							break;
 						}
 						default:
