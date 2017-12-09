@@ -1843,9 +1843,9 @@ void AQR_vAcquiregTimeThread (void const *argument)
 		if (((dFlagsSis & UOS_SIS_FLAG_MODO_TRABALHO) != 0) && (bSaveEstaticData++ > ARQ_SAVE_ESTATIC_DATA_TIMEOUT))
 		{
 			bSaveEstaticData = 0;
-//			AQR_SetStaticRegData();
-//			AQR_vPubAcumulaArea();
-//			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
+			AQR_SetStaticRegData();
+			AQR_vPubAcumulaArea();
+			osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -3610,12 +3610,12 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		}
 		else //Senão...
 		{
-			if (psStatus->bTrabalhando == true)
+			/*if (psStatus->bTrabalhando == true)
 			{
 							AQR_SetStaticRegData();
 							AQR_vPubAcumulaArea();
 							osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
-			}
+			}*/
 			//Não está trabalhando
 			psStatus->bTrabalhando = false;
 		}
