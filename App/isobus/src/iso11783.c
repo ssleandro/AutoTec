@@ -37,11 +37,10 @@
 
 #if defined(DUAL_ECUs)
 //	Used to address claim message
-uint8_t NAME[] = { 0xD5, 0x55, 0x35, 0x04, 0x00, 0x84, 0x09, 0x20 };
+uint8_t NAME[] = { 0x55, 0x55, 0x35, 0x04, 0x00, 0x84, 0x09, 0x20 };
 #else
 //  Used to address claim message
-uint8_t NAME[] =
-{	0x55, 0x55, 0x35, 0x04, 0x00, 0x84, 0x09, 0x20};
+uint8_t NAME[] = {	0x55, 0x55, 0x35, 0x04, 0x00, 0x84, 0x09, 0x20};
 #endif
 
 uint32_t wTransfTimestamp;                  // Needs to be global
@@ -169,7 +168,7 @@ void ISO_vSendGetHardware (void)
 void ISO_vSendWorkingSetMaintenance (bool bInitiatingWS)
 {
 
-	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY_MEDIUM_SYSTEM_STATUS);
+	(pISOMsg.frame).id = ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY_HIGH_SYSTEM_STATUS);
 	pISOMsg.DLC = 8;
 
 	// Working set maintenance ISO 11783-6    

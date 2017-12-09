@@ -3,7 +3,7 @@
 #define ISO_DESIGNATOR_WIDTH                 80
 #define ISO_DESIGNATOR_HEIGHT                80
 #define ISO_MASK_SIZE                       480
-#define ISO_VERSION_LABEL             "      1"
+#define ISO_VERSION_LABEL             "      0"
 #define MASK_WIDTH                          480
 #define MASK_HEIGHT                         480
 #define WorkingSet_0                          0

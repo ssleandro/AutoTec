@@ -50,12 +50,6 @@
 #define EXTINT_TIMEPULSE_PORT 4
 #define EXTINT_TIMEPULSE_PIN 0
 
-#define LED_DEBUG_GREEN_PORT 0x0E       // LED1
-#define LED_DEBUG_GREEN_PIN  0x08
-
-#define LED_DEBUG_RED_PORT 0x0E        // LED2
-#define LED_DEBUG_RED_PIN  0x09
-
 /* Tamanho máximo do buffer de transmissão do GPS */
 #define GPS_wTAM_BUF_ANEL     256
 /* máscara relacionada ao buffer em anel dos dados a serem transmitidos para o gps GPS_wTAM_BUF_ANEL-1  */
@@ -420,7 +414,11 @@ uint8_t bGPSRCVThreadArrayPosition = 0;            //!< Thread position in array
 peripheral_descriptor_p pGPSHandle;
 
 gpio_config_s sTimePulseInt;
-gpio_config_s sDebugIO;
+static gpio_config_s sLEDBlue;
+static gpio_config_s sLEDRed;
+gpio_config_s sDebug;
+gpio_config_s sDebugMaintenance;
+uint16_t wDebugLEDFreq = 8;
 
 /*******************************************************************************
  Variáveis públicas deste módulo:
@@ -876,6 +874,42 @@ void GPS_vConfigExtInterrupt (void)
 
 }
 
+void GPS_vConfigDebugLED (void)
+{
+	sLEDBlue.vpPrivateData = NULL;
+	sLEDBlue.bDefaultOutputHigh = false;
+	sLEDBlue.eDirection = GPIO_OUTPUT;
+	sLEDBlue.ePull = GPIO_PULL_INACT;
+	sLEDBlue.bMPort = LED_DEBUG_GREEN_PORT;
+	sLEDBlue.bMPin = LED_DEBUG_GREEN_PIN;
+
+	sLEDRed.vpPrivateData = NULL;
+	sLEDRed.bDefaultOutputHigh = false;
+	sLEDRed.eDirection = GPIO_OUTPUT;
+	sLEDRed.ePull = GPIO_PULL_INACT;
+	sLEDRed.bMPort = LED_DEBUG_RED_PORT;
+	sLEDRed.bMPin = LED_DEBUG_RED_PIN;
+
+	sDebug.vpPrivateData = NULL;
+	sDebug.bDefaultOutputHigh = false;
+	sDebug.eDirection = GPIO_OUTPUT;
+	sDebug.ePull = GPIO_PULL_INACT;
+	sDebug.bMPort = 0x0F;
+	sDebug.bMPin = 11;
+
+	sDebugMaintenance.vpPrivateData = NULL;
+	sDebugMaintenance.bDefaultOutputHigh = false;
+	sDebugMaintenance.eDirection = GPIO_OUTPUT;
+	sDebugMaintenance.ePull = GPIO_PULL_INACT;
+	sDebugMaintenance.bMPort = 0x0F;
+	sDebugMaintenance.bMPin = 10;
+
+	GPIO_eInit(&sLEDBlue);
+	GPIO_eInit(&sLEDRed);
+//	GPIO_eInit(&sDebug);
+//	GPIO_eInit(&sDebugMaintenance);
+}
+
 /*******************************************************************************
 
  void GPS_vTrfTrataTimePulse( void *p_arg )
@@ -888,6 +922,7 @@ void GPS_vConfigExtInterrupt (void)
 void GPS_vGPSTimePulseThread (void const *argument)
 {
 	osFlags dFlags;
+	uint8_t bDebugLED = 0;
 	uint8_t bContaSegundo = 0;
 	uint8_t bConta2S5 = 0;
 
@@ -903,6 +938,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
 
 	// Configure external interrupt 2 - Module GPS TIMEPULSE
 	GPS_vConfigExtInterrupt();
+//	GPS_vConfigDebugLED();
 
 	//Loop infinito da tarefa:
 	while (1)
@@ -919,17 +955,23 @@ void GPS_vGPSTimePulseThread (void const *argument)
 			{
 				bContaSegundo++;
 				bConta2S5++;
+				bDebugLED++;
 
 				if (bContaSegundo > 7)
 				{
 					bContaSegundo = 0;
-
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
+					GPIO_vToggle(&sLEDRed);
 				}
 				if (bConta2S5 > 20)
 				{
 					bConta2S5 = 0;
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
+				}
+				if (bDebugLED > wDebugLEDFreq)
+				{
+					bDebugLED = 0;
+					GPIO_vToggle(&sLEDBlue);
 				}
 			}
 			//Acumula a distância percorrida.

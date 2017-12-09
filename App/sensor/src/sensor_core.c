@@ -456,10 +456,10 @@ eAPPError_s SEN_vInitDeviceLayer (uint32_t wSelectedInterface)
 	GPIO_eInit(&sEnablePS9);
 
 	DISABLE_PS9;
+
 	// Enable power source 9V3
 	ENABLE_PS9;
 
-	ENABLE_PS9;
 	/*Prepare the device */
 	pSENSORHandle = DEV_open(PERIPHERAL_M2GSENSORCOMM);
 	ASSERT(pSENSORHandle != NULL);
@@ -829,9 +829,9 @@ void SEN_vSensorRecvThread (void const *argument)
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(SENRCV, WDT_SLEEP);
 		osDelayUntil(&dSENRecvTicks, 25);
-		osEnterCritical();
+//		osEnterCritical();
 		bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
-		osExitCritical();
+//		osExitCritical();
 		WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 
 		if (bRecvMessages)
@@ -918,7 +918,7 @@ void SEN_vSensorWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
-			osEnterCritical();
+//			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_CHANGE_SEND_ID, (void*)&(sRecv.id));
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
@@ -928,7 +928,7 @@ void SEN_vSensorWriteThread (void const *argument)
 				DEV_write(pSENSORHandle, &(sRecv.data[0]), sRecv.dlc);
 				WATCHDOG_STATE(SENWRT, WDT_ACTIVE);
 			}
-			osExitCritical();
+//			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);

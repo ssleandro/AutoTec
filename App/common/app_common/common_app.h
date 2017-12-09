@@ -187,7 +187,6 @@
   MESSAGE(name).eMessageType = Type; \
 }
 
-
 // Converter Macros
 #define MM2IN(value) 	roundf((value) * 0.393701f)
 #define IN2MM(value) 	(uint16_t)roundf((value * 2.541f))
@@ -202,6 +201,12 @@
 
 #define SDM2SP(value) 	roundf((value) / 3.28084f)
 #define SP2SDM(value) 	(uint16_t)roundf((value * 3.28084f))
+
+#define LED_DEBUG_GREEN_PORT 0x0E       // LED1
+#define LED_DEBUG_GREEN_PIN  0x08
+
+#define LED_DEBUG_RED_PORT 0x0E        // LED2
+#define LED_DEBUG_RED_PIN  0x09
 
 /******************************************************************************
  * Typedefs

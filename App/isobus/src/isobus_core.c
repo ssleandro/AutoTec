@@ -160,6 +160,8 @@ static sTransportProtocolControl sTPControlStruct;
 static sObjectPoolControl sOPControlStruct;
 static sAddressClaimControl sACCControlStruct;
 
+extern uint16_t wDebugLEDFreq;
+
 #ifndef UNITY_TEST
 DECLARE_QUEUE(IsobusQueue, QUEUE_SIZEOFISOBUS);     //!< Declaration of Interface Queue
 CREATE_SIGNATURE(Isobus);//!< Signature Declarations
@@ -1079,6 +1081,8 @@ void ISO_vIsobusRecvThread(void const *argument)
 {}
 #endif
 
+extern gpio_config_s sDebugMaintenance;
+
 /******************************************************************************
  * Function : ISO_vIsobusWriteThread(void const *argument)
  *//**
@@ -1136,6 +1140,12 @@ void ISO_vIsobusWriteThread (void const *argument)
 //			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
 			ASSERT(eError == APP_ERROR_SUCCESS);
+
+			if ((recv.frame.id == ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY_HIGH_SYSTEM_STATUS))
+				&& (recv.B1 == FUNC_WS_MAINTENANCE))
+			{
+//				GPIO_vToggle(&sDebugMaintenance);
+			}
 
 			if (eError == APP_ERROR_SUCCESS)
 			{
@@ -2647,6 +2657,7 @@ void ISO_vHandleReceivedMessages (ISOBUSMsg* sRcvMsg)
 						bReloadState = true;
 						eBackupCurrMask = eCurrentMask;
 						ISO_vHandleObjectPoolState(NULL);
+						wDebugLEDFreq = 2;
 					}
 				}
 			}
@@ -3239,11 +3250,14 @@ void ISO_vUpdateAlarmStatus (uint8_t bNumLine, eLineAlarm eAlarmStatus)
 	ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_RECTANGLE_LINE_ATTRIBUTE, wRectID);
 }
 
+extern gpio_config_s sDebug;
 
 void ISO_vUpdatePlanterDataMask (void)
 {
 	osStatus status;
 	static bool bUpdateLinesInfo;
+
+//	GPIO_vToggle(&sDebug);
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = WAIT_MUTEX(ISO_UpdateMask, osWaitForever);
@@ -3361,6 +3375,8 @@ void ISO_vUpdatePlanterDataMask (void)
 	status = RELEASE_MUTEX(ISO_UpdateMask);
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
+
+//	GPIO_vToggle(&sDebug);
 }
 
 void ISO_vUpdateTestModeDataMask (event_e eEvt)
