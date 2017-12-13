@@ -121,7 +121,7 @@ eDEVError_s IDN_open (void)
 	return eError;
 }
 
-uint8_t IDN_OneWire_VerifyCRC(void)
+uint8_t __attribute__((optimize("O0"))) IDN_OneWire_VerifyCRC(void)
 {
 	uint8_t bI, bAux, bCRCCalc = 0;
 
@@ -136,7 +136,7 @@ uint8_t IDN_OneWire_VerifyCRC(void)
 	return bCRCCalc;
 }
 
-void IDN_OneWire_ReadByte(uint8_t* pbData)
+void __attribute__((optimize("O0"))) IDN_OneWire_ReadByte(uint8_t* pbData)
 {
 	*pbData = 0;
 
@@ -181,7 +181,7 @@ void IDN_OneWire_ReadByte(uint8_t* pbData)
 #endif
 }
 
-void IDN_OneWire_WriteByte(uint8_t bData)
+void __attribute__((optimize("O0"))) IDN_OneWire_WriteByte(uint8_t bData)
 {
 #if defined (AUTEQ_VERSION)
 	for (uint8_t bI = 0; bI < DS2411R_ID_BYTES_NUMBER; bI++) {
@@ -226,7 +226,7 @@ void IDN_OneWire_WriteByte(uint8_t bData)
 #endif
 }
 
-bool IDN_OneWire_Reset(void)
+bool __attribute__((optimize("O0"))) IDN_OneWire_Reset(void)
 {
 	bool bPresencePulse = false;
 
@@ -261,7 +261,7 @@ bool IDN_OneWire_Reset(void)
 	return bPresencePulse;
 }
 
-uint32_t IDN_OneWire_Read_ID_Number(void)
+uint32_t __attribute__((optimize("O0"))) IDN_OneWire_Read_ID_Number(void)
 {
 	uint8_t bReadBytes = 0;
 

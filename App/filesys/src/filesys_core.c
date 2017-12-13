@@ -527,15 +527,7 @@ void FSM_vFileSysThread (void const *argument)
 	error = FFS_vLoadStaticReg();
 	ASSERT(error == APP_ERROR_SUCCESS);
 	osSignalSet(xPbulishThreadID, FFS_FLAG_STATIC_REG);
-	//osEnterCritical();
-/* 	for (gi=0; gi< 100; gi++)
-	{
-		//FFS_vSaveConfigFile();
-		 FFS_vSaveStaticReg();
-	}
-	//osExitCritical();
-	FFS_sGetFSInfo(&tsFSInfo);
-*/
+
 	/* Start the main functions of the application */
 	while (1)
 	{

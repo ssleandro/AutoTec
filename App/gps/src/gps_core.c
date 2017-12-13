@@ -961,7 +961,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
 				{
 					bContaSegundo = 0;
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
-					GPIO_vToggle(&sLEDRed);
+					//GPIO_vToggle(&sLEDRed);
 				}
 				if (bConta2S5 > 20)
 				{
@@ -971,7 +971,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
 				if (bDebugLED > wDebugLEDFreq)
 				{
 					bDebugLED = 0;
-					GPIO_vToggle(&sLEDBlue);
+					//GPIO_vToggle(&sLEDBlue);
 				}
 			}
 			//Acumula a distância percorrida.
@@ -2883,7 +2883,7 @@ void GPS_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_SEN_SYNC_READ_SENSORS)
 			{
 				osFlagSet(GPS_sFlagGPS, GPS_FLAG_METRO);
-				SEGGER_SYSVIEW_Print("Received EVENT_SEN_SYNC_READ_SENSORS event");
+//				SEGGER_SYSVIEW_Print("Received EVENT_SEN_SYNC_READ_SENSORS event");
 			}
 			break;
 		}

@@ -822,7 +822,6 @@ void ISO_vIdentifyEvent (contract_s* contract)
 				}
 				case EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER:
 				{
-					ISO_vUpdateSensorsIDNumber();
 					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
 					break;
 				}
@@ -831,7 +830,6 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					sM2GVersion* psM2GVer = pvPayData;
 					sISOM2GVersions = *psM2GVer;
 					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
-					ISO_vUpdateM2GVersion();
 					break;
 				}
 				case EVENT_GUI_UPDATE_FILE_INFO:
@@ -839,7 +837,6 @@ void ISO_vIdentifyEvent (contract_s* contract)
 					FFS_sFSInfo* psFSInfo = pvPayData;
 					sISOM2GFSInfo = *psFSInfo;
 					ISO_vISOThreadPutEventOnISOUpdateQ(eEvt);
-					ISO_vUpdateFileSystemInfo(psFSInfo);
 					break;
 				}
 				default:
@@ -2564,7 +2561,7 @@ void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 				}
 				else if (eCurrentMask == DATA_MASK_PLANTER)
 				{
-					ISO_vUpdatePlanterDataMask();
+//					ISO_vUpdatePlanterDataMask();
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_CONFIG_TO_PLANTER);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);

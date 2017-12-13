@@ -166,7 +166,7 @@ void vApplicationIdleHook (void)
  *******************************************************************************/
 
 int main (void)
-{
+ {
 	MCU_vSysInit();
 	MCU_vFFSInit();
 

@@ -398,7 +398,7 @@ void SEN_vSensorPublishThread (void const *argument)
 		{
 			dTxFlag = 0;
 			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_SYNC_READ_SENSORS, EVENT_SET, NULL);
-			SEGGER_SYSVIEW_Print("Published EVENT_SEN_SYNC_READ_SENSORS event");
+//			SEGGER_SYSVIEW_Print("Published EVENT_SEN_SYNC_READ_SENSORS event");
 		}
 		if (dTxFlag != 0)
 		{

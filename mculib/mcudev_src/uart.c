@@ -487,6 +487,7 @@ void UART_vReconfSettings (uart_config_s *pUART)
 {
 	uint32_t dConfig = 0;
 	uint32_t dBaud = 0;
+	volatile uint32_t dIE = 0;
 
 	/* Set stopbits configurations */
 	dConfig |= pvt_StopBits(pUART);
@@ -497,6 +498,8 @@ void UART_vReconfSettings (uart_config_s *pUART)
 	/* Set parity */
 	dConfig |= pvt_Parity(pUART);
 
+	dIE = Chip_UART_GetIntsEnabled(UART_MAP_REGISTER(pUART->eChannel));
+	Chip_UART_IntDisable(UART_MAP_REGISTER(pUART->eChannel), 0xFF);
 	/* Enable configurations */
 	Chip_UART_ConfigData(UART_MAP_REGISTER(pUART->eChannel), dConfig);
 
@@ -509,6 +512,7 @@ void UART_vReconfSettings (uart_config_s *pUART)
 	//Chip_UART_SetBaud(UART_MAP_REGISTER(pUART->eChannel), pUART->eBaudrate);
 
 	pUART->eBaudrate = dBaud;
+	Chip_UART_IntEnable(UART_MAP_REGISTER(pUART->eChannel), dIE);
 
 }
 

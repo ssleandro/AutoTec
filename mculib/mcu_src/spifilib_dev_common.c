@@ -147,7 +147,7 @@ static void spifiPrvDevGetID (uint32_t spifiAddr, SPIFI_DEVICE_ID_T *pID)
 			SPIFI_CMD_DATALEN(3 + pID->extCount) |
 			SPIFI_CMD_FIELDFORM(SPIFI_FIELDFORM_ALL_SERIAL) |
 			SPIFI_CMD_FRAMEFORM(SPIFI_FRAMEFORM_OP)));
-
+//	BRD_vWait_ms(3);
 	/* Get info from the device */
 	pID->mfgId[0] = spifi_HW_GetData8(pSpifiCtrlAddr); /* Manufacturers ID */
 	pID->mfgId[1] = spifi_HW_GetData8(pSpifiCtrlAddr); /* Memory Type */
@@ -158,7 +158,7 @@ static void spifiPrvDevGetID (uint32_t spifiAddr, SPIFI_DEVICE_ID_T *pID)
 	{
 		pID->extId[idx] = spifi_HW_GetData8(pSpifiCtrlAddr);
 	}
-
+//	BRD_vWait_ms(3);
 	spifi_HW_WaitCMD(pSpifiCtrlAddr);
 }
 

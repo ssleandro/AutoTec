@@ -435,7 +435,7 @@ eAPPError_s CTL_eGetSwHwVersion (void)
 
 			DEV_close(pIDHandle);
 		}
-	} while((dRecvBytes != 0) && (bRetry++ < 5));
+	} while((dRecvBytes == 0) && (bRetry++ < 5));
 
 	osFlagSet(CTL_sFlagSis, CTL_SW_HW_VERSION);
 
