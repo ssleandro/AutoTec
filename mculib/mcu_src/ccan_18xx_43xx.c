@@ -311,12 +311,7 @@ void Chip_CCAN_Send (LPC_CCAN_T *pCCAN, CCAN_MSG_IF_T IFSel, bool remoteFrame, C
 	uint8_t msgNum = getFreeMsgObject(pCCAN);
 	if (!msgNum)
 	{
-		for( int i=1; i<=CCAN_MSG_MAX_NUM;i++)
-		{
-			freeMsgObject(pCCAN, IFSel, i);
-		}
-		msgNum = getFreeMsgObject(pCCAN);
-		//return;
+		return;
 	}
 	Chip_CCAN_SetMsgObject(pCCAN, IFSel, CCAN_TX_DIR, remoteFrame, msgNum, pMsgObj);
 	while (Chip_CCAN_GetTxRQST(pCCAN) >> (msgNum - 1))

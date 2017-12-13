@@ -90,7 +90,7 @@ typedef eDEVError_s (*fpIOCTLFunction) (uint32_t wRequest, void * vpValue); /*!<
 static uint8_t bGPSRecvBuffer[M2GGPSCOMM_BUF_SIZE];         //!< Ring buffer array
 static RINGBUFF_T rbM2GGPSHandle;                           //!< Ring buffer control handle
 
-static uint8_t abGPSUARTBuffer[M2GGPSCOMM_BUF_SIZE];        //!< UART preliminar buffer
+static uint8_t abGPSUARTBuffer[M2GGPSCOMM_RX_FIFO_BUF_SIZE];        //!< UART preliminar buffer
 
 /*!< Device health status */
 static uint8_t bM2GGPSCOMMDevStatus;

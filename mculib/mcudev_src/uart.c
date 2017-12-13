@@ -68,16 +68,6 @@ static uint8_t sUARTIndex[5] = { UART0b, UART1b, UART2b, UART3b, UART4b };  //!<
 #define UART_MAP_REGISTER(x)   sUARTMap[sUARTIndex[x]].pRegister  //!< UART REGISTER map macro
 #define UART_MAP_IRQn(x)       sUARTMap[sUARTIndex[x]].iIRQn    //!< UART IRQ map macro
 
-// Ring buffer receive option
-/* Transmit and receive ring buffers */
-static RINGBUFF_T txring, rxring;
-
-/* Ring buffer size */
-#define UART_RB_SIZE 512
-
-/* Transmit and receive buffers */
-static uint8_t rxbuff[UART_RB_SIZE], txbuff[UART_RB_SIZE];
-
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
@@ -86,7 +76,6 @@ static uint32_t pvt_WordLenght (uart_config_s *pUART);
 static uint32_t pvt_Parity (uart_config_s *pUART);
 static int32_t pvt_ISR_ReadRxBuffer (uart_config_s *pUART);
 static void pvt_ISR_eRxInterrupt (uart_channel_e eListIndex);
-static void pvt_ISR_eRBRxInterrupt (uart_channel_e eListIndex);
 
 extern void UART0_IRQHandler (void);
 extern void UART1_IRQHandler (void);
@@ -311,19 +300,26 @@ static uint32_t pvt_Parity (uart_config_s *pUART)
 static int32_t pvt_ISR_ReadRxBuffer (uart_config_s *pUART)
 {
 	int32_t iCont = 0;
+	uint8_t bRecvByte;
+	volatile uint32_t dLSR = Chip_UART_ReadLineStatus(UART_MAP_REGISTER(pUART->eChannel));
 
-	while (Chip_UART_ReadLineStatus(UART_MAP_REGISTER(pUART->eChannel)) & UART_LSR_RDR)
+	while (dLSR & UART_LSR_RDR)
 	{
-		/* Read RBR n-times to get the data */
-		*(pUART->bInBuffer++) = (uint8_t)(UART_MAP_REGISTER(pUART->eChannel)->RBR & UART_RBR_MASKBIT);
-		iCont++;
+		bRecvByte = (uint8_t)(UART_MAP_REGISTER(pUART->eChannel)->RBR & UART_RBR_MASKBIT);
 
-		/* Check buffer overflow */
-		if (pUART->bInBuffer == NULL)
+		if ((dLSR & UART_LSR_RXFE) == 0)
 		{
-			pUART->eStatus |= UART_BUF_OVERFLOW;
-			break;
+			/* Read RBR n-times to get the data */
+			pUART->bInBuffer[iCont++] = (uint8_t)bRecvByte;
+
+			/* Check buffer overflow */
+			if (iCont >= UART_RX_FIFO_SIZE)
+			{
+				pUART->eStatus |= UART_BUF_OVERFLOW;
+				break;
+			}
 		}
+		dLSR = Chip_UART_ReadLineStatus(UART_MAP_REGISTER(pUART->eChannel));
 	}
 	return iCont;
 }
@@ -366,7 +362,7 @@ static int32_t pvt_ISR_ReadRxBuffer (uart_config_s *pUART)
 static void pvt_ISR_eRxInterrupt (uart_channel_e eListIndex)
 {
 	uint32_t wTemp = 0;
-	int32_t iRxBytes;
+	int32_t iRxBytes = 0;
 
 	uart_config_s *pUART;
 
@@ -388,13 +384,16 @@ static void pvt_ISR_eRxInterrupt (uart_channel_e eListIndex)
 	{
 		wTemp = UART_MAP_REGISTER(pUART->eChannel)->LSR;
 		pUART->eStatus |= UART_ERROR;
-		/* Callback called with -1 as argument TODO: return zero ?*/
-		pUART->fpCallBack(pUART->bInBuffer, -1);
+
+		iRxBytes = pvt_ISR_ReadRxBuffer(pUART);
+
+		if(iRxBytes > 0)
+			pUART->fpCallBack(pUART->bInBuffer, iRxBytes);
+
 		return;
 	}
-
 	/* Check if is an Receive data available or CTI interrupt */
-	if ((wTemp == (uint32_t) UART_IIR_INTID_RDA) || (wTemp == (uint32_t) UART_IIR_INTID_CTI))
+	else if ((wTemp == (uint32_t) UART_IIR_INTID_RDA) || (wTemp == (uint32_t) UART_IIR_INTID_CTI))
 	{
 		/* Read RBR (14 times or until no char received)*/
 		iRxBytes = pvt_ISR_ReadRxBuffer(pUART);
@@ -406,7 +405,7 @@ static void pvt_ISR_eRxInterrupt (uart_channel_e eListIndex)
 	}
 
 	/* Checks the end of transfer */
-	if (pUART->iRxTferSize <= 0)
+	if ((pUART->iRxTferSize <= 0) && (iRxBytes > 0))
 	{
 
 		/* Fixed RX IT mode issues */
@@ -423,37 +422,9 @@ static void pvt_ISR_eRxInterrupt (uart_channel_e eListIndex)
 			 * */
 		}
 
-		/* Adjust the buffer pointer to the begining of stream */
-		pUART->bInBuffer -= iRxBytes;
 		/* Call the user callback */
 		pUART->fpCallBack(pUART->bInBuffer, iRxBytes);
 	}
-
-	return;
-}
-
-static void pvt_ISR_eRBRxInterrupt (uart_channel_e eListIndex)
-{
-	uint16_t wRecvBytes = 0;
-	uart_config_s *pUART;
-
-	/* Get the UART handler */
-	if (psUARTList[eListIndex] == NULL)
-	{
-		return;
-	}
-	else
-	{
-		pUART = psUARTList[eListIndex];
-	}
-
-	Chip_UART_RXIntHandlerRB(UART_MAP_REGISTER(pUART->eChannel), &rxring);
-
-	wRecvBytes = RingBuffer_GetCount(&rxring);
-
-	Chip_UART_ReadRB(UART_MAP_REGISTER(pUART->eChannel), &rxring, &pUART->bInBuffer[0], wRecvBytes);
-
-	pUART->fpCallBack(pUART->bInBuffer, wRecvBytes);
 
 	return;
 }
@@ -516,6 +487,7 @@ void UART_vReconfSettings (uart_config_s *pUART)
 {
 	uint32_t dConfig = 0;
 	uint32_t dBaud = 0;
+	volatile uint32_t dIE = 0;
 
 	/* Set stopbits configurations */
 	dConfig |= pvt_StopBits(pUART);
@@ -526,6 +498,8 @@ void UART_vReconfSettings (uart_config_s *pUART)
 	/* Set parity */
 	dConfig |= pvt_Parity(pUART);
 
+	dIE = Chip_UART_GetIntsEnabled(UART_MAP_REGISTER(pUART->eChannel));
+	Chip_UART_IntDisable(UART_MAP_REGISTER(pUART->eChannel), 0xFF);
 	/* Enable configurations */
 	Chip_UART_ConfigData(UART_MAP_REGISTER(pUART->eChannel), dConfig);
 
@@ -538,6 +512,7 @@ void UART_vReconfSettings (uart_config_s *pUART)
 	//Chip_UART_SetBaud(UART_MAP_REGISTER(pUART->eChannel), pUART->eBaudrate);
 
 	pUART->eBaudrate = dBaud;
+	Chip_UART_IntEnable(UART_MAP_REGISTER(pUART->eChannel), dIE);
 
 }
 
@@ -660,11 +635,6 @@ eMCUError_s UART_eRecvData_IT (uart_config_s *pUART, int32_t iIRQPrio, int32_t i
 	/* UART_FCR_TRG_LEV3 (3 << 6) UART FIFO trigger level 3: 14 character */
 	Chip_UART_SetupFIFOS(UART_MAP_REGISTER(pUART->eChannel),
 		(UART_FCR_FIFO_EN | UART_FCR_RX_RS | UART_FCR_TX_RS | UART_FCR_TRG_LEV3));
-
-	/* Before using the ring buffers, initialize them using the ring
-	 buffer init function */
-	RingBuffer_Init(&rxring, rxbuff, 1, UART_RB_SIZE);
-	RingBuffer_Init(&txring, txbuff, 1, UART_RB_SIZE);
 
 	/* Sets the IER register to interrupt when:
 	 *  bit 0 - RBR Interrupt Enable
@@ -818,7 +788,7 @@ void UART2_IRQHandler (void)
 #ifdef USE_SYSVIEW
 	SEGGER_SYSVIEW_RecordEnterISR();
 #endif
-	pvt_ISR_eRBRxInterrupt(UART2);
+	pvt_ISR_eRxInterrupt(UART2);
 #ifdef USE_SYSVIEW
 	SEGGER_SYSVIEW_RecordExitISR();
 #endif

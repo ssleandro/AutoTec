@@ -44,7 +44,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of CONTROL queue
-#define QUEUE_SIZEOFGUI 16
+#define QUEUE_SIZEOFGUI 128
 
 #define THIS_MODULE MODULE_GUI
 
@@ -60,7 +60,7 @@ CREATE_SIGNATURE(GuiGPS);
 CREATE_CONTRACT(Gui);                              //!< Create contract for sensor msg publication
 CREATE_CONTRACT(GuiPubAquireg);
 
-CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 64);
+CREATE_LOCAL_QUEUE(GuiPublishQ, event_e, 128);
 CREATE_MUTEX(GUI_UpdateMask);
 
 eIsobusMask eCurrMask = DATA_MASK_INSTALLATION;
@@ -94,6 +94,7 @@ static tsPubSensorReplacement sPubReplacState;
 static canStatusStruct_s sGUISensorCANStatus;
 
 static sM2GVersion GUI_sM2GIDs;
+static FFS_sFSInfo sGUIFSInfo;
 
 // Keeps the alarm line status
 static uint64_t dBitsTolerance = 0;
@@ -301,6 +302,9 @@ void GUI_vGuiPublishThread (void const *argument)
 	event_e ePubEvt;
 
 	INITIALIZE_LOCAL_QUEUE(GuiPublishQ);           //!< Initialize message queue to publish thread
+#ifndef NDEBUG
+	REGISTRY_QUEUE(GuiPublishQ, Gui Publish);
+#endif
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Gui Publish Thread Created");
@@ -392,11 +396,6 @@ void GUI_vGuiPublishThread (void const *argument)
 				case EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE:
 				{
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, &sGUISensorCANStatus);
-					break;
-				}
-				case EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE:
-				{
-					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_UPDATE, NULL);
 					break;
 				}
 				case EVENT_GUI_INSTALLATION_REPEAT_TEST:	//No break
@@ -561,6 +560,11 @@ void GUI_vGuiPublishThread (void const *argument)
 					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &GUI_sM2GIDs);
 					break;
 				}
+				case EVENT_GUI_UPDATE_FILE_INFO:
+				{
+					PUBLISH_MESSAGE(Gui, ePubEvt, EVENT_SET, &sGUIFSInfo);
+					break;
+				}
 				default:
 					break;
 			}
@@ -685,7 +689,7 @@ void GUI_SetSisConfiguration(void)
 	}
 	else
 	{
-		sSISConfiguration.sMonitor.wAvalia = DM2FT(GUIConfigurationData.wEvaluationDistance);
+		sSISConfiguration.sMonitor.wAvalia = FT2DM(GUIConfigurationData.wEvaluationDistance);
 		sSISConfiguration.sMonitor.fLimVel = MLH2KMH(GUIConfigurationData.fMaxSpeed);
 		sSISConfiguration.sMonitor.wSementesPorMetro = SP2SDM(GUIConfigurationData.wSeedRate);
 		sSISConfiguration.sMonitor.wLargImpl = IN2MM(GUIConfigurationData.wImplementWidth);
@@ -931,11 +935,17 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				{
 					osFlagSet(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					osFlagClear(UOS_sFlagSis, UOS_SIS_FLAG_CONFIRMA_INST);
-					GUI_vUptPlanter();
+//					GUI_vUptPlanter();
 				} else if (eCurrMask == DATA_MASK_INSTALLATION)
 				{
 					osFlagClear(UOS_sFlagSis, (UOS_SIS_FLAG_MODO_TRABALHO | UOS_SIS_FLAG_MODO_TESTE));
 					ePubEvt = EVENT_GUI_INSTALLATION_REPEAT_TEST;
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+				} else if (eCurrMask == DATA_MASK_SYSTEM)
+				{
+					ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+					ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
 					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 				}
 
@@ -1160,9 +1170,12 @@ void GUI_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_CTL_UPDATE_FILE_INFO)
 			{
 				FFS_sFSInfo *psFSInfo = pvPayload;
+
 				if (psFSInfo != NULL)
 				{
-					// Trata informações da info
+					sGUIFSInfo = *psFSInfo;
+					ePubEvt = EVENT_GUI_UPDATE_FILE_INFO;
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 				}
 			}
 			if (ePubEvt == EVENT_CTL_FILE_FORMAT_DONE)
@@ -1178,6 +1191,7 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				UOS_tsVersaoCod* pbSerialNumber = pvPayload;
 				GUI_vFwVersionToString(&GUI_sM2GIDs.abFwVersion[0], pbSerialNumber->wVer, pbSerialNumber->wRev, pbSerialNumber->wBuild);
 				GUI_vBufferToStringHex(&GUI_sM2GIDs.abHwIDNumber[0], pbSerialNumber->abNumSerie, M2G_SERIAL_NUMBER_N_BYTES);
+				osDelay(30);
 				ePubEvt = EVENT_GUI_SYSTEM_SW_HW_VERSION;
 				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
 			}
@@ -1302,8 +1316,11 @@ void GUI_vIdentifyEvent (contract_s* contract)
 				canStatusStruct_s *psSensorCANStatus = pvPayload;
 				memcpy(&sGUISensorCANStatus, psSensorCANStatus, sizeof(canStatusStruct_s));
 
-				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
-				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+				if (eCurrMask == DATA_MASK_SYSTEM)
+				{
+					ePubEvt = EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE;
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+				}
 			}
 			break;
 		}
@@ -1311,17 +1328,21 @@ void GUI_vIdentifyEvent (contract_s* contract)
 		{
 			if (ePubEvt == EVENT_GPS_UPDATE_GPS_STATUS)
 			{
-//				GPS_sStatus *psGPSStats = pvPayload;
-//				GUI_sGPSStats = *psGPSStats;
-//				//Convert Velocidade
-//				float fModVel = GUI_sGPSStats.dModVel;
-//				fModVel *= 36.0f;
-//				float fVel = (float)GUI_fConvertUnit(fModVel,
-//																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
-//
-//				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
-//				ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
-//				GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+				GPS_sStatus *psGPSStats = pvPayload;
+				GUI_sGPSStats = *psGPSStats;
+				//Convert Velocidade
+				float fModVel = GUI_sGPSStats.dModVel;
+				fModVel *= 36.0f;
+				float fVel = (float)GUI_fConvertUnit(fModVel,
+																	GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
+
+				GUI_sGPSStats.dModVel = (uint32_t)roundf(fVel * 10);
+
+				if (eCurrMask == DATA_MASK_SYSTEM)
+				{
+					ePubEvt = EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE;
+					GUI_vGuiThreadPutEventOnGuiPublishQ(ePubEvt);
+				}
 			}
 			break;
 		}
@@ -1362,8 +1383,11 @@ void GUI_vGuiThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(GuiQueue);
-
 	INITIALIZE_MUTEX(GUI_UpdateMask);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(GuiQueue, GUI_vGuiThread);
+	REGISTRY_QUEUE(GUI_UpdateMask, GUI_UpdateMask);
+#endif
 
 	status = osFlagGroupCreate(&GUI_sFlags);
 	ASSERT(status == osOK);

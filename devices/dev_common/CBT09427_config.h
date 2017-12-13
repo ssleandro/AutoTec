@@ -51,7 +51,7 @@
 #define CBT_MAXIMUM_FREQUENCY 20000
 
 #define CBT_BUZZER_CHANNEL  PWM_CHANNEL1
-#define CBT_BUZZER_DUTY     90
+#define CBT_BUZZER_DUTY     0
 #define CBT_BUZZER_FREQ     440
 
 /******************************************************************************

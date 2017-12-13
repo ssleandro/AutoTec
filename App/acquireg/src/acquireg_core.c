@@ -43,7 +43,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFBUZZER (5)
+#define QUEUE_SIZEOFACQUIREG (32)
 #define THIS_MODULE MODULE_ACQUIREG
 
 /*!<< From MPA2500  */
@@ -53,8 +53,8 @@
 
 #define AQR_DISTANCIA_LIMPA_FALHA  10
 
-#define AQR_dTAMANHO_HEADER  ( uint32_t )( sizeof( UOS_sVersaoCod        ) + \
-        sizeof( UOS_sConfiguracao     )     )
+#define AQR_dTAMANHO_HEADER  ( uint32_t )( sizeof( UOS_sVersaoCod ) + \
+        sizeof( UOS_sConfiguracao ) )
 
 /******************************************************************************
  * Variables from others modules
@@ -67,7 +67,6 @@ osFlagsGroupId xSEN_sFlagApl;
 extern GPS_tsDadosGPS GPS_sDadosGPS;
 
 extern osMutexId GPS_MTX_sEntradas;
-extern uint8_t GPS_bDistanciaPercorrida;
 uint8_t AQR_bDistanciaPercorrida;
 EXTERN_TIMER(GPS_bTimerMtr);
 
@@ -154,7 +153,7 @@ tsPubSensorReplacement AQR_sPubTrocaSensor;
  * Module Variable Definitions
  *******************************************************************************/
 //static eAPPError_s eError; //!< Error variable
-DECLARE_QUEUE(AcquiregQueue, QUEUE_SIZEOFBUZZER);   //!< Declaration of Interface Queue
+DECLARE_QUEUE(AcquiregQueue, QUEUE_SIZEOFACQUIREG);   //!< Declaration of Interface Queue
 CREATE_SIGNATURE(AcquiregControl);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregSensor);//!< Signature Declarations
 CREATE_SIGNATURE(AcquiregGPS);//!< Signature Declarations
@@ -1642,6 +1641,9 @@ void AQR_vAcquiregThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(AcquiregQueue);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(AcquiregQueue, AQR_vAcquiregThread);
+#endif
 
 	// Internal flags
 	status = osFlagGroupCreate(&xSEN_sFlagApl);
@@ -2200,6 +2202,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	INITIALIZE_MUTEX(AQR_MTX_sEntradas);
 	INITIALIZE_MUTEX(AQR_MTX_sBufferListaSensores);
 	INITIALIZE_MUTEX(AQR_MTX_sBufferAcumulado);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(AQR_MTX_sEntradas, AQR_MTX_sEntradas);
+	REGISTRY_QUEUE(AQR_MTX_sBufferListaSensores, AQR_MTX_sBufferListaSensores);
+	REGISTRY_QUEUE(AQR_MTX_sBufferAcumulado, AQR_MTX_sBufferAcumulado);
+#endif
 
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bAQRMGTThreadArrayPosition)); //Task created, inform core
@@ -2208,9 +2215,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
-
-	// TODO: extern variable
-	//    UOS_sVersaoCod.wFlag = 0xFFFF;
 
 	// TODO: Copia para variável auxiliar a opção de configuração que ativa gravação de registros
 	AQR_bSalvaRegistro = UOS_sConfiguracao.sGPS.bSalvaRegistro;
@@ -3491,6 +3495,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 				psStatus->bVelZero = false;
 
 				//Ajusta o timer com timeout de 10 segundo
+				STOP_TIMER(AQR_bTimerImpStopped);
 				status = START_TIMER(AQR_bTimerImpStopped, AQR_TIMEOUT_10SEGS);
 				ASSERT(status == osOK);
 
@@ -3559,6 +3564,7 @@ void AQR_vAcquiregManagementThread (void const *argument)
 			if ((dValorFlagREG & AQR_FLAG_RESET_DESLIGA) > 0)
 			{
 				//Ajusta o timer com timeout de 30 Min.
+				STOP_TIMER(AQR_bTimerTurnOff);
 				status = START_TIMER(AQR_bTimerTurnOff, AQR_TIMEOUT_30MIN);
 				ASSERT(status == osOK);
 			}
@@ -3600,6 +3606,12 @@ void AQR_vAcquiregManagementThread (void const *argument)
 		}
 		else //Senão...
 		{
+			/*if (psStatus->bTrabalhando == true)
+			{
+							AQR_SetStaticRegData();
+							AQR_vPubAcumulaArea();
+							osFlagSet(xAQR_sFlagSis, AQR_APL_FLAG_SAVE_STATIC_REG);
+			}*/
 			//Não está trabalhando
 			psStatus->bTrabalhando = false;
 		}
@@ -3907,9 +3919,11 @@ void AQR_vAcquiregManagementThread (void const *argument)
 					}
 
 					//----------------------------------------------------------------------------
+#if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 					uint8_t bOutBuffer[30];
 					sprintf(bOutBuffer, "GPS: %d ; AQR: %d", GPS_bDistanciaPercorrida, AQR_bDistanciaPercorrida);
 					SEGGER_SYSVIEW_Print(bOutBuffer);
+#endif
 
 					//Arredonda Distância para Avaliação
 					//Arredonda variável de avaliação para um número inteiro.

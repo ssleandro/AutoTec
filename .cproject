@@ -94,7 +94,6 @@
 									<listOptionValue builtIn="false" value="USE_SYSVIEW"/>
 									<listOptionValue builtIn="false" value="CHIP_LPC43XX"/>
 									<listOptionValue builtIn="false" value="CORE_M4"/>
-									<listOptionValue builtIn="false" value="NDEBUG"/>
 									<listOptionValue builtIn="false" value="M2G_PROTOB"/>
 									<listOptionValue builtIn="false" value="configUSE_SEGGER_SYSTEM_VIEWER_HOOKS=1"/>
 									<listOptionValue builtIn="false" value="__SPF"/>

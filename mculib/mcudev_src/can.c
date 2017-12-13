@@ -48,22 +48,13 @@
 /******************************************************************************
  * Module Preprocessor Constants
  *******************************************************************************/
-
-#define CAN_MAP_IRQ(x) (sCANMap[x ? CAN1b : CAN0b].CANIntIRQ) //!< CAN IRQ map macro
-#define CAN_MAP_REGISTER(x) (sCANMap[x ? CAN1b : CAN0b].pCAN) //!< CAN Register map macro
+#define CAN_MAP_IRQ() (sCANMap[CAN0b].CANIntIRQ) //!< CAN IRQ map macro
+#define CAN_MAP_REGISTER() (sCANMap[CAN0b].pCAN) //!< CAN Register map macro
 
 /******************************************************************************
  * Module Preprocessor Macros
  *******************************************************************************/
-#define CAN_MAX_CHANNELS (CAN_INVALID) //!< Maximum number of CAN channels
-#define CAN_MAX_CLOCK 100000000  //!< Maximum clock supported on CAN
 
-#define CAN_STAT_LEC_MASK  (0x07)    //!< Mask for Last Error Code
-#define CAN_INT_STATUS (0x8000)      //!< CAN Status Macro
-
-#ifndef NULL
-#define NULL (void*)0
-#endif
 /******************************************************************************
  * Module Typedefs
  *******************************************************************************/
@@ -79,16 +70,13 @@
  * Module Variable Definitions
  *******************************************************************************/
 
-static bool CANInitiated[2] = { false, false }; //!< Indicates if a CAN port is initialized
+static bool CANInitiated = false; //!< Indicates if a CAN port is initialized
+static can_config_s * CANCfg = NULL;
 
-static CCAN_MSG_IF_T sCANInterface[2] = { CCAN_MSG_IF1, CCAN_MSG_IF2 }; //!< Indicates which CAN interface to use
-
-static can_config_s * CANlist[CAN_MAX_CHANNELS] = { NULL, NULL };  //!< List of channels initialized
 /******************************************************************************
  * Function Prototypes
  *******************************************************************************/
-extern void CAN0_IRQHandler (void);
-extern void CAN1_IRQHandler (void);
+
 /******************************************************************************
  * Function Definitions
  *******************************************************************************/
@@ -122,22 +110,22 @@ extern void CAN1_IRQHandler (void);
  * <hr>
  *
  *******************************************************************************/
-static void CAN_vTreatInterruptsISR (uint8_t bCANChannel)
+static void CAN_vTreatInterruptsISR ()
 {
 	can_config_s * pCAN = NULL;
 	canMSGStruct_s sCANMessage;
 	eCANStatus_s eCANStat;
 
 	// If CANlist position has a valid structure
-	if (CANlist[bCANChannel] != NULL)
+	if (CANCfg != NULL)
 	{
-		pCAN = CANlist[bCANChannel];
+		pCAN = CANCfg;
 	}
 
 	if (pCAN != NULL)
 	{
 		uint32_t wCANint;
-		while ((wCANint = Chip_CCAN_GetIntID(CAN_MAP_REGISTER(pCAN->eCANPort))) != 0)
+		while ((wCANint = Chip_CCAN_GetIntID(CAN_MAP_REGISTER())) != 0)
 		{
 			memset(sCANMessage.data, 0x00, 8);
 			sCANMessage.dlc = 0;
@@ -145,23 +133,23 @@ static void CAN_vTreatInterruptsISR (uint8_t bCANChannel)
 
 			if (wCANint & CAN_INT_STATUS) //Error or Transmit/Reception OK
 			{
-				eCANStat = Chip_CCAN_GetStatus(CAN_MAP_REGISTER(pCAN->eCANPort));
+				eCANStat = Chip_CCAN_GetStatus(CAN_MAP_REGISTER());
 				pCAN->fpCallback(eCANStat, sCANMessage);
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_BOFF);
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_EPASS);
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_EWARN);
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_TXOK);
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_RXOK);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_BOFF);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_EPASS);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_EWARN);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_TXOK);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_RXOK);
 			}
 			else if ((1 <= CCAN_INT_MSG_NUM(wCANint)) && (CCAN_INT_MSG_NUM(wCANint) <= 0x20))
 			{
-				Chip_CCAN_GetMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], wCANint,
+				Chip_CCAN_GetMsgObject(CAN_MAP_REGISTER(), CCAN_MSG_IF1, wCANint,
 					(CCAN_MSG_OBJ_T*)&sCANMessage);
 
-				eCANStat = Chip_CCAN_GetStatus(CAN_MAP_REGISTER(pCAN->eCANPort));
+				eCANStat = Chip_CCAN_GetStatus(CAN_MAP_REGISTER());
 
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_TXOK);
-				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CAN_STAT_RXOK);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_TXOK);
+				Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CAN_STAT_RXOK);
 				pCAN->fpCallback(eCANStat, sCANMessage);
 			}
 		}
@@ -203,48 +191,7 @@ void CAN0_IRQHandler (void)
 #ifdef USE_SYSVIEW_ISR
 	SEGGER_SYSVIEW_RecordEnterISR();
 #endif
-	CAN_vTreatInterruptsISR(CAN0);
-#ifdef USE_SYSVIEW_ISR
-	SEGGER_SYSVIEW_RecordExitISR();
-#endif
-}
-
-/******************************************************************************
- * Function : CAN1_IRQHandler(void)
- *//**
- * \b Description:
- *
- * This is a IRQ handling function for the CAN0. The result will be sent via Callback.
- * The IRQ  will read the value and send it through the Callback
- *
- * PRE-CONDITION: CAN Channel must be initialized
- *
- * POST-CONDITION: CAN interrupt sample sent via Callback
- *
- * @return     Void
- *
- * \b Example
- ~~~~~~~~~~~~~~~{.c}
- *  //Not available, IRQ is activated via CAN_vAddMessageID
- ~~~~~~~~~~~~~~~
- *
- * @see CAN_bInit, CAN_vDeInit, CAN_vAddMessageID, CAN_vRemoveMessageID, CAN_vSendMessage
- *
- * <br><b> - HISTORY OF CHANGES - </b>
- *
- * <table align="left" style="width:800px">
- * <tr><td> Date       </td><td> Software Version </td><td> Initials </td><td> Description </td></tr>
- * <tr><td> 17/02/2016 </td><td> 1.0.0            </td><td> TP       </td><td> Interface Created </td></tr>
- * </table><br><br>
- * <hr>
- *
- *******************************************************************************/
-void CAN1_IRQHandler (void)
-{
-#ifdef USE_SYSVIEW_ISR
-	SEGGER_SYSVIEW_RecordEnterISR();
-#endif
-	CAN_vTreatInterruptsISR(CAN1);
+	CAN_vTreatInterruptsISR();
 #ifdef USE_SYSVIEW_ISR
 	SEGGER_SYSVIEW_RecordExitISR();
 #endif
@@ -296,7 +243,7 @@ eMCUError_s CAN_eInit (can_config_s *pCAN)
 {
 	//Verify if it is a valid CAN port, if it is not already initiated, if it is a valid bitrate and if
 	//it has a valid message id
-	if ((pCAN->eCANPort < CAN_INVALID) && !CANInitiated[pCAN->eCANPort])
+	if ((pCAN->eCANPort < CAN_INVALID) && !CANInitiated)
 	{
 		eMCUError_s eErrorcode = CAN_eCheckFault(pCAN);
 		if (eErrorcode)
@@ -309,19 +256,19 @@ eMCUError_s CAN_eInit (can_config_s *pCAN)
 			return MCU_ERROR_CAN_INVALID_CLOCK;
 		}
 
-		CANInitiated[pCAN->eCANPort] = true; //Indicate that given CAN is initiated
+		CANInitiated = true; //Indicate that given CAN is initiated
 
 		//CAN interface preparation
-		Chip_CCAN_Init(CAN_MAP_REGISTER(pCAN->eCANPort));
+		Chip_CCAN_Init(CAN_MAP_REGISTER());
 
 		// Chip_CCAN_ConfigTestMode(CAN_MAP_REGISTER(pCAN->eCANPort),CCAN_TEST_TD_DOMINANT);
 
-		if (!Chip_CCAN_SetBitRate(CAN_MAP_REGISTER(pCAN->eCANPort), pCAN->eCANBitrate))
+		if (!Chip_CCAN_SetBitRate(CAN_MAP_REGISTER(), pCAN->eCANBitrate))
 		{
 			return MCU_ERROR_CAN_INVALID_BITRATE;
 		}
 
-		CANlist[pCAN->eCANPort] = pCAN;
+		CANCfg = pCAN;
 
 		return MCU_ERROR_SUCCESS;
 	}
@@ -330,41 +277,25 @@ eMCUError_s CAN_eInit (can_config_s *pCAN)
 
 void CAN_vDeInit (can_config_s *pCAN)
 {
-	NVIC_DisableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
-	Chip_CCAN_DeInit(CAN_MAP_REGISTER(pCAN->eCANPort));
-	CANInitiated[pCAN->eCANPort] = false; //Indicate that given CAN is not initiated
-	CANlist[pCAN->eCANPort] = NULL;
+	NVIC_DisableIRQ(CAN_MAP_IRQ());
+	Chip_CCAN_DeInit(CAN_MAP_REGISTER());
+	CANInitiated = false; //Indicate that given CAN is not initiated
+	CANCfg = NULL;
 }
 
 void CAN_vAddMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID)
 {
-	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
+	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated) //Valid and initiated
 	{
 		//Enable Interrupt
-		Chip_CCAN_EnableInt(CAN_MAP_REGISTER(pCAN->eCANPort), (CCAN_CTRL_IE | CCAN_CTRL_EIE));
-		Chip_CCAN_AddReceiveID(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], hCANmsgID);
+		Chip_CCAN_EnableInt(CAN_MAP_REGISTER(), (CCAN_CTRL_IE | CCAN_CTRL_EIE));
+		Chip_CCAN_AddReceiveID(CAN_MAP_REGISTER(), CCAN_MSG_IF1, hCANmsgID);
 		//Enable Interrupt
-		NVIC_EnableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
+		NVIC_EnableIRQ(CAN_MAP_IRQ());
 		//uint32_t wPrio = NVIC_GetPriority(CAN_MAP_IRQ(pCAN->eCANPort));
 		//NVIC_SetPriority(CAN_MAP_IRQ(pCAN->eCANPort), wPrio);
 
 	}
-}
-
-STATIC uint8_t getFreeMsgObject (LPC_CCAN_T *pCCAN)
-{
-	/* Return 1->32; 0 if not find free msg */
-	uint32_t msg_valid;
-	uint8_t i;
-	msg_valid = Chip_CCAN_GetValidMsg(pCCAN);
-	for (i = 0; i < CCAN_MSG_MAX_NUM; i++)
-	{
-		if (!((msg_valid >> i) & 1UL))
-		{
-			return i + 1;
-		}
-	}
-	return 0;	// No free object
 }
 
 void CCAN_SetMsgObject_ReceiveAll_ID (LPC_CCAN_T *pCCAN,
@@ -429,42 +360,57 @@ void CCAN_SetMsgObject_ReceiveAll_ID (LPC_CCAN_T *pCCAN,
 	Chip_CCAN_TransferMsgObject(pCCAN, IFSel, CCAN_IF_CMDMSK_WR | CCAN_IF_CMDMSK_TRANSFER_ALL, msgNum);
 }
 
+uint8_t CAN_getFreeMsgObject (LPC_CCAN_T *pCCAN)
+{
+	uint32_t msg_valid;
+	uint8_t i;
+	msg_valid = Chip_CCAN_GetValidMsg(pCCAN);
+	for (i = 0; i < CCAN_MSG_MAX_NUM; i++)
+	{
+		if (!((msg_valid >> i) & 1UL))
+		{
+			return i + 1;
+		}
+	}
+	return 0;	// No free object
+}
+
 void CAN_vAddAllMessageID (const can_config_s *pCAN, const uint32_t hCANmsgID)
 {
 	CCAN_MSG_OBJ_T temp;
 	uint8_t msgNum;
 
-	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
+	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated) //Valid and initiated
 	{
 		//Enable Interrupt
-		Chip_CCAN_EnableInt(CAN_MAP_REGISTER(pCAN->eCANPort), (CCAN_CTRL_IE | CCAN_CTRL_EIE));
+		Chip_CCAN_EnableInt(CAN_MAP_REGISTER(), (CCAN_CTRL_IE | CCAN_CTRL_EIE));
 
-		msgNum = getFreeMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort));
+		msgNum = CAN_getFreeMsgObject(CAN_MAP_REGISTER());
 		if (!msgNum)
 		{
 			return;
 		}
 		temp.id = hCANmsgID;
 		// Call CCAN_SetMsgObject_ReceiveAll_ID
-		CCAN_SetMsgObject_ReceiveAll_ID(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], CCAN_RX_DIR,
+		CCAN_SetMsgObject_ReceiveAll_ID(CAN_MAP_REGISTER(), CCAN_MSG_IF1, CCAN_RX_DIR,
 			false, msgNum, &temp);
 
 		//Enable Interrupt
-		NVIC_EnableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
+		NVIC_EnableIRQ(CAN_MAP_IRQ());
 	}
 }
 
 void CAN_vEnableLoopback (can_config_s *pCAN)
 {
-	Chip_CCAN_EnableTestMode(CAN_MAP_REGISTER(pCAN->eCANPort));
-	Chip_CCAN_ConfigTestMode(CAN_MAP_REGISTER(pCAN->eCANPort), CCAN_TEST_LOOPBACK_MODE);
+	Chip_CCAN_EnableTestMode(CAN_MAP_REGISTER());
+	Chip_CCAN_ConfigTestMode(CAN_MAP_REGISTER(), CCAN_TEST_LOOPBACK_MODE);
 }
 
 void CAN_vRemoveMessageID (const can_config_s *pCAN, const uint16_t hCANmsgID)
 {
-	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
+	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated) //Valid and initiated
 	{
-		Chip_CCAN_DeleteReceiveID(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], hCANmsgID);
+		Chip_CCAN_DeleteReceiveID(CAN_MAP_REGISTER(), CCAN_MSG_IF1, hCANmsgID);
 	}
 }
 
@@ -472,32 +418,32 @@ uint32_t CAN_vConfigRemoteMessageObj (const can_config_s *pCAN, const canMSGStru
 {
 	uint32_t obj_idx;
 
-	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
+	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated) //Valid and initiated
 	{
-		obj_idx = getFreeMsgObject(CAN_MAP_REGISTER(pCAN->eCANPort));
+		obj_idx = CAN_getFreeMsgObject(CAN_MAP_REGISTER());
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_MASK |
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDMSK = CCAN_IF_CMDMSK_MASK |
 		CCAN_IF_CMDMSK_ARB |
 		CCAN_IF_CMDMSK_CTRL;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ = obj_idx;
 
-		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+		while ((CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
 			;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_WR |
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDMSK = CCAN_IF_CMDMSK_WR |
 		CCAN_IF_CMDMSK_MASK |
 		CCAN_IF_CMDMSK_ARB |
 		CCAN_IF_CMDMSK_CTRL;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MSK2 &= ~(1U << 14);
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2 &= ~(1U << 13);
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2 |= CCAN_IF_ARB2_MSGVAL;
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL = CCAN_IF_MCTRL_UMSK | CCAN_IF_MCTRL_EOB
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].MSK2 &= ~(1U << 14);
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].ARB2 &= ~(1U << 13);
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].ARB2 |= CCAN_IF_ARB2_MSGVAL;
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].MCTRL = CCAN_IF_MCTRL_UMSK | CCAN_IF_MCTRL_EOB
 			| CCAN_IF_MCTRL_RXIE;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;
-		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ = obj_idx;
+		while ((CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
 			;
 	}
 	return obj_idx;
@@ -511,20 +457,20 @@ void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANM
 
 	uint16_t wCount = 0;
 
-	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
+	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated) //Valid and initiated
 	{
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_ARB |         // Read
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDMSK = CCAN_IF_CMDMSK_ARB |         // Read
 			CCAN_IF_CMDMSK_CTRL |                  // Access arbitration and Access control bits
 			CCAN_IF_CMDMSK_R_NEWDAT;               // Clear NEWDAT bit
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;  // Read from message object
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ = obj_idx;  // Read from message object
 
-		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+		while ((CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
 			;     // Wait for read to finish
 
-		mctrl = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL; // Store current value of MCTRL register
-		arb1 = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB1; // Store current value of ARB1 register
-		arb2 = CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2; // Store current value of ARB2 register
+		mctrl = CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].MCTRL; // Store current value of MCTRL register
+		arb1 = CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].ARB1; // Store current value of ARB1 register
+		arb2 = CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].ARB2; // Store current value of ARB2 register
 
 		// Prepare arb1 and arb2
 		if (CANMessage.id & CAN_ID_IDE_Msk)
@@ -551,49 +497,44 @@ void CAN_vSendRemoteMessage (const can_config_s *pCAN, const canMSGStruct_s CANM
 
 		mctrl = (mctrl & ~0xFU) | CCAN_IF_MCTRL_TXRQ | size;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDMSK = CCAN_IF_CMDMSK_ARB | // Access arbitration
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDMSK = CCAN_IF_CMDMSK_ARB | // Access arbitration
 			CCAN_IF_CMDMSK_CTRL |                  // Access control bits
 			CCAN_IF_CMDMSK_WR;                     // Write
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB1 = arb1;
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].ARB2 = arb2;
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].MCTRL = mctrl;
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].ARB1 = arb1;
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].ARB2 = arb2;
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].MCTRL = mctrl;
 
-		CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ = obj_idx;   // Write to message object
-		while ((CAN_MAP_REGISTER(pCAN->eCANPort)->IF[sCANInterface[pCAN->eCANPort]].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
+		CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ = obj_idx;   // Write to message object
+		while ((CAN_MAP_REGISTER()->IF[CCAN_MSG_IF1].CMDREQ & CCAN_IF_CMDREQ_BUSY) != 0)
 			;     // Wait for write to finish
 
-		while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER(pCAN->eCANPort)) >> (obj_idx - 1) && !(wCount++ > 0xFF))
+		while (Chip_CCAN_GetTxRQST(CAN_MAP_REGISTER()) >> (obj_idx - 1) && !(wCount++ > 0xFF))
 		{    // blocking , wait for sending completed
 		}
 	}
-	Chip_CCAN_SetValidMsg(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], obj_idx, false);
+	Chip_CCAN_SetValidMsg(CAN_MAP_REGISTER(), CCAN_MSG_IF1, obj_idx, false);
 }
 
-inline void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage)
+void CAN_vSendMessage (const can_config_s *pCAN, const canMSGStruct_s CANMessage)
 {
-	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated[pCAN->eCANPort]) //Valid and initiated
+	if ((pCAN->eCANPort < CAN_INVALID) && CANInitiated) //Valid and initiated
 	{
 		if (!(CANMessage.id & CAN_ID_RTR_Msk))
 		{
-			Chip_CCAN_Send(CAN_MAP_REGISTER(pCAN->eCANPort), sCANInterface[pCAN->eCANPort], false,
+			Chip_CCAN_Send(CAN_MAP_REGISTER(), CCAN_MSG_IF1, false,
 				(CCAN_MSG_OBJ_T *)&CANMessage);
 		}
 		else
 		{
 			CAN_vSendRemoteMessage(pCAN, CANMessage);
 		}
-		Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(pCAN->eCANPort), CCAN_STAT_TXOK);
-	}
-//	uint32_t wIntActive = NVIC_GetActive(CAN_MAP_IRQ(pCAN->eCANPort));
-//	if (!wIntActive)
-	{
-//		NVIC_EnableIRQ(CAN_MAP_IRQ(pCAN->eCANPort));
+		Chip_CCAN_ClearStatus(CAN_MAP_REGISTER(), CCAN_STAT_TXOK);
 	}
 }
 
 uint8_t CAN_bGetErrCount(const can_config_s *pCAN, can_transfer_id dir)
 {
-	return Chip_CCAN_GetErrCounter(CAN_MAP_REGISTER(pCAN->eCANPort), dir);
+	return Chip_CCAN_GetErrCounter(CAN_MAP_REGISTER(), dir);
 }
 

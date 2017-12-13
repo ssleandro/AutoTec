@@ -67,7 +67,7 @@ extern "C"
 #ifndef MAX_CLOCK_FREQ
 #if defined(CHIP_LPC43XX)
 //#define MAX_CLOCK_FREQ (204000000)
-#define MAX_CLOCK_FREQ (120000000)
+#define MAX_CLOCK_FREQ (104000000)
 #else
 #define MAX_CLOCK_FREQ (180000000)
 #endif

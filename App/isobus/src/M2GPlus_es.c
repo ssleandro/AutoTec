@@ -297,6 +297,12 @@ const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es[] = {
 		ID(ID_NULL), 1, WORD(7), 'V', 'e', 'r', 's', 'i', 'ó', 'n', 0,
 	ID(OutputString_11211), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
 		ID(ID_NULL), 1, WORD(2), 'I', 'D', 0,
+	ID(OutputString_11322), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
+		ID(ID_NULL), 1, WORD(7), 'N', 'o', 'm', 'b', 'r', 'e', ':', 0,
+	ID(OutputString_11323), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
+		ID(ID_NULL), 1, WORD(6), 'F', 'e', 'c', 'h', 'a', ':', 0,
+	ID(OutputString_11324), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
+		ID(ID_NULL), 1, WORD(7), 'T', 'a', 'm', 'a', 'ñ', 'o', ':', 0,
 }; //isoOP_M2GPlus_es
 
 const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_es_unit_metric[] = {

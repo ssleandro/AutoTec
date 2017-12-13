@@ -43,18 +43,12 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFGPS (5)
+#define QUEUE_SIZEOFGPS (32)
 
 #define THIS_MODULE MODULE_GPS
 
 #define EXTINT_TIMEPULSE_PORT 4
 #define EXTINT_TIMEPULSE_PIN 0
-
-#define LED_DEBUG_GREEN_PORT 0x0E       // LED1
-#define LED_DEBUG_GREEN_PIN  0x08
-
-#define LED_DEBUG_RED_PORT 0x0E        // LED2
-#define LED_DEBUG_RED_PIN  0x09
 
 /* Tamanho máximo do buffer de transmissão do GPS */
 #define GPS_wTAM_BUF_ANEL     256
@@ -417,12 +411,14 @@ uint8_t bGPSMGTThreadArrayPosition = 0;            //!< Thread position in array
 uint8_t bGPSTPSThreadArrayPosition = 0;            //!< Thread position in array
 uint8_t bGPSRCVThreadArrayPosition = 0;            //!< Thread position in array
 
-CREATE_LOCAL_QUEUE(GPSPublishQ, uint8_t*, 10);
-
 peripheral_descriptor_p pGPSHandle;
 
 gpio_config_s sTimePulseInt;
-gpio_config_s sDebugIO;
+static gpio_config_s sLEDBlue;
+static gpio_config_s sLEDRed;
+gpio_config_s sDebug;
+gpio_config_s sDebugMaintenance;
+uint16_t wDebugLEDFreq = 8;
 
 /*******************************************************************************
  Variáveis públicas deste módulo:
@@ -716,8 +712,8 @@ void GPS_vGPSPublishThread (void const *argument)
 #if defined (SYSVIEW_DEBUG_UNLOCK_ACQUIREG)
 			SEGGER_SYSVIEW_Print("Flag GPS status");
 #endif
-//			GUI_vItemStatusGPS (&GPS_sPublishStats);
-//			PUBLISH_MESSAGE(GPSStatus, EVENT_GPS_UPDATE_GPS_STATUS, EVENT_SET, &GPS_sPublishStats);
+			GUI_vItemStatusGPS (&GPS_sPublishStats);
+			PUBLISH_MESSAGE(GPSStatus, EVENT_GPS_UPDATE_GPS_STATUS, EVENT_SET, &GPS_sPublishStats);
 		}
 	}
 	osThreadTerminate(NULL);
@@ -878,6 +874,42 @@ void GPS_vConfigExtInterrupt (void)
 
 }
 
+void GPS_vConfigDebugLED (void)
+{
+	sLEDBlue.vpPrivateData = NULL;
+	sLEDBlue.bDefaultOutputHigh = false;
+	sLEDBlue.eDirection = GPIO_OUTPUT;
+	sLEDBlue.ePull = GPIO_PULL_INACT;
+	sLEDBlue.bMPort = LED_DEBUG_GREEN_PORT;
+	sLEDBlue.bMPin = LED_DEBUG_GREEN_PIN;
+
+	sLEDRed.vpPrivateData = NULL;
+	sLEDRed.bDefaultOutputHigh = false;
+	sLEDRed.eDirection = GPIO_OUTPUT;
+	sLEDRed.ePull = GPIO_PULL_INACT;
+	sLEDRed.bMPort = LED_DEBUG_RED_PORT;
+	sLEDRed.bMPin = LED_DEBUG_RED_PIN;
+
+	sDebug.vpPrivateData = NULL;
+	sDebug.bDefaultOutputHigh = false;
+	sDebug.eDirection = GPIO_OUTPUT;
+	sDebug.ePull = GPIO_PULL_INACT;
+	sDebug.bMPort = 0x0F;
+	sDebug.bMPin = 11;
+
+	sDebugMaintenance.vpPrivateData = NULL;
+	sDebugMaintenance.bDefaultOutputHigh = false;
+	sDebugMaintenance.eDirection = GPIO_OUTPUT;
+	sDebugMaintenance.ePull = GPIO_PULL_INACT;
+	sDebugMaintenance.bMPort = 0x0F;
+	sDebugMaintenance.bMPin = 10;
+
+	GPIO_eInit(&sLEDBlue);
+	GPIO_eInit(&sLEDRed);
+//	GPIO_eInit(&sDebug);
+//	GPIO_eInit(&sDebugMaintenance);
+}
+
 /*******************************************************************************
 
  void GPS_vTrfTrataTimePulse( void *p_arg )
@@ -890,6 +922,7 @@ void GPS_vConfigExtInterrupt (void)
 void GPS_vGPSTimePulseThread (void const *argument)
 {
 	osFlags dFlags;
+	uint8_t bDebugLED = 0;
 	uint8_t bContaSegundo = 0;
 	uint8_t bConta2S5 = 0;
 
@@ -905,6 +938,7 @@ void GPS_vGPSTimePulseThread (void const *argument)
 
 	// Configure external interrupt 2 - Module GPS TIMEPULSE
 	GPS_vConfigExtInterrupt();
+//	GPS_vConfigDebugLED();
 
 	//Loop infinito da tarefa:
 	while (1)
@@ -921,17 +955,23 @@ void GPS_vGPSTimePulseThread (void const *argument)
 			{
 				bContaSegundo++;
 				bConta2S5++;
+				bDebugLED++;
 
 				if (bContaSegundo > 7)
 				{
 					bContaSegundo = 0;
-
 					osFlagSet(GPS_sFlagGPS, GPS_FLAG_SEGUNDO);
+					//GPIO_vToggle(&sLEDRed);
 				}
 				if (bConta2S5 > 20)
 				{
 					bConta2S5 = 0;
-//					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
+					osFlagSet(GPS_sFlagGPS, GPS_FLAG_STATUS);
+				}
+				if (bDebugLED > wDebugLEDFreq)
+				{
+					bDebugLED = 0;
+					//GPIO_vToggle(&sLEDBlue);
 				}
 			}
 			//Acumula a distância percorrida.
@@ -1028,9 +1068,7 @@ uint32_t GPS_vSendData (uint16_t wNumDados, uint8_t *pbVetorDados)
 {
 	uint32_t dRet;
 
-	osEnterCritical();
 	dRet = DEV_write(pGPSHandle, &pbVetorDados[0], wNumDados);
-	osExitCritical();
 
 	return dRet;
 }
@@ -2845,7 +2883,7 @@ void GPS_vIdentifyEvent (contract_s* contract)
 			if (ePubEvt == EVENT_SEN_SYNC_READ_SENSORS)
 			{
 				osFlagSet(GPS_sFlagGPS, GPS_FLAG_METRO);
-				SEGGER_SYSVIEW_Print("Received EVENT_SEN_SYNC_READ_SENSORS event");
+//				SEGGER_SYSVIEW_Print("Received EVENT_SEN_SYNC_READ_SENSORS event");
 			}
 			break;
 		}
@@ -2868,6 +2906,12 @@ void GPS_vGPSThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(GPSQueue);
+	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
+	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(GPSQueue, GPS_vGPSThread);
+	REGISTRY_QUEUE(GPS_MTX_sEntradas, GPS_MTX_sEntradas);
+#endif
 
 	/* Init the module ring buffer - structure that receive data from device M2GGPSCOMM */
 	INITIALIZE_RINGBUFFER(uint8_t, GPSRx, GPS_RX_BUFFER_SIZE);
@@ -2887,11 +2931,9 @@ void GPS_vGPSThread (void const *argument)
 	//Aloca um timer de sistema para aguardar 5s:
 	INITIALIZE_TIMER(GPS_bTimerMtr, osTimerOnce);
 
-	//Mutex para controle de acesso às estruturas de dados de entrada do GPS:
-	INITIALIZE_MUTEX(GPS_MTX_sEntradas);
-
 	//Prepara o protocolo de comunicação para trabalhar:
 	memset(&GPS_sCtrlCBASRL, 0x00, sizeof(GPS_tsCtrlEnl));
+	memset(&GPS_sDadosGPS, 0x00, sizeof(GPS_tsDadosGPS));
 
 	GPS_sCtrlCBASRL.psFlagEnl = &GPS_sFlagEnl;
 	GPS_sCtrlCBASRL.dEventosEnl = GPS_ENL_FLAG_NENHUM;
@@ -3187,12 +3229,12 @@ void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
 
 	// arcseg
 	dLat = ( dLat << 2 ) + ( dLat << 1 ); //dLat *= 6;
-	dLat /= 100000;
+	dLat /= 1000;
 	psGPSStatus->wLatSec = dLat;
 
 	/* longitude */
 	dLon = GPS_sDadosGPS.lLon;
-	psGPSStatus->bLonDir = (dLon < 0) ? 'S':'N';
+	psGPSStatus->bLonDir = (dLon < 0) ? 'W':'E';
 
 	dLon = abs(dLon);
 
@@ -3210,7 +3252,7 @@ void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
 
 			// arcseg
 	dLon = ( dLon << 2 ) + ( dLon << 1 ); //dLat *= 6;
-	dLon /= 100000;
+	dLon /= 1000;
 	psGPSStatus->wLonSec = dLon;
 
 	/* PDOP */
@@ -3240,13 +3282,6 @@ void GUI_vItemStatusGPS(GPS_sStatus *psGPSStatus)
 
 	/* Velocidade */
 	psGPSStatus->dModVel = GPS_sDadosGPS.dGroundSpeed;
-/*
-	float fModVel = GPS_sDadosGPS.dGroundSpeed;
-	fModVel *= 36.0f;
-	float fVel = (float)GUI_fConvertUnit(fModVel,
-		GUI_dCONV(GUI_dMETERS, GUI_sConfig.bVelocidade));
-
-	psGPSStatus->dModVel = (uint32_t)roundf(fVel * 10);*/
 
 	/* BBRAM */
 	memcpy(psGPSStatus->bBBRAM, (GPS_sDadosGPS.bBateria) ? " OK" : "NOK", 3);
@@ -3304,18 +3339,16 @@ void GPS_vGPSRecvThread (void const *argument)
 	osThreadId xDiagMainID = (osThreadId)argument;
 	osSignalSet(xDiagMainID, THREADS_RETURN_SIGNAL(bGPSRCVThreadArrayPosition)); //Task created, inform core
 
-	uint32_t wTicks = osKernelSysTick();
+	uint32_t dGPSRecvTicks = osKernelSysTick();
 
 	while (1)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(GPSRCV, WDT_SLEEP);
-		osDelayUntil(&wTicks, 25);
+		osDelayUntil(&dGPSRecvTicks, 25);
 		WATCHDOG_STATE(GPSRCV, WDT_ACTIVE);
 
-		osEnterCritical();
 		wRecvBytes = DEV_read(pGPSHandle, &bPayload[0], sizeof(bPayload));
-		osExitCritical();
 
 		if (wRecvBytes)
 		{

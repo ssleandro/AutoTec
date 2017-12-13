@@ -58,7 +58,7 @@
 #include <inttypes.h>
 #include "mcuerror.h"
 
-#include "spifilib_dev.h" //TODO: commented line, change to spifi.h
+#include "spifilib_dev.h"
 #include "spifilib_api.h"
 
 /******************************************************************************
