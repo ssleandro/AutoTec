@@ -161,16 +161,12 @@
 #define INITIALIZE_LOCAL_QUEUE(QueueName) \
   (QueueName = osMessageCreate(osMessageQ(QueueName), NULL));  \
     ASSERT(QueueName != NULL);
+#define REGISTRY_QUEUE(QueueName, QueueNameStr) \
+	(vQueueAddToRegistry(QueueName, #QueueNameStr));
 /*!< Put message to an local queue */
 #define PUT_LOCAL_QUEUE(QueueName, message, time) (osMessagePutValue(QueueName, (void*)&message, time))
 /*!< Receive from Queue */
 #define RECEIVE_LOCAL_QUEUE(fromQueue, buffer, time) (osMessageGetValue(fromQueue, buffer, time))
-
-/*
-#define GET_PUBLISHED_EVENT(contract)   ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->dEvent
-#define GET_PUBLISHED_TYPE(contract) 	((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->eEvtType
-#define GET_PUBLISHED_PAYLOAD(contract) ((PubMessage*)(GET_MESSAGE(contract)->pvMessage))->vPayload
-*/
 
 #define GET_PUBLISHED_EVENT(contract)  	((smsg_key)(GET_MESSAGE(contract)->hMessageKey)).wEvent
 #define GET_PUBLISHED_TYPE(contract)  	(eEventType)((smsg_key)GET_MESSAGE(contract)->hMessageKey).wType
@@ -191,21 +187,26 @@
   MESSAGE(name).eMessageType = Type; \
 }
 
-
 // Converter Macros
-#define MM2IN(value) 	((value) * 0.0393701f)
-#define IN2MM(value) 	((uint16_t)(value * 25.41f))
-#define DM2IN(value) 	((value) * 3.93701f)
+#define MM2IN(value) 	roundf((value) * 0.393701f)
+#define IN2MM(value) 	(uint16_t)roundf((value * 2.541f))
+#define DM2IN(value) 	roundf((value) * 3.93701f)
 #define IN2DM(value) 	((uint16_t)(value * 0.2541f))
 
 #define DM2FT(value) 	((value) * 3.28084f)
-#define FT2DM(value) 	((value) / 3.28084f)
+#define FT2DM(value) 	roundf((value) / 3.28084f)
 
 #define KMH2MLH(value) 	(value * 0.621371f)
 #define MLH2KMH(value) 	(value * 1.60934f)
 
-#define SDM2SP(value) 	((value) / 3.28084f)
-#define SP2SDM(value) 	((uint16_t)(value * 3.28084f))
+#define SDM2SP(value) 	roundf((value) / 3.28084f)
+#define SP2SDM(value) 	(uint16_t)roundf((value * 3.28084f))
+
+#define LED_DEBUG_GREEN_PORT 0x0E       // LED1
+#define LED_DEBUG_GREEN_PIN  0x08
+
+#define LED_DEBUG_RED_PORT 0x0E        // LED2
+#define LED_DEBUG_RED_PIN  0x09
 
 /******************************************************************************
  * Typedefs
@@ -354,7 +355,6 @@ typedef enum event_e
 	EVENT_GUI_UPDATE_TRIMMING_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_GPS_INTERFACE,
 	EVENT_GUI_UPDATE_SYSTEM_CAN_INTERFACE,
-	EVENT_GUI_UPDATE_SYSTEM_SENSORS_INTERFACE,
 	EVENT_GUI_UPDATE_REPLACE_SENSOR,
 	EVENT_GUI_INSTALLATION_FINISH,
 	EVENT_GUI_INSTALLATION_REPEAT_TEST,
@@ -384,11 +384,10 @@ typedef enum event_e
 	EVENT_GUI_CONFIG_CHANGE_PASSWORD_ACK,
 	EVENT_GUI_CONFIG_CHANGE_PASSWORD_NACK,
 	EVENT_GUI_CONFIG_GET_MEMORY_USED,
-	EVENT_GUI_CONFIG_GET_MEMORY_USED_RESPONSE,
-	EVENT_GUI_SYSTEM_GET_FILE_INFO,
 	EVENT_GUI_SYSTEM_FORMAT_FILE,
 	EVENT_GUI_SYSTEM_SENSORS_ID_NUMBER,
 	EVENT_GUI_SYSTEM_SW_HW_VERSION,
+	EVENT_GUI_UPDATE_FILE_INFO,
 	EVENT_ISO_UPDATE_CURRENT_DATA_MASK,
 	EVENT_ISO_UPDATE_CURRENT_CONFIGURATION,
 	EVENT_ISO_INSTALLATION_REPEAT_TEST,
@@ -421,12 +420,6 @@ typedef enum event_e
 	EVENT_SEN_SYNC_READ_SENSORS,
 } event_e;
 
-typedef struct
-{
-	uint32_t dEvent;
-	eEventType eEvtType;
-	void* vPayload;
-} PubMessage;
 
 /******************************************************************************
  * Conversion from MPA
@@ -516,14 +509,22 @@ extern gpio_config_s sEnablePS9;
 /******************************************************************************
  * Typedefs from GUI module
  *******************************************************************************/
-#define SERIAL_NUMBER_N_BYTES			6
-#define M2G_HW_ID_NUMBER_N_DIGITS	SERIAL_NUMBER_N_BYTES * 2
-#define M2G_FW_VERSION_N_DIGITS		8
+#define M2G_SERIAL_NUMBER_N_BYTES		6
+#define M2G_HW_ID_NUMBER_N_DIGITS		M2G_SERIAL_NUMBER_N_BYTES * 2
+#define M2G_FW_VERSION_N_DIGITS			8
+#define M2G_SENSOR_ID_NUMBER_N_DIGITS	M2G_SERIAL_NUMBER_N_BYTES * 2
+#define M2G_SENSOR_FW_VER_N_DIGITS		8
 
 typedef struct sM2GVersion {
 	uint8_t abHwIDNumber[M2G_HW_ID_NUMBER_N_DIGITS];
 	uint8_t abFwVersion[M2G_FW_VERSION_N_DIGITS];
 } sM2GVersion;
+
+typedef struct sM2GSensorInfo {
+	eInstallationStatus eSensorIntallStatus;
+	uint8_t abIDNumber[M2G_SENSOR_ID_NUMBER_N_DIGITS];
+	uint8_t abFwVer[M2G_SENSOR_FW_VER_N_DIGITS];
+} sM2GSensorInfo;
 
 /******************************************************************************
  * Typedefs from Control module

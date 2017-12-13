@@ -63,7 +63,6 @@ osFlagsGroupId UOS_sFlagSis;
 		  X("GPS"        , 512  , osPriorityAboveNormal 	, GPS_vGPSThread        , MODULE_GPS        , GPS_WDTData  ) \
 		  X("Control"    , 512  , osPriorityNormal			, CTL_vControlThread    , MODULE_CONTROL    , CTL_WDTData  ) \
 		  X("Filesys"    , 1024 , osPriorityIdle				, FSM_vFileSysThread    , MODULE_FILESYS    , FSM_WDTData  ) \
-		  X("Buzzer"	  , 256  , osPriorityNormal			, BUZ_vBuzzerThread     , MODULE_BUZZER     , BUZ_WDTData  ) \
 		  X(NULL         ,   0  , 0                     	, NULL                  , 0                 , NULL         )
 
 /******************************************************************************

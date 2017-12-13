@@ -41,19 +41,22 @@
 #define M2G_SOURCE_ADDRESS 0x81
 #endif
 
-#define OBJECT_POOL_VERSION 0xAAAAAAABAAAAAA
-#define DESTINATION_ADDRESS 0x26
-#define VT_ADDRESS 0x26
-#define BROADCAST_ADDRESS 0xFF
+#define DESTINATION_ADDRESS					0x26
+#define VT_ADDRESS 								0x26
+#define BROADCAST_ADDRESS 						0xFF
 
-#define PRIORITY_4 0x04
-#define PRIORITY_6 0x06
-#define PRIOTITY_7 0x07
+#define PRIORITY_RESERVED						0x00
+#define PRIORITY_MACHINE2MACHINE_CONTROL	0x01
+#define PRIORITY_SYSTEM_PROTECTION			0x02
+#define PRIORITY_OPERATOR_BASED_CONTROL	0x03
+#define PRIORITY_HIGH_SYSTEM_STATUS 		0x04
+#define PRIORITY_MEDIUM_SYSTEM_STATUS 		0x06
+#define PRIOTITY_LARGE_DATA_TRANSFER 		0x07
 
-#define TRANSPORT_PROTOCOL 0
-#define TRANSPORT_PROTOCOL_MAX_POOLSIZE 1785
-#define EXTENDED_TRANSPORT_PROTOCOL 1
-#define EXTENDED_TRANSPORT_PROTOCOL_MAX_POOLSIZE 117440505
+#define TRANSPORT_PROTOCOL 							0
+#define TRANSPORT_PROTOCOL_MAX_BYTES 				1785
+#define EXTENDED_TRANSPORT_PROTOCOL 				1
+#define EXTENDED_TRANSPORT_PROTOCOL_MAX_BYTES	117440505
 #define EXTENDED_TRANSPORT_PROTOCOL_MAX_PACKETS 16777215
 
 /* ********************************************************
@@ -319,8 +322,8 @@ void ISO_vSendGetMemory (uint32_t);
 void ISO_vSendGetNumberSoftKeys (void);
 void ISO_vSendRequestToSend (uint32_t);
 void ISO_vSendProprietaryA (void);
-void ISO_vSendLoadVersion (uint64_t);
-void ISO_vSendStoreVersion (uint64_t);
+void ISO_vSendLoadVersion (const uint8_t abVersionLabel[7]);
+void ISO_vSendStoreVersion (const uint8_t abVersionLabel[7]);
 void ISO_vSendETP_CM_DPO (uint8_t, uint32_t);
 uint8_t ISO_vInitPointersToTranfer (const uint8_t*, uint32_t);
 void ISO_vSendBytesToVT (uint8_t, uint32_t, uint8_t);

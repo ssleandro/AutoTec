@@ -51,7 +51,7 @@
 #define EXB_MAXIMUM_FREQUENCY 20000
 
 #define EXB_BUZZER_CHANNEL  PWM_CHANNEL0
-#define EXB_BUZZER_DUTY     90
+#define EXB_BUZZER_DUTY     0
 #define EXB_BUZZER_FREQ     264
 
 /******************************************************************************

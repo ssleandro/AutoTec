@@ -848,9 +848,13 @@ void BRD_vSetupClocking (void)
 #if (MAX_CLOCK_FREQ > 180000000)
 	Chip_Clock_SetDivider(CLK_IDIV_E, CLKIN_MAINPLL, 5);
 #else
-	Chip_Clock_SetDivider(CLK_IDIV_E, CLKIN_MAINPLL, 4);
+	Chip_Clock_SetDivider(CLK_IDIV_E, CLKIN_MAINPLL, 8);
 #endif
 	Chip_Clock_SetBaseClock(CLK_BASE_SPIFI, CLKIN_IDIVE, true, false);
+
+	volatile uint32_t mpll, spill;
+	mpll =Chip_Clock_GetClockInputHz(CLKIN_MAINPLL);
+	spill =Chip_Clock_GetClockInputHz(CLKIN_IDIVE);
 }
 
 /******************************************************************************

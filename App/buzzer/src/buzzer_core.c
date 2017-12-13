@@ -45,7 +45,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of BUZZER queue
-#define QUEUE_SIZEOFBUZZER (10)
+#define QUEUE_SIZEOFBUZZER (16)
 
 #define THIS_MODULE MODULE_BUZZER
 
@@ -338,6 +338,9 @@ void BUZ_vBuzzerThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(BuzzerQueue);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(BuzzerQueue, BUZ_vBuzzerThread);
+#endif
 
 	/* Init buzzer device for output */
 	BUZ_vInitDeviceLayer();

@@ -64,7 +64,6 @@ CAN_tsParametrosExtended CAN_sParametrosExtended;
 
 //Mutex para acesso ao buffer da lista de sensores na rede CAN
 CREATE_MUTEX(CAN_MTX_sBufferListaSensores);
-CREATE_MUTEX(CAN_MTX_sMPAStruct);
 
 //Mutex para acesso ao arquivo da lista de sensores na rede CAN
 //OS_EVENT                *CAN_MTX_sArquivoListaSensores;

@@ -74,7 +74,7 @@
 #define AQR_bSTS_SALVA_REG              0x03
 #define AQR_bSTS_NOVO_REG               0x04
 
-#define ARQ_SAVE_ESTATIC_DATA_TIMEOUT	10
+#define ARQ_SAVE_ESTATIC_DATA_TIMEOUT	20
 /******************************************************************************
  * Macros
  *******************************************************************************/

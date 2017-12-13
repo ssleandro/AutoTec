@@ -42,7 +42,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of CONTROL queue
-#define QUEUE_SIZEOFRECORDS 5
+#define QUEUE_SIZEOFRECORDS 32
 
 #define THIS_MODULE MODULE_RECORDS
 
@@ -137,6 +137,9 @@ void REC_vRecordsThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(RecordsQueue);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(RecordsQueue, REC_vRecordsThread);
+#endif
 
 	//Create subthreads
 	uint8_t bNumberOfThreads = 0;

@@ -247,10 +247,10 @@ const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en[] = {
 		ID(ID_NULL), 0, WORD(68), 'D', 'o', ' ', 'y', 'o', 'u', ' ', 'w', 'a', 'n', 't', ' ', 't', 'o', ' ', 'r', 'e', 'p', 'l', 'a', 'c', 'e', ' ', 's', 'e', 'n', 's', 'o', 'r', ' ', 'o', 'f', ' ', 'r', 'o', 'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'f', 'o', 'r', ' ', 't', 'h', 'e', ' ', 'n', 'e', 'w', ' ', 's', 'e', 'n', 's', 'o', 'r', ' ', 'a', 'd', 'd', 'e', 'd', '?', 0,
 	ID(OutputString_11181), TYPEID_OUTSTR, WORD(153), WORD(24), COLOR_WHITE, ID(FontAttributes_23001), 1,
 		ID(ID_NULL), 1, WORD(9), 'A', 'u', 't', 'e', 'q', ' ', 'M', '2', 'G', 0,
-	ID(OutputString_11182), TYPEID_OUTSTR, WORD(104), WORD(16), COLOR_WHITE, ID(FontAttributes_23002), 1,
-		ID(ID_NULL), 0, WORD(8), 'H', 'a', 'r', 'd', 'w', 'a', 'r', 'e', 0,
-	ID(OutputString_11183), TYPEID_OUTSTR, WORD(104), WORD(16), COLOR_WHITE, ID(FontAttributes_23002), 1,
-		ID(ID_NULL), 0, WORD(8), 'F', 'i', 'r', 'm', 'w', 'a', 'r', 'e', 0,
+	ID(OutputString_11182), TYPEID_OUTSTR, WORD(117), WORD(16), COLOR_WHITE, ID(FontAttributes_23002), 1,
+		ID(ID_NULL), 0, WORD(9), 'H', 'a', 'r', 'd', 'w', 'a', 'r', 'e', ':', 0,
+	ID(OutputString_11183), TYPEID_OUTSTR, WORD(117), WORD(16), COLOR_WHITE, ID(FontAttributes_23002), 1,
+		ID(ID_NULL), 0, WORD(9), 'F', 'i', 'r', 'm', 'w', 'a', 'r', 'e', ':', 0,
 	ID(OutputString_11184), TYPEID_OUTSTR, WORD(99), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 3,
 		ID(ID_NULL), 1, WORD(11), 'M', 'e', 'm', 'o', 'r', 'y', ' ', 'U', 's', 'e', 'd', 0,
 	ID(OutputString_11185), TYPEID_OUTSTR, WORD(364), WORD(16), COLOR_WHITE, ID(FontAttributes_23002), 1,
@@ -297,6 +297,12 @@ const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en[] = {
 		ID(ID_NULL), 1, WORD(7), 'V', 'e', 'r', 's', 'i', 'o', 'n', 0,
 	ID(OutputString_11211), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
 		ID(ID_NULL), 1, WORD(2), 'I', 'D', 0,
+	ID(OutputString_11322), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
+		ID(ID_NULL), 1, WORD(5), 'N', 'a', 'm', 'e', ':', 0,
+	ID(OutputString_11323), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
+		ID(ID_NULL), 1, WORD(5), 'D', 'a', 't', 'e', ':', 0,
+	ID(OutputString_11324), TYPEID_OUTSTR, WORD(100), WORD(12), COLOR_WHITE, ID(FontAttributes_23000), 1,
+		ID(ID_NULL), 1, WORD(5), 'S', 'i', 'z', 'e', ':', 0,
 }; //isoOP_M2GPlus_en
 
 const unsigned char ISO_OP_MEMORY_CLASS isoOP_M2GPlus_en_unit_metric[] = {

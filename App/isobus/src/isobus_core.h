@@ -49,11 +49,15 @@
 /******************************************************************************
  * Preprocessor Constants
  *******************************************************************************/
-#define ISO_FLAG_LANGUAGE_UPDATED	0x0001
+#define ISO_FLAG_LANGUAGE_UPDATE			0x00000001
+#define ISO_FLAG_TP_COMM_REQUEST			0x00000002
+#define ISO_FLAG_TP_COMM_END				0x00000004
 
 #define ISO_NUM_NUMBER_VARIABLE_OBJECTS 276
 #define ISO_NUM_INPUT_LIST_OBJECTS 5
 #define ISO_NUM_FILL_ATTRIBUTES_OBJECTS 36
+
+#define ISO_MAX_STRING_BUFFER_SIZE		512
 
 #define ISO_KEY_PLANTER_ID					SoftKey_Planter
 #define ISO_KEY_INFO_ID						SoftKey_Info
@@ -285,6 +289,47 @@ typedef struct
 	event_e eAlarmEvent;
 } sUpdatePlanterMaskStates;
 
+typedef enum {
+	UIdle, UWaitingForLoadVersionResponse, UWaitingForMemoryResponse, UUploading, UWaitingForEOOResponse, UWaitingForStoreVersionResponse, UFailed
+} eOPUploadState;
+
+typedef enum {
+	OPNoneRegistered, OPRegistered, OPUploadedSuccessfully, OPUploading, OPCannotBeUploaded
+} eObjectPoolState;
+
+typedef struct {
+	eObjectPoolState eOPState;
+	eOPUploadState eOPUplState;
+	uint8_t* pbObjectPool;
+	uint32_t dOPSize;
+	uint8_t* pbOPLanguage;
+	uint32_t dOPLangSize;
+	uint8_t* pbOPUnits;
+	uint32_t dOPUnitsSize;
+} sObjectPoolControl;
+
+typedef enum {
+	ACCIdle, ACCWaitingGlobalVTStatusResponse, ACCWaitingVTStatusResponse, ACCWaitingHardwareResponse, ACCWaitingLanguageResquestResponse, ACCFailed
+} eAddressClaimNCapabilitiesState;
+
+typedef struct {
+	eAddressClaimNCapabilitiesState eACCState;
+} sAddressClaimControl;
+
+typedef enum {
+	TPIdle, TPInProgress, TPFailed
+} eTPState;
+
+typedef enum {
+	UploadObjectPool, UploadChangeStringValue
+} eUploadType;
+
+typedef struct {
+	eTPState eTPCommState;
+	eUploadType eTPUploadType;
+	uint8_t* pbTPBuffer;
+	uint32_t dNumOfBytes;
+} sTransportProtocolControl;
 /******************************************************************************
  * Variables
  *******************************************************************************/

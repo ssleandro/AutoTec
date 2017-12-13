@@ -1,5 +1,19 @@
 ﻿# Release Notes
 
+## v0.1.007
+    a.  Adicionado rotina de atualização da lista de sensores no object pool
+
+    b.  Adicionado rotina de atualização do ID number do equipamento no object pool
+
+    c.  Adicionado rotina de atualização da lista de arquivos no object pool
+
+    d.  Adicionado rotina de verificação e indicação de problema no sistema de arquivos.
+
+    e.  Adicionado rotina de atualização da versão de software no object pool.
+
+    f.  Implementado rotina de recuperação do object pool em caso de perda de comunicação.
+    
+
 ## v0.1.006
 
     a.  Adicionado RTC device

@@ -47,7 +47,7 @@
  * Module Preprocessor Constants
  *******************************************************************************/
 //!< MACRO to define the size of SENSOR queue
-#define QUEUE_SIZEOFSENSOR 5
+#define QUEUE_SIZEOFSENSOR 32
 
 #define THIS_MODULE MODULE_SENSOR
 
@@ -398,7 +398,7 @@ void SEN_vSensorPublishThread (void const *argument)
 		{
 			dTxFlag = 0;
 			PUBLISH_MESSAGE(SensorEvtPub, EVENT_SEN_SYNC_READ_SENSORS, EVENT_SET, NULL);
-			SEGGER_SYSVIEW_Print("Published EVENT_SEN_SYNC_READ_SENSORS event");
+//			SEGGER_SYSVIEW_Print("Published EVENT_SEN_SYNC_READ_SENSORS event");
 		}
 		if (dTxFlag != 0)
 		{
@@ -456,10 +456,10 @@ eAPPError_s SEN_vInitDeviceLayer (uint32_t wSelectedInterface)
 	GPIO_eInit(&sEnablePS9);
 
 	DISABLE_PS9;
+
 	// Enable power source 9V3
 	ENABLE_PS9;
 
-	ENABLE_PS9;
 	/*Prepare the device */
 	pSENSORHandle = DEV_open(PERIPHERAL_M2GSENSORCOMM);
 	ASSERT(pSENSORHandle != NULL);
@@ -591,6 +591,12 @@ void SEN_vSensorThread (void const *argument)
 
 	/* Init the module queue - structure that receive data from broker */
 	INITIALIZE_QUEUE(SensorQueue);
+	// Create a Mutex to access sensor buffer list on CAN network
+	INITIALIZE_MUTEX(CAN_MTX_sBufferListaSensores);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(SensorQueue, SEN_vSensorThread);
+	REGISTRY_QUEUE(CAN_MTX_sBufferListaSensores, CAN_MTX_sBufferListaSensores);
+#endif
 
 	/* Init M2GSENSORCOMM device for output */
 	SEN_vInitDeviceLayer(SENSOR_INITIAL_IO_IFACE);
@@ -624,9 +630,6 @@ void SEN_vSensorThread (void const *argument)
 	// Flags to indicate the CAN application status and treatment of Auteq protocol
 	status = osFlagGroupCreate(&CAN_psFlagApl);
 	ASSERT(status == osOK);
-
-	// Create a Mutex to access sensor buffer list on CAN network
-	INITIALIZE_MUTEX(CAN_MTX_sBufferListaSensores);
 
 	// System timers allocation to timeout control
 	// PnP command
@@ -799,7 +802,7 @@ void SEN_vSensorRecvThread (void const *argument)
 	osEvent evt;
 	uint8_t bIterator;
 	uint8_t bRecvMessages = 0;		//!< Lenght (messages) received
-	uint32_t dTicks;
+	uint32_t dSENRecvTicks;
 	uint16_t wCountMS = 0;
 	canMSGStruct_s asPayload[64];   //!< Buffer to hold the contract and message data
 
@@ -819,16 +822,16 @@ void SEN_vSensorRecvThread (void const *argument)
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 
-	dTicks = osKernelSysTick();
+	dSENRecvTicks = osKernelSysTick();
 
 	while (1)
 	{
 		/* Pool the device waiting for */
 		WATCHDOG_STATE(SENRCV, WDT_SLEEP);
-		osDelayUntil(&dTicks, 25);
-		osEnterCritical();
+		osDelayUntil(&dSENRecvTicks, 25);
+//		osEnterCritical();
 		bRecvMessages = DEV_read(pSENSORHandle, &asPayload[0], ARRAY_SIZE(asPayload));
-		osExitCritical();
+//		osExitCritical();
 		WATCHDOG_STATE(SENRCV, WDT_ACTIVE);
 
 		if (bRecvMessages)
@@ -889,6 +892,9 @@ void SEN_vSensorWriteThread (void const *argument)
 	canMSGStruct_s sRecv;
 
 	INITIALIZE_LOCAL_QUEUE(SensorWriteQ);
+#ifndef NDEBUG
+	REGISTRY_QUEUE(SensorWriteQ, Sensor Write);
+#endif
 
 #ifdef configUSE_SEGGER_SYSTEM_VIEWER_HOOKS
 	SEGGER_SYSVIEW_Print("Sensor Write Thread Created");
@@ -912,7 +918,7 @@ void SEN_vSensorWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
-			osEnterCritical();
+//			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pSENSORHandle, IOCTL_M2GSENSORCOMM_CHANGE_SEND_ID, (void*)&(sRecv.id));
 			ASSERT(eError == APP_ERROR_SUCCESS);
 
@@ -922,7 +928,7 @@ void SEN_vSensorWriteThread (void const *argument)
 				DEV_write(pSENSORHandle, &(sRecv.data[0]), sRecv.dlc);
 				WATCHDOG_STATE(SENWRT, WDT_ACTIVE);
 			}
-			osExitCritical();
+//			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);

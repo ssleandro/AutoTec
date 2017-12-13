@@ -49,7 +49,7 @@ const uint8_t FFS_abSensorCfgName[] = "SENSORES.CAN";
 //Nome do arquivo de registro estatico:
 const uint8_t FFS_abStaticRegCfgName[] = "ESTATICO.REG";
 
-EXTERN_MUTEX(FFS_AccesControl);
+EXTERN_MUTEX(FFS_AccessControl);
 
 /******************************************************************************
  * Variables from others modules
@@ -61,8 +61,6 @@ extern const UOS_tsConfiguracao UOS_sConfiguracaoDefault;
 extern AQR_tsCtrlListaSens FFS_sCtrlListaSens;
 
 extern AQR_tsRegEstaticoCRC FFS_sRegEstaticoCRC;
-
-extern FFS_sFSInfo tsFSInfo;
 
 /******************************************************************************
  * Typedefs
@@ -169,7 +167,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
 	uint8_t bErr;
 	eAPPError_s eRet;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	bErr = FFS_bReadFile(FFS_abConfigName, (uint8_t * )&FFS_sConfiguracao, sizeof(FFS_sConfiguracao));
 
@@ -198,7 +196,7 @@ eAPPError_s FFS_vLoadConfigFile (void)
 		eRet = APP_ERROR_ERROR;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return eRet;
 }
@@ -218,7 +216,7 @@ eAPPError_s FFS_vSaveConfigFile (void)
 	uint16_t wCRC16;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sConfiguracao,
@@ -235,7 +233,7 @@ eAPPError_s FFS_vSaveConfigFile (void)
 		ErroReturn = APP_ERROR_SUCCESS;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return ErroReturn;
 }
@@ -253,7 +251,7 @@ eAPPError_s FFS_vRemoveSensorCfg (void)
 {
 	uint8_t bNumTotalSensores, bCount;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	f_delete(FFS_abSensorCfgName);
 
@@ -272,7 +270,7 @@ eAPPError_s FFS_vRemoveSensorCfg (void)
 		FFS_sCtrlListaSens.CAN_sCtrlListaSens.asLista[bCount].eEstado = Novo;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return APP_ERROR_SUCCESS;
 }
@@ -292,7 +290,7 @@ eAPPError_s FFS_vSaveSensorCfg (void)
 	uint16_t wCRC16;
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	//Limpa a estrutura de novo sensor
 	memset(&FFS_sCtrlListaSens.CAN_sCtrlListaSens.sNovoSensor, 0,
@@ -312,7 +310,7 @@ eAPPError_s FFS_vSaveSensorCfg (void)
 		ErroReturn = APP_ERROR_SUCCESS;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return ErroReturn;
 }
@@ -333,7 +331,7 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 	uint8_t bErr;
 	eAPPError_s eRet;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	bErr = FFS_bReadFile(FFS_abSensorCfgName, (uint8_t * )&FFS_sCtrlListaSens, sizeof(FFS_sCtrlListaSens));
 
@@ -367,7 +365,7 @@ eAPPError_s FFS_vLoadSensorCfg (void)
 		eRet = APP_ERROR_ERROR;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return eRet;
 }
@@ -392,7 +390,7 @@ eAPPError_s FFS_vSaveStaticReg (void)
 
 	eAPPError_s ErroReturn = APP_ERROR_ERROR;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16, (uint8_t *)&FFS_sRegEstaticoCRC,
@@ -409,7 +407,7 @@ eAPPError_s FFS_vSaveStaticReg (void)
 		ErroReturn = APP_ERROR_SUCCESS;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return ErroReturn;
 }
@@ -433,10 +431,10 @@ eAPPError_s FFS_vLoadStaticReg (void)
 	eAPPError_s eRet;
 	uint8_t const *Filename = FFS_abStaticRegCfgName;
 
-	WAIT_MUTEX(FFS_AccesControl, osWaitForever);
+	WAIT_MUTEX(FFS_AccessControl, osWaitForever);
 
 	bErr = FFS_bReadFile(Filename, (uint8_t *) &FFS_sRegEstaticoCRC, sizeof(FFS_sRegEstaticoCRC));
-	ASSERT(bErr == 1);
+	ASSERT(bErr == F_NO_ERROR);
 
 	//Confere o CRC da configuracao:
 	TLS_vCalculaCRC16Bloco(&wCRC16_C, (uint8_t *) &FFS_sCtrlListaSens,
@@ -460,7 +458,7 @@ eAPPError_s FFS_vLoadStaticReg (void)
 		eRet = APP_ERROR_ERROR;
 	}
 
-	RELEASE_MUTEX(FFS_AccesControl);
+	RELEASE_MUTEX(FFS_AccessControl);
 
 	return eRet;
 }
@@ -480,6 +478,7 @@ void FFS_sGetFSInfo(FFS_sFSInfo *pSFInfo)
 	bErr = f_getfreespace( &xSpace );
 	if( bErr == F_NO_ERROR )
 	{
+		pSFInfo->wUsed = xSpace.used;
 		pSFInfo->wFree = xSpace.free;
 		pSFInfo->wTotal = xSpace.total;
 		pSFInfo->wBad = xSpace.bad;

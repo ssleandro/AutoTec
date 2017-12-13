@@ -102,7 +102,10 @@ extern uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 #if defined(__IAR_SYSTEMS_ICC__)
 static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 #elif defined(__GNUC__) && defined (__ARMEL__)
-static uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__ ((section(".extram"))); /* __attribute__ ((section(".osheap"))); */
+volatile uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__ ((section(".extram"))); /* __attribute__ ((section(".osheap"))); */
+#ifndef NDEBUG
+volatile const uint8_t freeRTOSMemoryScheme = configUSE_HEAP_SCHEME;
+#endif
 #endif
 #endif /* configAPPLICATION_ALLOCATED_HEAP */
 
