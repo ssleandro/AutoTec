@@ -67,7 +67,6 @@ osFlagsGroupId xSEN_sFlagApl;
 extern GPS_tsDadosGPS GPS_sDadosGPS;
 
 extern osMutexId GPS_MTX_sEntradas;
-extern uint8_t GPS_bDistanciaPercorrida;
 uint8_t AQR_bDistanciaPercorrida;
 EXTERN_TIMER(GPS_bTimerMtr);
 
@@ -2216,9 +2215,6 @@ void AQR_vAcquiregManagementThread (void const *argument)
 	WATCHDOG_STATE(AQRMGT, WDT_SLEEP);
 	osFlagWait(UOS_sFlagSis, UOS_SIS_FLAG_SIS_OK, false, false, osWaitForever);
 	WATCHDOG_STATE(AQRMGT, WDT_ACTIVE);
-
-	// TODO: extern variable
-	//    UOS_sVersaoCod.wFlag = 0xFFFF;
 
 	// TODO: Copia para variável auxiliar a opção de configuração que ativa gravação de registros
 	AQR_bSalvaRegistro = UOS_sConfiguracao.sGPS.bSalvaRegistro;

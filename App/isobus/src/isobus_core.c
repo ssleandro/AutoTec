@@ -1078,8 +1078,6 @@ void ISO_vIsobusRecvThread(void const *argument)
 {}
 #endif
 
-extern gpio_config_s sDebugMaintenance;
-
 /******************************************************************************
  * Function : ISO_vIsobusWriteThread(void const *argument)
  *//**
@@ -1134,15 +1132,8 @@ void ISO_vIsobusWriteThread (void const *argument)
 
 		if (evtPub.status == osEventMessage)
 		{
-//			osEnterCritical();
 			eError = (eAPPError_s)DEV_ioctl(pISOHandle, IOCTL_M2GISOCOMM_CHANGE_SEND_ID, (void*)&(recv.frame).id);
 			ASSERT(eError == APP_ERROR_SUCCESS);
-
-			if ((recv.frame.id == ISO_vGetID(ECU_TO_VT_PGN, M2G_SOURCE_ADDRESS, DESTINATION_ADDRESS, PRIORITY_HIGH_SYSTEM_STATUS))
-				&& (recv.B1 == FUNC_WS_MAINTENANCE))
-			{
-//				GPIO_vToggle(&sDebugMaintenance);
-			}
 
 			if (eError == APP_ERROR_SUCCESS)
 			{
@@ -1150,7 +1141,6 @@ void ISO_vIsobusWriteThread (void const *argument)
 				DEV_write(pISOHandle, &((recv.frame).data[0]), (recv.frame).dlc);
 				WATCHDOG_STATE(ISOWRT, WDT_ACTIVE);
 			}
-//			osExitCritical();
 		}
 	}
 	osThreadTerminate(NULL);
@@ -2561,7 +2551,6 @@ void ISO_HandleVtToEcuMessage (ISOBUSMsg* sRcvMsg)
 				}
 				else if (eCurrentMask == DATA_MASK_PLANTER)
 				{
-//					ISO_vUpdatePlanterDataMask();
 					ISO_vChangeSoftKeyMaskCommand(DATA_MASK_CONFIGURATION, MASK_TYPE_DATA_MASK,
 						SOFT_KEY_MASK_CONFIG_TO_PLANTER);
 					ISO_vHideShowContainerCommand(CO_CFG_CHANGE_CANCEL_RET_PLANTER, true);
@@ -3247,14 +3236,10 @@ void ISO_vUpdateAlarmStatus (uint8_t bNumLine, eLineAlarm eAlarmStatus)
 	ISO_vChangeAttributeCommand(RECTANGLE_PLANT_GET_ID_FROM_LINE_NUMBER(bNumLine), ISO_RECTANGLE_LINE_ATTRIBUTE, wRectID);
 }
 
-extern gpio_config_s sDebug;
-
 void ISO_vUpdatePlanterDataMask (void)
 {
 	osStatus status;
 	static bool bUpdateLinesInfo;
-
-//	GPIO_vToggle(&sDebug);
 
 	WATCHDOG_STATE(ISOUPDT, WDT_SLEEP);
 	status = WAIT_MUTEX(ISO_UpdateMask, osWaitForever);
@@ -3372,8 +3357,6 @@ void ISO_vUpdatePlanterDataMask (void)
 	status = RELEASE_MUTEX(ISO_UpdateMask);
 	ASSERT(status == osOK);
 	WATCHDOG_STATE(ISOUPDT, WDT_ACTIVE);
-
-//	GPIO_vToggle(&sDebug);
 }
 
 void ISO_vUpdateTestModeDataMask (event_e eEvt)

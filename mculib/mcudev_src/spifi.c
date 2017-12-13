@@ -54,8 +54,6 @@
  * Includes
  *******************************************************************************/
 #include <spifi.h>
-//#include "spifilib_dev.h" //TODO: commented line, change to spifi.h
-//#include "spifilib_api.h" //TODO: commented line, change to spifi.h
 #include "board.h"
 #include <string.h>
 #ifdef USE_SYSVIEW
